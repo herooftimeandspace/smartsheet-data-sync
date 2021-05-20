@@ -38,11 +38,11 @@ logging_config = dict(
               "%(asctime)s - %(levelname)s - %(message)s"}
     },
     handlers={
-        'console': {
-            'class': 'logging.StreamHandler',
-            'formatter': 'f',
-            'level': logging.INFO
-        },
+        # 'console': {
+        #     'class': 'logging.StreamHandler',
+        #     'formatter': 'f',
+        #     'level': logging.INFO
+        # },
         'file': {
             'class': 'logging.FileHandler',
             'formatter': 'f',
@@ -57,7 +57,7 @@ logging_config = dict(
         }
     },
     root={
-        'handlers': ['console', 'file', 'docker'],
+        'handlers': ['file', 'docker'],  # 'console'
         'level': logging.DEBUG,
         'disable_existing_loggers': False
     },
