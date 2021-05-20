@@ -7,7 +7,7 @@ import smartsheet
 from uuid_module import (get_cell_value, get_column_id, get_column_map,
                          json_extract)
 from uuid_module.variables import (jira_col, jira_idx_sheet, summary_col,
-                                   uuid_col, uuid_idx_sheet, workspace_id)
+                                   uuid_col, workspace_id)
 
 logger = logging.getLogger(__name__)
 
@@ -15,7 +15,6 @@ logger = logging.getLogger(__name__)
 # jira_idx_sheet = os.getenv('JIRA_IDX_SHEET')
 # summary_col = os.getenv('SUMMARY_COL')
 # uuid_col = os.getenv('UUID_COL')
-# uuid_idx_sheet = os.getenv('UUID_IDX_SHEET')
 # workspace_id = os.getenv('WORKSPACE_ID')
 
 
@@ -287,13 +286,8 @@ def get_all_sheet_ids(smartsheet_client):
         if ws_sheet_ids is not None:
             sheet_ids.extend(ws_sheet_ids)
 
-        # Don't include the UUID Database or JIRA databse sheet as
+        # Don't include the JIRA index sheet as
         # part of the sheet collection, if present.
-        try:
-            sheet_ids.remove(uuid_idx_sheet)
-        except ValueError:
-            logging.debug(
-                "{} not found in Sheet IDs list".format(uuid_idx_sheet))
         try:
             sheet_ids.remove(jira_idx_sheet)
         except ValueError:
