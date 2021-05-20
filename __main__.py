@@ -102,6 +102,9 @@ logging.debug("Initialization took: {}".format(elapsed))
 
 
 def refresh_sheet_ids():
+    """Wrapper container for APScheduler. Gets all sheet IDs from all
+       Workspaces.
+    """
     global sheet_id_lock
     with sheet_id_lock:
         global sheet_ids
@@ -110,6 +113,9 @@ def refresh_sheet_ids():
 
 
 def refresh_sheet_index():
+    """Wrapper container for APScheduler. Creates an array of all Sheet
+       objects.
+    """
     global sheet_ids
     global source_sheets
     global sheet_index_lock
@@ -125,6 +131,10 @@ def refresh_sheet_index():
 
 
 def refresh_project_index():
+    """Wrapper container for APScheduler. Creates a Project Index across all
+       sheets, and two sub-indexes for a scoped project index UUID:Jira
+       and a scoped Jira index Jira:UUID(s)
+    """
     global project_uuid_index
     global jira_sub_index
     global project_sub_index
@@ -158,22 +168,35 @@ def refresh_project_index():
 
 
 def refresh_jira_uuid_index():
+    """Wrapper container for APScheduler. Writes UUIDs to the Jira Index
+       Sheet.
+    """
     global jira_sub_index
     global project_sub_index
     write_jira_uuids(jira_sub_index, project_sub_index, smartsheet_client)
 
 
 def refresh_jira_cell_links():
+    """Wrapper container for APScheduler. Writes cell links between
+       the Jira Index Sheet and any number of Smartsheet sheets.
+    """
     link_from_index(project_sub_index, smartsheet_client)
 
 
 def refresh_uuid_cell_links():
+    """Wrapper container for APScheduler. Writes cell links between any
+       two sheets by UUID.
+    """
     global project_uuid_index
     global source_sheets
     write_uuid_cell_links(project_uuid_index, source_sheets, smartsheet_client)
 
 
 def refresh_sheet_uuids():
+    """Wrapper container for APScheduler. Writes UUIDs for any non-summary
+       row that does not already have a UUID, or if the UUID was incorrectly
+       modified.
+    """
     global source_sheets
     blank_uuid_index = get_blank_uuids(source_sheets, smartsheet_client)
     if blank_uuid_index:
@@ -187,6 +210,14 @@ def refresh_sheet_uuids():
 
 
 def track_time(function):
+    """Helper function to track how long each task takes
+
+    Args:
+        function (function): The function to time
+
+    Returns:
+        float: The amount of time in seconds, truncated to 3 decimal places.
+    """
     start = time.time()
     function()
     end = time.time()
@@ -196,6 +227,14 @@ def track_time(function):
 
 
 def main():
+    """Runs a one time instance of all tasks to pre-cache data for the
+       scheduler. Afterwards, adds each task to the scheduler at a set
+       interval.
+
+    Returns:
+        bool: Returns True if main successfully initialized and scheduled jobs,
+              False if not.
+    """
     start_total = time.time()
     msg = str("Starting first time initialization of Smartsheet project data.")
     logging.info(msg)
@@ -287,6 +326,8 @@ def main():
 
 
 if __name__ == '__main__':
+    """Runs main() and then starts the scheduler.
+    """
     # main()
     main = main()
     if main:
