@@ -83,4 +83,4 @@ Your local terminal will need an environment variable for `SMARTSHEET_ACCESS_TOK
 The Python app will pipe logs to the /logs/ folder as well as the Docker Logs console.
 
 # API Documentation
-API documentation can be found here: [UUID Module](/docs/index.html) 
+API documentation can be found here: [UUID Module](https://docs/index.html) 
