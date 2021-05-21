@@ -64,26 +64,25 @@ constant variables to ensure consistency across the application.</p>
 
                         <details>
             <summary>View Source</summary>
-            <div class="codehilite"><pre><span></span><span class="sd">&quot;&quot;&quot;The UUID module interacts with the Smartsheet API and the Jira Index</span>
-<span class="sd">       Sheet. It is broken down into submodules for getting data from the</span>
-<span class="sd">       Smartsheet API, building new data structures such as cells and rows,</span>
-<span class="sd">       and writing data back to Smartsheets.</span>
+            <div class="codehilite"><pre><span></span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">The UUID module interacts with the Smartsheet API and the Jira Index</span>
+<span class="sd">Sheet. It is broken down into submodules for getting data from the</span>
+<span class="sd">Smartsheet API, building new data structures such as cells and rows,</span>
+<span class="sd">and writing data back to Smartsheets.</span>
 
-<span class="sd">       The Helper and Variables submodules contain smaller functions to</span>
-<span class="sd">       smooth the data transfermation process between functions, and load</span>
-<span class="sd">       constant variables to ensure consistency across the application.</span>
+<span class="sd">The Helper and Variables submodules contain smaller functions to</span>
+<span class="sd">smooth the data transfermation process between functions, and load</span>
+<span class="sd">constant variables to ensure consistency across the application.</span>
 <span class="sd">&quot;&quot;&quot;</span>
-
-
-<span class="kn">from</span> <span class="nn">.build_data</span> <span class="kn">import</span> <span class="n">build_linked_cell</span><span class="p">,</span> <span class="n">build_row</span><span class="p">,</span> <span class="n">dest_indexes</span>
+<span class="kn">from</span> <span class="nn">.cell_link_sheet_data</span> <span class="kn">import</span> <span class="n">write_uuid_cell_links</span>
+<span class="kn">from</span> <span class="nn">.write_data</span> <span class="kn">import</span> <span class="p">(</span><span class="n">check_uuid</span><span class="p">,</span> <span class="n">link_from_index</span><span class="p">,</span> <span class="n">write_jira_uuids</span><span class="p">,</span>
+                         <span class="n">write_predecessor_dates</span><span class="p">,</span> <span class="n">write_uuids</span><span class="p">)</span>
+<span class="kn">from</span> <span class="nn">.helper</span> <span class="kn">import</span> <span class="p">(</span><span class="n">get_cell_value</span><span class="p">,</span> <span class="n">get_column_id</span><span class="p">,</span> <span class="n">get_column_map</span><span class="p">,</span>
+                     <span class="n">has_cell_link</span><span class="p">,</span> <span class="n">json_extract</span><span class="p">,</span> <span class="n">truncate</span><span class="p">)</span>
 <span class="kn">from</span> <span class="nn">.get_data</span> <span class="kn">import</span> <span class="p">(</span><span class="n">get_all_row_data</span><span class="p">,</span> <span class="n">get_all_sheet_ids</span><span class="p">,</span> <span class="n">get_blank_uuids</span><span class="p">,</span>
                        <span class="n">get_folder_sheet_map</span><span class="p">,</span> <span class="n">get_sub_indexs</span><span class="p">,</span> <span class="n">get_subfolder_map</span><span class="p">,</span>
                        <span class="n">get_ws_folder_map</span><span class="p">,</span> <span class="n">get_ws_sheet_map</span><span class="p">,</span> <span class="n">load_jira_index</span><span class="p">)</span>
-<span class="kn">from</span> <span class="nn">.helper</span> <span class="kn">import</span> <span class="p">(</span><span class="n">get_cell_value</span><span class="p">,</span> <span class="n">get_column_id</span><span class="p">,</span> <span class="n">get_column_map</span><span class="p">,</span>
-                     <span class="n">has_cell_link</span><span class="p">,</span> <span class="n">json_extract</span><span class="p">,</span> <span class="n">truncate</span><span class="p">)</span>
-<span class="kn">from</span> <span class="nn">.write_data</span> <span class="kn">import</span> <span class="p">(</span><span class="n">check_uuid</span><span class="p">,</span> <span class="n">link_from_index</span><span class="p">,</span> <span class="n">write_jira_uuids</span><span class="p">,</span>
-                         <span class="n">write_predecessor_dates</span><span class="p">,</span> <span class="n">write_uuids</span><span class="p">)</span>
-<span class="kn">from</span> <span class="nn">.cell_link_sheet_data</span> <span class="kn">import</span> <span class="n">write_uuid_cell_links</span>
+<span class="kn">from</span> <span class="nn">.build_data</span> <span class="kn">import</span> <span class="n">build_linked_cell</span><span class="p">,</span> <span class="n">build_row</span><span class="p">,</span> <span class="n">dest_indexes</span>
 </pre></div>
 
         </details>
