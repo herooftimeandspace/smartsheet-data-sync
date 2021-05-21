@@ -2,15 +2,14 @@ import json
 import logging
 import os
 
-import smartsheet
-from uuid_module import get_cell_value, get_column_id, get_column_map
-from uuid_module.build_module import build_row, dest_indexes
-from uuid_module.get_module import get_all_sheet_ids, load_jira_index
+# import smartsheet
+from uuid_module.build_data import build_row, dest_indexes
+from uuid_module.get_data import load_jira_index
 from uuid_module.helper import (get_cell_value, get_column_id, get_column_map,
                                 json_extract)
 from uuid_module.variables import (assignee_col, jira_col, jira_idx_sheet,
-                                   predecessor_col, sheet_columns, start_col,
-                                   status_col, summary_col, task_col, uuid_col)
+                                   predecessor_col, start_col, status_col,
+                                   task_col, uuid_col)
 
 logger = logging.getLogger(__name__)
 
@@ -28,6 +27,16 @@ logger = logging.getLogger(__name__)
 
 # sheets_to_update is a dict in the format
 def write_uuids(sheets_to_update, smartsheet_client):
+    """Writes UUIDs back to a collection of Smartsheets
+
+    Args:
+        sheets_to_update (dict): The sheets that need a UUID written
+        smartsheet_client (Object): The Smartsheet client to interact
+                                    with the API
+
+    Returns:
+        int: The number of sheets that were updated.
+    """
     sheets_updated = 0
     for sheet_id, sheet_data in sheets_to_update.items():
         sheet_name = sheet_data['sheet_name']
@@ -69,6 +78,21 @@ def write_uuids(sheets_to_update, smartsheet_client):
 # cell links and then write the rows back to the sheet.
 def link_from_index(project_sub_index,
                     smartsheet_client):
+    """Main functionality. For each sheet in the destination sheet
+       index, parse through the rows, determine if cells need to be
+       linked, create cell links and then write the rows back to
+       the sheet.
+
+    Args:
+        project_sub_index (dict): The list of projects that have a
+                                  UUID:Jira Ticket map.
+        smartsheet_client (Object): The Smartsheet client to interact
+                                    with the API
+
+    Returns:
+        bool: True if any links were written, False if no data was
+              written back to any sheet.
+    """
     # index_data_copy = jira_index_data.copy()
     project_data_copy = project_sub_index.copy()
 

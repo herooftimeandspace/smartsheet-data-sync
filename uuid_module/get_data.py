@@ -4,8 +4,8 @@ import os
 from collections import defaultdict
 
 import smartsheet
-from uuid_module import (get_cell_value, get_column_id, get_column_map,
-                         json_extract)
+
+from uuid_module.helper import get_cell_value, get_column_id, get_column_map
 from uuid_module.variables import (jira_col, jira_idx_sheet, summary_col,
                                    uuid_col, workspace_id)
 
@@ -298,6 +298,16 @@ def get_all_sheet_ids(smartsheet_client):
 
 
 def get_ws_folder_map(workspace):
+    """Get al of the folder IDs within the root Workspace, for each
+       workspace provided.
+
+    Args:
+        workspace (Workspace object): The workspace to parse for folder
+                                      IDs.
+
+    Returns:
+        list: A list of folder IDs found in the workspace.
+    """
     ws_folder_map = []
     if workspace.folders:
         logging.debug("Importing Folders from Workspace ID: "
@@ -313,6 +323,16 @@ def get_ws_folder_map(workspace):
 
 
 def get_folder_sheet_map(folder_map, smartsheet_client):
+    """Get all sheets from each folder in the folder map.
+
+    Args:
+        folder_map (list): A list of folder IDs found in the workspace
+        smartsheet_client (Object): The Smartsheet client to interact
+                                    with the API
+
+    Returns:
+        list: A list of sheet IDs from every folder in the workspace.
+    """
     folder_sheet_map = []
     if not folder_map:
         logging.debug("Folder map is empty. Skipping.")
@@ -340,6 +360,16 @@ def get_folder_sheet_map(folder_map, smartsheet_client):
 
 
 def get_ws_sheet_map(workspace_id, smartsheet_client):
+    """Gets all Sheet IDs from the root workspace, not located in a folder.
+
+    Args:
+        workspace_id (str): The ID or the workspace
+        smartsheet_client (Object): The Smartsheet client to interact
+                                    with the API
+
+    Returns:
+        list: A list of all sheet IDs in the root workspace
+    """
     ws_sheet_map = []
     workspace = smartsheet_client.Workspaces.get_workspace(workspace_id)
     logging.info("Importing Sheet IDs from WorkspaceID: " + str(workspace_id)
@@ -358,6 +388,18 @@ def get_ws_sheet_map(workspace_id, smartsheet_client):
 
 
 def get_subfolder_map(folder_ids, smartsheet_client):
+    """Loops through folder IDs and finds any subfolders, and
+       appends the new folder ID to the list, if found
+
+    Args:
+        folder_ids (list): The List of folder IDs to parse through
+        smartsheet_client (Object): The Smartsheet client to interact
+                                    with the API
+
+    Returns:
+        list: A flat list of all folder IDs located within other
+              folders.
+    """
     subfolder_map = []
     if not folder_ids:
         logging.debug("Sub-folder map is empty. Skipping.")
