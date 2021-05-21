@@ -8,7 +8,7 @@ from uuid_module.helper import (get_column_id, get_column_map, has_cell_link,
 from uuid_module.variables import (assignee_col, description_col, duration_col,
                                    predecessor_col, start_col, status_col,
                                    task_col, uuid_col, jira_col)
-from uuid_module.write_module import write_predecessor_dates
+from uuid_module.write_data import write_predecessor_dates
 
 logger = logging.getLogger(__name__)
 
@@ -29,6 +29,20 @@ logger = logging.getLogger(__name__)
 # source sheets is a list of all Sheet objects in all workspaces
 def write_uuid_cell_links(project_data_index, source_sheets,
                           smartsheet_client):
+    """If the description column has a value, look it up against
+       the UUIDs in the project dictionary. If a UUID matches, sync
+       details.
+
+    Args:
+        project_data_index (dict): All UUIDs and the row values
+        source_sheets (list): All sheet objects in all workspaces
+        smartsheet_client (Object): The Smartsheet client to interact
+                                    with the API
+
+    Raises:
+        ValueError: If the project index data passed in is None,
+                    raises and logs an error.
+    """
     # dest_uuid = sheet_id, row_id where we create the cell links. Data is
     # pulled INTO this row with the cell link.
     # source_uuid = sheet_id, row_id where the data is coming FROM via
