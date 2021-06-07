@@ -219,9 +219,10 @@ def write_jira_uuids(jira_sub_index, project_sub_index, smartsheet_client):
        the Index Sheet.
 
     Args:
-        jira_sub_index (dict): [description]
-        project_sub_index (dict): [description]
-        smartsheet_client (Object): [description]
+        jira_sub_index (dict): A dict of Jira Tickets: UUID(s)
+        project_sub_index (dict): A dict of UUID: Jira Ticket
+        smartsheet_client (Object): The Smartsheet client to interact with the
+                                    API
     """
     # Make copies for safekeeping, yeeeesss
     index_data_copy = jira_sub_index.copy()
@@ -304,7 +305,6 @@ def write_predecessor_dates(src_data, project_data_index, smartsheet_client):
 
     Args:
         src_data (dict): Row data from the write_uuid_cell_links.
-                         See below for expected format.
         project_data_index (dict): The dict of UUIDs and row data pulled
                                    from every project sheet.
         smartsheet_client (Object): The Smartsheet client to interact
@@ -314,23 +314,24 @@ def write_predecessor_dates(src_data, project_data_index, smartsheet_client):
         bool: True if the Start Date in the earliest predecessor was
               written back via API. False if the Start Date was not
               written due to failure.
-
-    Format of the src_data should be:
-    {
-        "UUID": "7208979009955716-3683235938232196-
-                7010994181433220-202105112138550000",  # Type: str
-        "Tasks": "Retrospective", # Type: str
-        "Description": "Thoughts on how the project went.",  # Type: str
-        "Status": "In Progress",  # Type: str
-        "Assigned To": "link@twitch.tv",  # Type: str
-        "Jira Ticket": "ING-12342",  # Type: str
-        "Duration": None,  # Type: str
-        "Start": "2021-03-31T08:00:00",  # Type: str
-        "Finish": "2021-03-31T08:00:00",  # Type: str
-        "Predecessors": "38FS +1w",  # Type: str
-        "Summary": "False"  # Type: str
-    }
     """
+
+    # TODO: Write a test to validate the format instead.
+    #     Format of the src_data should be:
+    # {
+    #     "UUID": "7208979009955716-3683235938232196-
+    #             7010994181433220-202105112138550000",  # Type: str
+    #     "Tasks": "Retrospective", # Type: str
+    #     "Description": "Thoughts on how the project went.",  # Type: str
+    #     "Status": "In Progress",  # Type: str
+    #     "Assigned To": "link@twitch.tv",  # Type: str
+    #     "Jira Ticket": "ING-12342",  # Type: str
+    #     "Duration": None,  # Type: str
+    #     "Start": "2021-03-31T08:00:00",  # Type: str
+    #     "Finish": "2021-03-31T08:00:00",  # Type: str
+    #     "Predecessors": "38FS +1w",  # Type: str
+    #     "Summary": "False"  # Type: str
+    # }
     dest_sheet_id = src_data[uuid_col].split("-")[0]
     dest_row_id = src_data[uuid_col].split("-")[1]
     start_date = src_data[start_col]

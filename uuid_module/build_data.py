@@ -96,7 +96,8 @@ def build_row(row, columns_to_link, dest_col_map, jira_index_sheet,
                                     with the API
 
     Returns:
-        [type]: [description]
+        Row: If cells were appended to the row, returns the new row, otherwise
+             returns None.
     """
     new_row = smartsheet_client.models.Row()
     new_row.id = row.id

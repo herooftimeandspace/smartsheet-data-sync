@@ -14,7 +14,8 @@ def get_cell_data(row, column_name, column_map):
         column_map (dict): The map of Column Name: Column ID
 
     Returns:
-        int: The column ID
+        cell (Cell): A Cell object or None if the column is not found in the
+                     map.
     """
     try:
         column_id = column_map[column_name]
@@ -52,7 +53,7 @@ def has_cell_link(old_cell, direction):
         str: "Linked" if status is "OK", "Broken" if staus is "BROKEN",
              None if the cell doesn't have a value and "Unlinked" if the
              cell doesn't have a cell link property. If the cell link
-             type is 'linksOutToCells' always return "Linked".
+             type is 'linksOutToCells', always return "Linked".
     """
     cell_json = json.loads(str(old_cell))
     if direction == "In":
@@ -80,6 +81,14 @@ def has_cell_link(old_cell, direction):
 def get_cell_value(row, col_name, col_map):
     """
     Get the value of the cell or return None
+
+    Args:
+        row (Row): The row of data that contains the IDs
+        col_name (str): The name of the referenced column
+        col_map (dict): The map of Column Name: Column ID
+
+    Returns:
+        str: The Value of the cell.
     """
     cell = get_cell_data(row, col_name, col_map)
     if cell is None or cell.value is None:
@@ -97,8 +106,14 @@ def get_cell_value(row, col_name, col_map):
 
 
 def json_extract(obj, key):
-    """
-    Recursively fetch values from nested JSON.
+    """Recursively fetch values from nested JSON.
+
+    Args:
+        obj (json): The JSON object to pars through
+        key (str): The key to search for
+
+    Returns:
+        str: The value if a key matches inside the obj JSON
     """
     arr = []
 
@@ -120,8 +135,19 @@ def json_extract(obj, key):
 
 
 def truncate(number, decimals=0):
-    """
-    Returns a value truncated to a specific number of decimal places.
+    """Returns a value truncated to a specific number of decimal places.
+
+    Args:
+        number (int): The number to truncate
+        decimals (int, optional): The number of decimal places to truncate.
+                                  Defaults to 0.
+
+    Raises:
+        TypeError: Validates the number is actually a number.
+        ValueError: Validates that the decimal is 0 or more.
+
+    Returns:
+        int: The number, truncated to the number of decimal places.
     """
     if not isinstance(decimals, int):
         raise TypeError("decimal places must be an integer.")
