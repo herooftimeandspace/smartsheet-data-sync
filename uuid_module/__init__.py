@@ -13,7 +13,7 @@ from .build_data import build_linked_cell, build_row, dest_indexes
 from .get_data import (get_all_row_data, get_all_sheet_ids, get_blank_uuids,
                        get_folder_sheet_map, get_sub_indexs, get_subfolder_map,
                        get_ws_folder_map, get_ws_sheet_map, load_jira_index)
-from .helper import (get_cell_value, get_column_id, get_column_map,
+from .helper import (get_cell_value, get_cell_data, get_column_map,
                      has_cell_link, json_extract, truncate)
 from .write_data import (check_uuid, link_from_index, write_jira_uuids,
                          write_predecessor_dates, write_uuids)

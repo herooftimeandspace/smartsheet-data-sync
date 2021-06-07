@@ -5,7 +5,7 @@ from collections import defaultdict
 
 import smartsheet
 
-from uuid_module.helper import get_cell_value, get_column_id, get_column_map
+from uuid_module.helper import get_cell_value, get_cell_data, get_column_map
 from uuid_module.variables import (jira_col, jira_idx_sheet, summary_col,
                                    uuid_col, workspace_id)
 
@@ -60,7 +60,7 @@ def get_all_row_data(source_sheets, columns, smartsheet_client):
         for row in sheet.rows:
             summary_cell = get_cell_value(
                 row, summary_col, col_map)
-            uuid_cell = get_column_id(row, uuid_col, col_map)
+            uuid_cell = get_cell_data(row, uuid_col, col_map)
 
             if summary_cell is None:
                 logging.debug("Summary row is {}. Continuing to next "
@@ -200,7 +200,7 @@ def load_jira_index(smartsheet_client):
     jira_index_col_map = get_column_map(jira_index_sheet)
     jira_index_rows = defaultdict(list)
     for row in jira_index_sheet.rows:
-        jira_cell = get_column_id(
+        jira_cell = get_cell_data(
             row, jira_col, jira_index_col_map)
         if jira_cell is None:
             logging.debug("Jira cell doesn't exist. Skipping.")

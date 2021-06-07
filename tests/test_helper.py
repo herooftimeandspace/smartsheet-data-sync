@@ -1,9 +1,10 @@
 import json
+from typing import Type
 import pytest
 import smartsheet
 import os
 
-from uuid_module.helper import (get_cell_value, get_column_id,
+from uuid_module.helper import (get_cell_value, get_cell_data,
                                 get_column_map, has_cell_link, json_extract,
                                 truncate)
 
@@ -117,11 +118,22 @@ def key():
 
 
 def test_get_cell_value(row, col_name, col_map):
-    assert get_cell_value(row, col_name, col_name) == "Lumine"
+    assert get_cell_value(row, col_name, col_map) == "Lumine"
 
 
-def test_get_column_id(row, col_name, col_map):
-    assert get_column_id(row, col_name, col_map) == 752133921468837
+def test_get_cell_data(row, col_name, col_map):
+    with open(cwd + '/cell.json') as f:
+        cell_json = json.load(f)
+    test_fixture_cell_data = smartsheet.models.Cell(cell_json)
+    test_cell_data = get_cell_data(row, col_name, col_map)
+    assert (test_cell_data.value,
+            test_cell_data.column_id,
+            test_cell_data.column_type,
+            test_cell_data.formula) == (
+        test_fixture_cell_data.value,
+        test_fixture_cell_data.column_id,
+        test_fixture_cell_data.column_type,
+        test_fixture_cell_data.formula)
 
 
 def test_get_column_map(sheet):
@@ -129,7 +141,7 @@ def test_get_column_map(sheet):
 
 
 def test_has_cell_link(cell, direction):
-    assert has_cell_link(cell, "In") == "Linked"
+    assert has_cell_link(cell, direction) == "Linked"
 
 
 def test_json_extract(obj, key):

@@ -5,8 +5,8 @@ import math
 logger = logging.getLogger(__name__)
 
 
-def get_column_id(row, column_name, column_map):
-    """Gets the ID from a column name
+def get_cell_data(row, column_name, column_map):
+    """Gets the cell data from a row via column name
 
     Args:
         row (Row): The row of data that contains the IDs
@@ -81,7 +81,7 @@ def get_cell_value(row, col_name, col_map):
     """
     Get the value of the cell or return None
     """
-    cell = get_column_id(row, col_name, col_map)
+    cell = get_cell_data(row, col_name, col_map)
     if cell is None or cell.value is None:
         try:
             msg = str("Cell is {} or cell value is {}. "

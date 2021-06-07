@@ -2,7 +2,7 @@ import logging
 import os
 from collections import defaultdict
 
-from uuid_module.helper import get_column_id, has_cell_link
+from uuid_module.helper import get_cell_data, has_cell_link
 # from uuid_module.variables import jira_col
 
 # jira_col = os.getenv('JIRA_COL')
@@ -101,7 +101,7 @@ def build_row(row, columns_to_link, dest_col_map, jira_index_sheet,
     new_row = smartsheet_client.models.Row()
     new_row.id = row.id
     for col in columns_to_link:
-        old_cell = get_column_id(row, col, dest_col_map)
+        old_cell = get_cell_data(row, col, dest_col_map)
         cell_check = has_cell_link(old_cell, 'In')
         if cell_check == "Linked":
             msg = str("Valid cell link: RowID {} | ColName {} | "

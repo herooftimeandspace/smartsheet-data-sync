@@ -5,7 +5,7 @@ import os
 # import smartsheet
 from uuid_module.build_data import build_row, dest_indexes
 from uuid_module.get_data import load_jira_index
-from uuid_module.helper import (get_cell_value, get_column_id, get_column_map,
+from uuid_module.helper import (get_cell_value, get_cell_data, get_column_map,
                                 json_extract)
 from uuid_module.variables import (assignee_col, jira_col, jira_idx_sheet,
                                    predecessor_col, start_col, status_col,
@@ -108,7 +108,7 @@ def link_from_index(project_sub_index,
         cell_links_to_update = []
 
         for row in dest_sheet.rows:
-            jira_cell = get_column_id(
+            jira_cell = get_cell_data(
                 row, jira_col, dest_col_map)
             if jira_cell is None or jira_cell.value is None:
                 logging.debug(
@@ -352,7 +352,7 @@ def write_predecessor_dates(src_data, project_data_index, smartsheet_client):
         logging.debug(msg)
         return True
 
-    pred_cell = get_column_id(dest_row, predecessor_col, dest_col_map)
+    pred_cell = get_cell_data(dest_row, predecessor_col, dest_col_map)
 
     # Evaluate the value of the predecessor cell. If it has a value other than
     # None, get the predecessor row ID and loop. If the new pred_cell value
@@ -362,7 +362,7 @@ def write_predecessor_dates(src_data, project_data_index, smartsheet_client):
     while pred_cell.value is not None:
         predecessor_row = smartsheet_client.Sheets.get_row(
             dest_sheet_id, dest_row_id, include='objectValue')
-        pred_cell = get_column_id(predecessor_row, predecessor_col,
+        pred_cell = get_cell_data(predecessor_row, predecessor_col,
                                   dest_col_map)
         pred_start_value = get_cell_value(dest_row, start_col, dest_col_map)
 
@@ -385,7 +385,7 @@ def write_predecessor_dates(src_data, project_data_index, smartsheet_client):
             dest_row_id = str(dest_row_id).translate(
                 {ord(i): None for i in "[]'"})
 
-    dest_start_cell = get_column_id(dest_row, start_col, dest_col_map)
+    dest_start_cell = get_cell_data(dest_row, start_col, dest_col_map)
 
     try:
         if dest_start_cell.linkInFromCell is not None:
@@ -402,7 +402,7 @@ def write_predecessor_dates(src_data, project_data_index, smartsheet_client):
             dest_col_map = get_column_map(dest_sheet)
             dest_row = smartsheet_client.Sheets.get_row(dest_sheet_id,
                                                         dest_row_id)
-            dest_uuid = get_column_id(dest_row, uuid_col, dest_col_map)
+            dest_uuid = get_cell_data(dest_row, uuid_col, dest_col_map)
             row_data = project_data_index[dest_uuid]
             write_predecessor_dates(
                 row_data, project_data_index, smartsheet_client)

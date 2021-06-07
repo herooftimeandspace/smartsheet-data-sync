@@ -3,7 +3,7 @@ import logging
 import re
 import os
 
-from uuid_module.helper import (get_column_id, get_column_map, has_cell_link,
+from uuid_module.helper import (get_cell_data, get_column_map, has_cell_link,
                                 json_extract, get_cell_value)
 from uuid_module.variables import (assignee_col, description_col, duration_col,
                                    predecessor_col, start_col, status_col,
@@ -238,7 +238,7 @@ def write_uuid_cell_links(project_data_index, source_sheets,
 
             for col in sync_columns:
                 if dest_row:
-                    cell = get_column_id(row, col, dest_col_map)
+                    cell = get_cell_data(row, col, dest_col_map)
                     link_status = has_cell_link(cell, 'In')
                     link_out_status = has_cell_link(cell, 'Out')
                     msg = str("{}, {}").format(cell, link_status)
