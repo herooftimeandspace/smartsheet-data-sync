@@ -69,47 +69,9 @@ def decimals():
 
 @pytest.fixture
 def obj():
-    json = {
-        "columnId": 752133921468837,
-        "columnType": "TEXT_NUMBER",
-        "displayValue": "Lumine",
-        "formula": "=UUID@row",
-        "hyperlink": {
-            "reportId": 674477165909395,
-            "sheetId": 117648125440672,
-            "sightId": 859583955564213,
-            "url": "https://genshin.gg"
-        },
-        "image": {
-            "altText": "Benny's favorite food",
-            "height": 25,
-            "id": "937767591144840",
-            "width": 25
-        },
-        "linkInFromCell": {
-            "columnId": 752133921468837,
-            "rowId": 117648125440672,
-            "sheetId": 246610665073979,
-            "sheetName": "Benny's Adventure Team",
-            "status": "OK"
-        },
-        "linksOutToCells": [
-            {
-                "columnId": 752133921468837,
-                "rowId": 246610665073979,
-                "sheetId": 117648125440672,
-                "sheetName": "Benny's Adventure Team",
-                "status": "BROKEN"
-            }
-        ],
-        "objectValue": {
-            "objectType": "ABSTRACT_DATETIME"
-        },
-        "overrideValidation": true,
-        "strict": true,
-        "value": "Lumine"
-    }
-    return json
+    with open(cwd + '/cell.json') as f:
+        cell_json = json.load(f)
+    return cell_json
 
 
 @pytest.fixture
@@ -118,10 +80,27 @@ def key():
 
 
 def test_get_cell_value(row, col_name, col_map):
+    with pytest.raises(TypeError):
+        get_cell_value("Row", col_name, col_map)
+    with pytest.raises(TypeError):
+        get_cell_value(row, 1, col_map)
+    with pytest.raises(TypeError):
+        get_cell_value(row, col_name, "col_map")
+    with pytest.raises(AttributeError):
+        get_cell_value(row, "Test", col_map)
     assert get_cell_value(row, col_name, col_map) == "Lumine"
 
 
 def test_get_cell_data(row, col_name, col_map):
+    with pytest.raises(TypeError):
+        get_cell_data("Row", col_name, col_map)
+    with pytest.raises(TypeError):
+        get_cell_data(row, 1, col_map)
+    with pytest.raises(TypeError):
+        get_cell_data(row, col_name, "col_map")
+    with pytest.raises(KeyError):
+        get_cell_data(row, "Test", col_map)
+
     with open(cwd + '/cell.json') as f:
         cell_json = json.load(f)
     test_fixture_cell_data = smartsheet.models.Cell(cell_json)
@@ -145,15 +124,19 @@ def test_has_cell_link(cell, direction):
 
 
 def test_json_extract(obj, key):
+    with pytest.raises(TypeError):
+        json_extract("String", -1)
+    with pytest.raises(TypeError):
+        json_extract(obj, -1)
     assert json_extract(obj, key) == ["=UUID@row"]
 
 
 def test_truncate(number, decimals):
+    with pytest.raises(TypeError):
+        truncate("Benny's Adventure Team", 4)
+    with pytest.raises(ValueError):
+        truncate(obj, -1)
     assert truncate(number, decimals) == 3.141
 
 
-def test_raises_exception_on_non_string_arguments():
-    with pytest.raises(TypeError):
-        get_cell_value(9)
-    with pytest.raises(TypeError):
-        truncate("Benny's Adventure Team", 4)
+# def test_raises_exception_on_non_string_arguments():

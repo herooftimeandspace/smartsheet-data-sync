@@ -1,6 +1,7 @@
 import logging
 import json
 import math
+import smartsheet
 
 logger = logging.getLogger(__name__)
 
@@ -17,10 +18,19 @@ def get_cell_data(row, column_name, column_map):
         cell (Cell): A Cell object or None if the column is not found in the
                      map.
     """
+    if not isinstance(row, smartsheet.models.row.Row):
+        raise TypeError("Row is not a Smartsheet Row type object")
+    elif not isinstance(column_name, str):
+        raise TypeError("Column name must be a string")
+    elif not isinstance(column_map, dict):
+        raise TypeError("Column Map must be a dict of ColNames:ColIDs")
+
     try:
         column_id = column_map[column_name]
     except KeyError:
-        logging.debug("Column not found: " + str(column_name))
+        msg = str("Column not found: {}").format(column_name)
+        logging.debug(msg)
+        # raise KeyError(msg)
         return None
     else:
         return row.get_column(column_id)
@@ -35,6 +45,11 @@ def get_column_map(sheet):
     Returns:
         dict: A map of Column Name: Column ID
     """
+    if not isinstance(sheet, smartsheet.models.sheet.Sheet):
+        err = str("Sheet must be a Smartsheet Sheet object,"
+                  "not {}").format(type(sheet))
+        raise TypeError(err)
+
     column_map = {}
     for column in sheet.columns:
         column_map[column.title] = column.id
@@ -90,6 +105,14 @@ def get_cell_value(row, col_name, col_map):
     Returns:
         str: The Value of the cell.
     """
+    # Validate data types.
+    if not isinstance(row, smartsheet.models.row.Row):
+        raise TypeError("Row is not a Smartsheet Row type object")
+    elif not isinstance(col_name, str):
+        raise TypeError("Column name must be a string")
+    elif not isinstance(col_map, dict):
+        raise TypeError("Column Map must be a dict of ColNames:ColIDs")
+
     cell = get_cell_data(row, col_name, col_map)
     if cell is None or cell.value is None:
         try:
@@ -98,8 +121,8 @@ def get_cell_value(row, col_name, col_map):
         except AttributeError:
             msg = str("Cell is {}. Returning 'None'"
                       "").format(cell)
-
-        logging.debug(msg)
+            logging.debug(msg)
+            raise AttributeError(msg)
         return None
     else:
         return str(cell.value)
@@ -115,6 +138,11 @@ def json_extract(obj, key):
     Returns:
         str: The value if a key matches inside the obj JSON
     """
+    if not isinstance(obj, dict):
+        raise TypeError("Obj must be a dict (json).")
+    elif not isinstance(key, str):
+        raise TypeError("Key must be a string.")
+
     arr = []
 
     def extract(obj, arr, key):
@@ -158,3 +186,19 @@ def truncate(number, decimals=0):
 
     factor = 10.0 ** decimals
     return math.trunc(number * factor) / factor
+
+
+# def check_structure(struct, conf):
+#     if isinstance(struct, dict) and isinstance(conf, dict):
+#         # struct is a dict of types or other dicts
+#         return all(k in conf and check_structure(struct[k],
+#                                                  conf[k]) for k in struct)
+#     if isinstance(struct, list) and isinstance(conf, list):
+#         # struct is list in the form [type or dict]
+#         return all(check_structure(struct[0], c) for c in conf)
+#     elif isinstance(struct, type):
+#         # struct is the type of conf
+#         return isinstance(conf, struct)
+#     else:
+#         # struct is neither a dict, nor list, not type
+#         return False
