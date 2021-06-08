@@ -4,7 +4,7 @@
        and writing data back to Smartsheets.
 
        The Helper and Variables submodules contain smaller functions to
-       smooth the data transfermation process between functions, and load
+       smooth the data transformation process between functions, and load
        constant variables to ensure consistency across the application.
 """
 
