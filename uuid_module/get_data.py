@@ -299,7 +299,7 @@ def get_all_sheet_ids(smartsheet_client):
 
 
 def get_ws_folder_map(workspace):
-    """Get al of the folder IDs within the root Workspace, for each
+    """Get all of the folder IDs within the root Workspace, for each
        workspace provided.
 
     Args:
