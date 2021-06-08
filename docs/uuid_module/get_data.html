@@ -198,19 +198,20 @@
 <span class="sd">        smartsheet_client (Object): The Smartsheet client to call the API</span>
 
 <span class="sd">    Returns:</span>
-<span class="sd">        dict: A nested set of dictionaries in the form of:</span>
-<span class="sd">        7637702645442436,  (Sheet ID, int)</span>
-<span class="sd">        {</span>
-<span class="sd">            &quot;sheet_name&quot;: &quot;Cloudwatch: Distribution Project Plan&quot;, # type: str</span>
-<span class="sd">            &quot;row_data&quot;: {  # type: dict</span>
-<span class="sd">                4733217466279812: { (Row ID, int)</span>
-<span class="sd">                    &quot;column_id&quot;: 2745267022784388, (int)</span>
-<span class="sd">                    &quot;uuid&quot;: &quot;7637702645442436-4733217466279812-</span>
-<span class="sd">                             2745267022784388-202105112340380000&quot; (str)</span>
-<span class="sd">                }</span>
-<span class="sd">            }</span>
-<span class="sd">        }</span>
+<span class="sd">        dict: A nested set of dictionaries</span>
 <span class="sd">    &quot;&quot;&quot;</span>
+    <span class="c1"># TODO: Write a test to validate the dict.</span>
+    <span class="c1"># 7637702645442436,  (Sheet ID, int)</span>
+    <span class="c1"># {</span>
+    <span class="c1">#     &quot;sheet_name&quot;: &quot;Cloudwatch: Distribution Project Plan&quot;, # type: str</span>
+    <span class="c1">#     &quot;row_data&quot;: {  # type: dict</span>
+    <span class="c1">#         4733217466279812: { (Row ID, int)</span>
+    <span class="c1">#             &quot;column_id&quot;: 2745267022784388, (int)</span>
+    <span class="c1">#             &quot;uuid&quot;: &quot;7637702645442436-4733217466279812-</span>
+    <span class="c1">#                      2745267022784388-202105112340380000&quot; (str)</span>
+    <span class="c1">#         }</span>
+    <span class="c1">#     }</span>
+    <span class="c1"># }</span>
     <span class="k">if</span> <span class="n">source_sheets</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
         <span class="k">raise</span> <span class="ne">ValueError</span>
 
@@ -375,7 +376,7 @@
 
 
 <span class="k">def</span> <span class="nf">get_ws_folder_map</span><span class="p">(</span><span class="n">workspace</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;Get al of the folder IDs within the root Workspace, for each</span>
+    <span class="sd">&quot;&quot;&quot;Get all of the folder IDs within the root Workspace, for each</span>
 <span class="sd">       workspace provided.</span>
 
 <span class="sd">    Args:</span>
@@ -664,19 +665,20 @@ reading and writing to the Smartsheet API</li>
 <span class="sd">        smartsheet_client (Object): The Smartsheet client to call the API</span>
 
 <span class="sd">    Returns:</span>
-<span class="sd">        dict: A nested set of dictionaries in the form of:</span>
-<span class="sd">        7637702645442436,  (Sheet ID, int)</span>
-<span class="sd">        {</span>
-<span class="sd">            &quot;sheet_name&quot;: &quot;Cloudwatch: Distribution Project Plan&quot;, # type: str</span>
-<span class="sd">            &quot;row_data&quot;: {  # type: dict</span>
-<span class="sd">                4733217466279812: { (Row ID, int)</span>
-<span class="sd">                    &quot;column_id&quot;: 2745267022784388, (int)</span>
-<span class="sd">                    &quot;uuid&quot;: &quot;7637702645442436-4733217466279812-</span>
-<span class="sd">                             2745267022784388-202105112340380000&quot; (str)</span>
-<span class="sd">                }</span>
-<span class="sd">            }</span>
-<span class="sd">        }</span>
+<span class="sd">        dict: A nested set of dictionaries</span>
 <span class="sd">    &quot;&quot;&quot;</span>
+    <span class="c1"># TODO: Write a test to validate the dict.</span>
+    <span class="c1"># 7637702645442436,  (Sheet ID, int)</span>
+    <span class="c1"># {</span>
+    <span class="c1">#     &quot;sheet_name&quot;: &quot;Cloudwatch: Distribution Project Plan&quot;, # type: str</span>
+    <span class="c1">#     &quot;row_data&quot;: {  # type: dict</span>
+    <span class="c1">#         4733217466279812: { (Row ID, int)</span>
+    <span class="c1">#             &quot;column_id&quot;: 2745267022784388, (int)</span>
+    <span class="c1">#             &quot;uuid&quot;: &quot;7637702645442436-4733217466279812-</span>
+    <span class="c1">#                      2745267022784388-202105112340380000&quot; (str)</span>
+    <span class="c1">#         }</span>
+    <span class="c1">#     }</span>
+    <span class="c1"># }</span>
     <span class="k">if</span> <span class="n">source_sheets</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
         <span class="k">raise</span> <span class="ne">ValueError</span>
 
@@ -742,18 +744,7 @@ reading and writing to the Smartsheet API</li>
 <h6 id="returns">Returns</h6>
 
 <blockquote>
-  <p>dict: A nested set of dictionaries in the form of:
-  7637702645442436,  (Sheet ID, int)
-  {
-      "sheet_name": "Cloudwatch: Distribution Project Plan", # type: str
-      "row_data": {  # type: dict
-          4733217466279812: { (Row ID, int)
-              "column_id": 2745267022784388, (int)
-              "uuid": "7637702645442436-4733217466279812-
-                       2745267022784388-202105112340380000" (str)
-          }
-      }
-  }</p>
+  <p>dict: A nested set of dictionaries</p>
 </blockquote>
 </div>
 
@@ -978,7 +969,7 @@ with the API</li>
                 <details>
             <summary>View Source</summary>
             <div class="codehilite"><pre><span></span><span class="k">def</span> <span class="nf">get_ws_folder_map</span><span class="p">(</span><span class="n">workspace</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;Get al of the folder IDs within the root Workspace, for each</span>
+    <span class="sd">&quot;&quot;&quot;Get all of the folder IDs within the root Workspace, for each</span>
 <span class="sd">       workspace provided.</span>
 
 <span class="sd">    Args:</span>
@@ -1004,7 +995,7 @@ with the API</li>
 
         </details>
 
-            <div class="docstring"><p>Get al of the folder IDs within the root Workspace, for each
+            <div class="docstring"><p>Get all of the folder IDs within the root Workspace, for each
    workspace provided.</p>
 
 <h6 id="args">Args</h6>
