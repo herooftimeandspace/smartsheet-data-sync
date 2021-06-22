@@ -5,7 +5,7 @@ from collections import defaultdict
 
 import smartsheet
 
-from uuid_module.helper import get_cell_value, get_column_id, get_column_map
+from uuid_module.helper import get_cell_value, get_cell_data, get_column_map
 from uuid_module.variables import (jira_col, jira_idx_sheet, summary_col,
                                    uuid_col, workspace_id)
 
@@ -60,7 +60,7 @@ def get_all_row_data(source_sheets, columns, smartsheet_client):
         for row in sheet.rows:
             summary_cell = get_cell_value(
                 row, summary_col, col_map)
-            uuid_cell = get_column_id(row, uuid_col, col_map)
+            uuid_cell = get_cell_data(row, uuid_col, col_map)
 
             if summary_cell is None:
                 logging.debug("Summary row is {}. Continuing to next "
@@ -121,19 +121,20 @@ def get_blank_uuids(source_sheets, smartsheet_client):
         smartsheet_client (Object): The Smartsheet client to call the API
 
     Returns:
-        dict: A nested set of dictionaries in the form of:
-        7637702645442436,  (Sheet ID, int)
-        {
-            "sheet_name": "Cloudwatch: Distribution Project Plan", # type: str
-            "row_data": {  # type: dict
-                4733217466279812: { (Row ID, int)
-                    "column_id": 2745267022784388, (int)
-                    "uuid": "7637702645442436-4733217466279812-
-                             2745267022784388-202105112340380000" (str)
-                }
-            }
-        }
+        dict: A nested set of dictionaries
     """
+    # TODO: Write a test to validate the dict.
+    # 7637702645442436,  (Sheet ID, int)
+    # {
+    #     "sheet_name": "Cloudwatch: Distribution Project Plan", # type: str
+    #     "row_data": {  # type: dict
+    #         4733217466279812: { (Row ID, int)
+    #             "column_id": 2745267022784388, (int)
+    #             "uuid": "7637702645442436-4733217466279812-
+    #                      2745267022784388-202105112340380000" (str)
+    #         }
+    #     }
+    # }
     if source_sheets is None:
         raise ValueError
 
@@ -200,7 +201,7 @@ def load_jira_index(smartsheet_client):
     jira_index_col_map = get_column_map(jira_index_sheet)
     jira_index_rows = defaultdict(list)
     for row in jira_index_sheet.rows:
-        jira_cell = get_column_id(
+        jira_cell = get_cell_data(
             row, jira_col, jira_index_col_map)
         if jira_cell is None:
             logging.debug("Jira cell doesn't exist. Skipping.")
@@ -298,7 +299,7 @@ def get_all_sheet_ids(smartsheet_client):
 
 
 def get_ws_folder_map(workspace):
-    """Get al of the folder IDs within the root Workspace, for each
+    """Get all of the folder IDs within the root Workspace, for each
        workspace provided.
 
     Args:

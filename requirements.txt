@@ -2,3 +2,4 @@ smartsheet-python-sdk
 apscheduler
 python-dotenv
 dumb-init
+pytest
