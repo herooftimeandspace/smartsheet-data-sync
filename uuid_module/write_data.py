@@ -5,7 +5,7 @@ import os
 # import smartsheet
 from uuid_module.build_data import build_row, dest_indexes
 from uuid_module.get_data import load_jira_index
-from uuid_module.helper import (get_cell_value, get_column_id, get_column_map,
+from uuid_module.helper import (get_cell_value, get_cell_data, get_column_map,
                                 json_extract)
 from uuid_module.variables import (assignee_col, jira_col, jira_idx_sheet,
                                    predecessor_col, start_col, status_col,
@@ -108,7 +108,7 @@ def link_from_index(project_sub_index,
         cell_links_to_update = []
 
         for row in dest_sheet.rows:
-            jira_cell = get_column_id(
+            jira_cell = get_cell_data(
                 row, jira_col, dest_col_map)
             if jira_cell is None or jira_cell.value is None:
                 logging.debug(
@@ -219,9 +219,10 @@ def write_jira_uuids(jira_sub_index, project_sub_index, smartsheet_client):
        the Index Sheet.
 
     Args:
-        jira_sub_index (dict): [description]
-        project_sub_index (dict): [description]
-        smartsheet_client (Object): [description]
+        jira_sub_index (dict): A dict of Jira Tickets: UUID(s)
+        project_sub_index (dict): A dict of UUID: Jira Ticket
+        smartsheet_client (Object): The Smartsheet client to interact with the
+                                    API
     """
     # Make copies for safekeeping, yeeeesss
     index_data_copy = jira_sub_index.copy()
@@ -304,7 +305,6 @@ def write_predecessor_dates(src_data, project_data_index, smartsheet_client):
 
     Args:
         src_data (dict): Row data from the write_uuid_cell_links.
-                         See below for expected format.
         project_data_index (dict): The dict of UUIDs and row data pulled
                                    from every project sheet.
         smartsheet_client (Object): The Smartsheet client to interact
@@ -314,23 +314,24 @@ def write_predecessor_dates(src_data, project_data_index, smartsheet_client):
         bool: True if the Start Date in the earliest predecessor was
               written back via API. False if the Start Date was not
               written due to failure.
-
-    Format of the src_data should be:
-    {
-        "UUID": "7208979009955716-3683235938232196-
-                7010994181433220-202105112138550000",  # Type: str
-        "Tasks": "Retrospective", # Type: str
-        "Description": "Thoughts on how the project went.",  # Type: str
-        "Status": "In Progress",  # Type: str
-        "Assigned To": "link@twitch.tv",  # Type: str
-        "Jira Ticket": "ING-12342",  # Type: str
-        "Duration": None,  # Type: str
-        "Start": "2021-03-31T08:00:00",  # Type: str
-        "Finish": "2021-03-31T08:00:00",  # Type: str
-        "Predecessors": "38FS +1w",  # Type: str
-        "Summary": "False"  # Type: str
-    }
     """
+
+    # TODO: Write a test to validate the format instead.
+    #     Format of the src_data should be:
+    # {
+    #     "UUID": "7208979009955716-3683235938232196-
+    #             7010994181433220-202105112138550000",  # Type: str
+    #     "Tasks": "Retrospective", # Type: str
+    #     "Description": "Thoughts on how the project went.",  # Type: str
+    #     "Status": "In Progress",  # Type: str
+    #     "Assigned To": "link@twitch.tv",  # Type: str
+    #     "Jira Ticket": "ING-12342",  # Type: str
+    #     "Duration": None,  # Type: str
+    #     "Start": "2021-03-31T08:00:00",  # Type: str
+    #     "Finish": "2021-03-31T08:00:00",  # Type: str
+    #     "Predecessors": "38FS +1w",  # Type: str
+    #     "Summary": "False"  # Type: str
+    # }
     dest_sheet_id = src_data[uuid_col].split("-")[0]
     dest_row_id = src_data[uuid_col].split("-")[1]
     start_date = src_data[start_col]
@@ -352,7 +353,7 @@ def write_predecessor_dates(src_data, project_data_index, smartsheet_client):
         logging.debug(msg)
         return True
 
-    pred_cell = get_column_id(dest_row, predecessor_col, dest_col_map)
+    pred_cell = get_cell_data(dest_row, predecessor_col, dest_col_map)
 
     # Evaluate the value of the predecessor cell. If it has a value other than
     # None, get the predecessor row ID and loop. If the new pred_cell value
@@ -362,7 +363,7 @@ def write_predecessor_dates(src_data, project_data_index, smartsheet_client):
     while pred_cell.value is not None:
         predecessor_row = smartsheet_client.Sheets.get_row(
             dest_sheet_id, dest_row_id, include='objectValue')
-        pred_cell = get_column_id(predecessor_row, predecessor_col,
+        pred_cell = get_cell_data(predecessor_row, predecessor_col,
                                   dest_col_map)
         pred_start_value = get_cell_value(dest_row, start_col, dest_col_map)
 
@@ -385,7 +386,7 @@ def write_predecessor_dates(src_data, project_data_index, smartsheet_client):
             dest_row_id = str(dest_row_id).translate(
                 {ord(i): None for i in "[]'"})
 
-    dest_start_cell = get_column_id(dest_row, start_col, dest_col_map)
+    dest_start_cell = get_cell_data(dest_row, start_col, dest_col_map)
 
     try:
         if dest_start_cell.linkInFromCell is not None:
@@ -402,7 +403,7 @@ def write_predecessor_dates(src_data, project_data_index, smartsheet_client):
             dest_col_map = get_column_map(dest_sheet)
             dest_row = smartsheet_client.Sheets.get_row(dest_sheet_id,
                                                         dest_row_id)
-            dest_uuid = get_column_id(dest_row, uuid_col, dest_col_map)
+            dest_uuid = get_cell_data(dest_row, uuid_col, dest_col_map)
             row_data = project_data_index[dest_uuid]
             write_predecessor_dates(
                 row_data, project_data_index, smartsheet_client)

@@ -70,7 +70,7 @@
 <span class="c1"># import smartsheet</span>
 <span class="kn">from</span> <span class="nn">uuid_module.build_data</span> <span class="kn">import</span> <span class="n">build_row</span><span class="p">,</span> <span class="n">dest_indexes</span>
 <span class="kn">from</span> <span class="nn">uuid_module.get_data</span> <span class="kn">import</span> <span class="n">load_jira_index</span>
-<span class="kn">from</span> <span class="nn">uuid_module.helper</span> <span class="kn">import</span> <span class="p">(</span><span class="n">get_cell_value</span><span class="p">,</span> <span class="n">get_column_id</span><span class="p">,</span> <span class="n">get_column_map</span><span class="p">,</span>
+<span class="kn">from</span> <span class="nn">uuid_module.helper</span> <span class="kn">import</span> <span class="p">(</span><span class="n">get_cell_value</span><span class="p">,</span> <span class="n">get_cell_data</span><span class="p">,</span> <span class="n">get_column_map</span><span class="p">,</span>
                                 <span class="n">json_extract</span><span class="p">)</span>
 <span class="kn">from</span> <span class="nn">uuid_module.variables</span> <span class="kn">import</span> <span class="p">(</span><span class="n">assignee_col</span><span class="p">,</span> <span class="n">jira_col</span><span class="p">,</span> <span class="n">jira_idx_sheet</span><span class="p">,</span>
                                    <span class="n">predecessor_col</span><span class="p">,</span> <span class="n">start_col</span><span class="p">,</span> <span class="n">status_col</span><span class="p">,</span>
@@ -173,7 +173,7 @@
         <span class="n">cell_links_to_update</span> <span class="o">=</span> <span class="p">[]</span>
 
         <span class="k">for</span> <span class="n">row</span> <span class="ow">in</span> <span class="n">dest_sheet</span><span class="o">.</span><span class="n">rows</span><span class="p">:</span>
-            <span class="n">jira_cell</span> <span class="o">=</span> <span class="n">get_column_id</span><span class="p">(</span>
+            <span class="n">jira_cell</span> <span class="o">=</span> <span class="n">get_cell_data</span><span class="p">(</span>
                 <span class="n">row</span><span class="p">,</span> <span class="n">jira_col</span><span class="p">,</span> <span class="n">dest_col_map</span><span class="p">)</span>
             <span class="k">if</span> <span class="n">jira_cell</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">or</span> <span class="n">jira_cell</span><span class="o">.</span><span class="n">value</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
                 <span class="n">logging</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span>
@@ -284,9 +284,10 @@
 <span class="sd">       the Index Sheet.</span>
 
 <span class="sd">    Args:</span>
-<span class="sd">        jira_sub_index (dict): [description]</span>
-<span class="sd">        project_sub_index (dict): [description]</span>
-<span class="sd">        smartsheet_client (Object): [description]</span>
+<span class="sd">        jira_sub_index (dict): A dict of Jira Tickets: UUID(s)</span>
+<span class="sd">        project_sub_index (dict): A dict of UUID: Jira Ticket</span>
+<span class="sd">        smartsheet_client (Object): The Smartsheet client to interact with the</span>
+<span class="sd">                                    API</span>
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="c1"># Make copies for safekeeping, yeeeesss</span>
     <span class="n">index_data_copy</span> <span class="o">=</span> <span class="n">jira_sub_index</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
@@ -369,7 +370,6 @@
 
 <span class="sd">    Args:</span>
 <span class="sd">        src_data (dict): Row data from the write_uuid_cell_links.</span>
-<span class="sd">                         See below for expected format.</span>
 <span class="sd">        project_data_index (dict): The dict of UUIDs and row data pulled</span>
 <span class="sd">                                   from every project sheet.</span>
 <span class="sd">        smartsheet_client (Object): The Smartsheet client to interact</span>
@@ -379,23 +379,24 @@
 <span class="sd">        bool: True if the Start Date in the earliest predecessor was</span>
 <span class="sd">              written back via API. False if the Start Date was not</span>
 <span class="sd">              written due to failure.</span>
-
-<span class="sd">    Format of the src_data should be:</span>
-<span class="sd">    {</span>
-<span class="sd">        &quot;UUID&quot;: &quot;7208979009955716-3683235938232196-</span>
-<span class="sd">                7010994181433220-202105112138550000&quot;,  # Type: str</span>
-<span class="sd">        &quot;Tasks&quot;: &quot;Retrospective&quot;, # Type: str</span>
-<span class="sd">        &quot;Description&quot;: &quot;Thoughts on how the project went.&quot;,  # Type: str</span>
-<span class="sd">        &quot;Status&quot;: &quot;In Progress&quot;,  # Type: str</span>
-<span class="sd">        &quot;Assigned To&quot;: &quot;link@twitch.tv&quot;,  # Type: str</span>
-<span class="sd">        &quot;Jira Ticket&quot;: &quot;ING-12342&quot;,  # Type: str</span>
-<span class="sd">        &quot;Duration&quot;: None,  # Type: str</span>
-<span class="sd">        &quot;Start&quot;: &quot;2021-03-31T08:00:00&quot;,  # Type: str</span>
-<span class="sd">        &quot;Finish&quot;: &quot;2021-03-31T08:00:00&quot;,  # Type: str</span>
-<span class="sd">        &quot;Predecessors&quot;: &quot;38FS +1w&quot;,  # Type: str</span>
-<span class="sd">        &quot;Summary&quot;: &quot;False&quot;  # Type: str</span>
-<span class="sd">    }</span>
 <span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="c1"># TODO: Write a test to validate the format instead.</span>
+    <span class="c1">#     Format of the src_data should be:</span>
+    <span class="c1"># {</span>
+    <span class="c1">#     &quot;UUID&quot;: &quot;7208979009955716-3683235938232196-</span>
+    <span class="c1">#             7010994181433220-202105112138550000&quot;,  # Type: str</span>
+    <span class="c1">#     &quot;Tasks&quot;: &quot;Retrospective&quot;, # Type: str</span>
+    <span class="c1">#     &quot;Description&quot;: &quot;Thoughts on how the project went.&quot;,  # Type: str</span>
+    <span class="c1">#     &quot;Status&quot;: &quot;In Progress&quot;,  # Type: str</span>
+    <span class="c1">#     &quot;Assigned To&quot;: &quot;link@twitch.tv&quot;,  # Type: str</span>
+    <span class="c1">#     &quot;Jira Ticket&quot;: &quot;ING-12342&quot;,  # Type: str</span>
+    <span class="c1">#     &quot;Duration&quot;: None,  # Type: str</span>
+    <span class="c1">#     &quot;Start&quot;: &quot;2021-03-31T08:00:00&quot;,  # Type: str</span>
+    <span class="c1">#     &quot;Finish&quot;: &quot;2021-03-31T08:00:00&quot;,  # Type: str</span>
+    <span class="c1">#     &quot;Predecessors&quot;: &quot;38FS +1w&quot;,  # Type: str</span>
+    <span class="c1">#     &quot;Summary&quot;: &quot;False&quot;  # Type: str</span>
+    <span class="c1"># }</span>
     <span class="n">dest_sheet_id</span> <span class="o">=</span> <span class="n">src_data</span><span class="p">[</span><span class="n">uuid_col</span><span class="p">]</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s2">&quot;-&quot;</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
     <span class="n">dest_row_id</span> <span class="o">=</span> <span class="n">src_data</span><span class="p">[</span><span class="n">uuid_col</span><span class="p">]</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s2">&quot;-&quot;</span><span class="p">)[</span><span class="mi">1</span><span class="p">]</span>
     <span class="n">start_date</span> <span class="o">=</span> <span class="n">src_data</span><span class="p">[</span><span class="n">start_col</span><span class="p">]</span>
@@ -417,7 +418,7 @@
         <span class="n">logging</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
         <span class="k">return</span> <span class="kc">True</span>
 
-    <span class="n">pred_cell</span> <span class="o">=</span> <span class="n">get_column_id</span><span class="p">(</span><span class="n">dest_row</span><span class="p">,</span> <span class="n">predecessor_col</span><span class="p">,</span> <span class="n">dest_col_map</span><span class="p">)</span>
+    <span class="n">pred_cell</span> <span class="o">=</span> <span class="n">get_cell_data</span><span class="p">(</span><span class="n">dest_row</span><span class="p">,</span> <span class="n">predecessor_col</span><span class="p">,</span> <span class="n">dest_col_map</span><span class="p">)</span>
 
     <span class="c1"># Evaluate the value of the predecessor cell. If it has a value other than</span>
     <span class="c1"># None, get the predecessor row ID and loop. If the new pred_cell value</span>
@@ -427,7 +428,7 @@
     <span class="k">while</span> <span class="n">pred_cell</span><span class="o">.</span><span class="n">value</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
         <span class="n">predecessor_row</span> <span class="o">=</span> <span class="n">smartsheet_client</span><span class="o">.</span><span class="n">Sheets</span><span class="o">.</span><span class="n">get_row</span><span class="p">(</span>
             <span class="n">dest_sheet_id</span><span class="p">,</span> <span class="n">dest_row_id</span><span class="p">,</span> <span class="n">include</span><span class="o">=</span><span class="s1">&#39;objectValue&#39;</span><span class="p">)</span>
-        <span class="n">pred_cell</span> <span class="o">=</span> <span class="n">get_column_id</span><span class="p">(</span><span class="n">predecessor_row</span><span class="p">,</span> <span class="n">predecessor_col</span><span class="p">,</span>
+        <span class="n">pred_cell</span> <span class="o">=</span> <span class="n">get_cell_data</span><span class="p">(</span><span class="n">predecessor_row</span><span class="p">,</span> <span class="n">predecessor_col</span><span class="p">,</span>
                                   <span class="n">dest_col_map</span><span class="p">)</span>
         <span class="n">pred_start_value</span> <span class="o">=</span> <span class="n">get_cell_value</span><span class="p">(</span><span class="n">dest_row</span><span class="p">,</span> <span class="n">start_col</span><span class="p">,</span> <span class="n">dest_col_map</span><span class="p">)</span>
 
@@ -450,7 +451,7 @@
             <span class="n">dest_row_id</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">dest_row_id</span><span class="p">)</span><span class="o">.</span><span class="n">translate</span><span class="p">(</span>
                 <span class="p">{</span><span class="nb">ord</span><span class="p">(</span><span class="n">i</span><span class="p">):</span> <span class="kc">None</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="s2">&quot;[]&#39;&quot;</span><span class="p">})</span>
 
-    <span class="n">dest_start_cell</span> <span class="o">=</span> <span class="n">get_column_id</span><span class="p">(</span><span class="n">dest_row</span><span class="p">,</span> <span class="n">start_col</span><span class="p">,</span> <span class="n">dest_col_map</span><span class="p">)</span>
+    <span class="n">dest_start_cell</span> <span class="o">=</span> <span class="n">get_cell_data</span><span class="p">(</span><span class="n">dest_row</span><span class="p">,</span> <span class="n">start_col</span><span class="p">,</span> <span class="n">dest_col_map</span><span class="p">)</span>
 
     <span class="k">try</span><span class="p">:</span>
         <span class="k">if</span> <span class="n">dest_start_cell</span><span class="o">.</span><span class="n">linkInFromCell</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
@@ -467,7 +468,7 @@
             <span class="n">dest_col_map</span> <span class="o">=</span> <span class="n">get_column_map</span><span class="p">(</span><span class="n">dest_sheet</span><span class="p">)</span>
             <span class="n">dest_row</span> <span class="o">=</span> <span class="n">smartsheet_client</span><span class="o">.</span><span class="n">Sheets</span><span class="o">.</span><span class="n">get_row</span><span class="p">(</span><span class="n">dest_sheet_id</span><span class="p">,</span>
                                                         <span class="n">dest_row_id</span><span class="p">)</span>
-            <span class="n">dest_uuid</span> <span class="o">=</span> <span class="n">get_column_id</span><span class="p">(</span><span class="n">dest_row</span><span class="p">,</span> <span class="n">uuid_col</span><span class="p">,</span> <span class="n">dest_col_map</span><span class="p">)</span>
+            <span class="n">dest_uuid</span> <span class="o">=</span> <span class="n">get_cell_data</span><span class="p">(</span><span class="n">dest_row</span><span class="p">,</span> <span class="n">uuid_col</span><span class="p">,</span> <span class="n">dest_col_map</span><span class="p">)</span>
             <span class="n">row_data</span> <span class="o">=</span> <span class="n">project_data_index</span><span class="p">[</span><span class="n">dest_uuid</span><span class="p">]</span>
             <span class="n">write_predecessor_dates</span><span class="p">(</span>
                 <span class="n">row_data</span><span class="p">,</span> <span class="n">project_data_index</span><span class="p">,</span> <span class="n">smartsheet_client</span><span class="p">)</span>
@@ -623,7 +624,7 @@ with the API</li>
         <span class="n">cell_links_to_update</span> <span class="o">=</span> <span class="p">[]</span>
 
         <span class="k">for</span> <span class="n">row</span> <span class="ow">in</span> <span class="n">dest_sheet</span><span class="o">.</span><span class="n">rows</span><span class="p">:</span>
-            <span class="n">jira_cell</span> <span class="o">=</span> <span class="n">get_column_id</span><span class="p">(</span>
+            <span class="n">jira_cell</span> <span class="o">=</span> <span class="n">get_cell_data</span><span class="p">(</span>
                 <span class="n">row</span><span class="p">,</span> <span class="n">jira_col</span><span class="p">,</span> <span class="n">dest_col_map</span><span class="p">)</span>
             <span class="k">if</span> <span class="n">jira_cell</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">or</span> <span class="n">jira_cell</span><span class="o">.</span><span class="n">value</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
                 <span class="n">logging</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span>
@@ -808,9 +809,10 @@ from the Jira Index</li>
 <span class="sd">       the Index Sheet.</span>
 
 <span class="sd">    Args:</span>
-<span class="sd">        jira_sub_index (dict): [description]</span>
-<span class="sd">        project_sub_index (dict): [description]</span>
-<span class="sd">        smartsheet_client (Object): [description]</span>
+<span class="sd">        jira_sub_index (dict): A dict of Jira Tickets: UUID(s)</span>
+<span class="sd">        project_sub_index (dict): A dict of UUID: Jira Ticket</span>
+<span class="sd">        smartsheet_client (Object): The Smartsheet client to interact with the</span>
+<span class="sd">                                    API</span>
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="c1"># Make copies for safekeeping, yeeeesss</span>
     <span class="n">index_data_copy</span> <span class="o">=</span> <span class="n">jira_sub_index</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
@@ -898,9 +900,10 @@ from the Jira Index</li>
 <h6 id="args">Args</h6>
 
 <ul>
-<li><strong>jira_sub_index (dict):</strong>  [description]</li>
-<li><strong>project_sub_index (dict):</strong>  [description]</li>
-<li><strong>smartsheet_client (Object):</strong>  [description]</li>
+<li><strong>jira_sub_index (dict): A dict of Jira Tickets:</strong>  UUID(s)</li>
+<li><strong>project_sub_index (dict): A dict of UUID:</strong>  Jira Ticket</li>
+<li><strong>smartsheet_client (Object):</strong>  The Smartsheet client to interact with the
+API</li>
 </ul>
 </div>
 
@@ -922,7 +925,6 @@ from the Jira Index</li>
 
 <span class="sd">    Args:</span>
 <span class="sd">        src_data (dict): Row data from the write_uuid_cell_links.</span>
-<span class="sd">                         See below for expected format.</span>
 <span class="sd">        project_data_index (dict): The dict of UUIDs and row data pulled</span>
 <span class="sd">                                   from every project sheet.</span>
 <span class="sd">        smartsheet_client (Object): The Smartsheet client to interact</span>
@@ -932,23 +934,24 @@ from the Jira Index</li>
 <span class="sd">        bool: True if the Start Date in the earliest predecessor was</span>
 <span class="sd">              written back via API. False if the Start Date was not</span>
 <span class="sd">              written due to failure.</span>
-
-<span class="sd">    Format of the src_data should be:</span>
-<span class="sd">    {</span>
-<span class="sd">        &quot;UUID&quot;: &quot;7208979009955716-3683235938232196-</span>
-<span class="sd">                7010994181433220-202105112138550000&quot;,  # Type: str</span>
-<span class="sd">        &quot;Tasks&quot;: &quot;Retrospective&quot;, # Type: str</span>
-<span class="sd">        &quot;Description&quot;: &quot;Thoughts on how the project went.&quot;,  # Type: str</span>
-<span class="sd">        &quot;Status&quot;: &quot;In Progress&quot;,  # Type: str</span>
-<span class="sd">        &quot;Assigned To&quot;: &quot;link@twitch.tv&quot;,  # Type: str</span>
-<span class="sd">        &quot;Jira Ticket&quot;: &quot;ING-12342&quot;,  # Type: str</span>
-<span class="sd">        &quot;Duration&quot;: None,  # Type: str</span>
-<span class="sd">        &quot;Start&quot;: &quot;2021-03-31T08:00:00&quot;,  # Type: str</span>
-<span class="sd">        &quot;Finish&quot;: &quot;2021-03-31T08:00:00&quot;,  # Type: str</span>
-<span class="sd">        &quot;Predecessors&quot;: &quot;38FS +1w&quot;,  # Type: str</span>
-<span class="sd">        &quot;Summary&quot;: &quot;False&quot;  # Type: str</span>
-<span class="sd">    }</span>
 <span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="c1"># TODO: Write a test to validate the format instead.</span>
+    <span class="c1">#     Format of the src_data should be:</span>
+    <span class="c1"># {</span>
+    <span class="c1">#     &quot;UUID&quot;: &quot;7208979009955716-3683235938232196-</span>
+    <span class="c1">#             7010994181433220-202105112138550000&quot;,  # Type: str</span>
+    <span class="c1">#     &quot;Tasks&quot;: &quot;Retrospective&quot;, # Type: str</span>
+    <span class="c1">#     &quot;Description&quot;: &quot;Thoughts on how the project went.&quot;,  # Type: str</span>
+    <span class="c1">#     &quot;Status&quot;: &quot;In Progress&quot;,  # Type: str</span>
+    <span class="c1">#     &quot;Assigned To&quot;: &quot;link@twitch.tv&quot;,  # Type: str</span>
+    <span class="c1">#     &quot;Jira Ticket&quot;: &quot;ING-12342&quot;,  # Type: str</span>
+    <span class="c1">#     &quot;Duration&quot;: None,  # Type: str</span>
+    <span class="c1">#     &quot;Start&quot;: &quot;2021-03-31T08:00:00&quot;,  # Type: str</span>
+    <span class="c1">#     &quot;Finish&quot;: &quot;2021-03-31T08:00:00&quot;,  # Type: str</span>
+    <span class="c1">#     &quot;Predecessors&quot;: &quot;38FS +1w&quot;,  # Type: str</span>
+    <span class="c1">#     &quot;Summary&quot;: &quot;False&quot;  # Type: str</span>
+    <span class="c1"># }</span>
     <span class="n">dest_sheet_id</span> <span class="o">=</span> <span class="n">src_data</span><span class="p">[</span><span class="n">uuid_col</span><span class="p">]</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s2">&quot;-&quot;</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
     <span class="n">dest_row_id</span> <span class="o">=</span> <span class="n">src_data</span><span class="p">[</span><span class="n">uuid_col</span><span class="p">]</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s2">&quot;-&quot;</span><span class="p">)[</span><span class="mi">1</span><span class="p">]</span>
     <span class="n">start_date</span> <span class="o">=</span> <span class="n">src_data</span><span class="p">[</span><span class="n">start_col</span><span class="p">]</span>
@@ -970,7 +973,7 @@ from the Jira Index</li>
         <span class="n">logging</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
         <span class="k">return</span> <span class="kc">True</span>
 
-    <span class="n">pred_cell</span> <span class="o">=</span> <span class="n">get_column_id</span><span class="p">(</span><span class="n">dest_row</span><span class="p">,</span> <span class="n">predecessor_col</span><span class="p">,</span> <span class="n">dest_col_map</span><span class="p">)</span>
+    <span class="n">pred_cell</span> <span class="o">=</span> <span class="n">get_cell_data</span><span class="p">(</span><span class="n">dest_row</span><span class="p">,</span> <span class="n">predecessor_col</span><span class="p">,</span> <span class="n">dest_col_map</span><span class="p">)</span>
 
     <span class="c1"># Evaluate the value of the predecessor cell. If it has a value other than</span>
     <span class="c1"># None, get the predecessor row ID and loop. If the new pred_cell value</span>
@@ -980,7 +983,7 @@ from the Jira Index</li>
     <span class="k">while</span> <span class="n">pred_cell</span><span class="o">.</span><span class="n">value</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
         <span class="n">predecessor_row</span> <span class="o">=</span> <span class="n">smartsheet_client</span><span class="o">.</span><span class="n">Sheets</span><span class="o">.</span><span class="n">get_row</span><span class="p">(</span>
             <span class="n">dest_sheet_id</span><span class="p">,</span> <span class="n">dest_row_id</span><span class="p">,</span> <span class="n">include</span><span class="o">=</span><span class="s1">&#39;objectValue&#39;</span><span class="p">)</span>
-        <span class="n">pred_cell</span> <span class="o">=</span> <span class="n">get_column_id</span><span class="p">(</span><span class="n">predecessor_row</span><span class="p">,</span> <span class="n">predecessor_col</span><span class="p">,</span>
+        <span class="n">pred_cell</span> <span class="o">=</span> <span class="n">get_cell_data</span><span class="p">(</span><span class="n">predecessor_row</span><span class="p">,</span> <span class="n">predecessor_col</span><span class="p">,</span>
                                   <span class="n">dest_col_map</span><span class="p">)</span>
         <span class="n">pred_start_value</span> <span class="o">=</span> <span class="n">get_cell_value</span><span class="p">(</span><span class="n">dest_row</span><span class="p">,</span> <span class="n">start_col</span><span class="p">,</span> <span class="n">dest_col_map</span><span class="p">)</span>
 
@@ -1003,7 +1006,7 @@ from the Jira Index</li>
             <span class="n">dest_row_id</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">dest_row_id</span><span class="p">)</span><span class="o">.</span><span class="n">translate</span><span class="p">(</span>
                 <span class="p">{</span><span class="nb">ord</span><span class="p">(</span><span class="n">i</span><span class="p">):</span> <span class="kc">None</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="s2">&quot;[]&#39;&quot;</span><span class="p">})</span>
 
-    <span class="n">dest_start_cell</span> <span class="o">=</span> <span class="n">get_column_id</span><span class="p">(</span><span class="n">dest_row</span><span class="p">,</span> <span class="n">start_col</span><span class="p">,</span> <span class="n">dest_col_map</span><span class="p">)</span>
+    <span class="n">dest_start_cell</span> <span class="o">=</span> <span class="n">get_cell_data</span><span class="p">(</span><span class="n">dest_row</span><span class="p">,</span> <span class="n">start_col</span><span class="p">,</span> <span class="n">dest_col_map</span><span class="p">)</span>
 
     <span class="k">try</span><span class="p">:</span>
         <span class="k">if</span> <span class="n">dest_start_cell</span><span class="o">.</span><span class="n">linkInFromCell</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
@@ -1020,7 +1023,7 @@ from the Jira Index</li>
             <span class="n">dest_col_map</span> <span class="o">=</span> <span class="n">get_column_map</span><span class="p">(</span><span class="n">dest_sheet</span><span class="p">)</span>
             <span class="n">dest_row</span> <span class="o">=</span> <span class="n">smartsheet_client</span><span class="o">.</span><span class="n">Sheets</span><span class="o">.</span><span class="n">get_row</span><span class="p">(</span><span class="n">dest_sheet_id</span><span class="p">,</span>
                                                         <span class="n">dest_row_id</span><span class="p">)</span>
-            <span class="n">dest_uuid</span> <span class="o">=</span> <span class="n">get_column_id</span><span class="p">(</span><span class="n">dest_row</span><span class="p">,</span> <span class="n">uuid_col</span><span class="p">,</span> <span class="n">dest_col_map</span><span class="p">)</span>
+            <span class="n">dest_uuid</span> <span class="o">=</span> <span class="n">get_cell_data</span><span class="p">(</span><span class="n">dest_row</span><span class="p">,</span> <span class="n">uuid_col</span><span class="p">,</span> <span class="n">dest_col_map</span><span class="p">)</span>
             <span class="n">row_data</span> <span class="o">=</span> <span class="n">project_data_index</span><span class="p">[</span><span class="n">dest_uuid</span><span class="p">]</span>
             <span class="n">write_predecessor_dates</span><span class="p">(</span>
                 <span class="n">row_data</span><span class="p">,</span> <span class="n">project_data_index</span><span class="p">,</span> <span class="n">smartsheet_client</span><span class="p">)</span>
@@ -1061,8 +1064,7 @@ from the Jira Index</li>
 <h6 id="args">Args</h6>
 
 <ul>
-<li><strong>src_data (dict):</strong>  Row data from the write_uuid_cell_links.
-See below for expected format.</li>
+<li><strong>src_data (dict):</strong>  Row data from the write_uuid_cell_links.</li>
 <li><strong>project_data_index (dict):</strong>  The dict of UUIDs and row data pulled
 from every project sheet.</li>
 <li><strong>smartsheet_client (Object):</strong>  The Smartsheet client to interact
@@ -1076,22 +1078,6 @@ with the API</li>
         written back via API. False if the Start Date was not
         written due to failure.</p>
 </blockquote>
-
-<p>Format of the src_data should be:
-{
-    "UUID": "7208979009955716-3683235938232196-
-            7010994181433220-202105112138550000",  # Type: str
-    "Tasks": "Retrospective", # Type: str
-    "Description": "Thoughts on how the project went.",  # Type: str
-    "Status": "In Progress",  # Type: str
-    "Assigned To": "link@twitch.tv",  # Type: str
-    "Jira Ticket": "ING-12342",  # Type: str
-    "Duration": None,  # Type: str
-    "Start": "2021-03-31T08:00:00",  # Type: str
-    "Finish": "2021-03-31T08:00:00",  # Type: str
-    "Predecessors": "38FS +1w",  # Type: str
-    "Summary": "False"  # Type: str
-}</p>
 </div>
 
 
