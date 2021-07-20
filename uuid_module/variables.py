@@ -5,7 +5,7 @@ module_log_name = "main.log"
 """The main log written to disk
     """
 
-workspace_id = [1014869735565188, 1498352056592260]
+workspace_id = [8158274374657924, 1479840747546500, 6569226535233412]
 """List of workspace IDs. Workspace IDs are Type: int.
     """
 uuid_col = "UUID"

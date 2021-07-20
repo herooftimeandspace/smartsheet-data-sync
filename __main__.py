@@ -272,39 +272,39 @@ def main():
 
     logging.debug("------------------------")
     logging.debug("Adding job to refresh Sheet IDs. "
-                  "Interval = 15 seconds.")
+                  "Cron = At minute 3.")
     logging.debug("------------------------")
     scheduler.add_job(refresh_sheet_ids,
-                      'interval',
-                      seconds=20)
+                      'cron',
+                      minute=3)
     logging.debug("------------------------")
     logging.debug("Adding job to refresh the sheet index. "
-                  "Interval = 20 seconds.")
+                  "Cron = At minute 6.")
     logging.debug("------------------------")
     scheduler.add_job(refresh_sheet_index,
-                      'interval',
-                      seconds=40)
+                      'cron',
+                      minute=6)
     logging.debug("------------------------")
     logging.debug("Adding job to refresh the project indes. "
-                  "Interval = 20 seconds.")
+                  "Cron = At minute 4.")
     logging.debug("------------------------")
     scheduler.add_job(refresh_project_index,
-                      'interval',
-                      seconds=25)
+                      'cron',
+                      minute=4)
     logging.debug("------------------------")
     logging.debug("Adding job to update the Jira UUID Index. "
-                  "Interval = 20 seconds.")
+                  "Cron = At minute 1.")
     logging.debug("------------------------")
     scheduler.add_job(refresh_jira_uuid_index,
-                      'interval',
-                      seconds=10)
+                      'cron',
+                      minute=1)
     logging.debug("------------------------")
     logging.debug("Adding job to create new cell links by "
-                  "Jira ticket. Interval = 15 seconds.")
+                  "Jira ticket. Cron = At minute 2.")
     logging.debug("------------------------")
     scheduler.add_job(refresh_jira_cell_links,
-                      'interval',
-                      seconds=15)
+                      'cron',
+                      minute=2)
     # logging.debug("------------------------")
     # logging.debug("Adding job to create new cell links by "
     #               "UUID. Interval = 15 seconds.")
@@ -314,11 +314,61 @@ def main():
     #                   seconds=20)
     logging.debug("------------------------")
     logging.debug("Adding jobs write new UUIDs back to project sheets."
-                  "Interval = 1 minute")
+                  "Cron = At minute 5")
     logging.debug("------------------------")
     scheduler.add_job(refresh_sheet_uuids,
-                      'interval',
-                      seconds=30)
+                      'cron',
+                      minute=5)
+
+    # logging.debug("------------------------")
+    # logging.debug("Adding job to refresh Sheet IDs. "
+    #               "Interval = 15 seconds.")
+    # logging.debug("------------------------")
+    # scheduler.add_job(refresh_sheet_ids,
+    #                   'interval',
+    #                   seconds=20)
+    # logging.debug("------------------------")
+    # logging.debug("Adding job to refresh the sheet index. "
+    #               "Interval = 20 seconds.")
+    # logging.debug("------------------------")
+    # scheduler.add_job(refresh_sheet_index,
+    #                   'interval',
+    #                   seconds=40)
+    # logging.debug("------------------------")
+    # logging.debug("Adding job to refresh the project indes. "
+    #               "Interval = 20 seconds.")
+    # logging.debug("------------------------")
+    # scheduler.add_job(refresh_project_index,
+    #                   'interval',
+    #                   seconds=25)
+    # logging.debug("------------------------")
+    # logging.debug("Adding job to update the Jira UUID Index. "
+    #               "Interval = 20 seconds.")
+    # logging.debug("------------------------")
+    # scheduler.add_job(refresh_jira_uuid_index,
+    #                   'interval',
+    #                   seconds=10)
+    # logging.debug("------------------------")
+    # logging.debug("Adding job to create new cell links by "
+    #               "Jira ticket. Interval = 15 seconds.")
+    # logging.debug("------------------------")
+    # scheduler.add_job(refresh_jira_cell_links,
+    #                   'interval',
+    #                   seconds=15)
+    # # logging.debug("------------------------")
+    # # logging.debug("Adding job to create new cell links by "
+    # #               "UUID. Interval = 15 seconds.")
+    # # logging.debug("------------------------")
+    # # scheduler.add_job(refresh_uuid_cell_links,
+    # #                   'interval',
+    # #                   seconds=20)
+    # logging.debug("------------------------")
+    # logging.debug("Adding jobs write new UUIDs back to project sheets."
+    #               "Interval = 1 minute")
+    # logging.debug("------------------------")
+    # scheduler.add_job(refresh_sheet_uuids,
+    #                   'interval',
+    #                   seconds=30)
     return True
 
 
