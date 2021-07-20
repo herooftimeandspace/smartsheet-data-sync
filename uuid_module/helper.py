@@ -115,14 +115,9 @@ def get_cell_value(row, col_name, col_map):
 
     cell = get_cell_data(row, col_name, col_map)
     if cell is None or cell.value is None:
-        try:
-            msg = str("Cell is {} or cell value is {}. "
-                      "Returning 'None'").format(cell, cell.value)
-        except AttributeError:
-            msg = str("Cell is {}. Returning 'None'"
-                      "").format(cell)
-            logging.debug(msg)
-            raise AttributeError(msg)
+        msg = str("Cell is 'None' or cell value is 'None'. "
+                  "Returning 'None'").format()
+        logging.debug(msg)
         return None
     else:
         return str(cell.value)
