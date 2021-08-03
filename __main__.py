@@ -248,6 +248,9 @@ def main():
     logging.info("Retrieving the project UUID index "
                  "and sub-indexes took: {} seconds.".format(elapsed3))
 
+    elapsed7 = track_time(refresh_sheet_uuids)
+    logging.info("Writing new UUIDs took: {} seconds.".format(elapsed7))
+
     elapsed4 = track_time(refresh_jira_uuid_index)
     logging.info(
         "Writing UUIDs to the Jira Index Sheet took: "
@@ -261,9 +264,6 @@ def main():
     # elapsed6 = track_time(refresh_uuid_cell_links())
     # logging.info(
     #     "Linking project rows by UUID took: {} seconds.".format(elapsed6))
-
-    elapsed7 = track_time(refresh_sheet_uuids)
-    logging.info("Writing new UUIDs took: {} seconds.".format(elapsed7))
 
     end_total = time.time()
     total = end_total - start_total
