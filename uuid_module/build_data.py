@@ -62,10 +62,11 @@ def dest_indexes(project_data):
     dest_sheet_index = defaultdict(list)
     # dest_row_index = defaultdict(list)
     for uuid, ticket in project_data.items():
-        dest_sheet_id = uuid.split("-")[0]
-        # dest_row_id = uuid.split("-")[1]
-        dest_sheet_index[dest_sheet_id].append(ticket)
-        # dest_row_index[dest_row_id].append(ticket)
+        if uuid is None:
+            continue
+        else:
+            dest_sheet_id = uuid.split("-")[0]
+            dest_sheet_index[dest_sheet_id].append(ticket)
     return dest_sheet_index,  # dest_row_index
 
 
