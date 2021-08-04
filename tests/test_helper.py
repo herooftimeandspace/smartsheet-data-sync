@@ -86,8 +86,6 @@ def test_get_cell_value(row, col_name, col_map):
         get_cell_value(row, 1, col_map)
     with pytest.raises(TypeError):
         get_cell_value(row, col_name, "col_map")
-    # with pytest.raises(AttributeError):
-    #     get_cell_value(row, "Test", col_map)
     assert get_cell_value(row, col_name, col_map) == "Lumine"
 
 
