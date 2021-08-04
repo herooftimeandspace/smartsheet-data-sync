@@ -99,7 +99,7 @@ def test_get_cell_data(row, col_name, col_map):
     with pytest.raises(TypeError):
         get_cell_data(row, col_name, "col_map")
     with pytest.raises(KeyError):
-        get_cell_data(row, "Test", col_map)
+        get_cell_data(row, 1, col_map)
 
     with open(cwd + '/cell.json') as f:
         cell_json = json.load(f)
