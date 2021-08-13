@@ -1,9 +1,6 @@
 import json
 import logging
-import os
 from collections import defaultdict
-
-import smartsheet
 
 from uuid_module.helper import get_cell_value, get_cell_data, get_column_map
 from uuid_module.variables import (jira_col, jira_idx_sheet, summary_col,
