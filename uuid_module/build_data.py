@@ -1,9 +1,6 @@
 import logging
-import os
 from collections import defaultdict
-
 from uuid_module.helper import get_cell_data, has_cell_link
-# from uuid_module.variables import jira_col
 
 # jira_col = os.getenv('JIRA_COL')
 
