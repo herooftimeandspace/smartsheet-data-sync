@@ -1,7 +1,6 @@
 import json
 import logging
 import re
-import os
 
 from uuid_module.helper import (get_cell_data, get_column_map, has_cell_link,
                                 json_extract, get_cell_value)
