@@ -13,17 +13,6 @@ from uuid_module.variables import (assignee_col, jira_col, jira_idx_sheet,
 
 logger = logging.getLogger(__name__)
 
-# assignee_col = os.getenv('ASSIGNEE_COL')
-# jira_col = os.getenv('JIRA_COL')
-# jira_idx_sheet = os.getenv('JIRA_IDX_SHEET')
-# predecessor_col = os.getenv('PREDECESSOR_COL')
-# sheet_columns = os.getenv('SHEET_COLUMNS')
-# start_col = os.getenv('START_COL')
-# status_col = os.getenv('STATUS_COL')
-# summary_col = os.getenv('SUMMARY_COL')
-# task_col = os.getenv('TASK_COL')
-# uuid_col = os.getenv('UUID_COL')
-
 
 # sheets_to_update is a dict in the format
 def write_uuids(sheets_to_update, smartsheet_client):
