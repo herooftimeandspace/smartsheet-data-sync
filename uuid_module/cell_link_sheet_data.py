@@ -1,7 +1,6 @@
 import json
 import logging
 import re
-import os
 
 from uuid_module.helper import (get_cell_data, get_column_map, has_cell_link,
                                 json_extract, get_cell_value)
@@ -11,16 +10,6 @@ from uuid_module.variables import (assignee_col, description_col, duration_col,
 from uuid_module.write_data import write_predecessor_dates
 
 logger = logging.getLogger(__name__)
-
-# assignee_col = os.getenv('ASSIGNEE_COL')
-# description_col = os.getenv('DESCRIPTION_COL')
-# duration_col = os.getenv('DURATION_COL')
-# predecessor_col = os.getenv('PREDECESSOR_COL')
-# start_col = os.getenv('START_COL')
-# status_col = os.getenv('STATUS_COL')
-# task_col = os.getenv('TASK_COL')
-# uuid_col = os.getenv('UUID_COL')
-# jira_col = os.getenv('JIRA_COL')
 
 
 # If a description column has a value, look it up against the UUIDs
