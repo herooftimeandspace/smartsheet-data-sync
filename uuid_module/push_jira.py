@@ -2,7 +2,6 @@ import json
 import logging
 import os
 
-# import smartsheet
 from uuid_module.build_data import build_row, dest_indexes
 from uuid_module.get_data import load_jira_index
 from uuid_module.helper import (get_cell_value, get_cell_data, get_column_map,

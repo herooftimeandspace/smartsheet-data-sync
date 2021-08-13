@@ -1,21 +1,12 @@
 import json
 import logging
-import os
 from collections import defaultdict
-
-import smartsheet
 
 from uuid_module.helper import get_cell_value, get_cell_data, get_column_map
 from uuid_module.variables import (jira_col, jira_idx_sheet, summary_col,
                                    uuid_col, workspace_id)
 
 logger = logging.getLogger(__name__)
-
-# jira_col = os.getenv('JIRA_COL')
-# jira_idx_sheet = os.getenv('JIRA_IDX_SHEET')
-# summary_col = os.getenv('SUMMARY_COL')
-# uuid_col = os.getenv('UUID_COL')
-# workspace_id = os.getenv('WORKSPACE_ID')
 
 
 def get_all_row_data(source_sheets, columns, smartsheet_client):
