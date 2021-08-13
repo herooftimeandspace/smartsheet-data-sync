@@ -2,7 +2,11 @@ import logging
 import os
 import threading
 import time
+import json
 from logging.config import dictConfig
+import boto3
+import base64
+from botocore.exceptions import ClientError
 
 import smartsheet
 from apscheduler.executors.pool import ProcessPoolExecutor, ThreadPoolExecutor
@@ -12,19 +16,91 @@ from dotenv import load_dotenv
 from uuid_module.cell_link_sheet_data import write_uuid_cell_links
 from uuid_module.get_data import (get_all_row_data, get_all_sheet_ids,
                                   get_blank_uuids, get_sub_indexs)
-from uuid_module.helper import truncate
+from uuid_module.helper import json_extract, truncate
 from uuid_module.variables import log_location, module_log_name, sheet_columns
 from uuid_module.write_data import (link_from_index, write_jira_uuids,
                                     write_uuids)
 
 start = time.time()
-# load_dotenv()
 
-# log_location = os.getenv('LOG_LOCATION')
-# module_log_name = os.getenv('MODULE_LOG_NAME')
-# sheet_columns = os.getenv('SHEET_COLUMNS')
-# summary_col = os.getenv('SUMMARY_COL')
-# uuid_col = os.getenv('UUID_COL')
+# Use this code snippet in your app.
+# If you need more information about configurations or implementing the sample
+# code, visit the AWS docs:
+# https://aws.amazon.com/developers/getting-started/python/
+
+
+def get_secret():
+    """Gets the API token from AWS Secrets Manager
+
+    Raises:
+        e: DecryptionFailureException.
+        e: InternalServiceErrorException
+        e: InvalidParameterException
+        e: InvalidRequestException
+        e: ResourceNotFoundException
+
+    Returns:
+        str: The Smartsheet API key
+    """
+    secret_name = "prod/smartsheet-data-sync/api-token"
+    region_name = "us-east-2"
+
+    # Create a Secrets Manager client
+    session = boto3.session.Session()
+    client = session.client(
+        service_name='secretsmanager',
+        region_name=region_name
+    )
+
+    # In this sample we only handle the specific exceptions for the
+    # 'GetSecretValue' API.
+    # See https://docs.aws.amazon.com/secretsmanager/latest/
+    # apireference/API_GetSecretValue.html
+    # We rethrow the exception by default.
+
+    try:
+        get_secret_value_response = client.get_secret_value(
+            SecretId=secret_name
+        )
+    except ClientError as e:
+        if e.response['Error']['Code'] == 'DecryptionFailureException':
+            # Secrets Manager can't decrypt the protected secret text using
+            # the provided KMS key.
+            # Deal with the exception here, and/or rethrow at your discretion.
+            raise e
+        elif e.response['Error']['Code'] == 'InternalServiceErrorException':
+            # An error occurred on the server side.
+            # Deal with the exception here, and/or rethrow at your discretion.
+            raise e
+        elif e.response['Error']['Code'] == 'InvalidParameterException':
+            # You provided an invalid value for a parameter.
+            # Deal with the exception here, and/or rethrow at your discretion.
+            raise e
+        elif e.response['Error']['Code'] == 'InvalidRequestException':
+            # You provided a parameter value that is not valid for the current
+            # state of the resource.
+            # Deal with the exception here, and/or rethrow at your discretion.
+            raise e
+        elif e.response['Error']['Code'] == 'ResourceNotFoundException':
+            # We can't find the resource that you asked for.
+            # Deal with the exception here, and/or rethrow at your discretion.
+            raise e
+    else:
+        # Decrypts secret using the associated KMS CMK.
+        # Depending on whether the secret is a string or binary, one of these
+        # fields will be populated.
+        if 'SecretString' in get_secret_value_response:
+            secret = get_secret_value_response['SecretString']
+
+            api_key = json.loads(str(secret))
+            api_key = json_extract(api_key, "SMARTSHEET_ACCESS_TOKEN")
+            api_key = ''.join(map(str, api_key))
+            return api_key
+        else:
+            decoded_binary_secret = base64.b64decode(
+                get_secret_value_response['SecretBinary'])
+            return decoded_binary_secret
+
 
 cwd = os.path.dirname(os.path.abspath(__file__))
 log_location = os.path.join(cwd, log_location)
@@ -85,6 +161,7 @@ logging.debug("Initializing Smartsheet Client API")
 logging.debug("------------------------")
 # Initialize client. Uses the API token in the environment variable
 # "SMARTSHEET_ACCESS_TOKEN"
+os.environ["SMARTSHEET_ACCESS_TOKEN"] = get_secret()
 smartsheet_client = smartsheet.Smartsheet()
 # Make sure we don't miss any error
 smartsheet_client.errors_as_exceptions(True)
