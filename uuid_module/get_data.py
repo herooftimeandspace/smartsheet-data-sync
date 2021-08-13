@@ -8,12 +8,6 @@ from uuid_module.variables import (jira_col, jira_idx_sheet, summary_col,
 
 logger = logging.getLogger(__name__)
 
-# jira_col = os.getenv('JIRA_COL')
-# jira_idx_sheet = os.getenv('JIRA_IDX_SHEET')
-# summary_col = os.getenv('SUMMARY_COL')
-# uuid_col = os.getenv('UUID_COL')
-# workspace_id = os.getenv('WORKSPACE_ID')
-
 
 def get_all_row_data(source_sheets, columns, smartsheet_client):
     """Parses through all source sheets and gets specific data from the
