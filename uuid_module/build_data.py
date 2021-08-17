@@ -38,12 +38,10 @@ def build_linked_cell(jira_index_sheet, jira_index_col_map, dest_col_map,
     return new_cell
 
 
-# Faster than pulling sheet data from the
-# API because we already have the data from the
-# project_data dictionary
 def dest_indexes(project_data):
     """Helper function to create indexes on the destination sheet
-       and rows.
+       and rows. Faster than pulling data from the API because the app
+       already has the data from the project_data dictionary
 
     Args:
         project_data (dict): The dictionary with all project rows
@@ -65,11 +63,6 @@ def dest_indexes(project_data):
     return dest_sheet_index,  # dest_row_index
 
 
-# Function to build new cell links, unlink broken links, or do
-# nothing if the cell link status is "OK". Used to remove
-# unchanged rows from the update list.
-# Returns new_row if any cells need to be linked or unlinked
-# Returns None if no action needed
 def build_row(row, columns_to_link, dest_col_map, jira_index_sheet,
               jira_index_col_map, idx_row_id, smartsheet_client):
     """Function to build new cell links, unlink broken links, or

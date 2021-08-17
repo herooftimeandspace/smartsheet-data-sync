@@ -57,8 +57,8 @@ def get_column_map(sheet):
 
 
 def has_cell_link(old_cell, direction):
-    """Helper function to determine if an existing cell already has a cell
-       link.
+    """Determine if an existing cell already has a cell link, which direction
+       and whether it needs to be repaired.
 
     Args:
         old_cell (Cell): The Cell object to check.
@@ -70,6 +70,7 @@ def has_cell_link(old_cell, direction):
              cell doesn't have a cell link property. If the cell link
              type is 'linksOutToCells', always return "Linked".
     """
+
     cell_json = json.loads(str(old_cell))
     if direction == "In":
         try:
@@ -105,6 +106,7 @@ def get_cell_value(row, col_name, col_map):
     Returns:
         str: The Value of the cell.
     """
+
     # Validate data types.
     if not isinstance(row, smartsheet.models.row.Row):
         raise TypeError("Row is not a Smartsheet Row type object")
