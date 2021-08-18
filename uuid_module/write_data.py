@@ -14,7 +14,6 @@ from uuid_module.variables import (assignee_col, jira_col, jira_idx_sheet,
 logger = logging.getLogger(__name__)
 
 
-# sheets_to_update is a dict in the format
 def write_uuids(sheets_to_update, smartsheet_client):
     """Writes UUIDs back to a collection of Smartsheets
 
@@ -26,12 +25,23 @@ def write_uuids(sheets_to_update, smartsheet_client):
     Returns:
         int: The number of sheets that were updated.
     """
+    # Reset the counter on each run
     sheets_updated = 0
+
+    # Iterate through each set of sheet IDs and associated data from the
+    # dictionary
     for sheet_id, sheet_data in sheets_to_update.items():
+
+        # Assign friendly names to make grokking easier.
         sheet_name = sheet_data['sheet_name']
         row_data = sheet_data['row_data']
 
+        # Create an empty list of rows to write back to the sheet.
         rows_to_write = []
+
+        # Iterate through each set of row IDs and assocaiated cell data,
+        # create new row and cell objects to overwrite the existing data,
+        # and update the UUID value for the row.
         for row_id, cell_data in row_data.items():
             new_row = smartsheet_client.models.Row()
             new_row.id = int(row_id)
@@ -62,15 +72,11 @@ def write_uuids(sheets_to_update, smartsheet_client):
     return sheets_updated
 
 
-# Main function. For each Sheet in the destination sheet index,
-# parse through rows, determine if cells need to be linked, create
-# cell links and then write the rows back to the sheet.
 def link_from_index(project_sub_index,
                     smartsheet_client):
-    """Main functionality. For each sheet in the destination sheet
-       index, parse through the rows, determine if cells need to be
-       linked, create cell links and then write the rows back to
-       the sheet.
+    """For each sheet in the destination sheet index, parse through the rows,
+       determine if cells need to be linked, create cell links and then write
+       the rows back to the sheet.
 
     Args:
         project_sub_index (dict): The list of projects that have a
@@ -82,21 +88,34 @@ def link_from_index(project_sub_index,
         bool: True if any links were written, False if no data was
               written back to any sheet.
     """
-    # index_data_copy = jira_index_data.copy()
+
+    # Create a copy of the project_sub_index so that we don't alter any
+    # other function's data set.
     project_data_copy = project_sub_index.copy()
 
+    # Create a list of columns that will be cell linked.
     columns_to_link = [jira_col, status_col, task_col, assignee_col]
 
+    # Create smaller indexes from the copy to speed up processing
     dest_sheet_index = dest_indexes(project_data_copy)[0]
     jira_index_sheet, jira_index_col_map, jira_index_rows = load_jira_index(
         smartsheet_client)
 
+    # Iterate through each sheet ID in the smaller sheet index.
     for sheet_id in dest_sheet_index.keys():
+        # Get the sheet data for the ID.
         dest_sheet = smartsheet_client.Sheets.get_sheet(sheet_id)
+
+        # Build a column map for easier column name to ID reference
         dest_col_map = get_column_map(dest_sheet)
+
+        # Create an empty list of cell links to update.
         cell_links_to_update = []
 
+        # Iterate through each row in the sheet.
         for row in dest_sheet.rows:
+            # Get the value of the Jira Ticket cell and validate that there
+            # is a value in the cell.
             jira_cell = get_cell_data(
                 row, jira_col, dest_col_map)
             if jira_cell is None or jira_cell.value is None:
@@ -104,6 +123,9 @@ def link_from_index(project_sub_index,
                     "Jira Ticket not found in Dest Sheet row. Skipping")
                 continue
             else:
+                # Set a friendly variable names, validate that the row ID is
+                # present in the sheet, and create a new row with the cell
+                # links.
                 jira_value = jira_cell.value
                 idx_row_id = jira_index_rows[jira_value]
                 if not idx_row_id:
@@ -161,6 +183,7 @@ def check_uuid(uuid_value, jira_value, uuid_list, jira_data_values):
         list: uuid_list if the UUID is not found in the uuid_list after
               appending the new UUID, or jira_data_values if the UUID
               value is None
+        none: If the 'if' checks fail.
     """
     if uuid_list is None:
         msg = str("UUID list is {}. Cannot process against an empty "
@@ -201,11 +224,11 @@ def check_uuid(uuid_value, jira_value, uuid_list, jira_data_values):
 
 
 def write_jira_uuids(jira_sub_index, project_sub_index, smartsheet_client):
-    """Checks each row of the index sheet for the Jira ticket
-       and UUID cells. Compares that against the UUIDs and Jira tickets of each
-       destination sheet. If there is a match, do nothing. If there isn't a
-       match, append or create the UUID value and write the UUID cell back to
-       the Index Sheet.
+    """Check each row of the index sheet for the Jira ticket and UUID cells.
+       Compare that against the UUIDs and Jira tickets of each destination
+       sheet. If there is a match, do nothing. If there isn't a match, append
+       or create the UUID value and write the UUID cell back to the Index
+       Sheet.
 
     Args:
         jira_sub_index (dict): A dict of Jira Tickets: UUID(s)
@@ -213,25 +236,36 @@ def write_jira_uuids(jira_sub_index, project_sub_index, smartsheet_client):
         smartsheet_client (Object): The Smartsheet client to interact with the
                                     API
     """
-    # Make copies for safekeeping, yeeeesss
-    index_data_copy = jira_sub_index.copy()
-    # project_data_copy = project_sub_index.copy()
 
+    # Create a copy of the project_sub_index so that we don't alter any
+    # other function's data set.
+    index_data_copy = jira_sub_index.copy()
+
+    # Query the Smartsheet API for the full contents of the Jira index sheet.
+    # Create a column map for the sheet, and then an empty list for rows to
+    # update.
     jira_index_sheet = smartsheet_client.Sheets.get_sheet(jira_idx_sheet)
     jira_index_col_map = get_column_map(jira_index_sheet)
     idx_rows_to_update = []
 
+    # Iterate through each row in the index sheet.
     for row in jira_index_sheet.rows:
+        # Create friendly names for the Jira and UUID cell values.
         jira_value = get_cell_value(row, jira_col, jira_index_col_map)
         uuid_value = get_cell_value(row, uuid_col, jira_index_col_map)
 
+        # Validate that the Jira value is not None. Skip the row if it is
+        # None.
         if not jira_value:
             logging.debug("Jira value is {}. Skipping row.".format(jira_value))
             continue
 
+        # Create a new row object and assign it the current row's ID.
         idx_new_row = smartsheet_client.models.Row()
         idx_new_row.id = row.id
 
+        # Check if the Jira Ticket is in the index. If it is, create a new
+        # cell object and assign the column ID and value from the index.
         if jira_value in index_data_copy.keys():
             msg = str("Jira ticket {} matches a key in sheet index").format(
                 jira_value)
@@ -240,10 +274,11 @@ def write_jira_uuids(jira_sub_index, project_sub_index, smartsheet_client):
             uuid_new_cell.column_id = int(
                 jira_index_col_map[uuid_col])
             jira_data_values = index_data_copy[jira_value]
+
+            # Iterate through the UUIDs and validate that the UUID is
+            # correctly tied to a Jira ticket.
             for uuid_list in jira_data_values:
-                uuid_new_value = check_uuid(uuid_value,
-                                            jira_value,
-                                            uuid_list,
+                uuid_new_value = check_uuid(uuid_value, jira_value, uuid_list,
                                             jira_data_values)
 
                 if not uuid_new_value:
@@ -252,7 +287,6 @@ def write_jira_uuids(jira_sub_index, project_sub_index, smartsheet_client):
                                                            jira_value)
                     logging.debug(msg)
                 elif uuid_new_value is not None:
-                    # logging.debug("Check UUID returned TRUTHY")
                     # Strip [] and ' from the string for future parsing.
                     uuid_new_value = str(uuid_new_value).\
                         translate({ord(i): None for i in "[]'"})
@@ -262,6 +296,8 @@ def write_jira_uuids(jira_sub_index, project_sub_index, smartsheet_client):
                     idx_new_row.cells.append(uuid_new_cell)
                     # Append the new row to the list of rows to update
                     idx_rows_to_update.append(idx_new_row)
+
+                    # TODO: Determine if Break or Continue is appropriate
                     break
                 else:
                     msg = str("Unknown error determining if UUID list value "
@@ -321,19 +357,27 @@ def write_predecessor_dates(src_data, project_data_index, smartsheet_client):
     #     "Predecessors": "38FS +1w",  # Type: str
     #     "Summary": "False"  # Type: str
     # }
+
+    # Create friendly names for sheet ID, row ID and start date.
     dest_sheet_id = src_data[uuid_col].split("-")[0]
     dest_row_id = src_data[uuid_col].split("-")[1]
     start_date = src_data[start_col]
 
+    # Query the API for the sheet data, get the column map, and get the row
+    # data. Include the objectValue so we can see the row predecessor(s).
     dest_sheet = smartsheet_client.Sheets.get_sheet(dest_sheet_id)
     dest_col_map = get_column_map(dest_sheet)
     dest_row = smartsheet_client.Sheets.get_row(dest_sheet_id,
                                                 dest_row_id,
                                                 include='objectValue')
 
+    # Validate that the start date is useful.
     if not start_date:
         logging.debug("Start date is {}".format(start_date))
         return False
+
+    # Get the start date of the row's predecessor. Verify that they are
+    # different.
     pred_start_value = get_cell_value(dest_row, start_col, dest_col_map)
     if pred_start_value == start_date:
         msg = str("Start date {} matches the start date {} in the "
@@ -342,6 +386,7 @@ def write_predecessor_dates(src_data, project_data_index, smartsheet_client):
         logging.debug(msg)
         return True
 
+    # Get the predecessor cell values.
     pred_cell = get_cell_data(dest_row, predecessor_col, dest_col_map)
 
     # Evaluate the value of the predecessor cell. If it has a value other than
@@ -349,6 +394,9 @@ def write_predecessor_dates(src_data, project_data_index, smartsheet_client):
     # is None but there is no objectValue, the row doesn't have a predecessor
     # so we set the destination row ID to the final predecessor ID and break
     # the loop.
+
+    # TODO: Handle multiple predecessors. Find earliest predecessor and update
+    # that date, or update every predecessor.
     while pred_cell.value is not None:
         predecessor_row = smartsheet_client.Sheets.get_row(
             dest_sheet_id, dest_row_id, include='objectValue')
@@ -375,6 +423,7 @@ def write_predecessor_dates(src_data, project_data_index, smartsheet_client):
             dest_row_id = str(dest_row_id).translate(
                 {ord(i): None for i in "[]'"})
 
+    # Get the value of the destination Start Date cell.
     dest_start_cell = get_cell_data(dest_row, start_col, dest_col_map)
 
     try:

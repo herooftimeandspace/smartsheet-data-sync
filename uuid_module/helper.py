@@ -57,8 +57,10 @@ def get_column_map(sheet):
 
 
 def has_cell_link(old_cell, direction):
-    """Helper function to determine if an existing cell already has a cell
-       link.
+    """Determine if an existing cell already has a cell link, which direction
+       and whether it needs to be repaired. Returning None currently disabled
+       because it caused the script to skip valid cells that should have been
+       linked.
 
     Args:
         old_cell (Cell): The Cell object to check.
@@ -66,12 +68,15 @@ def has_cell_link(old_cell, direction):
 
     Returns:
         str: "Linked" if status is "OK", "Broken" if staus is "BROKEN",
-             None if the cell doesn't have a value and "Unlinked" if the
-             cell doesn't have a cell link property. If the cell link
-             type is 'linksOutToCells', always return "Linked".
+             "Unlinked" if the cell doesn't have a cell link property. If the
+             cell link type is 'linksOutToCells', always return "Linked".
     """
+
+    # Load the cell values as a json object
     cell_json = json.loads(str(old_cell))
+
     if direction == "In":
+        # Check the status of the link.
         try:
             linked_cell = cell_json['linkInFromCell']
             status = linked_cell['status']
@@ -80,16 +85,17 @@ def has_cell_link(old_cell, direction):
             elif status == 'BROKEN':
                 return "Broken"
         except KeyError:
-            if old_cell.value is None:
-                return None
+            # if old_cell.value is None:
+            #     return None
             return "Unlinked"
     elif direction == "Out":
+        # Always set to Linked, unless it's invalid.
         try:
             linked_cell = cell_json['linksOutToCells']
             return "Linked"
         except KeyError:
-            if old_cell.value is None:
-                return None
+            # if old_cell.value is None:
+            #     return None
             return "Unlinked"
 
 
@@ -103,8 +109,10 @@ def get_cell_value(row, col_name, col_map):
         col_map (dict): The map of Column Name: Column ID
 
     Returns:
-        str: The Value of the cell.
+        str: The value of the cell.
+        none: If the cell doesn't exist or has a null value.
     """
+
     # Validate data types.
     if not isinstance(row, smartsheet.models.row.Row):
         raise TypeError("Row is not a Smartsheet Row type object")
@@ -130,14 +138,21 @@ def json_extract(obj, key):
         obj (json): The JSON object to pars through
         key (str): The key to search for
 
+    Raises:
+        TypeError: If the objects passed in aren't a dict or string,
+                   respectively.
+
     Returns:
         str: The value if a key matches inside the obj JSON
     """
+
+    # Validate data types before attempting to process.
     if not isinstance(obj, dict):
         raise TypeError("Obj must be a dict (json).")
     elif not isinstance(key, str):
         raise TypeError("Key must be a string.")
 
+    # Create an empty list as an 'array'
     arr = []
 
     def extract(obj, arr, key):
@@ -158,7 +173,7 @@ def json_extract(obj, key):
 
 
 def truncate(number, decimals=0):
-    """Returns a value truncated to a specific number of decimal places.
+    """Return a value truncated to a specific number of decimal places.
 
     Args:
         number (int): The number to truncate
@@ -172,6 +187,8 @@ def truncate(number, decimals=0):
     Returns:
         int: The number, truncated to the number of decimal places.
     """
+
+    # Validate data types before attempting to process.
     if not isinstance(decimals, int):
         raise TypeError("decimal places must be an integer.")
     elif decimals < 0:

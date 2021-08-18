@@ -11,7 +11,6 @@ from botocore.exceptions import ClientError
 import smartsheet
 from apscheduler.executors.pool import ProcessPoolExecutor, ThreadPoolExecutor
 from apscheduler.schedulers.background import BlockingScheduler
-from dotenv import load_dotenv
 
 from uuid_module.cell_link_sheet_data import write_uuid_cell_links
 from uuid_module.get_data import (get_all_row_data, get_all_sheet_ids,

@@ -12,10 +12,6 @@ from uuid_module.write_data import write_predecessor_dates
 logger = logging.getLogger(__name__)
 
 
-# If a description column has a value, look it up against the UUIDs
-# in the project dictionary. If a UUID matches, sync details.
-# project_data_index is a dict of all UUIDs and the row values.
-# source sheets is a list of all Sheet objects in all workspaces
 def write_uuid_cell_links(project_data_index, source_sheets,
                           smartsheet_client):
     """If the description column has a value, look it up against
@@ -34,6 +30,7 @@ def write_uuid_cell_links(project_data_index, source_sheets,
     """
     # dest_uuid = sheet_id, row_id where we create the cell links. Data is
     # pulled INTO this row with the cell link.
+
     # source_uuid = sheet_id, row_id where the data is coming FROM via
     # the cell link. source_uuid is located in the description column
     # of the uuid:row_data.
@@ -129,6 +126,7 @@ def write_uuid_cell_links(project_data_index, source_sheets,
                       "Row data: {}"
                       "").format(sync_columns, dest_uuid, row_data)
         logging.debug(msg)
+
         # Make sure that the description matches our UUID pattern
         if bool(re.match(r"\d+-\d+-\d+-\d+",
                          row_data[description_col])):
@@ -168,7 +166,7 @@ def write_uuid_cell_links(project_data_index, source_sheets,
 
             src_sheet = None
             for src_sheet in source_sheets:
-                # load column names and IDs for the src_sheet sheet.
+                # Load column names and IDs for the src_sheet sheet.
                 if int(source_uuid.split("-")[0]) == src_sheet.id:
                     column_names = json_extract(
                         json.loads(str(src_sheet)), "title")
@@ -304,12 +302,14 @@ def write_uuid_cell_links(project_data_index, source_sheets,
                     new_cell.column_id = int(dest_col_id)
                     new_cell.value = smartsheet_client.models.ExplicitNull()
                     new_cell.link_in_from_cell = cell_link
+
                     # Append the new cell to the row after all the parameters
                     # have been set.
                     new_row.cells.append(new_cell)
             if new_row.cells:
                 # Append the new row to the list of rows to update
                 rows_to_update.append(new_row)
+
                 # TODO: Figure out why rows with outgoing links are written.
                 msg = str("{}, {}").format(new_row, link_out_status)
                 logging.error(msg)
