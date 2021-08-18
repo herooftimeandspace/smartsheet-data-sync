@@ -18,4 +18,12 @@ project_col = "Jira Project"
     rows and data to the Jira Index sheet. On next Jira Index sheet sync,
     copies the Jira ticket into the Jira Ticket column with the row
     associated with the UUID.
+
+    Args:
+
+    Raises:
+        TypeError:
+
+    Returns:
+
     """
