@@ -4,7 +4,6 @@ import logging
 import os
 import threading
 import time
-from datetime import datetime, timedelta
 from logging.config import dictConfig
 
 import boto3
@@ -16,7 +15,7 @@ from botocore.exceptions import ClientError
 from uuid_module.cell_link_sheet_data import write_uuid_cell_links
 from uuid_module.get_data import (get_all_row_data, get_all_sheet_ids,
                                   get_blank_uuids, get_sub_indexs)
-from uuid_module.helper import json_extract, truncate, row_filter
+from uuid_module.helper import json_extract, truncate, get_timestamp
 from uuid_module.variables import log_location, module_log_name, sheet_columns
 from uuid_module.write_data import (link_from_index, write_jira_uuids,
                                     write_uuids)
@@ -197,7 +196,7 @@ def refresh_sheet_index():
     # Calculate a number minutes ago to get only the rows that were modified
     # since the last run.
     minutes = 65
-    modified_since = row_filter(minutes)
+    _, modified_since = get_timestamp(minutes)
 
     with sheet_index_lock:
         source_sheets = []

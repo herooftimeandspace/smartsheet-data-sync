@@ -203,7 +203,7 @@ def truncate(number, decimals=0):
     return math.trunc(number * factor) / factor
 
 
-def row_filter(number):
+def get_timestamp(number):
     """Subtracts the number intput from the current time to generate a
        timestamp N number of minutes ago.
 
@@ -216,5 +216,6 @@ def row_filter(number):
     date = datetime.now()
     delta = timedelta(minutes=number)
     modified_since = date - delta
-    modified_since = modified_since.replace(microsecond=0).isoformat()
-    return modified_since
+    modified_since = modified_since.replace(microsecond=0)  # .isoformat()
+    modified_since_iso = modified_since.replace(microsecond=0).isoformat()
+    return modified_since, modified_since_iso

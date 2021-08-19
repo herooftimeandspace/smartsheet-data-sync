@@ -1,12 +1,17 @@
 import json
 import logging
 from collections import defaultdict
+from datetime import datetime
+import pytz
 
-from uuid_module.helper import get_cell_value, get_cell_data, get_column_map
+from uuid_module.helper import (get_cell_data, get_cell_value, get_column_map,
+                                get_timestamp)
 from uuid_module.variables import (jira_col, jira_idx_sheet, summary_col,
                                    uuid_col, workspace_id)
 
 logger = logging.getLogger(__name__)
+
+utc = pytz.UTC
 
 
 def get_all_row_data(source_sheets, columns, smartsheet_client):
@@ -388,9 +393,21 @@ def get_folder_sheet_map(folder_map, smartsheet_client):
                               + folder.name)
                 # Iterate through each sheet in the folder, and append it
                 # to the list.
+                minutes = 65
+                modified_since, _ = get_timestamp(minutes)
+                modified_since = utc.localize(modified_since)
+                modified_since = modified_since.replace(tzinfo=utc)
                 for sheet in folder.sheets:
                     sheet_id = str(sheet.id)
-                    folder_sheet_map.append(sheet_id)
+                    sheet_modified = sheet.modified_at
+                    sheet_modified = sheet_modified.replace(tzinfo=utc)
+
+                    # If the sheet was modified in the last N minutes, add it
+                    # to the index. Otherwise, skip it.
+                    if sheet_modified >= modified_since:
+                        folder_sheet_map.append(sheet_id)
+                    else:
+                        continue
         logging.info("Loaded " + str(len(folder_sheet_map))
                      + " sheets from " + str(len(folder_map)) + " folders.")
     return folder_sheet_map
