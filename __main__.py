@@ -1,21 +1,21 @@
+import base64
+import json
 import logging
 import os
 import threading
 import time
-import json
 from logging.config import dictConfig
-import boto3
-import base64
-from botocore.exceptions import ClientError
 
+import boto3
 import smartsheet
 from apscheduler.executors.pool import ProcessPoolExecutor, ThreadPoolExecutor
 from apscheduler.schedulers.background import BlockingScheduler
+from botocore.exceptions import ClientError
 
 from uuid_module.cell_link_sheet_data import write_uuid_cell_links
 from uuid_module.get_data import (get_all_row_data, get_all_sheet_ids,
                                   get_blank_uuids, get_sub_indexs)
-from uuid_module.helper import json_extract, truncate
+from uuid_module.helper import json_extract, truncate, get_timestamp
 from uuid_module.variables import log_location, module_log_name, sheet_columns
 from uuid_module.write_data import (link_from_index, write_jira_uuids,
                                     write_uuids)
@@ -192,12 +192,20 @@ def refresh_sheet_index():
     global sheet_ids
     global source_sheets
     global sheet_index_lock
+
+    # Calculate a number minutes ago to get only the rows that were modified
+    # since the last run.
+    minutes = 65
+    _, modified_since = get_timestamp(minutes)
+
     with sheet_index_lock:
         source_sheets = []
         # Iterate through each sheet ID.
         for sheet_id in sheet_ids:
             # Query the Smartsheet API for the sheet details
-            sheet = smartsheet_client.Sheets.get_sheet(sheet_id)
+            sheet = smartsheet_client.\
+                Sheets.get_sheet(sheet_id,
+                                 rows_modified_since=modified_since)
             source_sheets.append(sheet)
             logging.debug("Loading Sheet ID: {} | "
                           "Sheet Name: {}".format(sheet.id, sheet.name))
