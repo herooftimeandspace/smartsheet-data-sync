@@ -1,6 +1,7 @@
 import base64
 import json
 import logging
+from math import modf
 import os
 import threading
 import time
@@ -204,8 +205,7 @@ def refresh_sheet_index():
         for sheet_id in sheet_ids:
             # Query the Smartsheet API for the sheet details
             sheet = smartsheet_client.\
-                Sheets.get_sheet(sheet_id,
-                                 rows_modified_since=modified_since)
+                Sheets.get_sheet(sheet_id, rows_modified_since=modified_since)
             source_sheets.append(sheet)
             logging.debug("Loading Sheet ID: {} | "
                           "Sheet Name: {}".format(sheet.id, sheet.name))
@@ -392,7 +392,7 @@ def main():
     end_total = time.time()
     total = end_total - start_total
     total = truncate(total, 3)
-    logging.debug("Total time: {} seconds.".format(total))
+    logging.info("Total time: {} seconds.".format(total))
 
     logging.debug("------------------------")
     logging.debug("Adding job to refresh Sheet IDs. "
@@ -449,22 +449,22 @@ if __name__ == '__main__':
     """
     # main()
     main = main()
-    if main:
-        try:
-            logging.debug("------------------------")
-            logging.debug("Starting job scheduler.")
-            logging.debug("------------------------")
-            scheduler.start()
-        except KeyboardInterrupt:
-            logging.warning("------------------------")
-            logging.warning("Scheduled Jobs shut down due "
-                            "to Keyboard Interrupt.")
-            logging.warning("------------------------")
-            scheduler.shutdown()
-        else:
-            scheduler.shutdown()
-            logging.debug("------------------------")
-            logging.debug("Scheduled Jobs ended without interruption.")
-            logging.debug("------------------------")
-    else:
-        logging.error("Issue with running MAIN. Process terminated.")
+    # if main:
+    #     try:
+    #         logging.debug("------------------------")
+    #         logging.debug("Starting job scheduler.")
+    #         logging.debug("------------------------")
+    #         scheduler.start()
+    #     except KeyboardInterrupt:
+    #         logging.warning("------------------------")
+    #         logging.warning("Scheduled Jobs shut down due "
+    #                         "to Keyboard Interrupt.")
+    #         logging.warning("------------------------")
+    #         scheduler.shutdown()
+    #     else:
+    #         scheduler.shutdown()
+    #         logging.debug("------------------------")
+    #         logging.debug("Scheduled Jobs ended without interruption.")
+    #         logging.debug("------------------------")
+    # else:
+    #     logging.error("Issue with running MAIN. Process terminated.")
