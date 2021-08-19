@@ -1,11 +1,11 @@
 import base64
 import json
 import logging
-from math import modf
 import os
 import threading
 import time
 from logging.config import dictConfig
+from math import modf
 
 import boto3
 import smartsheet
@@ -16,10 +16,9 @@ from botocore.exceptions import ClientError
 from uuid_module.cell_link_sheet_data import write_uuid_cell_links
 from uuid_module.get_data import (get_all_row_data, get_all_sheet_ids,
                                   get_blank_uuids, get_sub_indexs)
-from uuid_module.helper import json_extract, truncate, get_timestamp
+from uuid_module.helper import get_timestamp, json_extract, truncate
 from uuid_module.variables import log_location, module_log_name, sheet_columns
-from uuid_module.write_data import (link_from_index, write_jira_uuids,
-                                    write_uuids)
+from uuid_module.write_data import link_from_index, write_uuids
 
 start = time.time()
 
