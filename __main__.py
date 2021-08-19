@@ -281,7 +281,6 @@ def full_jira_sync():
         logging.info(msg)
         return
 
-    # write_jira_uuids(jira_sub_index, project_sub_index, smartsheet_client)
     link_from_index(project_sub_index, smartsheet_client)
     write_uuid_cell_links(project_uuid_index,
                           source_sheets, smartsheet_client)
