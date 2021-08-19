@@ -7,7 +7,7 @@ import pytz
 from uuid_module.helper import (get_cell_data, get_cell_value, get_column_map,
                                 get_timestamp)
 from uuid_module.variables import (jira_col, jira_idx_sheet, summary_col,
-                                   uuid_col, workspace_id)
+                                   uuid_col, workspace_id, minutes)
 
 logger = logging.getLogger(__name__)
 
@@ -283,7 +283,6 @@ def get_all_sheet_ids(smartsheet_client):
 
     # Get the workspace Smartsheet object from the workspace_id
     # configured in our variables.
-    minutes = 65
     modified_since, _ = get_timestamp(minutes)
     modified_since = utc.localize(modified_since)
     modified_since = modified_since.replace(tzinfo=utc)

@@ -212,6 +212,8 @@ def get_timestamp(number):
     """
     if not isinstance(number, int):
         raise TypeError("Number of minutes must be an integer.")
+    if number <= 0:
+        raise AttributeError("Number needs to be a positive int.")
 
     date = datetime.now()
     delta = timedelta(minutes=number)

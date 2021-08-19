@@ -1,11 +1,11 @@
 import json
+import os
 from typing import Type
+
 import pytest
 import smartsheet
-import os
-
-from uuid_module.helper import (get_cell_value, get_cell_data,
-                                get_column_map, has_cell_link, json_extract,
+from uuid_module.helper import (get_cell_data, get_cell_value, get_column_map,
+                                get_timestamp, has_cell_link, json_extract,
                                 truncate)
 
 true = True
@@ -65,6 +65,12 @@ def number():
 @pytest.fixture
 def decimals():
     return 3
+
+
+@pytest.fixture
+def minutes():
+    test_time = get_timestamp(10)
+    return 10, test_time
 
 
 @pytest.fixture
@@ -133,6 +139,17 @@ def test_truncate(number, decimals):
     with pytest.raises(ValueError):
         truncate(obj, -1)
     assert truncate(number, decimals) == 3.141
+
+# TODO: Might need some fixing. Merge and fix in pytests branch
+
+
+def test_get_timestamp(minutes):
+    with pytest.raises(TypeError):
+        get_timestamp("Benny's Adventure Team")
+    with pytest.raises(AttributeError):
+        get_timestamp(-10)
+    _, test_time = minutes()
+    assert get_timestamp(minutes) == test_time
 
 
 # def test_raises_exception_on_non_string_arguments():

@@ -17,7 +17,8 @@ from uuid_module.cell_link_sheet_data import write_uuid_cell_links
 from uuid_module.get_data import (get_all_row_data, get_all_sheet_ids,
                                   get_blank_uuids, get_sub_indexs)
 from uuid_module.helper import get_timestamp, json_extract, truncate
-from uuid_module.variables import log_location, module_log_name, sheet_columns
+from uuid_module.variables import (log_location, minutes, module_log_name,
+                                   sheet_columns)
 from uuid_module.write_data import link_from_index, write_uuids
 
 start = time.time()
@@ -191,7 +192,6 @@ def full_jira_sync():
     def refresh_source_sheets(minutes):
         _, modified_since = get_timestamp(minutes)
         with sheet_index_lock:
-            source_sheets = []
             # Iterate through each sheet ID.
             for sheet_id in sheet_ids:
                 # Query the Smartsheet API for the sheet details
@@ -203,7 +203,7 @@ def full_jira_sync():
                               "Sheet Name: {}".format(sheet.id, sheet.name))
         return source_sheets
 
-    source_sheets = refresh_source_sheets(minutes=65)
+    source_sheets = refresh_source_sheets(minutes)
 
     blank_uuid_index = get_blank_uuids(source_sheets, smartsheet_client)
     if blank_uuid_index:
