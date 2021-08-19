@@ -175,53 +175,58 @@ elapsed = truncate(elapsed, 2)
 logging.debug("Initialization took: {}".format(elapsed))
 
 
-def refresh_sheet_ids():
-    """Wrapper container for APScheduler. Gets all sheet IDs from all
-       Workspaces.
-    """
+def full_jira_sync():
+    start = time.time()
+    msg = str("Starting refresh of Smartsheet project data.")
+    logging.info(msg)
+
     global sheet_id_lock
     with sheet_id_lock:
-        global sheet_ids
         sheet_ids = get_all_sheet_ids(smartsheet_client)
         sheet_ids = list(set(sheet_ids))
 
-
-def refresh_sheet_index():
-    """Wrapper container for APScheduler. Creates an array of all Sheet
-       objects.
-    """
-    global sheet_ids
-    global source_sheets
     global sheet_index_lock
 
     # Calculate a number minutes ago to get only the rows that were modified
     # since the last run.
-    minutes = 65
-    _, modified_since = get_timestamp(minutes)
+    def refresh_source_sheets(minutes):
+        _, modified_since = get_timestamp(minutes)
+        with sheet_index_lock:
+            source_sheets = []
+            # Iterate through each sheet ID.
+            for sheet_id in sheet_ids:
+                # Query the Smartsheet API for the sheet details
+                sheet = smartsheet_client.\
+                    Sheets.get_sheet(
+                        sheet_id, rows_modified_since=modified_since)
+                source_sheets.append(sheet)
+                logging.debug("Loading Sheet ID: {} | "
+                              "Sheet Name: {}".format(sheet.id, sheet.name))
+        return source_sheets
 
-    with sheet_index_lock:
-        source_sheets = []
-        # Iterate through each sheet ID.
-        for sheet_id in sheet_ids:
-            # Query the Smartsheet API for the sheet details
-            sheet = smartsheet_client.\
-                Sheets.get_sheet(sheet_id, rows_modified_since=modified_since)
-            source_sheets.append(sheet)
-            logging.debug("Loading Sheet ID: {} | "
-                          "Sheet Name: {}".format(sheet.id, sheet.name))
+    source_sheets = refresh_source_sheets(minutes=65)
 
+    blank_uuid_index = get_blank_uuids(source_sheets, smartsheet_client)
+    if blank_uuid_index:
+        logging.debug("There are {} project sheets to be updated".format(
+            len(blank_uuid_index)))
+        sheets_updated = write_uuids(blank_uuid_index, smartsheet_client)
+        if sheets_updated > 0:
+            logging.debug("{} project sheet(s) updated".format(sheets_updated))
+            source_sheets = refresh_source_sheets(minutes=2)
+        else:
+            logging.debug("No UUIDs to update.")
 
-def refresh_project_index():
-    """Wrapper container for APScheduler. Creates a Project Index across all
-       sheets, and two sub-indexes for a scoped project index UUID:Jira
-       and a scoped Jira index Jira:UUID(s)
-    """
-    global project_uuid_index
-    global jira_sub_index
-    global project_sub_index
-    global source_sheets
+    if not source_sheets:
+        end = time.time()
+        elapsed = end - start
+        elapsed = truncate(elapsed, 3)
+        msg = str("Sheet index is empty. "
+                  "Aborting after {} seconds.").format(elapsed)
+        logging.info(msg)
+        return
+
     global project_index_lock
-
     with project_index_lock:
         try:
             project_uuid_index = get_all_row_data(
@@ -229,15 +234,19 @@ def refresh_project_index():
         except ValueError as e:
             msg = str("Getting all row data returned an error. {}").format(e)
             logging.error(msg)
+
     if project_uuid_index:
-        logging.debug("Project Index is {} "
-                      "items long".format(len(project_uuid_index)))
-    else:
-        msg = str("Project UUID Index is empty. Continuing.")
+        logging.info("Project Index is {} "
+                     "items long".format(len(project_uuid_index)))
+
+    if not project_uuid_index:
+        end = time.time()
+        elapsed = end - start
+        elapsed = truncate(elapsed, 3)
+        msg = str("Project UUID Index is empty. "
+                  "Aborting after {} seconds.").format(elapsed)
         logging.info(msg)
-        jira_sub_index = []
-        project_sub_index = []
-        return jira_sub_index, project_sub_index
+        return
 
     try:
         jira_sub_index, project_sub_index = get_sub_indexs(
@@ -247,87 +256,41 @@ def refresh_project_index():
         logging.error(msg)
 
     if project_sub_index:
-        logging.debug("Project Sub Index is {} "
-                      "items long".format(len(project_sub_index)))
+        logging.info("Project Sub Index is {} "
+                     "items long".format(len(project_sub_index)))
+
+    if not project_sub_index:
+        end = time.time()
+        elapsed = end - start
+        elapsed = truncate(elapsed, 3)
+        msg = str("Project sub-index is empty. "
+                  "Aborting after {} seconds.").format(elapsed)
+        logging.info(msg)
+        return
 
     if jira_sub_index:
-        logging.debug("Jira Sub Index is {} "
-                      "items long".format(len(jira_sub_index)))
+        logging.info("Jira Sub Index is {} "
+                     "items long".format(len(jira_sub_index)))
 
-
-def refresh_jira_uuid_index():
-    """Wrapper container for APScheduler. Writes UUIDs to the Jira Index
-       Sheet.
-    """
-    global jira_sub_index
-    global project_sub_index
     if not jira_sub_index:
-        msg = str("Jira sub-index is empty. Continuing.")
-        logging.info(msg)
-        return
-    elif not project_sub_index:
-        msg = str("Project sub-index is empty. Continuing.")
-        logging.info(msg)
-        return
-    else:
-        write_jira_uuids(jira_sub_index, project_sub_index, smartsheet_client)
-
-
-def refresh_jira_cell_links():
-    """Wrapper container for APScheduler. Writes cell links between
-       the Jira Index Sheet and any number of Smartsheet sheets.
-    """
-    if not jira_sub_index:
-        msg = str("Jira sub-index is empty. Continuing.")
-        logging.info(msg)
-        return
-    elif not project_sub_index:
-        msg = str("Project sub-index is empty. Continuing.")
-        logging.info(msg)
-        return
-    else:
-        link_from_index(project_sub_index, smartsheet_client)
-
-
-def refresh_uuid_cell_links():
-    """Wrapper container for APScheduler. Writes cell links between any
-       two sheets by UUID.
-    """
-    global project_uuid_index
-    global source_sheets
-    if not project_uuid_index:
-        msg = str("Project UUID Index is empty. Continuing.")
-        logging.info(msg)
-        return
-    elif not source_sheets:
-        msg = str("Sheet index is empty. Continuing.")
-        logging.info(msg)
-        return
-    else:
-        write_uuid_cell_links(project_uuid_index,
-                              source_sheets, smartsheet_client)
-
-
-def refresh_sheet_uuids():
-    """Wrapper container for APScheduler. Writes UUIDs for any non-summary
-       row that does not already have a UUID, or if the UUID was incorrectly
-       modified.
-    """
-    global source_sheets
-    if not source_sheets:
-        msg = str("Project UUID Index is empty. Continuing.")
+        end = time.time()
+        elapsed = end - start
+        elapsed = truncate(elapsed, 3)
+        msg = str("Jira sub-index is empty. "
+                  "Aborting after {} seconds.").format(elapsed)
         logging.info(msg)
         return
 
-    blank_uuid_index = get_blank_uuids(source_sheets, smartsheet_client)
-    if blank_uuid_index:
-        logging.debug("There are {} project sheets to be updated".format(
-            len(blank_uuid_index)))
-        sheets_updated = write_uuids(blank_uuid_index, smartsheet_client)
-        if sheets_updated > 0:
-            logging.debug("{} project sheet(s) updated".format(sheets_updated))
-        else:
-            logging.debug("No UUIDs to update.")
+    # write_jira_uuids(jira_sub_index, project_sub_index, smartsheet_client)
+    link_from_index(project_sub_index, smartsheet_client)
+    write_uuid_cell_links(project_uuid_index,
+                          source_sheets, smartsheet_client)
+
+    end = time.time()
+    elapsed = end - start
+    elapsed = truncate(elapsed, 3)
+    logging.info(
+        "Retrieving everything took: {} seconds.".format(elapsed))
 
 
 def track_time(function):
@@ -360,34 +323,9 @@ def main():
     msg = str("Starting first time initialization of Smartsheet project data.")
     logging.info(msg)
 
-    elapsed1 = track_time(refresh_sheet_ids)
+    elapsed1 = track_time(full_jira_sync)
     logging.info(
-        "Retrieving all sheet IDs took: {} seconds.".format(elapsed1))
-
-    elapsed2 = track_time(refresh_sheet_index)
-    logging.info(
-        "Retrieving all sheet objects took: {} seconds.".format(elapsed2))
-
-    elapsed3 = track_time(refresh_project_index)
-    logging.info("Retrieving the project UUID index "
-                 "and sub-indexes took: {} seconds.".format(elapsed3))
-
-    elapsed7 = track_time(refresh_sheet_uuids)
-    logging.info("Writing new UUIDs took: {} seconds.".format(elapsed7))
-
-    elapsed4 = track_time(refresh_jira_uuid_index)
-    logging.info(
-        "Writing UUIDs to the Jira Index Sheet took: "
-        "{} seconds.".format(elapsed4))
-
-    elapsed5 = track_time(refresh_jira_cell_links)
-    logging.info(
-        "Linking project sheets to the Jira Index "
-        "Sheet took: {} seconds.".format(elapsed5))
-
-    # elapsed6 = track_time(refresh_uuid_cell_links())
-    # logging.info(
-    #     "Linking project rows by UUID took: {} seconds.".format(elapsed6))
+        "Initial run took: {} seconds.".format(elapsed1))
 
     end_total = time.time()
     total = end_total - start_total
@@ -395,52 +333,12 @@ def main():
     logging.info("Total time: {} seconds.".format(total))
 
     logging.debug("------------------------")
-    logging.debug("Adding job to refresh Sheet IDs. "
-                  "Cron = At minute 1.")
+    logging.debug("Adding job to refresh everything. "
+                  "Interval = every 1 minute.")
     logging.debug("------------------------")
-    scheduler.add_job(refresh_sheet_ids,
-                      'cron',
-                      minute=1)
-
-    logging.debug("------------------------")
-    logging.debug("Adding job to refresh the sheet index. "
-                  "Cron = At minute 2.")
-    logging.debug("------------------------")
-    scheduler.add_job(refresh_sheet_index,
-                      'cron',
-                      minute=2)
-
-    logging.debug("------------------------")
-    logging.debug("Adding job to refresh the project index. "
-                  "Cron = At minute 3.")
-    logging.debug("------------------------")
-    scheduler.add_job(refresh_project_index,
-                      'cron',
-                      minute=3)
-
-    logging.debug("------------------------")
-    logging.debug("Adding jobs write new UUIDs back to project sheets."
-                  "Cron = At minute 4")
-    logging.debug("------------------------")
-    scheduler.add_job(refresh_sheet_uuids,
-                      'cron',
-                      minute=4)
-
-    logging.debug("------------------------")
-    logging.debug("Adding job to update the Jira UUID index. "
-                  "Cron = At minute 5.")
-    logging.debug("------------------------")
-    scheduler.add_job(refresh_jira_uuid_index,
-                      'cron',
-                      minute=5)
-
-    logging.debug("------------------------")
-    logging.debug("Adding job to create new cell links by "
-                  "Jira ticket. Cron = At minute 6.")
-    logging.debug("------------------------")
-    scheduler.add_job(refresh_jira_cell_links,
-                      'cron',
-                      minute=6)
+    scheduler.add_job(full_jira_sync,
+                      'interval',
+                      minutes=1)
     return True
 
 
@@ -449,22 +347,22 @@ if __name__ == '__main__':
     """
     # main()
     main = main()
-    # if main:
-    #     try:
-    #         logging.debug("------------------------")
-    #         logging.debug("Starting job scheduler.")
-    #         logging.debug("------------------------")
-    #         scheduler.start()
-    #     except KeyboardInterrupt:
-    #         logging.warning("------------------------")
-    #         logging.warning("Scheduled Jobs shut down due "
-    #                         "to Keyboard Interrupt.")
-    #         logging.warning("------------------------")
-    #         scheduler.shutdown()
-    #     else:
-    #         scheduler.shutdown()
-    #         logging.debug("------------------------")
-    #         logging.debug("Scheduled Jobs ended without interruption.")
-    #         logging.debug("------------------------")
-    # else:
-    #     logging.error("Issue with running MAIN. Process terminated.")
+    if main:
+        try:
+            logging.debug("------------------------")
+            logging.debug("Starting job scheduler.")
+            logging.debug("------------------------")
+            scheduler.start()
+        except KeyboardInterrupt:
+            logging.warning("------------------------")
+            logging.warning("Scheduled Jobs shut down due "
+                            "to Keyboard Interrupt.")
+            logging.warning("------------------------")
+            scheduler.shutdown()
+        else:
+            scheduler.shutdown()
+            logging.debug("------------------------")
+            logging.debug("Scheduled Jobs ended without interruption.")
+            logging.debug("------------------------")
+    else:
+        logging.error("Issue with running MAIN. Process terminated.")
