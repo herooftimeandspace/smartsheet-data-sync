@@ -221,6 +221,7 @@ def refresh_project_index():
     global project_sub_index
     global source_sheets
     global project_index_lock
+
     with project_index_lock:
         try:
             project_uuid_index = get_all_row_data(
@@ -231,6 +232,12 @@ def refresh_project_index():
     if project_uuid_index:
         logging.debug("Project Index is {} "
                       "items long".format(len(project_uuid_index)))
+    else:
+        msg = str("Project UUID Index is empty. Continuing.")
+        logging.info(msg)
+        jira_sub_index = []
+        project_sub_index = []
+        return jira_sub_index, project_sub_index
 
     try:
         jira_sub_index, project_sub_index = get_sub_indexs(
@@ -254,14 +261,32 @@ def refresh_jira_uuid_index():
     """
     global jira_sub_index
     global project_sub_index
-    write_jira_uuids(jira_sub_index, project_sub_index, smartsheet_client)
+    if not jira_sub_index:
+        msg = str("Jira sub-index is empty. Continuing.")
+        logging.info(msg)
+        return
+    elif not project_sub_index:
+        msg = str("Project sub-index is empty. Continuing.")
+        logging.info(msg)
+        return
+    else:
+        write_jira_uuids(jira_sub_index, project_sub_index, smartsheet_client)
 
 
 def refresh_jira_cell_links():
     """Wrapper container for APScheduler. Writes cell links between
        the Jira Index Sheet and any number of Smartsheet sheets.
     """
-    link_from_index(project_sub_index, smartsheet_client)
+    if not jira_sub_index:
+        msg = str("Jira sub-index is empty. Continuing.")
+        logging.info(msg)
+        return
+    elif not project_sub_index:
+        msg = str("Project sub-index is empty. Continuing.")
+        logging.info(msg)
+        return
+    else:
+        link_from_index(project_sub_index, smartsheet_client)
 
 
 def refresh_uuid_cell_links():
@@ -270,7 +295,17 @@ def refresh_uuid_cell_links():
     """
     global project_uuid_index
     global source_sheets
-    write_uuid_cell_links(project_uuid_index, source_sheets, smartsheet_client)
+    if not project_uuid_index:
+        msg = str("Project UUID Index is empty. Continuing.")
+        logging.info(msg)
+        return
+    elif not source_sheets:
+        msg = str("Sheet index is empty. Continuing.")
+        logging.info(msg)
+        return
+    else:
+        write_uuid_cell_links(project_uuid_index,
+                              source_sheets, smartsheet_client)
 
 
 def refresh_sheet_uuids():
@@ -279,6 +314,11 @@ def refresh_sheet_uuids():
        modified.
     """
     global source_sheets
+    if not source_sheets:
+        msg = str("Project UUID Index is empty. Continuing.")
+        logging.info(msg)
+        return
+
     blank_uuid_index = get_blank_uuids(source_sheets, smartsheet_client)
     if blank_uuid_index:
         logging.debug("There are {} project sheets to be updated".format(
