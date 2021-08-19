@@ -336,7 +336,7 @@ def main():
     logging.debug("------------------------")
     scheduler.add_job(full_jira_sync,
                       'interval',
-                      minutes=1)
+                      minutes=30)
     return True
 
 
