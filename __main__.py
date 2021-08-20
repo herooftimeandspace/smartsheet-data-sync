@@ -186,6 +186,7 @@ def full_jira_sync():
         sheet_ids = list(set(sheet_ids))
 
     global sheet_index_lock
+    source_sheets = []
 
     # Calculate a number minutes ago to get only the rows that were modified
     # since the last run.
