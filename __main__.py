@@ -5,7 +5,6 @@ import os
 import threading
 import time
 from logging.config import dictConfig
-from math import modf
 
 import boto3
 import smartsheet
