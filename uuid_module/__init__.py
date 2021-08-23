@@ -8,7 +8,6 @@
        constant variables to ensure consistency across the application.
 """
 
-from .cell_link_sheet_data import write_uuid_cell_links
 from .get_data import (get_all_row_data, get_all_sheet_ids, get_blank_uuids,
                        get_sub_indexs, load_jira_index)
 from .helper import (chunks, get_cell_data, get_cell_value, get_column_map,

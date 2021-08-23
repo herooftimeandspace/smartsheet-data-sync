@@ -186,28 +186,30 @@ def full_jira_sync(minutes):
 
     global sheet_id_lock
     with sheet_id_lock:
+        global sheet_ids
         sheet_ids = get_all_sheet_ids(smartsheet_client)
         sheet_ids = list(set(sheet_ids))
 
     global sheet_index_lock
-    # Calculate a number minutes ago to get only the rows that were modified
-    # since the last run.
 
     def refresh_source_sheets(minutes):
         _, modified_since = get_timestamp(minutes)
-        source_sheets = []
+
         with sheet_index_lock:
             source_sheets = []
-            # Iterate through each sheet ID.
-            for sheet_id in sheet_ids:
-                # Query the Smartsheet API for the sheet details
-                sheet = smartsheet_client.\
-                    Sheets.get_sheet(
-                        sheet_id, rows_modified_since=modified_since)
-                source_sheets.append(sheet)
-                logging.debug("Loading Sheet ID: {} | "
-                              "Sheet Name: {}".format(sheet.id, sheet.name))
-        return source_sheets
+            with sheet_index_lock:
+                source_sheets = []
+                # Iterate through each sheet ID.
+                for sheet_id in sheet_ids:
+                    # Query the Smartsheet API for the sheet details
+                    sheet = smartsheet_client.\
+                        Sheets.get_sheet(
+                            sheet_id, rows_modified_since=modified_since)
+                    source_sheets.append(sheet)
+                    logging.debug("Loading Sheet ID: {} | "
+                                  "Sheet Name: {}".format(sheet.id,
+                                                          sheet.name))
+            return source_sheets
 
     source_sheets = refresh_source_sheets(minutes)
 
@@ -237,19 +239,9 @@ def full_jira_sync(minutes):
         except ValueError as e:
             msg = str("Getting all row data returned an error. {}").format(e)
             logging.error(msg)
-
     if project_uuid_index:
-        logging.info("Project Index is {} "
-                     "items long".format(len(project_uuid_index)))
-
-    if not project_uuid_index:
-        end = time.time()
-        elapsed = end - start
-        elapsed = truncate(elapsed, 3)
-        msg = str("Project UUID Index is empty. "
-                  "Aborting after {} seconds.").format(elapsed)
-        logging.info(msg)
-        return
+        logging.debug("Project Index is {} "
+                      "items long".format(len(project_uuid_index)))
 
     try:
         jira_sub_index, project_sub_index = get_sub_indexs(
@@ -259,30 +251,12 @@ def full_jira_sync(minutes):
         logging.error(msg)
 
     if project_sub_index:
-        logging.info("Project Sub Index is {} "
-                     "items long".format(len(project_sub_index)))
-
-    if not project_sub_index:
-        end = time.time()
-        elapsed = end - start
-        elapsed = truncate(elapsed, 3)
-        msg = str("Project sub-index is empty. "
-                  "Aborting after {} seconds.").format(elapsed)
-        logging.info(msg)
-        return
+        logging.debug("Project Sub Index is {} "
+                      "items long".format(len(project_sub_index)))
 
     if jira_sub_index:
-        logging.info("Jira Sub Index is {} "
-                     "items long".format(len(jira_sub_index)))
-
-    if not jira_sub_index:
-        end = time.time()
-        elapsed = end - start
-        elapsed = truncate(elapsed, 3)
-        msg = str("Jira sub-index is empty. "
-                  "Aborting after {} seconds.").format(elapsed)
-        logging.info(msg)
-        return
+        logging.debug("Jira Sub Index is {} "
+                      "items long".format(len(jira_sub_index)))
 
     logging.debug("Writing Jira cell links.")
     write_jira_index_cell_links(project_sub_index, smartsheet_client)
