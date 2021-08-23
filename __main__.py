@@ -1,11 +1,11 @@
 import base64
+import gc
 import json
 import logging
 import os
 import threading
 import time
 from logging.config import dictConfig
-import gc
 
 import boto3
 import smartsheet
@@ -193,6 +193,7 @@ def full_jira_sync():
         _, modified_since = get_timestamp(minutes)
         source_sheets = []
         with sheet_index_lock:
+            source_sheets = []
             # Iterate through each sheet ID.
             for sheet_id in sheet_ids:
                 # Query the Smartsheet API for the sheet details
@@ -204,7 +205,7 @@ def full_jira_sync():
                               "Sheet Name: {}".format(sheet.id, sheet.name))
         return source_sheets
 
-    source_sheets = refresh_source_sheets(minutes)
+    source_sheets = refresh_source_sheets(minutes=65)
 
     blank_uuid_index = get_blank_uuids(source_sheets, smartsheet_client)
     if blank_uuid_index:

@@ -45,6 +45,7 @@ jira_idx_sheet = "5366809688860548"
 """Jira Index Sheet ID. Type: str
     """
 
+
 index_columns = [task_col, description_col,
                  status_col, assignee_col, jira_col,
                  duration_col, start_col, finish_col, predecessor_col]
