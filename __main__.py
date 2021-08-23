@@ -5,6 +5,7 @@ import os
 import threading
 import time
 from logging.config import dictConfig
+import gc
 
 import boto3
 import smartsheet
@@ -146,8 +147,8 @@ except FileExistsError:
 logger = logging.getLogger()
 
 executors = {
-    'default': ThreadPoolExecutor(20),
-    'processpool': ProcessPoolExecutor(5)
+    'default': ThreadPoolExecutor(1),
+    'processpool': ProcessPoolExecutor(1)
 }
 job_defaults = {
     'coalesce': True,
@@ -289,6 +290,7 @@ def full_jira_sync():
     elapsed = truncate(elapsed, 3)
     logging.info(
         "Retrieving everything took: {} seconds.".format(elapsed))
+    gc.collect()
 
 
 def track_time(function):
