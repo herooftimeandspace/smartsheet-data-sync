@@ -19,7 +19,7 @@ from uuid_module.get_data import (get_all_row_data, get_all_sheet_ids,
 from uuid_module.helper import get_timestamp, json_extract, truncate
 from uuid_module.variables import (log_location, minutes, module_log_name,
                                    sheet_columns)
-from uuid_module.write_data import link_from_index, write_uuids
+from uuid_module.write_data import write_jira_index_cell_links, write_uuids
 
 start = time.time()
 
@@ -119,7 +119,7 @@ logging_config = dict(
         'file': {
             'class': 'logging.FileHandler',
             'formatter': 'f',
-            'level': logging.WARNING,
+            'level': logging.DEBUG,
             'filename': log_location + module_log_name
         },
         'docker': {
@@ -208,14 +208,14 @@ def full_jira_sync():
 
     blank_uuid_index = get_blank_uuids(source_sheets, smartsheet_client)
     if blank_uuid_index:
-        logging.debug("There are {} project sheets to be updated".format(
+        logging.info("There are {} project sheets to be updated".format(
             len(blank_uuid_index)))
         sheets_updated = write_uuids(blank_uuid_index, smartsheet_client)
         if sheets_updated > 0:
-            logging.debug("{} project sheet(s) updated".format(sheets_updated))
-            source_sheets = refresh_source_sheets(minutes=2)
+            logging.info("{} project sheet(s) updated".format(sheets_updated))
+            source_sheets = refresh_source_sheets(minutes)
         else:
-            logging.debug("No UUIDs to update.")
+            logging.info("No UUIDs to update.")
 
     if not source_sheets:
         end = time.time()
@@ -281,7 +281,9 @@ def full_jira_sync():
         logging.info(msg)
         return
 
-    link_from_index(project_sub_index, smartsheet_client)
+    logging.info("Writing Jira cell links.")
+    write_jira_index_cell_links(project_sub_index, smartsheet_client)
+    logging.debug("Writing UUID cell links.")
     write_uuid_cell_links(project_uuid_index,
                           source_sheets, smartsheet_client)
 
@@ -338,7 +340,7 @@ def main():
     logging.debug("------------------------")
     scheduler.add_job(full_jira_sync,
                       'interval',
-                      minutes=5)
+                      seconds=30)
     return True
 
 

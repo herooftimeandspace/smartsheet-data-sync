@@ -61,6 +61,12 @@ def get_all_row_data(source_sheets, columns, smartsheet_client):
                 row, summary_col, col_map)
             uuid_cell = get_cell_data(row, uuid_col, col_map)
 
+            if uuid_cell is None:
+                logging.debug("Sheet ID {} | Sheet Name {} "
+                              "doesn't have UUID column. "
+                              "Skipping sheet.".format(sheet.id, sheet.name))
+                break
+
             if summary_cell is None:
                 logging.debug("Summary row is {}. Continuing to next "
                               "row.".format(summary_cell))
@@ -69,12 +75,6 @@ def get_all_row_data(source_sheets, columns, smartsheet_client):
                 logging.debug("Summary row is {}. Continuing to next "
                               "row.".format(summary_cell))
                 continue
-
-            if uuid_cell is None:
-                logging.debug("Sheet ID {} | Sheet Name {} "
-                              "doesn't have UUID column. "
-                              "Skipping sheet.".format(sheet.id, sheet.name))
-                break
 
             row_data = {}
             all_row_data[uuid_cell.value] = row_data

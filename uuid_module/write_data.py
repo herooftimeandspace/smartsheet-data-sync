@@ -72,8 +72,8 @@ def write_uuids(sheets_to_update, smartsheet_client):
     return sheets_updated
 
 
-def link_from_index(project_sub_index,
-                    smartsheet_client):
+def write_jira_index_cell_links(project_sub_index,
+                                smartsheet_client):
     """For each sheet in the destination sheet index, parse through the rows,
        determine if cells need to be linked, create cell links and then write
        the rows back to the sheet.
@@ -143,7 +143,7 @@ def link_from_index(project_sub_index,
                               "").format(len(new_row.cells),
                                          new_row.id,
                                          dest_sheet.name)
-                    logging.debug(msg)
+                    logging.info(msg)
                 else:
                     continue
 
@@ -161,9 +161,7 @@ def link_from_index(project_sub_index,
             msg = str("No updates needed for Sheet ID: {} | "
                       "Sheet Name {}.").format(dest_sheet.id,
                                                dest_sheet.name)
-            logging.debug(msg)
-
-    return True
+            logging.info(msg)
 
 
 def check_uuid(uuid_value, jira_value, uuid_list, jira_data_values):
