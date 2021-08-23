@@ -212,8 +212,12 @@ def load_jira_index(smartsheet_client):
         smartsheet_client (Object): The Smartsheet client to query the API
 
     Returns:
+        sheet: A Smartsheet Sheet object that includes all data for the Jira
+               Index Sheet
+        dict: A dictionary containing mapped column IDs to column names
         dict: A dictionary containing the Jira ticket as the key and the
               row ID as the value.
+
     """
     jira_index_sheet = smartsheet_client.Sheets.get_sheet(jira_idx_sheet)
     jira_index_col_map = get_column_map(jira_index_sheet)
@@ -228,8 +232,10 @@ def load_jira_index(smartsheet_client):
             row, jira_col, jira_index_col_map)
         if jira_cell is None:
             logging.debug("Jira cell doesn't exist. Skipping.")
+            continue
         elif jira_cell.value is None:
             logging.debug("Jira value doesn't exist. Skipping.")
+            continue
         else:
             jira_value = jira_cell.value
             jira_index_rows[jira_value] = row.id
