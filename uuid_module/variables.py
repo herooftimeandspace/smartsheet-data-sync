@@ -45,6 +45,7 @@ jira_idx_sheet = "5366809688860548"
 """Jira Index Sheet ID. Type: str
     """
 
+
 index_columns = [task_col, description_col,
                  status_col, assignee_col, jira_col,
                  duration_col, start_col, finish_col, predecessor_col]
@@ -64,9 +65,4 @@ sheet_columns = [uuid_col, task_col, description_col,
 sync_columns = [status_col, assignee_col, task_col,
                 start_col, duration_col]
 """List of columns to use during Cell link syncs. Type: list
-    """
-
-minutes = 65
-"""The maximum number of minutes into the past the get_timestamp function
-    should look before filtering out results. Type: int
     """
