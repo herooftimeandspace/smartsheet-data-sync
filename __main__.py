@@ -175,7 +175,7 @@ elapsed = truncate(elapsed, 2)
 logging.debug("Initialization took: {}".format(elapsed))
 
 
-def full_jira_sync():
+def full_jira_sync(minutes):
     start = time.time()
     msg = str("Starting refresh of Smartsheet project data.")
     logging.info(msg)
@@ -296,7 +296,7 @@ def full_jira_sync():
     gc.collect()
 
 
-def track_time(function):
+def track_time(function, **args):
     """Helper function to track how long each task takes
 
     Args:
@@ -306,7 +306,7 @@ def track_time(function):
         float: The amount of time in seconds, truncated to 3 decimal places.
     """
     start = time.time()
-    function()
+    function(**args)
     end = time.time()
     elapsed = end - start
     elapsed = truncate(elapsed, 3)
@@ -326,7 +326,7 @@ def main():
     msg = str("Starting first time initialization of Smartsheet project data.")
     logging.info(msg)
 
-    elapsed1 = track_time(full_jira_sync)
+    elapsed1 = track_time(lambda: full_jira_sync(minutes))
     logging.info(
         "Initial run took: {} seconds.".format(elapsed1))
 
@@ -336,12 +336,23 @@ def main():
     logging.info("Total time: {} seconds.".format(total))
 
     logging.debug("------------------------")
-    logging.debug("Adding job to refresh everything. "
+    logging.debug("Adding job to refresh Jira tickets in real time. "
                   "Interval = every 30 seconds.")
     logging.debug("------------------------")
     scheduler.add_job(full_jira_sync,
                       'interval',
+                      args=[minutes],
                       seconds=30)
+
+    logging.debug("------------------------")
+    logging.debug("Adding job to get all data in the past week. "
+                  "Cron = every day at 1:00am UTC.")
+    logging.debug("------------------------")
+    scheduler.add_job(full_jira_sync,
+                      'cron',
+                      args=[10080],
+                      day='*/1',
+                      hour='1')
     return True
 
 
@@ -357,10 +368,10 @@ if __name__ == '__main__':
             logging.debug("------------------------")
             scheduler.start()
         except KeyboardInterrupt:
-            logging.warning("------------------------")
-            logging.warning("Scheduled Jobs shut down due "
-                            "to Keyboard Interrupt.")
-            logging.warning("------------------------")
+            logging.info("------------------------")
+            logging.info("Scheduled Jobs shut down due "
+                         "to Keyboard Interrupt.")
+            logging.info("------------------------")
             scheduler.shutdown()
     else:
         logging.error("Issue with running MAIN. Process terminated.")
