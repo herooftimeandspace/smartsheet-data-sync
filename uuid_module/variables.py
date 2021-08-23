@@ -67,7 +67,7 @@ sync_columns = [status_col, assignee_col, task_col,
 """List of columns to use during Cell link syncs. Type: list
     """
 
-minutes = 1440
+minutes = 2880
 """The maximum number of minutes into the past the get_timestamp function
     should look before filtering out results. Type: int
     """
