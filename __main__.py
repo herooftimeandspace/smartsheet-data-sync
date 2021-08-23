@@ -156,11 +156,11 @@ job_defaults = {
 }
 scheduler = BlockingScheduler(executors=executors, job_defaults=job_defaults)
 
+# Initialize client. Uses the API token in the environment variable
+# "SMARTSHEET_ACCESS_TOKEN", which is pulled from the AWS Secrets API.
 logging.debug("------------------------")
 logging.debug("Initializing Smartsheet Client API")
 logging.debug("------------------------")
-# Initialize client. Uses the API token in the environment variable
-# "SMARTSHEET_ACCESS_TOKEN"
 os.environ["SMARTSHEET_ACCESS_TOKEN"] = get_secret()
 smartsheet_client = smartsheet.Smartsheet()
 # Make sure we don't miss any error
@@ -205,7 +205,7 @@ def full_jira_sync():
                               "Sheet Name: {}".format(sheet.id, sheet.name))
         return source_sheets
 
-    source_sheets = refresh_source_sheets(minutes=65)
+    source_sheets = refresh_source_sheets(minutes=10)
 
     blank_uuid_index = get_blank_uuids(source_sheets, smartsheet_client)
     if blank_uuid_index:
@@ -282,11 +282,11 @@ def full_jira_sync():
         logging.info(msg)
         return
 
-    logging.info("Writing Jira cell links.")
+    logging.debug("Writing Jira cell links.")
     write_jira_index_cell_links(project_sub_index, smartsheet_client)
-    logging.debug("Writing UUID cell links.")
-    write_uuid_cell_links(project_uuid_index,
-                          source_sheets, smartsheet_client)
+    # logging.debug("Writing UUID cell links.")
+    # write_uuid_cell_links(project_uuid_index,
+    #                       source_sheets, smartsheet_client)
 
     end = time.time()
     elapsed = end - start
@@ -337,7 +337,7 @@ def main():
 
     logging.debug("------------------------")
     logging.debug("Adding job to refresh everything. "
-                  "Interval = every 1 minute.")
+                  "Interval = every 30 seconds.")
     logging.debug("------------------------")
     scheduler.add_job(full_jira_sync,
                       'interval',
@@ -362,10 +362,5 @@ if __name__ == '__main__':
                             "to Keyboard Interrupt.")
             logging.warning("------------------------")
             scheduler.shutdown()
-        else:
-            scheduler.shutdown()
-            logging.debug("------------------------")
-            logging.debug("Scheduled Jobs ended without interruption.")
-            logging.debug("------------------------")
     else:
         logging.error("Issue with running MAIN. Process terminated.")
