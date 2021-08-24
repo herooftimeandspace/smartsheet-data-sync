@@ -220,6 +220,10 @@ def load_jira_index(smartsheet_client):
 
     """
     jira_index_sheet = smartsheet_client.Sheets.get_sheet(jira_idx_sheet)
+    msg = str("{} rows loaded from sheet ID: {} | Sheet name: {}"
+              "").format(jira_index_sheet.id, jira_index_sheet.name,
+                         len(jira_index_sheet.rows))
+    logging.debug(msg)
     jira_index_col_map = get_column_map(jira_index_sheet)
 
     # Create a dict of rows where the values are lists.
