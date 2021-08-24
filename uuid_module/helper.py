@@ -219,3 +219,17 @@ def get_timestamp(number):
     modified_since = modified_since.replace(microsecond=0)  # .isoformat()
     modified_since_iso = modified_since.replace(microsecond=0).isoformat()
     return modified_since, modified_since_iso
+
+
+def chunks(lst, n):
+    """Yield successive n-sized chunks from lst.
+
+    Args:
+        lst (list): The list of objects to chunk
+        n (int): The number of items in the list to chunk together
+
+    Yields:
+        lst (list): The sub-list of chunked items
+    """
+    for i in range(0, len(lst), n):
+        yield lst[i:i + n]
