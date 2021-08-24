@@ -61,12 +61,6 @@ def get_all_row_data(source_sheets, columns, smartsheet_client):
                 row, summary_col, col_map)
             uuid_cell = get_cell_data(row, uuid_col, col_map)
 
-            if uuid_cell is None:
-                logging.debug("Sheet ID {} | Sheet Name {} "
-                              "doesn't have UUID column. "
-                              "Skipping sheet.".format(sheet.id, sheet.name))
-                break
-
             if summary_cell is None:
                 logging.debug("Summary row is {}. Continuing to next "
                               "row.".format(summary_cell))
@@ -75,6 +69,12 @@ def get_all_row_data(source_sheets, columns, smartsheet_client):
                 logging.debug("Summary row is {}. Continuing to next "
                               "row.".format(summary_cell))
                 continue
+
+            if uuid_cell is None:
+                logging.debug("Sheet ID {} | Sheet Name {} "
+                              "doesn't have UUID column. "
+                              "Skipping sheet.".format(sheet.id, sheet.name))
+                break
 
             row_data = {}
             all_row_data[uuid_cell.value] = row_data
@@ -212,12 +212,8 @@ def load_jira_index(smartsheet_client):
         smartsheet_client (Object): The Smartsheet client to query the API
 
     Returns:
-        sheet: A Smartsheet Sheet object that includes all data for the Jira
-               Index Sheet
-        dict: A dictionary containing mapped column IDs to column names
         dict: A dictionary containing the Jira ticket as the key and the
               row ID as the value.
-
     """
     jira_index_sheet = smartsheet_client.Sheets.get_sheet(jira_idx_sheet)
     jira_index_col_map = get_column_map(jira_index_sheet)
@@ -232,10 +228,8 @@ def load_jira_index(smartsheet_client):
             row, jira_col, jira_index_col_map)
         if jira_cell is None:
             logging.debug("Jira cell doesn't exist. Skipping.")
-            continue
         elif jira_cell.value is None:
             logging.debug("Jira value doesn't exist. Skipping.")
-            continue
         else:
             jira_value = jira_cell.value
             jira_index_rows[jira_value] = row.id
@@ -291,11 +285,107 @@ def get_all_sheet_ids(smartsheet_client):
 
     # Get the workspace Smartsheet object from the workspace_id
     # configured in our variables.
-    minutes = 65
-    modified_since, _ = get_timestamp(minutes)
-    modified_since = utc.localize(modified_since)
-    modified_since = modified_since.replace(tzinfo=utc)
-    sheet_ids = []
+    for ws in workspace_id:
+        workspace = smartsheet_client.Workspaces.get_workspace(ws)
+
+        # Get the top-level folders from the workspace. If the function
+        # returns any values, append it to the folder map. Skip if None.
+        ws_folder_ids = get_ws_folder_map(workspace)
+        if ws_folder_ids is not None:
+            folder_map.extend(ws_folder_ids)
+
+        # Iterate through the top-level folders from the workspace.
+        # Find any folder IDs nested anywhere in the workspace. If the function
+        # returns any values, append it to the folder map. Skip if None.
+        all_folder_ids = get_subfolder_map(ws_folder_ids, smartsheet_client)
+        if all_folder_ids is not None:
+            folder_map.extend(all_folder_ids)
+
+        # Iterate through the folder map, and the top-level workspace.
+        # Find all sheet IDs nested anywhere in the workspace. If the function
+        # returns any values, append it to the sheet map. Skip if None.
+        folder_sheet_ids = get_folder_sheet_map(folder_map, smartsheet_client)
+        ws_sheet_ids = get_ws_sheet_map(ws, smartsheet_client)
+        if folder_sheet_ids is not None:
+            sheet_ids.extend(folder_sheet_ids)
+        if ws_sheet_ids is not None:
+            sheet_ids.extend(ws_sheet_ids)
+
+        # Don't include the JIRA index sheet as
+        # part of the sheet collection, if present.
+        try:
+            sheet_ids.remove(jira_idx_sheet)
+        except ValueError:
+            logging.debug(
+                "{} not found in Sheet IDs list".format(jira_idx_sheet))
+
+    return sheet_ids
+
+
+def get_ws_folder_map(workspace):
+    """Get all of the folder IDs within the root Workspace, for each
+       workspace provided.
+
+    Args:
+        workspace (Workspace object): The workspace to parse for folder
+                                      IDs.
+
+    Returns:
+        list: A list of folder IDs found in the workspace.
+        none: There are no folders in the workspace.
+    """
+
+    # Create an empty list where we can store Workspace folder IDs.
+    ws_folder_map = []
+
+    # Check if there are folders in the Workspace. Append all folder IDs to
+    # the list.
+    if workspace.folders:
+        logging.debug("Importing Folders from Workspace ID: "
+                      + str(workspace.id) + " | " + workspace.name)
+        for folders in workspace.folders:
+            logging.debug("Appended Folder ID: " + str(folders.id) + " | "
+                          + folders.name + " to ws_folder_map.")
+            ws_folder_map.append(folders.id)
+        return ws_folder_map
+    else:
+        logging.debug("No folders in workspace.")
+        return None
+
+
+def get_folder_sheet_map(folder_map, smartsheet_client):
+    """Get all sheets from each folder in the folder map.
+
+    Args:
+        folder_map (list): A list of folder IDs found in the workspace
+        smartsheet_client (Object): The Smartsheet client to interact
+                                    with the API
+
+    Returns:
+        list: A list of sheet IDs from every folder in the workspace.
+        none: There are no sheets in the folder.
+    """
+
+    # Create an empty list where we can store the sheet IDs.
+    folder_sheet_map = []
+
+    # Check if we have folders to iterate through.
+    if not folder_map:
+        logging.debug("Folder map is empty. Skipping.")
+        return None
+    else:
+        # Iterate through each folder ID in the list.
+        for folder_id in folder_map:
+            try:
+                # Get the contents of the folder
+                folder = smartsheet_client.Folders.get_folder(folder_id)
+
+            except smartsheet_client.exceptions.ApiError as e:
+                logging.debug("Error on API request.")
+                logging.debug("Status Code: " + e.statusCode
+                              + " Reason: " + e.Reason
+                              + " Message: " + e.message())
+                return
 
             else:
                 logging.debug("Importing SheetIDs from FolderID: "
