@@ -2,11 +2,11 @@ import json
 import logging
 import re
 
-from uuid_module.helper import (chunks, get_cell_data, get_cell_value,
-                                get_column_map, has_cell_link, json_extract)
+from uuid_module.helper import (get_cell_data, get_column_map, has_cell_link,
+                                json_extract, get_cell_value)
 from uuid_module.variables import (assignee_col, description_col, duration_col,
-                                   jira_col, predecessor_col, start_col,
-                                   status_col, task_col, uuid_col)
+                                   predecessor_col, start_col, status_col,
+                                   task_col, uuid_col, jira_col)
 from uuid_module.write_data import write_predecessor_dates
 
 logger = logging.getLogger(__name__)
@@ -331,17 +331,8 @@ def write_uuid_cell_links(project_data_index, source_sheets,
                                                  dest_sheet.id,
                                                  dest_sheet.name)
             logging.info(msg)
-            # If over 125 rows need to be written to a single sheet, chunk
-            # the rows into segments of 125. Anything over 125 will cause
-            # the API to fail.
-            if len(rows_to_update) > 125:
-                chunked_cells = chunks(rows_to_update, 125)
-                for i in chunked_cells:
-                    try:
-                        result = smartsheet_client.Sheets.\
-                            update_rows(dest_sheet.id, i)
-                        logging.debug(result)
-                    except Exception as e:
-                        logging.warning(e.message)
+            result = smartsheet_client.Sheets.update_rows(dest_sheet.id,
+                                                          rows_to_update)
+            logging.debug(result)
         else:
             logging.debug("No updates required.")
