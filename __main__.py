@@ -29,7 +29,7 @@ start = time.time()
 
 
 def get_secret():
-    """Gets the API token from AWS Secrets Manager
+    """Gets the API token from AWS Secrets Manager.
 
     Raises:
         e: DecryptionFailureException.
