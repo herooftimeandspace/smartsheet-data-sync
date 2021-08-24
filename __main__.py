@@ -178,7 +178,7 @@ logging.debug("Initialization took: {}".format(elapsed))
 def full_jira_sync(minutes):
     start = time.time()
     msg = str("Starting refresh of Smartsheet project data.")
-    logging.info(msg)
+    logging.debug(msg)
 
     global sheet_id_lock
     with sheet_id_lock:
@@ -205,18 +205,16 @@ def full_jira_sync(minutes):
                               "Sheet Name: {}".format(sheet.id, sheet.name))
         return source_sheets
 
-    source_sheets = refresh_source_sheets(minutes=10)
+    source_sheets = refresh_source_sheets(minutes)
 
     blank_uuid_index = get_blank_uuids(source_sheets, smartsheet_client)
     if blank_uuid_index:
-        logging.info("There are {} project sheets to be updated".format(
-            len(blank_uuid_index)))
+        logging.info("There are {} project sheets to be updated"
+                     "with UUIDs".format(len(blank_uuid_index)))
         sheets_updated = write_uuids(blank_uuid_index, smartsheet_client)
-        if sheets_updated > 0:
-            logging.info("{} project sheet(s) updated".format(sheets_updated))
-            source_sheets = refresh_source_sheets(minutes)
-        else:
-            logging.info("No UUIDs to update.")
+        if sheets_updated:
+            logging.info("{} project sheet(s) updated with UUIDs"
+                         "".format(sheets_updated))
 
     if not source_sheets:
         end = time.time()
@@ -292,7 +290,7 @@ def full_jira_sync(minutes):
     elapsed = end - start
     elapsed = truncate(elapsed, 3)
     logging.info(
-        "Retrieving everything took: {} seconds.".format(elapsed))
+        "Full Jira sync took: {} seconds.".format(elapsed))
     gc.collect()
 
 
@@ -314,27 +312,14 @@ def track_time(function, **args):
 
 
 def main():
-    """Runs a one time instance of all tasks to pre-cache data for the
-       scheduler. Afterwards, adds each task to the scheduler at a set
-       interval.
+    """Configures the scheduler to run two jobs. One job runs every 30 seconds
+       and looks back based on the minutes defined in variables. The second
+       job runs every day at 1:00am UTC and looks back 1 week.
 
     Returns:
         bool: Returns True if main successfully initialized and scheduled jobs,
               False if not.
     """
-    start_total = time.time()
-    msg = str("Starting first time initialization of Smartsheet project data.")
-    logging.info(msg)
-
-    elapsed1 = track_time(lambda: full_jira_sync(minutes))
-    logging.info(
-        "Initial run took: {} seconds.".format(elapsed1))
-
-    end_total = time.time()
-    total = end_total - start_total
-    total = truncate(total, 3)
-    logging.info("Total time: {} seconds.".format(total))
-
     logging.debug("------------------------")
     logging.debug("Adding job to refresh Jira tickets in real time. "
                   "Interval = every 30 seconds.")
