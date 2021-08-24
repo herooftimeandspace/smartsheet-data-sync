@@ -177,7 +177,11 @@ logging.debug("Initialization took: {}".format(elapsed))
 
 def full_jira_sync(minutes):
     start = time.time()
-    msg = str("Starting refresh of Smartsheet project data.")
+    msg = str("Starting refresh of Smartsheet project data. "
+              "Looking back {} minutes from {}"
+              "").format(minutes,
+                         time.strftime('%Y-%m-%d %H:%M:%S',
+                                       time.localtime(start)))
     logging.debug(msg)
 
     global sheet_id_lock
