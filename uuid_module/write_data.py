@@ -5,8 +5,8 @@ import os
 # import smartsheet
 from uuid_module.build_data import build_row, dest_indexes
 from uuid_module.get_data import load_jira_index
-from uuid_module.helper import (get_cell_value, get_cell_data, get_column_map,
-                                json_extract)
+from uuid_module.helper import (chunks, get_cell_data, get_cell_value,
+                                get_column_map, json_extract)
 from uuid_module.variables import (assignee_col, jira_col, jira_idx_sheet,
                                    predecessor_col, start_col, status_col,
                                    task_col, uuid_col)
@@ -66,14 +66,14 @@ def write_uuids(sheets_to_update, smartsheet_client):
             logging.debug(msg)
             sheets_updated += 1
         else:
-            msg = str("No updates required for Sheet ID: "
+            msg = str("No UUID updates required for Sheet ID: "
                       "{} | Sheet Name: {}").format(sheet_id, sheet_name)
             logging.debug(msg)
     return sheets_updated
 
 
-def link_from_index(project_sub_index,
-                    smartsheet_client):
+def write_jira_index_cell_links(project_sub_index,
+                                smartsheet_client):
     """For each sheet in the destination sheet index, parse through the rows,
        determine if cells need to be linked, create cell links and then write
        the rows back to the sheet.
@@ -154,16 +154,24 @@ def link_from_index(project_sub_index,
                       "").format(len(cell_links_to_update), dest_sheet.id,
                                  dest_sheet.name)
             logging.info(msg)
-            result = smartsheet_client.Sheets.update_rows(dest_sheet.id,
-                                                          cell_links_to_update)
-            logging.debug(result)
+
+            # If over 125 rows need to be written to a single sheet, chunk
+            # the rows into segments of 125. Anything over 125 will cause
+            # the API to fail.
+            if len(cell_links_to_update) > 125:
+                chunked_cells = chunks(cell_links_to_update, 125)
+                for i in chunked_cells:
+                    try:
+                        result = smartsheet_client.Sheets.\
+                            update_rows(dest_sheet.id, i)
+                        logging.debug(result)
+                    except Exception as e:
+                        logging.warning(e.message)
         else:
-            msg = str("No updates needed for Sheet ID: {} | "
+            msg = str("No Jira Ticket updates needed for Sheet ID: {} | "
                       "Sheet Name {}.").format(dest_sheet.id,
                                                dest_sheet.name)
-            logging.debug(msg)
-
-    return True
+            logging.info(msg)
 
 
 def check_uuid(uuid_value, jira_value, uuid_list, jira_data_values):
