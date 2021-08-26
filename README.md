@@ -18,6 +18,12 @@ Python prequisites are:
 
 These libraries are automatically installed when the docker image is built, but you will need them installed locally to test the app without using Docker. Pyenv is recommended.
 
+## AWS
+1. AWS Secrets
+2. CodePipeline
+3. Copilot
+4. Fargate
+
 ## Smartsheet Setup
 ### Smartsheet API Token
 For development you can use your own API token. For production, this should be a service account in Smartsheet.
