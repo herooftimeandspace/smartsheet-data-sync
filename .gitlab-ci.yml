@@ -37,7 +37,7 @@ test:
 
 run:
   script:
-    - docker-compose up --build
+    - python __main__.py
     # - python setup.py bdist_wheel
     # # an alternative approach is to install and run:
     # - pip install dist/*
@@ -48,7 +48,7 @@ run:
 
 pages:
   script:
-    - pip install pdoc
+    - pip install pdoc smartsheet-python-sdk
     - pdoc -o docs/ -d google uuid_module
     - mv docs/ ../public/
   artifacts:
