@@ -50,7 +50,8 @@ pages:
   script:
     - pip install pdoc smartsheet-python-sdk
     - pdoc -o docs/ -d google uuid_module
-    - mv docs/ ../public/
+    - mkdir ./public
+    - mv ./docs/* ./public/
   artifacts:
     paths:
       - public
