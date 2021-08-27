@@ -73,3 +73,16 @@ deploy_staging:
     # - python __main__.py
   environment:
     name: Staging
+
+deploy_prod:
+  stage: deploy
+  script:
+    -echo "Deploy to production server"
+  environment:
+    name: Production
+  when: manual
+  only:
+    - main
+
+after_script:
+  - python3 __main__.py
