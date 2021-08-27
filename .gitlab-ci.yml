@@ -24,7 +24,6 @@ cache:
     - venv/
 
 stages:
-  - build
   - test
   - pages
   - deploy
@@ -34,24 +33,15 @@ before_script:
   - pip install virtualenv
   - virtualenv venv
   - source venv/bin/activate
-
-build:
-  script:
-    - pip install -r requirements.txt
-    # - python __main__.py
-    # - python setup.py bdist_wheel
-    # # an alternative approach is to install and run:
-    # - pip install dist/*
-    # # run the command here
-  # artifacts:
-  #   paths:
-  #     - dist/*.whl
+  - docker info
+  - pip install -r requirements.txt
 
 test:
   script:
-    - pip install tox flake8 pytest smartsheet-python-sdk # you can also use tox
-    - pip install -r requirements.txt
+    - pip install flake8 # you can also use tox
     - pytest
+    - flake8 --max-line-length=80 ./*.py
+    - flake8 --max-line-length=80 ./uuid_module/*.py
     # - tox -e py36,flake8
 
 pages:
@@ -78,11 +68,9 @@ deploy_prod:
   stage: deploy
   script:
     -echo "Deploy to production server"
+    # - python __main__.py
   environment:
     name: Production
   when: manual
   only:
     - main
-
-after_script:
-  - python3 __main__.py
