@@ -23,20 +23,19 @@ cache:
     - .cache/pip
     - venv/
 
+stages:
+  - build
+  - test
+  - pages
+  - deploy
+
 before_script:
   - python -V  # Print out python version for debugging
   - pip install virtualenv
   - virtualenv venv
   - source venv/bin/activate
 
-test:
-  script:
-    - pip install tox flake8 pytest smartsheet-python-sdk # you can also use tox
-    - pip install -r requirements.txt
-    - pytest
-    # - tox -e py36,flake8
-
-run:
+build:
   script:
     - pip install -r requirements.txt
     # - python __main__.py
@@ -47,6 +46,13 @@ run:
   # artifacts:
   #   paths:
   #     - dist/*.whl
+
+test:
+  script:
+    - pip install tox flake8 pytest smartsheet-python-sdk # you can also use tox
+    - pip install -r requirements.txt
+    - pytest
+    # - tox -e py36,flake8
 
 pages:
   script:
@@ -64,6 +70,6 @@ deploy_staging:
   stage: deploy
   script:
     - echo "Deploy to staging server"
-    - python __main__.py
+    # - python __main__.py
   environment:
     name: Staging
