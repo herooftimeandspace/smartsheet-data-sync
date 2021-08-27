@@ -34,7 +34,7 @@ test:
     - pip install tox flake8 pytest smartsheet-python-sdk # you can also use tox
     - pip install -r requirements.txt
     - pytest
-    - tox -e py36,flake8
+    # - tox -e py36,flake8
 
 run:
   script:
