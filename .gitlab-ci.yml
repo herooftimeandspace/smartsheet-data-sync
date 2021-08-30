@@ -28,6 +28,7 @@ test:
   - flake8 --max-line-length=80 ./*.py
   - flake8 --max-line-length=80 ./uuid_module/*.py
 pages:
+  stage: pages
   script:
   - pip install pdoc smartsheet-python-sdk
   - pdoc -o docs/ -d google uuid_module
