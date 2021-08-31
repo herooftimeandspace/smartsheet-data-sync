@@ -58,10 +58,10 @@ deploy_prod:
   only:
     - main
 
-after_script:
-  - docker build -t registry.gitlab-dev.video.xarth.tv/cmpbad/smartsheet-data-sync-gitlab .
-  - docker push registry.gitlab-dev.video.xarth.tv/cmpbad/smartsheet-data-sync-gitlab
-  - main
+# after_script:
+#   - docker build -t registry.gitlab-dev.video.xarth.tv/cmpbad/smartsheet-data-sync-gitlab .
+#   - docker push registry.gitlab-dev.video.xarth.tv/cmpbad/smartsheet-data-sync-gitlab
+#   - main
 sast:
   stage: test
 include:
