@@ -25,7 +25,6 @@ linting:
   stage: test
   script:
   - pip install flake8
-  - pytest
   - flake8 --max-line-length=80 ./*.py
   - flake8 --max-line-length=80 ./uuid_module/*.py
 coverage:
