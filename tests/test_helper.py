@@ -1,12 +1,13 @@
 import json
+import os
+import sys
 from typing import Type
+
 import pytest
 import smartsheet
-import os
+from uuid_module.helper import (get_cell_data, get_cell_value, get_column_map,
+                                has_cell_link, json_extract, truncate)
 
-from uuid_module.helper import (get_cell_value, get_cell_data,
-                                get_column_map, has_cell_link, json_extract,
-                                truncate)
 
 true = True
 false = False

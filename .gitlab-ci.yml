@@ -21,12 +21,17 @@ before_script:
   - virtualenv venv
   - source venv/bin/activate
   - pip install -r requirements.txt
-test:
+linting:
+  stage: test
   script:
   - pip install flake8
   - pytest
   - flake8 --max-line-length=80 ./*.py
   - flake8 --max-line-length=80 ./uuid_module/*.py
+coverage:
+  stage: test
+  script:
+    - pytest --cov=./ tests/
 pages:
   stage: pages
   script:

@@ -1,3 +1,4 @@
+[![coverage report](https://gitlab-dev.video.xarth.tv/cmpbad/smartsheet-data-sync-gitlab/badges/staging/coverage.svg)](https://gitlab-dev.video.xarth.tv/cmpbad/smartsheet-data-sync-gitlab/-/commits/staging) | [![pipeline status](https://gitlab-dev.video.xarth.tv/cmpbad/smartsheet-data-sync-gitlab/badges/staging/pipeline.svg)](https://gitlab-dev.video.xarth.tv/cmpbad/smartsheet-data-sync-gitlab/-/commits/staging)
 # Overview
 This Smartsheet Data Sync application is designed create and sync data across multiple sheets and Jira without needing to create a Jira Connector per sheet. It uses run several modules on a timed basis. The modules perform the following actions:
 1. Queries the Smartsheet API for all sheets across one or more workspaces
