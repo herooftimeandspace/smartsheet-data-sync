@@ -35,7 +35,6 @@ coverage:
 pages:
   stage: pages
   script:
-  - pip install pdoc smartsheet-python-sdk
   - pdoc -o docs/ -d google uuid_module
   - mkdir ./public
   - mv ./docs/* ./public/
