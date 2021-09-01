@@ -20,17 +20,17 @@ stages:
 prep:
   stage: prep
   script:
-  - python -V  # Print out python version for debugging
-  - pip install virtualenv
-  - virtualenv venv
-  - source venv/bin/activate
-  - pip install -r requirements.txt
-  linting:
+    - python -V  # Print out python version for debugging
+    - pip install virtualenv
+    - virtualenv venv
+    - source venv/bin/activate
+    - pip install -r requirements.txt
+linting:
   stage: lint
   script:
-  - pip install flake8
-  - flake8 --max-line-length=80 --per-file-ignores="__init__.py:F401" ./*.py
-  - flake8 --max-line-length=80 --per-file-ignores="__init__.py:F401" ./uuid_module/*.py
+    - pip install flake8
+    - flake8 --max-line-length=80 --per-file-ignores="__init__.py:F401" ./*.py
+    - flake8 --max-line-length=80 --per-file-ignores="__init__.py:F401" ./uuid_module/*.py
 coverage:
   stage: test
   script:
