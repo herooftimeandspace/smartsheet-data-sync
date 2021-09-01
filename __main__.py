@@ -15,7 +15,7 @@ from apscheduler.executors.pool import ProcessPoolExecutor, ThreadPoolExecutor
 from apscheduler.schedulers.background import BlockingScheduler
 from botocore.exceptions import ClientError
 
-from uuid_module.cell_link_sheet_data import write_uuid_cell_links
+# from uuid_module.cell_link_sheet_data import write_uuid_cell_links
 from uuid_module.get_data import (get_all_row_data, get_all_sheet_ids,
                                   get_blank_uuids, get_sub_indexs)
 from uuid_module.helper import get_timestamp, json_extract, truncate
