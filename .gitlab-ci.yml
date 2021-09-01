@@ -20,12 +20,13 @@ stages:
 - deploy
 prep:
   stage: prep
+  script:
   - python -V  # Print out python version for debugging
   - pip install virtualenv
   - virtualenv venv
   - source venv/bin/activate
   - pip install -r requirements.txt
-  - curl -Lo /usr/local/bin/copilot https://github.com/aws/copilot-cli/releases/latest/download/copilot-darwin && chmod +x /usr/local/bin/copilot && copilot --help
+  - curl -Lo /usr/local/bin/copilot https://github.com/aws/copilot-cli/releases/latest/download/copilot-darwin && chmod +x /usr/local/bin/copilot
 linting:
   stage: lint
   script:
@@ -51,13 +52,14 @@ deploy_staging:
   stage: deploy
   script:
   - echo "Deploy to staging server"
-  copilot svc deploy --name svc-smartsheet-data-sync --env staging
+  - copilot svc deploy --name svc-smartsheet-data-sync --env staging
   environment:
     name: Staging
 deploy_prod:
   stage: deploy
-  script: -echo "Deploy to production server"
-  copilot svc deploy --name svc-smartsheet-data-sync --env prod
+  script:
+    - echo "Deploy to production server"
+    - copilot svc deploy --name svc-smartsheet-data-sync --env prod
   environment:
     name: Production
   when: manual
