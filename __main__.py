@@ -31,7 +31,7 @@ start = time.time()
 # https://aws.amazon.com/developers/getting-started/python/
 
 
-def get_secret():
+def get_secret(env):
     """Gets the API token from AWS Secrets Manager.
 
     Raises:
@@ -44,19 +44,13 @@ def get_secret():
     Returns:
         str: The Smartsheet API key
     """
-    try:
-        opts, args = getopt.getopt(argv, "hsp", ["staging", "prod"])
-    except getopt.GetoptError:
-        print("__main__.py --staging --prod")
-        sys.exit(2)
-    for opt, arg in opts:
-        if opt == '-h':
-            print("__main__.py --staging --prod")
-            sys.exit()
-        elif opt in ("-s", "--staging"):
-            secret_name = "staging/smartsheet-data-sync/api-token"
-        elif opt in ("-p", "--prod"):
-            secret_name = "prod/smartsheet-data-sync-/api-token"
+    for e in env:
+        if e in ("-s", "--staging", "-staging"):
+            secret_name = "staging/smartsheet-data-sync/svc-api-token"
+        elif e in ("-p", "--prod", "-prod"):
+            secret_name = "prod/smartsheet-data-sync/svc-api-token"
+        else:
+            logging.ERROR("Failed to set API Key from AWS Secrets")
 
     region_name = "us-east-2"
     ACCESS_KEY = os.environ.get('ACCESS_KEY')
@@ -177,10 +171,11 @@ scheduler = BlockingScheduler(executors=executors, job_defaults=job_defaults)
 
 # Initialize client. Uses the API token in the environment variable
 # "SMARTSHEET_ACCESS_TOKEN", which is pulled from the AWS Secrets API.
+env = sys.argv[1:]
 logging.debug("------------------------")
 logging.debug("Initializing Smartsheet Client API")
 logging.debug("------------------------")
-os.environ["SMARTSHEET_ACCESS_TOKEN"] = get_secret()
+os.environ["SMARTSHEET_ACCESS_TOKEN"] = get_secret(env)
 smartsheet_client = smartsheet.Smartsheet()
 # Make sure we don't miss any error
 smartsheet_client.errors_as_exceptions(True)
@@ -367,7 +362,6 @@ def main():
 if __name__ == '__main__':
     """Runs main() and then starts the scheduler.
     """
-    # main()
     main = main()
     if main:
         try:
