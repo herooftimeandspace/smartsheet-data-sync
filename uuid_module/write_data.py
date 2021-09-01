@@ -1,15 +1,13 @@
 import json
 import logging
-import os
 
 # import smartsheet
 from uuid_module.build_data import build_row, dest_indexes
 from uuid_module.get_data import load_jira_index
 from uuid_module.helper import (chunks, get_cell_data, get_cell_value,
                                 get_column_map, json_extract)
-from uuid_module.variables import (assignee_col, jira_col, jira_idx_sheet,
-                                   predecessor_col, start_col, status_col,
-                                   task_col, uuid_col)
+from uuid_module.variables import (assignee_col, jira_col, predecessor_col,
+                                   start_col, status_col, task_col, uuid_col)
 
 logger = logging.getLogger(__name__)
 

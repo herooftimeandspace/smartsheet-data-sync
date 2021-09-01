@@ -31,8 +31,8 @@ linting:
   stage: lint
   script:
   - pip install flake8
-  - flake8 --max-line-length=80 ./*.py
-  - flake8 --max-line-length=80 ./uuid_module/*.py
+  - flake8 --max-line-length=80 --per-file-ignores="__init__.py:F401" ./*.py
+  - flake8 --max-line-length=80 --per-file-ignores="__init__.py:F401" ./uuid_module/*.py
 coverage:
   stage: test
   script:
