@@ -16,7 +16,6 @@ stages:
 - lint
 - test
 - pages
-- build
 - deploy
 prep:
   stage: prep
@@ -26,8 +25,7 @@ prep:
   - virtualenv venv
   - source venv/bin/activate
   - pip install -r requirements.txt
-  - curl -Lo /usr/local/bin/copilot https://github.com/aws/copilot-cli/releases/latest/download/copilot-darwin && chmod +x /usr/local/bin/copilot
-linting:
+  linting:
   stage: lint
   script:
   - pip install flake8
@@ -36,10 +34,12 @@ linting:
 coverage:
   stage: test
   script:
+    - pip install pytest pytest-cov pytest-xdist
     - pytest --cov=./ tests/
 pages:
   stage: pages
   script:
+  - pip install pdoc
   - pdoc -o docs/ -d google uuid_module
   - mkdir ./public
   - mv ./docs/* ./public/
@@ -52,6 +52,7 @@ deploy_staging:
   stage: deploy
   script:
   - echo "Deploy to staging server"
+  - curl -Lo /usr/local/bin/copilot https://github.com/aws/copilot-cli/releases/latest/download/copilot-darwin && chmod +x /usr/local/bin/copilot
   - copilot svc deploy --name svc-smartsheet-data-sync --env staging
   environment:
     name: Staging
@@ -59,6 +60,7 @@ deploy_prod:
   stage: deploy
   script:
     - echo "Deploy to production server"
+    - curl -Lo /usr/local/bin/copilot https://github.com/aws/copilot-cli/releases/latest/download/copilot-darwin && chmod +x /usr/local/bin/copilot
     - copilot svc deploy --name svc-smartsheet-data-sync --env prod
   environment:
     name: Production
@@ -70,7 +72,7 @@ deploy_prod:
 #   - docker build -t registry.gitlab-dev.video.xarth.tv/cmpbad/smartsheet-data-sync-gitlab .
 #   - docker push registry.gitlab-dev.video.xarth.tv/cmpbad/smartsheet-data-sync-gitlab
 #   - main
-sast:
-  stage: test
-include:
-- template: Security/SAST.gitlab-ci.yml
+# sast:
+#   stage: test
+# include:
+# - template: Security/SAST.gitlab-ci.yml
