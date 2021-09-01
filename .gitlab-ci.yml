@@ -53,6 +53,8 @@ deploy_staging:
   script:
   - echo "Deploy to staging server"
   - /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
+  - echo 'eval "$(/home/linuxbrew/.linuxbrew/bin/brew shellenv)"' >> /root/.profile
+  - eval "$(/home/linuxbrew/.linuxbrew/bin/brew shellenv)"
   - brew install aws/tap/copilot-cli
   - copilot svc deploy --name svc-smartsheet-data-sync --env staging
   environment:
