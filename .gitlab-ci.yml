@@ -12,16 +12,20 @@ cache:
   - ".cache/pip"
   - venv/
 stages:
+- prep
 - lint
 - test
 - pages
+- build
 - deploy
-before_script:
+prep:
+  stage: prep
   - python -V  # Print out python version for debugging
   - pip install virtualenv
   - virtualenv venv
   - source venv/bin/activate
   - pip install -r requirements.txt
+  - curl -Lo /usr/local/bin/copilot https://github.com/aws/copilot-cli/releases/latest/download/copilot-darwin && chmod +x /usr/local/bin/copilot && copilot --help
 linting:
   stage: lint
   script:
@@ -43,15 +47,21 @@ pages:
     - public
   rules:
   - if: "$CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH"
+copilot:
+  stage: build
+  script:
+
 deploy_staging:
   stage: deploy
   script:
   - echo "Deploy to staging server"
+  copilot svc deploy --name svc-smartsheet-data-sync --env test
   environment:
     name: Staging
 deploy_prod:
   stage: deploy
   script: -echo "Deploy to production server"
+  copilot svc deploy --name svc-smartsheet-data-sync --env prod
   environment:
     name: Production
   when: manual

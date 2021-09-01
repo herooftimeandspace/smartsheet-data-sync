@@ -42,7 +42,7 @@ def get_secret():
     Returns:
         str: The Smartsheet API key
     """
-    secret_name = "prod/smartsheet-data-sync/api-token"
+    secret_name = "staging/smartsheet-data-sync/api-token"
     region_name = "us-east-2"
     ACCESS_KEY = os.environ.get('ACCESS_KEY')
     SECRET_KEY = os.environ.get('SECRET_KEY')
