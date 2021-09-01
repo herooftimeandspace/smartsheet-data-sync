@@ -1,8 +1,10 @@
 import base64
 import gc
+import getopt
 import json
 import logging
 import os
+import sys
 import threading
 import time
 from logging.config import dictConfig
@@ -42,7 +44,20 @@ def get_secret():
     Returns:
         str: The Smartsheet API key
     """
-    secret_name = "staging/smartsheet-data-sync/api-token"
+    try:
+        opts, args = getopt.getopt(argv, "hsp", ["staging", "prod"])
+    except getopt.GetoptError:
+        print("__main__.py --staging --prod")
+        sys.exit(2)
+    for opt, arg in opts:
+        if opt == '-h':
+            print("__main__.py --staging --prod")
+            sys.exit()
+        elif opt in ("-s", "--staging"):
+            secret_name = "staging/smartsheet-data-sync/api-token"
+        elif opt in ("-p", "--prod"):
+            secret_name = "prod/smartsheet-data-sync-/api-token"
+
     region_name = "us-east-2"
     ACCESS_KEY = os.environ.get('ACCESS_KEY')
     SECRET_KEY = os.environ.get('SECRET_KEY')
