@@ -47,15 +47,11 @@ pages:
     - public
   rules:
   - if: "$CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH"
-copilot:
-  stage: build
-  script:
-
 deploy_staging:
   stage: deploy
   script:
   - echo "Deploy to staging server"
-  copilot svc deploy --name svc-smartsheet-data-sync --env test
+  copilot svc deploy --name svc-smartsheet-data-sync --env staging
   environment:
     name: Staging
 deploy_prod:
