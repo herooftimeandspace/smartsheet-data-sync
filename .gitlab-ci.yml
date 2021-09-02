@@ -19,14 +19,14 @@ stages:
 - deploy
 before_script:
   - docker info
-# prep:
-#   stage: prep
-#   script:
-#     - python -V  # Print out python version for debugging
-#     - pip install virtualenv
-#     - virtualenv venv
-#     - source venv/bin/activate
-#     - pip install -r requirements.txt
+prep:
+  stage: prep
+  script:
+    - python -V  # Print out python version for debugging
+    - pip install virtualenv
+    - virtualenv venv
+    - source venv/bin/activate
+    - pip install -r requirements.txt
 # linting:
 #   stage: lint
 #   script:
