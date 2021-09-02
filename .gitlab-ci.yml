@@ -17,72 +17,83 @@ stages:
 - test
 - pages
 - deploy
-prep:
-  stage: prep
-  script:
-    - python -V  # Print out python version for debugging
-    - pip install virtualenv
-    - virtualenv venv
-    - source venv/bin/activate
-    - pip install -r requirements.txt
-linting:
-  stage: lint
-  script:
-    - pip install flake8
-    - flake8 --max-line-length=80 --per-file-ignores="__init__.py:F401" ./*.py
-    - flake8 --max-line-length=80 --per-file-ignores="__init__.py:F401" ./uuid_module/*.py
-coverage:
-  stage: test
-  script:
-    - pip install -r requirements.txt
-    - pytest --cov=./ --junitxml=report.xml tests/
-  artifacts:
-    when: always
-    reports:
-      junit: report.xml
-pages:
-  stage: pages
-  script:
-  - pip install pdoc
-  - pdoc -o docs/ -d google uuid_module
-  - mkdir ./public
-  - mv ./docs/* ./public/
-  artifacts:
-    paths:
-    - public
-  rules:
-  - if: "$CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH"
-deploy_staging:
-  stage: deploy
-  script:
-  - echo "Deploy to staging server"
-  - /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
-  - echo 'eval "$(/home/linuxbrew/.linuxbrew/bin/brew shellenv)"' >> /root/.profile
-  - eval "$(/home/linuxbrew/.linuxbrew/bin/brew shellenv)"
-  - brew install aws/tap/copilot-cli
-  - export AWS_REGION=us-east-2
-  - export AWS_ACCESS_KEY_ID=$ACCESS_KEY
-  - export AWS_SECRET_ACCESS_KEY=$SECRET_KEY
-  - copilot svc deploy --name svc-smartsheet-data-sync --env staging
-  environment:
-    name: Staging
-deploy_prod:
-  stage: deploy
-  script:
-    - echo "Deploy to production server"
-    - curl -Lo /usr/local/bin/copilot https://github.com/aws/copilot-cli/releases/latest/download/copilot-darwin && chmod +x /usr/local/bin/copilot
-    - copilot svc deploy --name svc-smartsheet-data-sync --env prod
-  environment:
-    name: Production
-  when: manual
-  only:
-    - main
-
-# after_script:
-#   - docker build -t registry.gitlab-dev.video.xarth.tv/cmpbad/smartsheet-data-sync-gitlab .
-#   - docker push registry.gitlab-dev.video.xarth.tv/cmpbad/smartsheet-data-sync-gitlab
-#   - main
-# sast:
+before_script:
+  - docker info
+# prep:
+#   stage: prep
+#   script:
+#     - python -V  # Print out python version for debugging
+#     - pip install virtualenv
+#     - virtualenv venv
+#     - source venv/bin/activate
+#     - pip install -r requirements.txt
+# linting:
+#   stage: lint
+#   script:
+#     - pip install flake8
+#     - flake8 --max-line-length=80 --per-file-ignores="__init__.py:F401" ./*.py
+#     - flake8 --max-line-length=80 --per-file-ignores="__init__.py:F401" ./uuid_module/*.py
+# coverage:
 #   stage: test
-# include:
-# - template: Security/SAST.gitlab-ci.yml
+#   script:
+#     - pip install -r requirements.txt
+#     - pytest --cov=./ --junitxml=report.xml tests/
+#   artifacts:
+#     when: always
+#     reports:
+#       junit: report.xml
+# pages:
+#   stage: pages
+#   needs: []
+#   script:
+#   - pip install pdoc
+#   - pdoc -o docs/ -d google uuid_module
+#   - mkdir ./public
+#   - mv ./docs/* ./public/
+#   artifacts:
+#     paths:
+#     - public
+#   rules:
+#   - if: "$CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH"
+# deploy_staging:
+#   stage: deploy
+#   image:
+#     name: $CI_REGISTRY/docker-images/kaniko-project/executor:debug
+#     entrypoint: ['']
+#   script:
+#   - mkdir -p /kaniko/.docker
+#   /kaniko/executor --context $CI_PROJECT_DIR --build-arg FROM_IMAGE=$CI_REGISTRY/video-tools/provisionerciimage:latest --dockerfile build/gitlab.Dockerfile
+#   - /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
+#   - echo 'eval "$(/home/linuxbrew/.linuxbrew/bin/brew shellenv)"' >> /root/.profile
+#   - eval "$(/home/linuxbrew/.linuxbrew/bin/brew shellenv)"
+#   - brew install aws/tap/copilot-cli
+#   - export AWS_REGION=us-east-2
+#   - export AWS_ACCESS_KEY_ID=$ACCESS_KEY
+#   - export AWS_SECRET_ACCESS_KEY=$SECRET_KEY
+#   - sudo groupadd docker
+#   - sudo usermod -aG docker $USER
+#   - newgrp docker
+#   - brew install docker
+#   - copilot svc deploy --name svc-smartsheet-data-sync --env staging
+#   environment:
+#     name: Staging
+# deploy_prod:
+#   stage: deploy
+#   script:
+#     - echo "Deploy to production server"
+#     - curl -Lo /usr/local/bin/copilot https://github.com/aws/copilot-cli/releases/latest/download/copilot-darwin && chmod +x /usr/local/bin/copilot
+#     - copilot svc deploy --name svc-smartsheet-data-sync --env prod
+#   environment:
+#     name: Production
+#   when: manual
+#   only:
+#     - main
+
+# # after_script:
+# #   - docker build -t registry.gitlab-dev.video.xarth.tv/cmpbad/smartsheet-data-sync-gitlab .
+# #   - docker push registry.gitlab-dev.video.xarth.tv/cmpbad/smartsheet-data-sync-gitlab
+# #   - main
+# # sast:
+# #   stage: test
+# # include:
+# # - template: Security/SAST.gitlab-ci.yml
