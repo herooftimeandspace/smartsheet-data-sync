@@ -17,8 +17,6 @@ stages:
 - test
 - pages
 - deploy
-before_script:
-  - /kaniko/executor --context $CI_PROJECT_DIR docker info
 prep:
   stage: prep
   script:
@@ -27,6 +25,13 @@ prep:
     - virtualenv venv
     - source venv/bin/activate
     - pip install -r requirements.txt
+  stage: deploy
+  image:
+    name: $CI_REGISTRY/docker-images/kaniko-project/executor:debug
+    entrypoint: ['']
+  script:
+  - mkdir -p /kaniko/.docker
+  - /kaniko/executor --context $CI_PROJECT_DIR --build-arg COPILOT_ENV=staging --dockerfile Dockerfile
 # linting:
 #   stage: lint
 #   script:
@@ -62,7 +67,7 @@ prep:
 #     entrypoint: ['']
 #   script:
 #   - mkdir -p /kaniko/.docker
-#   /kaniko/executor --context $CI_PROJECT_DIR --build-arg FROM_IMAGE=$CI_REGISTRY/video-tools/provisionerciimage:latest --dockerfile build/gitlab.Dockerfile
+#   - /kaniko/executor --context $CI_PROJECT_DIR --build-arg COPILOT_ENV=staging --dockerfile build/gitlab.Dockerfile
 #   - /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
 #   - echo 'eval "$(/home/linuxbrew/.linuxbrew/bin/brew shellenv)"' >> /root/.profile
 #   - eval "$(/home/linuxbrew/.linuxbrew/bin/brew shellenv)"
