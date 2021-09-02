@@ -35,7 +35,11 @@ coverage:
   stage: test
   script:
     - pip install -r requirements.txt
-    - pytest --cov=./ tests/
+    - pytest --cov=./ --junitxml=report.xml tests/
+  artifacts:
+    when: always
+    reports:
+      junit: report.xml
 pages:
   stage: pages
   script:
