@@ -18,7 +18,7 @@ stages:
 - pages
 - deploy
 before_script:
-  - /kaniko/executer --context $CI_PROJECT_DIR docker info
+  - /kaniko/executor --context $CI_PROJECT_DIR docker info
 prep:
   stage: prep
   script:
