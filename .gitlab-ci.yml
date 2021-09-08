@@ -40,7 +40,7 @@ deploy_staging:
     - usermod -aG docker root
     - newgrp docker
     - apt update
-    - apt install clang
+    - apt install clang -y
     - brew install docker
     - copilot --help
 
