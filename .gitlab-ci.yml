@@ -32,7 +32,6 @@ deploy_staging:
     - echo 'eval "$(/home/linuxbrew/.linuxbrew/bin/brew shellenv)"' >> /root/.profile
     - eval "$(/home/linuxbrew/.linuxbrew/bin/brew shellenv)"
     - brew install gcc
-    - brew postinstall gcc@5
     - brew install aws/tap/copilot-cli
     - export AWS_REGION=us-east-2
     - export AWS_ACCESS_KEY_ID=$ACCESS_KEY
@@ -46,7 +45,7 @@ deploy_staging:
 
 # linting:
 #   stage: lint
-#   script:
+#   script:gi
 #     - pip install flake8
 #     - flake8 --max-line-length=80 --per-file-ignores="__init__.py:F401" ./*.py
 #     - flake8 --max-line-length=80 --per-file-ignores="__init__.py:F401" ./uuid_module/*.py
