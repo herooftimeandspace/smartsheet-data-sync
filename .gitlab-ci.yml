@@ -25,6 +25,35 @@ prep:
     - virtualenv venv
     - source venv/bin/activate
     - pip install -r requirements.txt
+linting:
+  stage: lint
+  script:gi
+    - pip install flake8
+    - flake8 --max-line-length=80 --per-file-ignores="__init__.py:F401" ./*.py
+    - flake8 --max-line-length=80 --per-file-ignores="__init__.py:F401" ./uuid_module/*.py
+coverage:
+  stage: test
+  needs: []
+  script:
+    - pip install -r requirements.txt
+    - pytest --cov=./ --junitxml=report.xml tests/
+  artifacts:
+    when: always
+    reports:
+      junit: report.xml
+pages:
+  stage: pages
+  needs: ["coverage"]
+  script:
+  - pip install pdoc
+  - pdoc -o docs/ -d google uuid_module
+  - mkdir ./public
+  - mv ./docs/* ./public/
+  artifacts:
+    paths:
+    - public
+  rules:
+  - if: "$CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH"
 deploy_staging:
   stage: deploy
   script:
@@ -42,72 +71,33 @@ deploy_staging:
     - apt update
     - apt install clang -y
     - brew install --build-from-source docker
-    - copilot --help
-
-
-# linting:
-#   stage: lint
-#   script:gi
-#     - pip install flake8
-#     - flake8 --max-line-length=80 --per-file-ignores="__init__.py:F401" ./*.py
-#     - flake8 --max-line-length=80 --per-file-ignores="__init__.py:F401" ./uuid_module/*.py
-# coverage:
-#   stage: test
-#   script:
-#     - pip install -r requirements.txt
-#     - pytest --cov=./ --junitxml=report.xml tests/
-#   artifacts:
-#     when: always
-#     reports:
-#       junit: report.xml
-# pages:
-#   stage: pages
-#   needs: []
-#   script:
-#   - pip install pdoc
-#   - pdoc -o docs/ -d google uuid_module
-#   - mkdir ./public
-#   - mv ./docs/* ./public/
-#   artifacts:
-#     paths:
-#     - public
-#   rules:
-#   - if: "$CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH"
-# deploy_staging:
-#   stage: deploy
-#   image:
-#     name: $CI_REGISTRY/docker-images/kaniko-project/executor:debug
-#     entrypoint: ['']
-#   script:
-#   - mkdir -p /kaniko/.docker
-#   - /kaniko/executor --context $CI_PROJECT_DIR --build-arg COPILOT_ENV=staging --dockerfile build/gitlab.Dockerfile
-#   - /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
-#   - echo 'eval "$(/home/linuxbrew/.linuxbrew/bin/brew shellenv)"' >> /root/.profile
-#   - eval "$(/home/linuxbrew/.linuxbrew/bin/brew shellenv)"
-#   - brew install aws/tap/copilot-cli
-#   - export AWS_REGION=us-east-2
-#   - export AWS_ACCESS_KEY_ID=$ACCESS_KEY
-#   - export AWS_SECRET_ACCESS_KEY=$SECRET_KEY
-#   - sudo groupadd docker
-#   - sudo usermod -aG docker $USER
-#   - newgrp docker
-#   - apt get clang
-#   - brew postinstall gcc@5
-#   - brew install docker
-#   - copilot svc deploy --name svc-smartsheet-data-sync --env staging
-#   environment:
-#     name: Staging
-# deploy_prod:
-#   stage: deploy
-#   script:
-#     - echo "Deploy to production server"
-#     - curl -Lo /usr/local/bin/copilot https://github.com/aws/copilot-cli/releases/latest/download/copilot-darwin && chmod +x /usr/local/bin/copilot
-#     - copilot svc deploy --name svc-smartsheet-data-sync --env prod
-#   environment:
-#     name: Production
-#   when: manual
-#   only:
-#     - main
+    - copilot svc deploy --name svc-smartsheet-data-sync --env staging
+  environment:
+    name: Staging
+deploy_prod:
+  stage: deploy
+  needs: ["deploy_staging"]
+  script:
+    - /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
+    - echo 'eval "$(/home/linuxbrew/.linuxbrew/bin/brew shellenv)"' >> /root/.profile
+    - eval "$(/home/linuxbrew/.linuxbrew/bin/brew shellenv)"
+    - brew install gcc
+    - brew install aws/tap/copilot-cli
+    - export AWS_REGION=us-east-2
+    - export AWS_ACCESS_KEY_ID=$ACCESS_KEY
+    - export AWS_SECRET_ACCESS_KEY=$SECRET_KEY
+    - groupadd docker
+    - usermod -aG docker root
+    - newgrp docker
+    - apt update
+    - apt install clang -y
+    - brew install --build-from-source docker
+    - copilot svc deploy --name svc-smartsheet-data-sync --env prod
+  environment:
+    name: Production
+  when: manual
+  only:
+    - main
 
 # # after_script:
 # #   - docker build -t registry.gitlab-dev.video.xarth.tv/cmpbad/smartsheet-data-sync-gitlab .
