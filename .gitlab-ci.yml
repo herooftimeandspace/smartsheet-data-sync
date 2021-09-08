@@ -28,6 +28,7 @@ prep:
 deploy_staging:
   stage: deploy
   script:
+    - whoami
     - /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
     - echo 'eval "$(/home/linuxbrew/.linuxbrew/bin/brew shellenv)"' >> /root/.profile
     - eval "$(/home/linuxbrew/.linuxbrew/bin/brew shellenv)"
@@ -37,7 +38,7 @@ deploy_staging:
     - export AWS_ACCESS_KEY_ID=$ACCESS_KEY
     - export AWS_SECRET_ACCESS_KEY=$SECRET_KEY
     - groupadd docker
-    - usermod -aG docker $USER
+    - usermod -aG docker root
     - newgrp docker
     - apt get clang
     - brew install docker
