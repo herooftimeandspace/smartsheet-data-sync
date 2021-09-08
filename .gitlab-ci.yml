@@ -41,7 +41,7 @@ deploy_staging:
     - newgrp docker
     - apt update
     - apt install clang -y
-    - brew install docker
+    - brew install --build-from-source docker
     - copilot --help
 
 
