@@ -25,13 +25,25 @@ prep:
     - virtualenv venv
     - source venv/bin/activate
     - pip install -r requirements.txt
-  stage: deploy
+stage: deploy
   image:
     name: $CI_REGISTRY/docker-images/kaniko-project/executor:debug
     entrypoint: ['']
   script:
-  - mkdir -p /kaniko/.docker
-  - /kaniko/executor --context $CI_PROJECT_DIR --build-arg COPILOT_ENV=staging --dockerfile Dockerfile
+    - /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
+    - echo 'eval "$(/home/linuxbrew/.linuxbrew/bin/brew shellenv)"' >> /root/.profile
+    - eval "$(/home/linuxbrew/.linuxbrew/bin/brew shellenv)"
+    - brew install aws/tap/copilot-cli
+    - export AWS_REGION=us-east-2
+    - export AWS_ACCESS_KEY_ID=$ACCESS_KEY
+    - export AWS_SECRET_ACCESS_KEY=$SECRET_KEY
+    - sudo groupadd docker
+    - sudo usermod -aG docker $USER
+    - newgrp docker
+    - apt get clang
+    - brew install docker
+
+
 # linting:
 #   stage: lint
 #   script:
@@ -78,6 +90,8 @@ prep:
 #   - sudo groupadd docker
 #   - sudo usermod -aG docker $USER
 #   - newgrp docker
+#   - apt get clang
+#   - brew postinstall gcc@5
 #   - brew install docker
 #   - copilot svc deploy --name svc-smartsheet-data-sync --env staging
 #   environment:
