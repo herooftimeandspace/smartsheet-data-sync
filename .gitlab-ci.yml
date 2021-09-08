@@ -31,11 +31,13 @@ deploy_staging:
     - /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
     - echo 'eval "$(/home/linuxbrew/.linuxbrew/bin/brew shellenv)"' >> /root/.profile
     - eval "$(/home/linuxbrew/.linuxbrew/bin/brew shellenv)"
+    - brew install gcc
+    - brew postinstall gcc@5
     - brew install aws/tap/copilot-cli
     - export AWS_REGION=us-east-2
     - export AWS_ACCESS_KEY_ID=$ACCESS_KEY
     - export AWS_SECRET_ACCESS_KEY=$SECRET_KEY
-    - sudo groupadd docker
+    - groupadd docker
     - sudo usermod -aG docker $USER
     - newgrp docker
     - apt get clang
