@@ -40,8 +40,10 @@ deploy_staging:
     - groupadd docker
     - usermod -aG docker root
     - newgrp docker
+    - apt update
     - apt install clang
     - brew install docker
+    - copilot --help
 
 
 # linting:
