@@ -25,10 +25,8 @@ prep:
     - virtualenv venv
     - source venv/bin/activate
     - pip install -r requirements.txt
-stage: deploy
-  image:
-    name: $CI_REGISTRY/docker-images/kaniko-project/executor:debug
-    entrypoint: ['']
+deploy_staging:
+  stage: deploy
   script:
     - /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
     - echo 'eval "$(/home/linuxbrew/.linuxbrew/bin/brew shellenv)"' >> /root/.profile
