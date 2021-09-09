@@ -73,7 +73,7 @@ deploy_staging:
     # - apt update
     # - apt install clang -y
     # - brew install --build-from-source docker
-    - docker --help
+    - systemctl start docker
 
     - copilot svc deploy --name svc-smartsheet-data-sync --env staging
   environment:
