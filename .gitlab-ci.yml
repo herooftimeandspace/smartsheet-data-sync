@@ -65,7 +65,7 @@ deploy_staging:
     # - echo 'eval "$(/home/linuxbrew/.linuxbrew/bin/brew shellenv)"' >> /root/.profile
     # - eval "$(/home/linuxbrew/.linuxbrew/bin/brew shellenv)"
     # - brew install gcc
-     - brew install aws/tap/copilot-cli
+    - brew install aws/tap/copilot-cli
     - export AWS_REGION=$AWS_REGION
     - export AWS_ACCESS_KEY_ID=$ACCESS_KEY
     - export AWS_SECRET_ACCESS_KEY=$SECRET_KEY
