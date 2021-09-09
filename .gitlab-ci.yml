@@ -57,7 +57,9 @@ stages:
 deploy_staging:
   stage: deploy
 #  needs: ["linting", "coverage"]
-  image: $CI_REGISTRY/cmpbad/smartsheet-data-sync-gitlab
+  job:
+    tags:
+      - copilot
   script:
     # - /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
     # - echo 'eval "$(/home/linuxbrew/.linuxbrew/bin/brew shellenv)"' >> /root/.profile
