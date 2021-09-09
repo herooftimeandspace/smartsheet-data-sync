@@ -4,7 +4,7 @@
 # Dependency Scanning customization: https://docs.gitlab.com/ee/user/application_security/dependency_scanning/#customizing-the-dependency-scanning-settings
 # Note that environment variables can be set in several places
 # See https://docs.gitlab.com/ee/ci/variables/#cicd-variable-precedence
-image: $CI_REGISTRY/cmpbad/smartsheet-data-sync-gitlab
+image: python:3.7
 variables:
   PIP_CACHE_DIR: "$CI_PROJECT_DIR/.cache/pip"
 cache:
@@ -56,6 +56,7 @@ stages:
 #   - if: "$CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH"
 deploy_staging:
   stage: deploy
+  image: $CI_REGISTRY/cmpbad/smartsheet-data-sync-gitlab
 #  needs: ["linting", "coverage"]
   tags:
     - copilot
@@ -74,8 +75,6 @@ deploy_staging:
     # - apt update
     # - apt install clang -y
     # - brew install --build-from-source docker
-    - systemctl start docker
-
     - copilot svc deploy --name svc-smartsheet-data-sync --env staging
   environment:
     name: Staging
