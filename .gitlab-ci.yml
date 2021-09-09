@@ -13,7 +13,6 @@ cache:
   - venv/
 stages:
 - prep
-- lint
 - test
 - pages
 - deploy
@@ -26,7 +25,8 @@ prep:
     - source venv/bin/activate
     - pip install -r requirements.txt
 linting:
-  stage: lint
+  stage: test
+  needs: []
   script:
     - pip install flake8
     - flake8 --max-line-length=80 --per-file-ignores="__init__.py:F401" ./*.py
@@ -56,6 +56,7 @@ pages:
   - if: "$CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH"
 deploy_staging:
   stage: deploy
+  needs: ["linting", "coverage"]
   image: $CI_REGISTRY/cmpbad/smartsheet-data-sync-gitlab
   script:
     # - /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
