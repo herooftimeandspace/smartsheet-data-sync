@@ -14,8 +14,8 @@ cache:
 stages:
 - prep
 - test
-- pages
 - deploy
+- pages
 prep:
   stage: prep
   script:
