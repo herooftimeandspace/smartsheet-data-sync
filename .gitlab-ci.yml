@@ -56,7 +56,9 @@ stages:
 #   - if: "$CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH"
 deploy_staging:
   stage: deploy
-  image: $CI_REGISTRY/cmpbad/smartsheet-data-sync-gitlab
+  image: docker:20.10.7
+  services:
+    - docker:20.10.7-dind
 #  needs: ["linting", "coverage"]
   tags:
     - copilot
