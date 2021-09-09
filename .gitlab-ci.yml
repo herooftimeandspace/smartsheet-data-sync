@@ -58,21 +58,21 @@ deploy_staging:
   stage: deploy
   image: $CI_REGISTRY/cmpbad/smartsheet-data-sync-gitlab
   script:
-    - /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
-    - echo 'eval "$(/home/linuxbrew/.linuxbrew/bin/brew shellenv)"' >> /root/.profile
-    - eval "$(/home/linuxbrew/.linuxbrew/bin/brew shellenv)"
-    - brew install gcc
-    - brew install aws/tap/copilot-cli
+    # - /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
+    # - echo 'eval "$(/home/linuxbrew/.linuxbrew/bin/brew shellenv)"' >> /root/.profile
+    # - eval "$(/home/linuxbrew/.linuxbrew/bin/brew shellenv)"
+    # - brew install gcc
+    # - brew install aws/tap/copilot-cli
     - export AWS_REGION=us-east-2
     - export AWS_ACCESS_KEY_ID=$ACCESS_KEY
     - export AWS_SECRET_ACCESS_KEY=$SECRET_KEY
-    - groupadd docker
-    - usermod -aG docker root
-    - newgrp docker
-    - apt update
-    - apt install clang -y
-    - brew install --build-from-source docker
-    - dockerd
+    # - groupadd docker
+    # - usermod -aG docker root
+    # - newgrp docker
+    # - apt update
+    # - apt install clang -y
+    # - brew install --build-from-source docker
+    # - dockerd
     - copilot svc deploy --name svc-smartsheet-data-sync --env staging
   environment:
     name: Staging
@@ -80,20 +80,21 @@ deploy_prod:
   stage: deploy
   needs: ["deploy_staging"]
   script:
-    - /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
-    - echo 'eval "$(/home/linuxbrew/.linuxbrew/bin/brew shellenv)"' >> /root/.profile
-    - eval "$(/home/linuxbrew/.linuxbrew/bin/brew shellenv)"
-    - brew install gcc
-    - brew install aws/tap/copilot-cli
+    # - /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
+    # - echo 'eval "$(/home/linuxbrew/.linuxbrew/bin/brew shellenv)"' >> /root/.profile
+    # - eval "$(/home/linuxbrew/.linuxbrew/bin/brew shellenv)"
+    # - brew install gcc
+    # - brew install aws/tap/copilot-cli
     - export AWS_REGION=us-east-2
     - export AWS_ACCESS_KEY_ID=$ACCESS_KEY
     - export AWS_SECRET_ACCESS_KEY=$SECRET_KEY
-    - groupadd docker
-    - usermod -aG docker root
-    - newgrp docker
-    - apt update
-    - apt install clang -y
-    - brew install --build-from-source docker
+    # - groupadd docker
+    # - usermod -aG docker root
+    # - newgrp docker
+    # - apt update
+    # - apt install clang -y
+    # - brew install --build-from-source docker
+    # - dockerd
     - copilot svc deploy --name svc-smartsheet-data-sync --env prod
   environment:
     name: Production
