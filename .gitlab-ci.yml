@@ -4,7 +4,7 @@
 # Dependency Scanning customization: https://docs.gitlab.com/ee/user/application_security/dependency_scanning/#customizing-the-dependency-scanning-settings
 # Note that environment variables can be set in several places
 # See https://docs.gitlab.com/ee/ci/variables/#cicd-variable-precedence
-image: python:3.7
+image: $CI_REGISTRY/cmpbad/smartsheet-data-sync-gitlab
 variables:
   PIP_CACHE_DIR: "$CI_PROJECT_DIR/.cache/pip"
 cache:
@@ -65,7 +65,7 @@ deploy_staging:
     # - eval "$(/home/linuxbrew/.linuxbrew/bin/brew shellenv)"
     # - brew install gcc
     # - brew install aws/tap/copilot-cli
-    - export AWS_REGION=us-east-2
+    - export AWS_REGION=$AWS_REGION
     - export AWS_ACCESS_KEY_ID=$ACCESS_KEY
     - export AWS_SECRET_ACCESS_KEY=$SECRET_KEY
     # - groupadd docker
