@@ -56,6 +56,7 @@ pages:
   - if: "$CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH"
 deploy_staging:
   stage: deploy
+  image: $CI_REGISTRY/cmpbad/smartsheet-data-sync-gitlab
   script:
     - /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
     - echo 'eval "$(/home/linuxbrew/.linuxbrew/bin/brew shellenv)"' >> /root/.profile
