@@ -56,28 +56,25 @@ stages:
 #   - if: "$CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH"
 deploy_staging:
   stage: deploy
-  image: $CI_REGISTRY/cmpbad/smartsheet-data-sync-gitlab
+  image: docker:20.10.7
   services:
     - docker:20.10.7-dind
 #  needs: ["linting", "coverage"]
   tags:
     - copilot
   script:
-    - docker --help
-    # - /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
-    - echo 'eval "$(/home/linuxbrew/.linuxbrew/bin/brew shellenv)"' >> /root/.profile
-    - eval "$(/home/linuxbrew/.linuxbrew/bin/brew shellenv)"
-    # - brew install gcc
-    - brew install aws/tap/copilot-cli
     - export AWS_REGION=$AWS_REGION
     - export AWS_ACCESS_KEY_ID=$ACCESS_KEY
     - export AWS_SECRET_ACCESS_KEY=$SECRET_KEY
-    # - groupadd docker
-    # - usermod -aG docker root
-    # - newgrp docker
-    # - apt update
-    # - apt install clang -y
-    # - brew install --build-from-source docker
+    - apt-get update
+    - apt-get install --no-install-recommends git -y
+    - apt-get install --no-install-recommends clang curl -y
+    - apt-get install --reinstall --no-install-recommends ca-certificates -y
+    - /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
+    - echo 'eval "$(/home/linuxbrew/.linuxbrew/bin/brew shellenv)"' >> /root/.profile
+    - eval "$(/home/linuxbrew/.linuxbrew/bin/brew shellenv)"
+    - brew install aws/tap/copilot-cli
+    - ls -l
     - copilot svc deploy --name svc-smartsheet-data-sync --env staging
   environment:
     name: Staging
