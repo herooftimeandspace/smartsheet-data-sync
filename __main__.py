@@ -51,7 +51,7 @@ def get_secret(env):
         else:
             logging.ERROR("Failed to set API Key from AWS Secrets")
 
-    region_name = "us-east-2"
+    region_name = "us-west-2"
     ACCESS_KEY = os.environ.get('ACCESS_KEY')
     SECRET_KEY = os.environ.get('SECRET_KEY')
 
