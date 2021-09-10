@@ -60,7 +60,7 @@ pages:
 deploy_staging:
   stage: deploy
   image: ubuntu:latest
- needs: ["linting", "coverage"]
+  needs: ["linting", "coverage"]
   tags:
     - copilot
   script:
@@ -73,7 +73,7 @@ deploy_staging:
 deploy_prod:
     stage: deploy
   image: ubuntu:latest
- needs: ["linting", "coverage"]
+  needs: ["linting", "coverage"]
   tags:
     - copilot
   script:
