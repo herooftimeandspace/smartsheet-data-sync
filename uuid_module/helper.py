@@ -1,6 +1,8 @@
-import logging
 import json
+import logging
 import math
+from datetime import datetime, timedelta
+
 import smartsheet
 
 logger = logging.getLogger(__name__)
@@ -198,3 +200,35 @@ def truncate(number, decimals=0):
 
     factor = 10.0 ** decimals
     return math.trunc(number * factor) / factor
+
+
+def get_timestamp(number):
+    """Subtracts the number intput from the current time to generate a
+       timestamp N number of minutes ago.
+
+    Returns:
+        string: an ISO8601 compliant timestamp
+    """
+    if not isinstance(number, int):
+        raise TypeError("Number of minutes must be an integer.")
+
+    date = datetime.now()
+    delta = timedelta(minutes=number)
+    modified_since = date - delta
+    modified_since = modified_since.replace(microsecond=0)  # .isoformat()
+    modified_since_iso = modified_since.replace(microsecond=0).isoformat()
+    return modified_since, modified_since_iso
+
+
+def chunks(lst, n):
+    """Yield successive n-sized chunks from lst.
+
+    Args:
+        lst (list): The list of objects to chunk
+        n (int): The number of items in the list to chunk together
+
+    Yields:
+        lst (list): The sub-list of chunked items
+    """
+    for i in range(0, len(lst), n):
+        yield lst[i:i + n]

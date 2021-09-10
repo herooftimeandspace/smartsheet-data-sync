@@ -1,9 +1,9 @@
-# The manifest for the "svc-smartsheet-data-sync" service.
+# The manifest for the "smartsheet-data-sync-backend" service.
 # Read the full specification for the "Backend Service" type at:
 #  https://aws.github.io/copilot-cli/docs/manifest/backend-service/
 
 # Your service name will be used in naming your resources like log groups, ECS services, etc.
-name: svc-smartsheet-data-sync
+name: smartsheet-data-sync-backend
 type: Backend Service
 
 # Your service does not allow any traffic.
@@ -14,8 +14,8 @@ image:
   build: Dockerfile
 
 cpu: 512       # Number of CPU units for the task.
-memory: 1024    # Amount of memory in MiB used by the task.
-count: 0       # Number of tasks that should be running in your service.
+memory: 2048    # Amount of memory in MiB used by the task.
+count: 1       # Number of tasks that should be running in your service.
 exec: true     # Enable running commands in your container.
 
 # Optional fields for more advanced use-cases.
@@ -27,6 +27,13 @@ exec: true     # Enable running commands in your container.
 #  GITHUB_TOKEN: GITHUB_TOKEN  # The key is the name of the environment variable, the value is the name of the SSM parameter.
 
 # You can override any of the values defined above by environment.
-#environments:
-#  test:
-#    count: 2               # Number of tasks to run for the "test" environment.
+environments:
+  staging:
+  #  count: 2               # Number of tasks to run for the "test" environment.
+    image:
+      args:
+        COPILOT_ENV: staging
+  prod:
+    image:
+      args:
+        COPILOT_ENV: prod

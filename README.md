@@ -1,3 +1,4 @@
+[![coverage report](https://gitlab-dev.video.xarth.tv/cmpbad/smartsheet-data-sync-gitlab/badges/staging/coverage.svg)](https://gitlab-dev.video.xarth.tv/cmpbad/smartsheet-data-sync-gitlab/-/commits/staging) | Staging:[![pipeline status](https://gitlab-dev.video.xarth.tv/cmpbad/smartsheet-data-sync-gitlab/badges/staging/pipeline.svg)](https://gitlab-dev.video.xarth.tv/cmpbad/smartsheet-data-sync-gitlab/-/commits/staging) | Prod: [![pipeline status](https://gitlab-dev.video.xarth.tv/cmpbad/smartsheet-data-sync-gitlab/badges/main/pipeline.svg)](https://gitlab-dev.video.xarth.tv/cmpbad/smartsheet-data-sync-gitlab/-/commits/main)
 # Overview
 This Smartsheet Data Sync application is designed create and sync data across multiple sheets and Jira without needing to create a Jira Connector per sheet. It uses run several modules on a timed basis. The modules perform the following actions:
 1. Queries the Smartsheet API for all sheets across one or more workspaces
@@ -10,13 +11,25 @@ This Smartsheet Data Sync application is designed create and sync data across mu
 # Setup
 ## Python
 Python prequisites are:
-1. Python >= 3.7
-2. smartsheet-python-sdk
-3. apscheduler
-4. pytest
-5. pdoc
+1. python >= 3.7 - < 3.9 recommended due to Smartsheet kit issues.
+2. smartsheet-python-sdk - Smartsheet API toolkit
+3. apscheduler - Schedules cron / interval jobs
+4. boto3 - Toolkit for interacting with AWS services
+5. pytest - Code testing
+6. pytest-cov - Code coverage reporting
+7. pytest-xdist - Support module for pytest-cov
+8. pdoc - Lightweight API documentation generator
 
 These libraries are automatically installed when the docker image is built, but you will need them installed locally to test the app without using Docker. Pyenv is recommended.
+
+## AWS
+1. AWS Account with Admin Role
+2. [AWS Secrets Manager](https://us-west-2.console.aws.amazon.com/secretsmanager/home?region=us-west-2#!/listSecrets)
+3. [Copilot](https://aws.github.io/copilot-cli/)
+
+## Docker
+1. Docker - For Copilot builds
+2. Docker Compose - For local dev
 
 ## Smartsheet Setup
 ### Smartsheet API Token
@@ -53,37 +66,32 @@ You will need access to the Smartsheet Jira Connector. This can be granted by an
 3. Click `Add Workflow`
 4. Configure the workflow. You will want a bidirectional sync, to create a new Sheet or designate a sheet already created, and designate one or more Jira projects to sync. During the setup you will be able to create filters that narrow down the scope of the data synced between Jira and Smartsheet. Disable grouping by ticket type. Ensure that you sync the following columns: `Summary`, `Status`, and `Assignee` Recommended: Create and save a Jira filter before creating the connector to ensure you only sync the tickets you intend.
 
-## Dockerfile
-Note: .gitignore automatically ignores the `.env` and `Dockerfile` files. Ensure that you don't upload your credentials to the repo.
-1. Copy the `Dockerfile_example` file to the root directory and rename to `Dockerfile`
-2. Replace `[API ACCESS TOKEN]` with your Smartsheet API token.
-3. Save.
-
-## .env File
-1. Copy the `env_example` file to the root directory and rename to `.env`
-2. Replace `[API ACCESS TOKEN]` with your Smartsheet API token.
-3. Save.
-
 ## Variables
 The `variables.py` file holds the static information needed to process API requests. Several fields will need to be modified to suit your environment
 1. `workspace_id` is a list of Smartsheet Workspace IDs. Workspace IDs can be found by right clicking on a workspace in Smartsheet, and selecting `Properties`. An example with 2 workspaces is `workspace_id = [1014869735565188, 1498352056592260]`
 2. `jira_idx_sheet` is a string, which contains the sheet ID of the centralized sheet where the Smartsheet Jira Connector synchronizes Jira tickets with Smartsheet. The sheet ID can be found by right clicking on the sheet you have designated to store and sync Jira tickets, and selecting `Properties`.
 
-
 # Running the App
-By default, the app uses APScheduler to run multiple functions in timed intervals. For example, the API query to pull down every sheet from the workspaces is configured for `40 seconds`. Timing is controlled through the `scheduler.add_job` functions. Time can be tweaked based on the number of workspaces and sheets that need to be parsed. More sheets = longer recommended intervals.
+By default, the app uses [APScheduler](https://apscheduler.readthedocs.io/en/stable/userguide.html) to run multiple functions in timed intervals. For example, the API query to pull down every sheet from the workspaces is configured for `30 seconds`. Timing is controlled through the `scheduler.add_job` functions. Time can be tweaked based on the number of workspaces and sheets that need to be parsed. More sheets = longer recommended intervals.
 
+# Developer's Guide
 For testing, you can comment out the APScheduler start section and enable the `main()` function to run each module once.
 
-## Locally
+## Locally in Terminal
 Your local terminal will need an environment variable for `SMARTSHEET_ACCESS_TOKEN` which was generated during setup. Run the `__main__.py` app in terminal. Logs will output to the /logs/ folder and the console.
 
+The app accepts one of 3 arguments for debug, staging, and prod deployments. The app will accept any of the following:
+1. -d, -debug, --debug
+2. -s, -staging, --staging
+3. -p, -prod, --prod
 
-## Docker
-1. Build the latest Docker image using `docker build -t uuid .`
-2. Run the Docker image in detached mode with `docker run -d -v $(pwd):/uuid --name manage_uuids uuid`
+Setting the -d flag will enable DEBUG level logging in an output file under /logs. This is useful if API calls fail and you need to figure out which sheets are causing the issue. Setting -s or -p will pull the staging or prod API tokens as defined in Secrets Manager, and only output INFO level logging in the console.
 
-The Python app will pipe logs to the /logs/ folder as well as the Docker Logs console.
+## Locally with Docker
+Build and run the latest Docker configuration using `docker-compose up --build -d`. Docker will build the AWS and Smartsheet-Data-Sync containers that allow access to AWS Secrets and run the app. The default logging level when running locally is DEBUG. The Python app will pipe logs to the /logs/ folder as well as the Docker Logs console.
+
+## Staging / Production
+Once code is ready for deployment, create a pull request for the `staging` branch. This will automatically trigger a Gitlab CI/CD pipeline to deploy changes to the Staging environment in AWS. Similarly, pull requests from `staging` to `main` will trigger the pipeline to deploy the Prod environment in AWS. Commits directly to `main` are disabled.
 
 # API Documentation
-API documentation can be found in the /docs folder, and is generated by pdoc. Run `pdoc -o docs/ uuid_module -d google` in the root directory to regenerate API documentation.
+[API documentation](docs/index.html) is generated by pdoc. Run `pdoc -o docs/ uuid_module -d google` in the root directory to regenerate API documentation.
