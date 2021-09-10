@@ -346,7 +346,7 @@ def get_all_sheet_ids(smartsheet_client):
     return sheet_ids
 
 
-def get_secret(env):
+def get_secret(secret_name):
     """Gets the API token from AWS Secrets Manager.
 
     Raises:
@@ -359,15 +359,6 @@ def get_secret(env):
     Returns:
         str: The Smartsheet API key
     """
-    for e in env:
-        if e in ("-s", "--staging", "-staging"):
-            secret_name = "staging/smartsheet-data-sync/svc-api-token"
-        elif e in ("-p", "--prod", "-prod"):
-            secret_name = "prod/smartsheet-data-sync/svc-api-token"
-        elif e in ("-d", "--debug", "-debug"):
-            secret_name = "staging/smartsheet-data-sync/svc-api-token"
-        else:
-            logging.ERROR("Failed to set API Key from AWS Secrets")
 
     region_name = "us-west-2"
     ACCESS_KEY = os.environ.get('ACCESS_KEY')
@@ -430,3 +421,18 @@ def get_secret(env):
             decoded_binary_secret = base64.b64decode(
                 get_secret_value_response['SecretBinary'])
             return decoded_binary_secret
+
+
+def get_secret_name(env):
+    for e in env:
+        if e in ("-s", "--staging", "-staging"):
+            secret_name = "staging/smartsheet-data-sync/svc-api-token"
+        elif e in ("-p", "--prod", "-prod"):
+            secret_name = "prod/smartsheet-data-sync/svc-api-token"
+        elif e in ("-d", "--debug", "-debug"):
+            secret_name = "staging/smartsheet-data-sync/svc-api-token"
+        else:
+            logging.error("Failed to set API Key from AWS Secrets")
+            secret_name = ""
+
+    return secret_name

@@ -12,7 +12,8 @@ from apscheduler.schedulers.background import BlockingScheduler
 
 # from uuid_module.cell_link_sheet_data import write_uuid_cell_links
 from uuid_module.get_data import (get_all_row_data, get_all_sheet_ids,
-                                  get_blank_uuids, get_sub_indexs, get_secret)
+                                  get_blank_uuids, get_secret, get_secret_name,
+                                  get_sub_indexs)
 from uuid_module.helper import get_timestamp, truncate
 from uuid_module.variables import (log_location, minutes, module_log_name,
                                    sheet_columns)
@@ -31,6 +32,26 @@ log_location = os.path.join(cwd, log_location)
 
 
 def set_logging_config(env):
+    logging_config = dict(
+        version=1,
+        formatters={
+            'f': {'format':
+                  "%(asctime)s - %(levelname)s - %(message)s"}
+        },
+        handlers={
+            'docker': {
+                'class': 'logging.StreamHandler',
+                'formatter': 'f',
+                'level': logging.INFO,
+                'stream': 'ext://sys.stdout'
+            }
+        },
+        root={
+            'handlers': ['docker'],  # 'console', 'file'
+            'level': logging.DEBUG,
+            'disable_existing_loggers': False
+        },
+    )
     for e in env:
         if e in ("-s", "--staging", "-staging"):
             logging_config = dict(
@@ -101,8 +122,7 @@ def set_logging_config(env):
                     'disable_existing_loggers': False
                 },
             )
-        else:
-            logging.ERROR("Failed to set logging level for the environment.")
+
     return logging_config
 
 
@@ -130,10 +150,20 @@ job_defaults = {
 }
 scheduler = BlockingScheduler(executors=executors, job_defaults=job_defaults)
 
+for e in env:
+    if e in ("--", None):
+        logging.error("No environment flag set. Please use --debug, --staging "
+                      "or --prod. Terminating app.")
+        quit()
+    else:
+        msg = str("The {} flag was passed from the command line").format(env)
+        logging.info(msg)
+
 logging.debug("------------------------")
 logging.debug("Initializing Smartsheet Client API")
 logging.debug("------------------------")
-os.environ["SMARTSHEET_ACCESS_TOKEN"] = get_secret(env)
+secret_name = get_secret_name(env)
+os.environ["SMARTSHEET_ACCESS_TOKEN"] = get_secret(secret_name)
 smartsheet_client = smartsheet.Smartsheet()
 # Make sure we don't miss any error
 smartsheet_client.errors_as_exceptions(True)
