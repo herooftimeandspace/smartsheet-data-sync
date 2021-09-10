@@ -1,6 +1,4 @@
-import base64
 import gc
-import json
 import logging
 import os
 import sys
@@ -16,7 +14,7 @@ from botocore.exceptions import ClientError
 
 # from uuid_module.cell_link_sheet_data import write_uuid_cell_links
 from uuid_module.get_data import (get_all_row_data, get_all_sheet_ids,
-                                  get_blank_uuids, get_sub_indexs)
+                                  get_blank_uuids, get_sub_indexs, get_secret)
 from uuid_module.helper import get_timestamp, json_extract, truncate
 from uuid_module.variables import (log_location, minutes, module_log_name,
                                    sheet_columns)
@@ -30,124 +28,90 @@ start = time.time()
 # https://aws.amazon.com/developers/getting-started/python/
 
 
-def get_secret(env):
-    """Gets the API token from AWS Secrets Manager.
-
-    Raises:
-        e: DecryptionFailureException.
-        e: InternalServiceErrorException
-        e: InvalidParameterException
-        e: InvalidRequestException
-        e: ResourceNotFoundException
-
-    Returns:
-        str: The Smartsheet API key
-    """
-    for e in env:
-        if e in ("-s", "--staging", "-staging"):
-            secret_name = "staging/smartsheet-data-sync/svc-api-token"
-        elif e in ("-p", "--prod", "-prod"):
-            secret_name = "prod/smartsheet-data-sync/svc-api-token"
-        else:
-            logging.ERROR("Failed to set API Key from AWS Secrets")
-
-    region_name = "us-west-2"
-    ACCESS_KEY = os.environ.get('ACCESS_KEY')
-    SECRET_KEY = os.environ.get('SECRET_KEY')
-
-    # Create a Secrets Manager client
-    session = boto3.session.Session()
-    client = session.client(
-        service_name='secretsmanager',
-        region_name=region_name,
-        aws_access_key_id=ACCESS_KEY,
-        aws_secret_access_key=SECRET_KEY,
-    )
-
-    # In this sample we only handle the specific exceptions for the
-    # 'GetSecretValue' API.
-    # See https://docs.aws.amazon.com/secretsmanager/latest/
-    # apireference/API_GetSecretValue.html
-    # We rethrow the exception by default.
-
-    try:
-        get_secret_value_response = client.get_secret_value(
-            SecretId=secret_name
-        )
-    except ClientError as e:
-        if e.response['Error']['Code'] == 'DecryptionFailureException':
-            # Secrets Manager can't decrypt the protected secret text using
-            # the provided KMS key.
-            # Deal with the exception here, and/or rethrow at your discretion.
-            raise e
-        elif e.response['Error']['Code'] == 'InternalServiceErrorException':
-            # An error occurred on the server side.
-            # Deal with the exception here, and/or rethrow at your discretion.
-            raise e
-        elif e.response['Error']['Code'] == 'InvalidParameterException':
-            # You provided an invalid value for a parameter.
-            # Deal with the exception here, and/or rethrow at your discretion.
-            raise e
-        elif e.response['Error']['Code'] == 'InvalidRequestException':
-            # You provided a parameter value that is not valid for the current
-            # state of the resource.
-            # Deal with the exception here, and/or rethrow at your discretion.
-            raise e
-        elif e.response['Error']['Code'] == 'ResourceNotFoundException':
-            # We can't find the resource that you asked for.
-            # Deal with the exception here, and/or rethrow at your discretion.
-            raise e
-    else:
-        # Decrypts secret using the associated KMS CMK.
-        # Depending on whether the secret is a string or binary, one of these
-        # fields will be populated.
-        if 'SecretString' in get_secret_value_response:
-            secret = get_secret_value_response['SecretString']
-
-            api_key = json.loads(str(secret))
-            api_key = json_extract(api_key, "SMARTSHEET_ACCESS_TOKEN")
-            api_key = ''.join(map(str, api_key))
-            return api_key
-        else:
-            decoded_binary_secret = base64.b64decode(
-                get_secret_value_response['SecretBinary'])
-            return decoded_binary_secret
-
-
 cwd = os.path.dirname(os.path.abspath(__file__))
 log_location = os.path.join(cwd, log_location)
-logging_config = dict(
-    version=1,
-    formatters={
-        'f': {'format':
-              "%(asctime)s - %(levelname)s - %(message)s"}
-    },
-    handlers={
-        # 'console': {
-        #     'class': 'logging.StreamHandler',
-        #     'formatter': 'f',
-        #     'level': logging.INFO
-        # },
-        'file': {
-            'class': 'logging.FileHandler',
-            'formatter': 'f',
-            'level': logging.DEBUG,
-            'filename': log_location + module_log_name
-        },
-        'docker': {
-            'class': 'logging.StreamHandler',
-            'formatter': 'f',
-            'level': logging.INFO,
-            'stream': 'ext://sys.stdout'
-        }
-    },
-    root={
-        'handlers': ['docker'],  # 'console', 'file'
-        'level': logging.DEBUG,
-        'disable_existing_loggers': False
-    },
-)
 
+
+def set_logging_config(env):
+    for e in env:
+        if e in ("-s", "--staging", "-staging"):
+            logging_config = dict(
+                version=1,
+                formatters={
+                    'f': {'format':
+                          "%(asctime)s - %(levelname)s - %(message)s"}
+                },
+                handlers={
+                    'docker': {
+                        'class': 'logging.StreamHandler',
+                        'formatter': 'f',
+                        'level': logging.INFO,
+                        'stream': 'ext://sys.stdout'
+                    }
+                },
+                root={
+                    'handlers': ['docker'],  # 'console', 'file'
+                    'level': logging.DEBUG,
+                    'disable_existing_loggers': False
+                },
+            )
+        elif e in ("-p", "--prod", "-prod"):
+            logging_config = dict(
+                version=1,
+                formatters={
+                    'f': {'format':
+                          "%(asctime)s - %(levelname)s - %(message)s"}
+                },
+                handlers={
+                    'docker': {
+                        'class': 'logging.StreamHandler',
+                        'formatter': 'f',
+                        'level': logging.INFO,
+                        'stream': 'ext://sys.stdout'
+                    }
+                },
+                root={
+                    'handlers': ['docker'],  # 'console', 'file'
+                    'level': logging.DEBUG,
+                    'disable_existing_loggers': False
+                },
+            )
+        elif e in ("-d", "--debug", "-debug"):
+            logging_config = dict(
+                version=1,
+                formatters={
+                    'f': {'format':
+                          "%(asctime)s - %(levelname)s - %(message)s"}
+                },
+                handlers={
+                    'file': {
+                        'class': 'logging.FileHandler',
+                        'formatter': 'f',
+                        'level': logging.DEBUG,
+                        'filename': log_location + module_log_name
+                    },
+                    'docker': {
+                        'class': 'logging.StreamHandler',
+                        'formatter': 'f',
+                        'level': logging.DEBUG,
+                        'stream': 'ext://sys.stdout'
+                    }
+                },
+                root={
+                    'handlers': ['docker', 'file'],  # 'console', 'file'
+                    'level': logging.DEBUG,
+                    'disable_existing_loggers': False
+                },
+            )
+        else:
+            logging.ERROR("Failed to set logging level for the environment.")
+    return logging_config
+
+
+# Initialize client. Uses the API token in the environment variable
+# "SMARTSHEET_ACCESS_TOKEN", which is pulled from the AWS Secrets API.
+env = sys.argv[1:]
+logging_config = set_logging_config(env)
 try:
     os.mkdir(log_location)
     f = open(log_location + module_log_name, "w")
@@ -168,9 +132,6 @@ job_defaults = {
 }
 scheduler = BlockingScheduler(executors=executors, job_defaults=job_defaults)
 
-# Initialize client. Uses the API token in the environment variable
-# "SMARTSHEET_ACCESS_TOKEN", which is pulled from the AWS Secrets API.
-env = sys.argv[1:]
 logging.debug("------------------------")
 logging.debug("Initializing Smartsheet Client API")
 logging.debug("------------------------")
@@ -226,7 +187,7 @@ def full_jira_sync(minutes):
 
     blank_uuid_index = get_blank_uuids(source_sheets, smartsheet_client)
     if blank_uuid_index:
-        logging.info("There are {} project sheets to be updated"
+        logging.info("There are {} project sheets to be updated "
                      "with UUIDs".format(len(blank_uuid_index)))
         sheets_updated = write_uuids(blank_uuid_index, smartsheet_client)
         if sheets_updated:
