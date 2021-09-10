@@ -19,90 +19,68 @@ stages:
 before_script:
   - docker info
   - copilot help
-# prep:
-#   stage: prep
-#   script:
-#     - python -V  # Print out python version for debugging
-#     - pip install virtualenv
-#     - virtualenv venv
-#     - source venv/bin/activate
-#     - pip install -r requirements.txt
-# linting:
-#   stage: test
-#   needs: []
-#   script:
-#     - pip install flake8
-#     - flake8 --max-line-length=80 --per-file-ignores="__init__.py:F401" ./*.py
-#     - flake8 --max-line-length=80 --per-file-ignores="__init__.py:F401" ./uuid_module/*.py
-# coverage:
-#   stage: test
-#   needs: []
-#   script:
-#     - pip install -r requirements.txt
-#     - pytest --cov=./ --junitxml=report.xml tests/
-#   artifacts:
-#     when: always
-#     reports:
-#       junit: report.xml
-# pages:
-#   stage: pages
-#   needs: ["coverage"]
-#   script:
-#   - pip install pdoc
-#   - pdoc -o docs/ -d google uuid_module
-#   - mkdir ./public
-#   - mv ./docs/* ./public/
-#   artifacts:
-#     paths:
-#     - public
-#   rules:
-#   - if: "$CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH"
+prep:
+  stage: prep
+  script:
+    - python -V  # Print out python version for debugging
+    - pip install virtualenv
+    - virtualenv venv
+    - source venv/bin/activate
+    - pip install -r requirements.txt
+linting:
+  stage: test
+  needs: []
+  script:
+    - pip install flake8
+    - flake8 --max-line-length=80 --per-file-ignores="__init__.py:F401" ./*.py
+    - flake8 --max-line-length=80 --per-file-ignores="__init__.py:F401" ./uuid_module/*.py
+coverage:
+  stage: test
+  needs: []
+  script:
+    - pip install -r requirements.txt
+    - pytest --cov=./ --junitxml=report.xml tests/
+  artifacts:
+    when: always
+    reports:
+      junit: report.xml
+pages:
+  stage: pages
+  needs: ["coverage"]
+  script:
+  - pip install pdoc
+  - pdoc -o docs/ -d google uuid_module
+  - mkdir ./public
+  - mv ./docs/* ./public/
+  artifacts:
+    paths:
+    - public
+  rules:
+  - if: "$CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH"
 deploy_staging:
   stage: deploy
   image: ubuntu:latest
-  # services:
-  #   - docker:20.10.7-dind
-#  needs: ["linting", "coverage"]
+ needs: ["linting", "coverage"]
   tags:
     - copilot
   script:
     - export AWS_REGION=$AWS_REGION
     - export AWS_ACCESS_KEY_ID=$ACCESS_KEY
     - export AWS_SECRET_ACCESS_KEY=$SECRET_KEY
-    # - sudo yum update
-    # - sudo yum install git -y
-    # - sudo yum install clang curl -y
-    # - sudo yum install reinstall ca-certificates -y
-    # - apt install --no-install-recommends docker -y
-    # - systemctl start docker
-    # - cp /etc/ssl/certs/ca-certificates.crt /etc/pki/tls/certs/ca-bundle.crt
-    # - chown -R $(whoami) /usr/local/bin
-    # - curl -Lo copilot-install https://github.com/aws/copilot-cli/releases/latest/download/copilot-linux && sudo chmod +x copilot-install && sudo mv copilot-install /usr/local/bin/copilot && copilot --help
-    # - docker --help
-    # - ls -l /usr/local/bin
     - copilot svc deploy --name smartsheet-data-sync-backend --env staging
   environment:
     name: Staging
 deploy_prod:
-  stage: deploy
-  needs: ["deploy_staging"]
+    stage: deploy
+  image: ubuntu:latest
+ needs: ["linting", "coverage"]
+  tags:
+    - copilot
   script:
-    # - /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
-    # - echo 'eval "$(/home/linuxbrew/.linuxbrew/bin/brew shellenv)"' >> /root/.profile
-    # - eval "$(/home/linuxbrew/.linuxbrew/bin/brew shellenv)"
-    # - brew install gcc
-    # - brew install aws/tap/copilot-cli
-    - export AWS_REGION=us-east-2
+    - export AWS_REGION=$AWS_REGION
     - export AWS_ACCESS_KEY_ID=$ACCESS_KEY
     - export AWS_SECRET_ACCESS_KEY=$SECRET_KEY
-    # - groupadd docker
-    # - usermod -aG docker root
-    # - newgrp docker
-    # - apt update
-    # - apt install clang -y
-    # - brew install --build-from-source docker
-    # - dockerd
-    - copilot svc deploy --name svc-smartsheet-data-sync --env prod
+    - copilot svc deploy --name smartsheet-data-sync-backend --env staging
   environment:
     name: Production
   when: manual
