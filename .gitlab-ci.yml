@@ -50,8 +50,8 @@ coverage:
 sast:
   stage: test
   needs: []
-  include:
-    - template: Security/SAST.gitlab-ci.yml
+include:
+  - template: Security/SAST.gitlab-ci.yml
 
 pages:
   stage: pages
@@ -70,7 +70,7 @@ pages:
 deploy_staging:
   stage: deploy
   image: ubuntu:latest
-  needs: ["linting", "coverage", "sast"]
+  needs: ["linting", "coverage"]
   tags:
     - copilot
   script:
