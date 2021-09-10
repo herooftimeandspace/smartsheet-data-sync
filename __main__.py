@@ -142,7 +142,7 @@ logging_config = dict(
         }
     },
     root={
-        'handlers': ['file', 'docker'],  # 'console'
+        'handlers': ['docker'],  # 'console', 'file'
         'level': logging.DEBUG,
         'disable_existing_loggers': False
     },

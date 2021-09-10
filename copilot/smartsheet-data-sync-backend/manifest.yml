@@ -28,7 +28,7 @@ exec: true     # Enable running commands in your container.
 
 # You can override any of the values defined above by environment.
 environments:
-  test:
+  staging:
   #  count: 2               # Number of tasks to run for the "test" environment.
     image:
       args:
