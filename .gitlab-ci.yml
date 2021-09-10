@@ -90,14 +90,14 @@ deploy_staging:
 deploy_prod:
   stage: deploy
   image: ubuntu:latest
-  needs: ["linting", "coverage", "sast"]
+  needs: ["linting", "coverage"]
   tags:
     - copilot
   script:
     - export AWS_REGION=$AWS_REGION
     - export AWS_ACCESS_KEY_ID=$ACCESS_KEY
     - export AWS_SECRET_ACCESS_KEY=$SECRET_KEY
-    - copilot svc deploy --name smartsheet-data-sync-backend --env staging
+    - copilot svc deploy --name smartsheet-data-sync-backend --env prod
   environment:
     name: Production
   only:
