@@ -44,6 +44,10 @@ coverage:
     when: always
     reports:
       junit: report.xml
+sast:
+  stage: test
+include:
+  - template: Security/SAST.gitlab-ci.yml
 pages:
   stage: pages
   needs: ["coverage"]
@@ -91,7 +95,3 @@ deploy_prod:
 # #   - docker build -t registry.gitlab-dev.video.xarth.tv/cmpbad/smartsheet-data-sync-gitlab .
 # #   - docker push registry.gitlab-dev.video.xarth.tv/cmpbad/smartsheet-data-sync-gitlab
 # #   - main
-# # sast:
-# #   stage: test
-# # include:
-# # - template: Security/SAST.gitlab-ci.yml
