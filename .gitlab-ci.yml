@@ -71,7 +71,7 @@ deploy_staging:
   environment:
     name: Staging
 deploy_prod:
-    stage: deploy
+  stage: deploy
   image: ubuntu:latest
   needs: ["linting", "coverage"]
   tags:
