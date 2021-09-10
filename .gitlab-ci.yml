@@ -56,7 +56,7 @@ stages:
 #   - if: "$CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH"
 deploy_staging:
   stage: deploy
-  image: docker:20.10.7
+  image: ubuntu:latest
   services:
     - docker:20.10.7-dind
 #  needs: ["linting", "coverage"]
@@ -70,12 +70,11 @@ deploy_staging:
     - apt install --no-install-recommends git -y
     - apt install --no-install-recommends clang curl -y
     - apt install --reinstall --no-install-recommends ca-certificates -y
-    - /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
-    - echo 'eval "$(/home/linuxbrew/.linuxbrew/bin/brew shellenv)"' >> /root/.profile
-    - eval "$(/home/linuxbrew/.linuxbrew/bin/brew shellenv)"
-    - brew install aws/tap/copilot-cli
+    - apt install --no-install-recommends docker=20.10.7 -y
+    - cp /etc/ssl/certs/ca-certificates.crt /etc/pki/tls/certs/ca-bundle.crt
+    - curl -Lo copilot https://github.com/aws/copilot-cli/releases/latest/download/copilot-linux && chmod +x copilot && mv copilot /usr/local/bin/copilot && copilot --help
     - ls -l
-    - copilot svc deploy --name svc-smartsheet-data-sync --env staging
+    # - copilot svc deploy --name svc-smartsheet-data-sync --env staging
   environment:
     name: Staging
 deploy_prod:
