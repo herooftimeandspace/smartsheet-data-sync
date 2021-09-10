@@ -69,8 +69,8 @@ deploy_staging:
     - apt update
     - apt install --no-install-recommends git -y
     - apt install --no-install-recommends clang curl -y
-    # - apt install --reinstall --no-install-recommends ca-certificates -y
-    # - apt install --no-install-recommends docker=20.10.7 -y
+    - apt install --reinstall --no-install-recommends ca-certificates -y
+    - apt install --no-install-recommends docker -y
     # - cp /etc/ssl/certs/ca-certificates.crt /etc/pki/tls/certs/ca-bundle.crt
     - curl -Lo copilot https://github.com/aws/copilot-cli/releases/latest/download/copilot-linux && chmod +x copilot && mv copilot /usr/local/bin/copilot && copilot --help
     - docker --help
