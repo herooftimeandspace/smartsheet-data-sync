@@ -68,15 +68,15 @@ deploy_staging:
     - export AWS_REGION=$AWS_REGION
     - export AWS_ACCESS_KEY_ID=$ACCESS_KEY
     - export AWS_SECRET_ACCESS_KEY=$SECRET_KEY
-    - apt update
-    - apt install --no-install-recommends git -y
-    - apt install --no-install-recommends clang curl -y
-    - apt install --reinstall --no-install-recommends ca-certificates -y
+    - yum update
+    - yum install --no-install-recommends git
+    - yum install --no-install-recommends clang curl
+    - yum install --reinstall --no-install-recommends ca-certificates
     # - apt install --no-install-recommends docker -y
     # - systemctl start docker
     # - cp /etc/ssl/certs/ca-certificates.crt /etc/pki/tls/certs/ca-bundle.crt
     - curl -Lo copilot https://github.com/aws/copilot-cli/releases/latest/download/copilot-linux && sudo chmod +x copilot && mv copilot /usr/local/bin/copilot && copilot --help
-    - docker --help
+    # - docker --help
     - ls -l
     # - copilot svc deploy --name svc-smartsheet-data-sync --env staging
   environment:
