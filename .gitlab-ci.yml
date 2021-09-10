@@ -16,9 +16,9 @@ stages:
 - test
 - deploy
 - pages
-before_script:
-  - docker info
-  - copilot help
+# before_script:
+#   - docker info
+#   - copilot help
 prep:
   stage: prep
   script:
