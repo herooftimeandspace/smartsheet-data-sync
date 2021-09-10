@@ -11,14 +11,14 @@ cache:
   paths:
   - ".cache/pip"
   - venv/
+
 stages:
 - prep
+- lint
 - test
 - deploy
 - pages
-# before_script:
-#   - docker info
-#   - copilot help
+
 prep:
   stage: prep
   script:
@@ -27,15 +27,17 @@ prep:
     - virtualenv venv
     - source venv/bin/activate
     - pip install -r requirements.txt
+
 linting:
-  stage: test
+  stage: lint
   needs: []
   script:
     - pip install flake8
     - flake8 --max-line-length=80 --per-file-ignores="__init__.py:F401" ./*.py
     - flake8 --max-line-length=80 --per-file-ignores="__init__.py:F401" ./uuid_module/*.py
+
 coverage:
-  stage: test
+  stage: lint
   needs: []
   script:
     - pip install -r requirements.txt
@@ -44,10 +46,13 @@ coverage:
     when: always
     reports:
       junit: report.xml
+
 sast:
   stage: test
+  needs: []
 include:
   - template: Security/SAST.gitlab-ci.yml
+
 pages:
   stage: pages
   needs: ["coverage"]
@@ -61,10 +66,11 @@ pages:
     - public
   rules:
   - if: "$CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH"
+
 deploy_staging:
   stage: deploy
   image: ubuntu:latest
-  needs: ["linting", "coverage"]
+  needs: ["linting", "coverage", "sast"]
   tags:
     - copilot
   script:
@@ -74,10 +80,13 @@ deploy_staging:
     - copilot svc deploy --name smartsheet-data-sync-backend --env staging
   environment:
     name: Staging
+  except:
+    - main
+
 deploy_prod:
   stage: deploy
   image: ubuntu:latest
-  needs: ["linting", "coverage"]
+  needs: ["linting", "coverage", "sast"]
   tags:
     - copilot
   script:
@@ -87,7 +96,6 @@ deploy_prod:
     - copilot svc deploy --name smartsheet-data-sync-backend --env staging
   environment:
     name: Production
-  when: manual
   only:
     - main
 
