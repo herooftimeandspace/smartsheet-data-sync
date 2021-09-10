@@ -75,9 +75,9 @@ deploy_staging:
     # - apt install --no-install-recommends docker -y
     # - systemctl start docker
     # - cp /etc/ssl/certs/ca-certificates.crt /etc/pki/tls/certs/ca-bundle.crt
-    - curl -Lo copilot-install https://github.com/aws/copilot-cli/releases/latest/download/copilot-linux && chmod +x copilot-install && mv copilot-install /usr/local/bin/copilot && copilot --help
+    - curl -Lo copilot-install https://github.com/aws/copilot-cli/releases/latest/download/copilot-linux && sudo chmod +x copilot-install && sudo mv copilot-install /usr/local/bin/copilot && copilot --help
     # - docker --help
-    - ls -l
+    - ls -l /usr/local/bin
     # - copilot svc deploy --name svc-smartsheet-data-sync --env staging
   environment:
     name: Staging
