@@ -49,7 +49,7 @@ coverage:
     reports:
       cobertura:
         - reports/coverage.xml
-  coverage: '/*TOTAL.*\s+(\d+%)$*/'
+  coverage: 'TOTAL.*\s+(\d+%)$'
 
 sast:
   stage: test
