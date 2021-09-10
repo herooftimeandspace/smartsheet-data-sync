@@ -46,6 +46,7 @@ coverage:
     when: always
     reports:
       junit: report.xml
+  coverage: '/^TOTAL.+?(\d+\%)$/'
 
 sast:
   stage: test
