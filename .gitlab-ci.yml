@@ -69,9 +69,9 @@ deploy_staging:
     - export AWS_ACCESS_KEY_ID=$ACCESS_KEY
     - export AWS_SECRET_ACCESS_KEY=$SECRET_KEY
     - yum update
-    - yum install --no-install-recommends git
-    - yum install --no-install-recommends clang curl
-    - yum install --reinstall --no-install-recommends ca-certificates
+    - yum install --no-install-recommends git -y
+    - yum install --no-install-recommends clang curl -y
+    - yum install --reinstall --no-install-recommends ca-certificates -y
     # - apt install --no-install-recommends docker -y
     # - systemctl start docker
     # - cp /etc/ssl/certs/ca-certificates.crt /etc/pki/tls/certs/ca-bundle.crt
