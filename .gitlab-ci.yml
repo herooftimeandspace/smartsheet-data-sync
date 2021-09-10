@@ -90,7 +90,7 @@ deploy_staging:
 deploy_prod:
   stage: deploy
   image: ubuntu:latest
-  needs: ["linting", "coverage", "sast"]
+  needs: ["linting", "coverage"]
   tags:
     - copilot
   script:
