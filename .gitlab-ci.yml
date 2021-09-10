@@ -41,11 +41,11 @@ coverage:
   needs: []
   script:
     - pip install -r requirements.txt
-    - pytest --cov=./ --junitxml=report.xml tests/
+    - pytest --cov-config=.coveragerc --cov=./ --cov-report xml
   artifacts:
     when: always
     reports:
-      junit: report.xml
+      junit: coverage.xml
   coverage: '/^TOTAL.+?(\d+\%)$/'
 
 sast:
