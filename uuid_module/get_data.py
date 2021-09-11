@@ -427,10 +427,13 @@ def get_secret_name(env):
     for e in env:
         if e in ("-s", "--staging", "-staging"):
             secret_name = "staging/smartsheet-data-sync/svc-api-token"
+            return(secret_name)
         elif e in ("-p", "--prod", "-prod"):
             secret_name = "prod/smartsheet-data-sync/svc-api-token"
+            return(secret_name)
         elif e in ("-d", "--debug", "-debug"):
             secret_name = "staging/smartsheet-data-sync/svc-api-token"
+            return(secret_name)
         else:
             logging.error("Failed to set API Key from AWS Secrets")
             secret_name = ""
