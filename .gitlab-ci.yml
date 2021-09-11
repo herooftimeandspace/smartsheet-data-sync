@@ -82,6 +82,8 @@ deploy_staging:
     - export AWS_ACCESS_KEY_ID=$ACCESS_KEY
     - export AWS_SECRET_ACCESS_KEY=$SECRET_KEY
     - copilot svc deploy --name smartsheet-data-sync-backend --env staging
+    - docker rm -v $(docker ps -a -q -f status=exited)
+    - docker rmi $(docker images -f "dangling=true" -q)
   environment:
     name: Staging
   except:
@@ -98,6 +100,8 @@ deploy_prod:
     - export AWS_ACCESS_KEY_ID=$ACCESS_KEY
     - export AWS_SECRET_ACCESS_KEY=$SECRET_KEY
     - copilot svc deploy --name smartsheet-data-sync-backend --env prod
+    - docker rm -v $(docker ps -a -q -f status=exited)
+    - docker rmi $(docker images -f "dangling=true" -q)
   environment:
     name: Production
   only:
