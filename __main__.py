@@ -163,7 +163,6 @@ logging.debug("------------------------")
 logging.debug("Initializing Smartsheet Client API")
 logging.debug("------------------------")
 secret_name = get_secret_name(env)
-print(secret_name)
 os.environ["SMARTSHEET_ACCESS_TOKEN"] = get_secret(secret_name)
 smartsheet_client = smartsheet.Smartsheet()
 # Make sure we don't miss any error
