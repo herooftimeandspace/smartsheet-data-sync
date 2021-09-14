@@ -165,6 +165,13 @@ def write_jira_index_cell_links(project_sub_index,
                         logging.debug(result)
                     except Exception as e:
                         logging.warning(e.message)
+            else:
+                try:
+                    result = smartsheet_client.Sheets.\
+                        update_rows(dest_sheet.id, cell_links_to_update)
+                    logging.debug(result)
+                except Exception as e:
+                    logging.warning(e.message)
         else:
             msg = str("No Jira Ticket updates needed for Sheet ID: {} | "
                       "Sheet Name {}.").format(dest_sheet.id,
