@@ -48,7 +48,7 @@ coverage:
     paths:
       - coverage.xml
     reports:
-      cobertura:
+      junit:
         - coverage.xml
   coverage: '/TOTAL.*\s+(\d+%)/'
 
