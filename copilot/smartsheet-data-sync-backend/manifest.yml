@@ -28,6 +28,14 @@ exec: true     # Enable running commands in your container.
 
 # You can override any of the values defined above by environment.
 environments:
+  dev:
+  #  count: 2               # Number of tasks to run for the "test" environment.
+    variables:
+      COPILOT_ENV: debug
+    image:
+      build:
+        args:
+          COPILOT_ENV: debug
   staging:
   #  count: 2               # Number of tasks to run for the "test" environment.
     variables:

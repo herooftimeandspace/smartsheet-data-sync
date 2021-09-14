@@ -15,9 +15,10 @@ cache:
 stages:
 - prep
 - lint
+- pages
 - test
 - deploy
-- pages
+# - pages
 
 prep:
   stage: prep
@@ -30,7 +31,7 @@ prep:
 
 linting:
   stage: lint
-  needs: []
+  needs: ["prep"]
   script:
     - pip install flake8
     - flake8 --max-line-length=80 --per-file-ignores="__init__.py:F401" ./*.py
@@ -38,7 +39,7 @@ linting:
 
 coverage:
   stage: lint
-  needs: []
+  needs: ["prep"]
   script:
     - pip install -r requirements.txt
     - pytest --cov-config=.coveragerc --cov=./
@@ -53,7 +54,6 @@ coverage:
 
 sast:
   stage: test
-  needs: []
 include:
   - template: Security/SAST.gitlab-ci.yml
 
@@ -68,13 +68,30 @@ pages:
   artifacts:
     paths:
     - public
-  rules:
-  - if: "$CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH"
+  # rules:
+  # - if: "$CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH"
+
+deploy_branch:
+  stage: deploy
+  image: ubuntu:latest
+  tags:
+    - copilot
+  script:
+    - export AWS_REGION=$AWS_REGION
+    - export AWS_ACCESS_KEY_ID=$ACCESS_KEY
+    - export AWS_SECRET_ACCESS_KEY=$SECRET_KEY
+    - copilot svc deploy --name smartsheet-data-sync-backend --env dev
+    - docker rm -v $(docker ps -a -q -f status=exited) || true
+    - docker rmi $(docker images -f "dangling=true" -q) || true
+  environment:
+    name: Dev
+  except:
+    - staging
+    - main
 
 deploy_staging:
   stage: deploy
   image: ubuntu:latest
-  needs: ["linting", "coverage"]
   tags:
     - copilot
   script:
@@ -86,13 +103,12 @@ deploy_staging:
     - docker rmi $(docker images -f "dangling=true" -q) || true
   environment:
     name: Staging
-  except:
-    - main
+  only:
+    - staging
 
 deploy_prod:
   stage: deploy
   image: ubuntu:latest
-  needs: ["linting", "coverage"]
   tags:
     - copilot
   script:
