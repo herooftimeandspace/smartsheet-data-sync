@@ -13,7 +13,7 @@ from apscheduler.schedulers.background import BlockingScheduler
 # from uuid_module.cell_link_sheet_data import write_uuid_cell_links
 from uuid_module.get_data import (get_all_row_data, get_all_sheet_ids,
                                   get_blank_uuids, get_secret, get_secret_name,
-                                  get_sub_indexs)
+                                  get_sub_indexes)
 from uuid_module.helper import get_timestamp, truncate
 from uuid_module.variables import (log_location, minutes, module_log_name,
                                    sheet_columns)
@@ -188,7 +188,7 @@ def full_jira_sync(minutes):
 
     global sheet_id_lock
     with sheet_id_lock:
-        sheet_ids = get_all_sheet_ids(smartsheet_client)
+        sheet_ids = get_all_sheet_ids(smartsheet_client, minutes)
         sheet_ids = list(set(sheet_ids))
 
     global sheet_index_lock
@@ -213,7 +213,7 @@ def full_jira_sync(minutes):
 
     source_sheets = refresh_source_sheets(minutes)
 
-    blank_uuid_index = get_blank_uuids(source_sheets, smartsheet_client)
+    blank_uuid_index = get_blank_uuids(source_sheets)
     if blank_uuid_index:
         logging.info("There are {} project sheets to be updated "
                      "with UUIDs".format(len(blank_uuid_index)))
@@ -235,7 +235,7 @@ def full_jira_sync(minutes):
     with project_index_lock:
         try:
             project_uuid_index = get_all_row_data(
-                source_sheets, sheet_columns, smartsheet_client)
+                source_sheets, sheet_columns, minutes)
         except ValueError as e:
             msg = str("Getting all row data returned an error. {}").format(e)
             logging.error(msg)
@@ -254,7 +254,7 @@ def full_jira_sync(minutes):
         return
 
     try:
-        jira_sub_index, project_sub_index = get_sub_indexs(
+        jira_sub_index, project_sub_index = get_sub_indexes(
             project_uuid_index)
     except ValueError as e:
         msg = str("Getting sub-indexes returned an error. {}").format(e)

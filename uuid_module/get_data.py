@@ -19,15 +19,15 @@ logger = logging.getLogger(__name__)
 utc = pytz.UTC
 
 
-def get_all_row_data(source_sheets, columns, smartsheet_client):
+def get_all_row_data(source_sheets, columns, minutes):
     """Parses through all source sheets and gets specific data from the
        columns provided.
 
     Args:
         source_sheets (list): A list of Sheet objects to parse
         columns (list): A list of column names to extract data from.
-        smartsheet_client (Object): The Smartsheeet client, required for
-                                    reading and writing to the Smartsheet API
+        minutes (int): The number of minutes to look back when collecting
+                       row data.
 
     Returns:
         dict: Returns a dict of UUIDs and the row values
@@ -57,6 +57,10 @@ def get_all_row_data(source_sheets, columns, smartsheet_client):
     # Create the empty dict we'll pass back
     all_row_data = {}
 
+    modified_since, _ = get_timestamp(minutes)
+    modified_since = utc.localize(modified_since)
+    modified_since = modified_since.replace(tzinfo=utc)
+
     for sheet in source_sheets:
         # Iterate through the columns and map the column ID to the column name
         col_map = get_column_map(sheet)
@@ -81,8 +85,25 @@ def get_all_row_data(source_sheets, columns, smartsheet_client):
                               "row.".format(summary_cell))
                 continue
 
-            row_data = {}
-            all_row_data[uuid_cell.value] = row_data
+            row_modified = row.modified_at
+
+            # If the row was modified in the last N minutes, add
+            # it to the index. Otherwise, skip it.
+            if row_modified >= modified_since:
+                msg = str("True | Cutoff: {} | Row Modified Date: "
+                          "{} | Row Number: {} |Sheet Name: {}").format(
+                    modified_since, row_modified, row.row_number,
+                    sheet.name)
+                logging.debug(msg)
+                row_data = {}
+                all_row_data[uuid_cell.value] = row_data
+            else:
+                msg = str("False | Cutoff: {} | Row Modified Date: "
+                          "{} | Row Number: {} |Sheet Name: {}").format(
+                    modified_since, row_modified, row.row_number,
+                    sheet.name)
+                logging.debug(msg)
+                continue
 
             # Iterate through each column passed in.
             for col_name in columns:
@@ -117,13 +138,12 @@ def get_all_row_data(source_sheets, columns, smartsheet_client):
         return None
 
 
-def get_blank_uuids(source_sheets, smartsheet_client):
+def get_blank_uuids(source_sheets):
     """For all rows that need a UUID generated, creates nested dicts with the
        necessary data to generate the UUID.
 
     Args:
         source_sheets (list): A list of Sheet objects
-        smartsheet_client (Object): The Smartsheet client to call the API
 
     Returns:
         dict: A nested set of dictionaries
@@ -182,21 +202,27 @@ def get_blank_uuids(source_sheets, smartsheet_client):
             # Check if the UUID already exists. If there's a match, skip
             # updating the cell / row.
             if uuid_value == uuid:
-                msg = str("Cell at Column Name: {} and Row ID: "
-                          "{} matches existing UUID. Cell skipped."
-                          "").format(uuid_col, row.id)
+                msg = str("Cell at Column Name: {} | Row ID: {} | "
+                          "Row Number: {}, {} matches existing UUID. "
+                          "Cell skipped.").format(uuid_col, row.id,
+                                                  row.row_number, uuid)
                 logging.debug(msg)
             elif uuid_value != uuid:
-                msg = str("Cell at column name: {} and row ID: {} has an "
-                          "existing value of {}. Tagging for update."
-                          "{}.").format(uuid_col, row.id, uuid_value, uuid)
+                msg = str("Cell at Column Name: {} | Row ID: {} | "
+                          "Row Number: {} has an existing value of {}. "
+                          "Tagging for update."
+                          "{}.").format(uuid_col, row.id, row.row_number,
+                                        uuid_value, uuid)
                 logging.debug(msg)
                 rows_to_update[row.id] = {
                     "column_id": col_map[uuid_col], "uuid": uuid}
             else:
                 msg = str("There was an issue parsing rows in the sheet. "
-                          "Sheet ID: {} | Row Data: {}").format(sheet.id, row)
+                          "Sheet ID: {} | Sheet Name: {}"
+                          "").format(sheet.id, sheet.name)
                 logging.warning(msg)
+                msg = str("Dumping Row Data: {}").format(row)
+                logging.debug(msg)
 
         # Collect all rows to update and parse them into a dict of sheets
         # to update.
@@ -226,8 +252,8 @@ def load_jira_index(smartsheet_client):
     """
     jira_index_sheet = smartsheet_client.Sheets.get_sheet(jira_idx_sheet)
     msg = str("{} rows loaded from sheet ID: {} | Sheet name: {}"
-              "").format(jira_index_sheet.id, jira_index_sheet.name,
-                         len(jira_index_sheet.rows))
+              "").format(len(jira_index_sheet.rows), jira_index_sheet.id,
+                         jira_index_sheet.name)
     logging.debug(msg)
     jira_index_col_map = get_column_map(jira_index_sheet)
 
@@ -251,7 +277,7 @@ def load_jira_index(smartsheet_client):
     return jira_index_sheet, jira_index_col_map, jira_index_rows
 
 
-def get_sub_indexs(project_data):
+def get_sub_indexes(project_data):
     """Read all rows from the full project data index. If the Jira
        column exists in the dict values, create two sub-indexes.
 
@@ -284,7 +310,7 @@ def get_sub_indexs(project_data):
     return jira_sub_index, project_sub_index
 
 
-def get_all_sheet_ids(smartsheet_client):
+def get_all_sheet_ids(smartsheet_client, minutes):
     """Get all the sheet IDs from every sheet in every folder, subfolder and
        workspace as defined in the workspace_id.
 
@@ -298,7 +324,6 @@ def get_all_sheet_ids(smartsheet_client):
 
     # Get the workspace Smartsheet object from the workspace_id
     # configured in our variables.
-    minutes = 65
     modified_since, _ = get_timestamp(minutes)
     modified_since = utc.localize(modified_since)
     modified_since = modified_since.replace(tzinfo=utc)

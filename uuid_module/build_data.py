@@ -94,9 +94,11 @@ def build_row(row, columns_to_link, dest_col_map, jira_index_sheet,
         old_cell = get_cell_data(row, col, dest_col_map)
         cell_check = has_cell_link(old_cell, 'In')
         if cell_check == "Linked":
-            msg = str("Valid cell link: RowID {} | ColName {} | "
-                      "Cell Value {}").format(row.id, col,
-                                              old_cell.link_in_from_cell)
+            msg = str("Valid cell link: RowID {} | Row Number {} | "
+                      "ColName {} | Cell Value {}").format(row.id,
+                                                           row.row_number, col,
+                                                           old_cell.
+                                                           link_in_from_cell)
             logging.debug(msg)
         elif cell_check == "Unlinked":
             link_cell = build_linked_cell(jira_index_sheet,
@@ -106,17 +108,20 @@ def build_row(row, columns_to_link, dest_col_map, jira_index_sheet,
                                           col,
                                           smartsheet_client)
             new_row.cells.append(link_cell)
-            msg = "No Cell Link: Row ID {} | ColName {} | Cell link {}".format(
-                row.id, col, link_cell.link_in_from_cell)
+            msg = str("No Cell Link: Row ID {} | Row Number {} | "
+                      "ColName {} | Cell link {}").format(
+                row.id, row.row_number, col, link_cell.link_in_from_cell)
             logging.debug(msg)
         elif cell_check == "Broken":
             unlink_cell = smartsheet_client.models.Cell()
             unlink_cell.id = int(dest_col_map[col])
             unlink_cell.value = old_cell.value
             new_row.cells.append(unlink_cell)
-            msg = str("Broken Cell Link: Row ID {} | ColName {} | "
-                      "Cell link {}".format(row.id, col,
-                                            unlink_cell.link_in_from_cell))
+            msg = str("Broken Cell Link: Row ID {} | Row Number {} | "
+                      "ColName {} | Cell link {}".format(row.id,
+                                                         row.row_number, col,
+                                                         unlink_cell.
+                                                         link_in_from_cell))
             logging.debug(msg)
         elif cell_check is None:
             msg = str("Cell is valid and unlinked, but is {}. Continuing "
