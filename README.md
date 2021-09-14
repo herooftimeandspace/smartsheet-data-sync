@@ -1,4 +1,9 @@
-[![coverage report](https://gitlab-dev.video.xarth.tv/cmpbad/smartsheet-data-sync-gitlab/badges/main/coverage.svg?job=coverage&key_text=Python+3.7+Coverage&key_width=140)](https://gitlab-dev.video.xarth.tv/cmpbad/smartsheet-data-sync-gitlab/-/commits/main) | Staging: [![pipeline status](https://gitlab-dev.video.xarth.tv/cmpbad/smartsheet-data-sync-gitlab/badges/staging/pipeline.svg)](https://gitlab-dev.video.xarth.tv/cmpbad/smartsheet-data-sync-gitlab/-/commits/staging) | Prod: [![pipeline status](https://gitlab-dev.video.xarth.tv/cmpbad/smartsheet-data-sync-gitlab/badges/main/pipeline.svg)](https://gitlab-dev.video.xarth.tv/cmpbad/smartsheet-data-sync-gitlab/-/commits/main)
+| Status      | Coverage |
+| ----------- | ----------- |
+| [![pipeline status](https://gitlab-dev.video.xarth.tv/cmpbad/smartsheet-data-sync-gitlab/badges/main/pipeline.svg)](https://gitlab-dev.video.xarth.tv/cmpbad/smartsheet-data-sync-gitlab/-/commits/main) | [![coverage report](https://gitlab-dev.video.xarth.tv/cmpbad/smartsheet-data-sync-gitlab/badges/main/coverage.svg?job=coverage&key_text=Python+3.7+Coverage&key_width=140)](https://gitlab-dev.video.xarth.tv/cmpbad/smartsheet-data-sync-gitlab/-/commits/main) | 
+| [![pipeline status](https://gitlab-dev.video.xarth.tv/cmpbad/smartsheet-data-sync-gitlab/badges/staging/pipeline.svg)](https://gitlab-dev.video.xarth.tv/cmpbad/smartsheet-data-sync-gitlab/-/commits/staging) | [![coverage report](https://gitlab-dev.video.xarth.tv/cmpbad/smartsheet-data-sync-gitlab/badges/main/coverage.svg?job=coverage&key_text=Python+3.7+Coverage&key_width=140)](https://gitlab-dev.video.xarth.tv/cmpbad/smartsheet-data-sync-gitlab/-/commits/staging)    |
+
+| Staging:  | Prod: 
 # Overview
 This Smartsheet Data Sync application is designed create and sync data across multiple sheets and Jira without needing to create a Jira Connector per sheet. It uses run several modules on a timed basis. The modules perform the following actions:
 1. Queries the Smartsheet API for all sheets across one or more workspaces
