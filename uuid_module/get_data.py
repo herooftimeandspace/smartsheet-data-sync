@@ -336,6 +336,22 @@ def get_all_sheet_ids(smartsheet_client, minutes):
         if workspace.folders:
             ws = str(workspace)
             ws_json = json.loads(ws)
+
+            # Handle empty workspaces
+            subfolders = json_extract(ws_json, "folders")
+            sheets = json_extract(ws_json, "sheets")
+            if not subfolders:
+                msg = str("Workspace ID {} has no subfolders. "
+                          "Skippiong.").format(ws_id)
+                logging.info(msg)
+                continue
+            elif not sheets:
+                msg = str("Workspace ID {} has no sheets to parse. "
+                          "Skipping.").format(ws_id)
+                logging.info(msg)
+                continue
+
+            # Process workspaces with folders / sheets.
             for subfolder in ws_json['folders']:
                 for sheet in subfolder['sheets']:
                     modified_at = sheet['modifiedAt']
