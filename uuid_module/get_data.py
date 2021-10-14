@@ -337,44 +337,36 @@ def get_all_sheet_ids(smartsheet_client, minutes):
             ws = str(workspace)
             ws_json = json.loads(ws)
 
-            # Handle empty workspaces
-            subfolders = json_extract(ws_json, "folders")
-            sheets = json_extract(ws_json, "sheets")
-            if not subfolders:
-                msg = str("Workspace ID {} has no subfolders. "
-                          "Skippiong.").format(ws_id)
-                logging.info(msg)
-                continue
-            elif not sheets:
-                msg = str("Workspace ID {} has no sheets to parse. "
-                          "Skipping.").format(ws_id)
-                logging.info(msg)
-                continue
-
-            # Process workspaces with folders / sheets.
             for subfolder in ws_json['folders']:
-                for sheet in subfolder['sheets']:
-                    modified_at = sheet['modifiedAt']
-                    head, sep, tail = modified_at.partition('+')
-                    sheet_modified = datetime.strptime(
-                        head, '%Y-%m-%dT%H:%M:%S')
-                    sheet_modified = utc.localize(sheet_modified)
-                    sheet_modified = sheet_modified.replace(tzinfo=utc)
+                try:
+                    for sheet in subfolder['sheets']:
+                        modified_at = sheet['modifiedAt']
+                        head, sep, tail = modified_at.partition('+')
+                        sheet_modified = datetime.strptime(
+                            head, '%Y-%m-%dT%H:%M:%S')
+                        sheet_modified = utc.localize(sheet_modified)
+                        sheet_modified = sheet_modified.replace(tzinfo=utc)
 
-                    # If the sheet was modified in the last N minutes, add
-                    # it to the index. Otherwise, skip it.
-                    if sheet_modified >= modified_since:
-                        msg = str("True | Cutoff: {} | Sheet Modified Date: "
-                                  "{} | Sheet Name: {}").format(
-                            modified_since, sheet_modified, sheet['name'])
-                        logging.debug(msg)
-                        sheet_ids.append(sheet['id'])
-                    else:
-                        msg = str("False | Cutoff: {} | Sheet Modified Date: "
-                                  "{} | Sheet Name: {}").format(
-                            modified_since, sheet_modified, sheet['name'])
-                        logging.debug(msg)
-                        continue
+                        # If the sheet was modified in the last N minutes, add
+                        # it to the index. Otherwise, skip it.
+                        if sheet_modified >= modified_since:
+                            msg = str("True | Cutoff: {} | Sheet Modified "
+                                      "Date: {} | Sheet Name: {}").format(
+                                modified_since, sheet_modified, sheet['name'])
+                            logging.debug(msg)
+                            sheet_ids.append(sheet['id'])
+                        else:
+                            msg = str("False | Cutoff: {} | Sheet Modified "
+                                      "Date: {} | Sheet Name: {}").format(
+                                modified_since, sheet_modified, sheet['name'])
+                            logging.debug(msg)
+                            continue
+                # Handle empty workspaces
+                except KeyError as e:
+                    msg = str("Dictionary key {} not found in "
+                              "subfolders for workspace ID {}").format(e,
+                                                                       ws_id)
+                    logging.debug(msg)
 
     # Don't include the JIRA index sheet as
     # part of the sheet collection, if present.
