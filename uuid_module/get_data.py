@@ -405,7 +405,6 @@ def get_secret(secret_name):
         region_name=region_name,
         aws_access_key_id=ACCESS_KEY,
         aws_secret_access_key=SECRET_KEY,
-        aws_session_token=SESSION_TOKEN
     )
 
     # In this sample we only handle the specific exceptions for the
