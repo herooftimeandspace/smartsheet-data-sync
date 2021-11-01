@@ -396,7 +396,6 @@ def get_secret(secret_name):
     region_name = "us-west-2"
     ACCESS_KEY = os.environ.get('ACCESS_KEY')
     SECRET_KEY = os.environ.get('SECRET_KEY')
-    SESSION_TOKEN = os.environ.get('SESSION_TOKEN')
 
     # Create a Secrets Manager client
     session = boto3.session.Session()
