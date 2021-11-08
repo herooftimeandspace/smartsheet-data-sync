@@ -37,7 +37,7 @@ def write_uuid_cell_links(project_data_index, source_sheets,
     if project_data_index is None:
         msg = str("Project index data is None. Aborting the process for "
                   "linking cells by UUID.")
-        logging.warning(msg)
+        logging.info(msg)
         raise ValueError(msg)
 
     for dest_uuid, row_data in project_data_index.items():
@@ -62,7 +62,7 @@ def write_uuid_cell_links(project_data_index, source_sheets,
         elif dest_uuid == row_data[description_col]:
             msg = str("UUID {} can't link to itself. "
                       "Continuing to next UUID.").format(dest_uuid)
-            logging.debug(msg)
+            logging.warning(msg)
             continue
         elif row_data[jira_col]:
             msg = str("Row has a Jira ticket value of {}. "
