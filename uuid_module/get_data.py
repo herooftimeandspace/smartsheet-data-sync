@@ -20,7 +20,7 @@ utc = pytz.UTC
 
 
 def refresh_source_sheets(smartsheet_client, sheet_ids, minutes=0):
-    """Creates a dict of source sheets. If minutes is defined, only gathers 
+    """Creates a dict of source sheets. If minutes is defined, only gathers
        sheets modified since the minutes value. Otherwise pulls all sheets
        from the workspaces.
 
@@ -28,12 +28,12 @@ def refresh_source_sheets(smartsheet_client, sheet_ids, minutes=0):
         smartsheet_client (client): Allows interaction with the Smartsheet API
         sheet_ids (list): The list of Smartsheet sheet IDs to parse
         minutes (int, optional): Number of minutes into the past that the API
-                                 should pull sheet and row data, if greater 
+                                 should pull sheet and row data, if greater
                                  than 0. Defaults to 0.
 
     Returns:
-        source_sheets (list): The list of sheets, including row data for rows 
-                              modified since the minutes value, if greater 
+        source_sheets (list): The list of sheets, including row data for rows
+                              modified since the minutes value, if greater
                               than 0
     """
     source_sheets = []
