@@ -14,7 +14,7 @@ from apscheduler.schedulers.background import BlockingScheduler
 from uuid_module.get_data import (get_all_row_data, get_all_sheet_ids,
                                   get_blank_uuids, get_secret, get_secret_name,
                                   get_sub_indexes, refresh_source_sheets)
-from uuid_module.helper import get_timestamp, truncate
+from uuid_module.helper import truncate
 from uuid_module.variables import (log_location, minutes, module_log_name,
                                    sheet_columns)
 from uuid_module.write_data import write_jira_index_cell_links, write_uuids
