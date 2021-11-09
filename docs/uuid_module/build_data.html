@@ -58,13 +58,8 @@
                         <details>
             <summary>View Source</summary>
             <div class="codehilite"><pre><span></span><span class="kn">import</span> <span class="nn">logging</span>
-<span class="kn">import</span> <span class="nn">os</span>
 <span class="kn">from</span> <span class="nn">collections</span> <span class="kn">import</span> <span class="n">defaultdict</span>
-
 <span class="kn">from</span> <span class="nn">uuid_module.helper</span> <span class="kn">import</span> <span class="n">get_cell_data</span><span class="p">,</span> <span class="n">has_cell_link</span>
-<span class="c1"># from uuid_module.variables import jira_col</span>
-
-<span class="c1"># jira_col = os.getenv(&#39;JIRA_COL&#39;)</span>
 
 <span class="n">logger</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">(</span><span class="vm">__name__</span><span class="p">)</span>
 
@@ -102,12 +97,10 @@
     <span class="k">return</span> <span class="n">new_cell</span>
 
 
-<span class="c1"># Faster than pulling sheet data from the</span>
-<span class="c1"># API because we already have the data from the</span>
-<span class="c1"># project_data dictionary</span>
 <span class="k">def</span> <span class="nf">dest_indexes</span><span class="p">(</span><span class="n">project_data</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;Helper function to create indexes on the destination sheet</span>
-<span class="sd">       and rows.</span>
+<span class="sd">       and rows. Faster than pulling data from the API because the app</span>
+<span class="sd">       already has the data from the project_data dictionary</span>
 
 <span class="sd">    Args:</span>
 <span class="sd">        project_data (dict): The dictionary with all project rows</span>
@@ -121,18 +114,14 @@
     <span class="n">dest_sheet_index</span> <span class="o">=</span> <span class="n">defaultdict</span><span class="p">(</span><span class="nb">list</span><span class="p">)</span>
     <span class="c1"># dest_row_index = defaultdict(list)</span>
     <span class="k">for</span> <span class="n">uuid</span><span class="p">,</span> <span class="n">ticket</span> <span class="ow">in</span> <span class="n">project_data</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
-        <span class="n">dest_sheet_id</span> <span class="o">=</span> <span class="n">uuid</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s2">&quot;-&quot;</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
-        <span class="c1"># dest_row_id = uuid.split(&quot;-&quot;)[1]</span>
-        <span class="n">dest_sheet_index</span><span class="p">[</span><span class="n">dest_sheet_id</span><span class="p">]</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">ticket</span><span class="p">)</span>
-        <span class="c1"># dest_row_index[dest_row_id].append(ticket)</span>
+        <span class="k">if</span> <span class="n">uuid</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">continue</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">dest_sheet_id</span> <span class="o">=</span> <span class="n">uuid</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s2">&quot;-&quot;</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
+            <span class="n">dest_sheet_index</span><span class="p">[</span><span class="n">dest_sheet_id</span><span class="p">]</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">ticket</span><span class="p">)</span>
     <span class="k">return</span> <span class="n">dest_sheet_index</span><span class="p">,</span>  <span class="c1"># dest_row_index</span>
 
 
-<span class="c1"># Function to build new cell links, unlink broken links, or do</span>
-<span class="c1"># nothing if the cell link status is &quot;OK&quot;. Used to remove</span>
-<span class="c1"># unchanged rows from the update list.</span>
-<span class="c1"># Returns new_row if any cells need to be linked or unlinked</span>
-<span class="c1"># Returns None if no action needed</span>
 <span class="k">def</span> <span class="nf">build_row</span><span class="p">(</span><span class="n">row</span><span class="p">,</span> <span class="n">columns_to_link</span><span class="p">,</span> <span class="n">dest_col_map</span><span class="p">,</span> <span class="n">jira_index_sheet</span><span class="p">,</span>
               <span class="n">jira_index_col_map</span><span class="p">,</span> <span class="n">idx_row_id</span><span class="p">,</span> <span class="n">smartsheet_client</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;Function to build new cell links, unlink broken links, or</span>
@@ -164,9 +153,11 @@
         <span class="n">old_cell</span> <span class="o">=</span> <span class="n">get_cell_data</span><span class="p">(</span><span class="n">row</span><span class="p">,</span> <span class="n">col</span><span class="p">,</span> <span class="n">dest_col_map</span><span class="p">)</span>
         <span class="n">cell_check</span> <span class="o">=</span> <span class="n">has_cell_link</span><span class="p">(</span><span class="n">old_cell</span><span class="p">,</span> <span class="s1">&#39;In&#39;</span><span class="p">)</span>
         <span class="k">if</span> <span class="n">cell_check</span> <span class="o">==</span> <span class="s2">&quot;Linked&quot;</span><span class="p">:</span>
-            <span class="n">msg</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="s2">&quot;Valid cell link: RowID </span><span class="si">{}</span><span class="s2"> | ColName </span><span class="si">{}</span><span class="s2"> | &quot;</span>
-                      <span class="s2">&quot;Cell Value </span><span class="si">{}</span><span class="s2">&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">row</span><span class="o">.</span><span class="n">id</span><span class="p">,</span> <span class="n">col</span><span class="p">,</span>
-                                              <span class="n">old_cell</span><span class="o">.</span><span class="n">link_in_from_cell</span><span class="p">)</span>
+            <span class="n">msg</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="s2">&quot;Valid cell link: RowID </span><span class="si">{}</span><span class="s2"> | Row Number </span><span class="si">{}</span><span class="s2"> | &quot;</span>
+                      <span class="s2">&quot;ColName </span><span class="si">{}</span><span class="s2"> | Cell Value </span><span class="si">{}</span><span class="s2">&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">row</span><span class="o">.</span><span class="n">id</span><span class="p">,</span>
+                                                           <span class="n">row</span><span class="o">.</span><span class="n">row_number</span><span class="p">,</span> <span class="n">col</span><span class="p">,</span>
+                                                           <span class="n">old_cell</span><span class="o">.</span>
+                                                           <span class="n">link_in_from_cell</span><span class="p">)</span>
             <span class="n">logging</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
         <span class="k">elif</span> <span class="n">cell_check</span> <span class="o">==</span> <span class="s2">&quot;Unlinked&quot;</span><span class="p">:</span>
             <span class="n">link_cell</span> <span class="o">=</span> <span class="n">build_linked_cell</span><span class="p">(</span><span class="n">jira_index_sheet</span><span class="p">,</span>
@@ -176,17 +167,20 @@
                                           <span class="n">col</span><span class="p">,</span>
                                           <span class="n">smartsheet_client</span><span class="p">)</span>
             <span class="n">new_row</span><span class="o">.</span><span class="n">cells</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">link_cell</span><span class="p">)</span>
-            <span class="n">msg</span> <span class="o">=</span> <span class="s2">&quot;No Cell Link: Row ID </span><span class="si">{}</span><span class="s2"> | ColName </span><span class="si">{}</span><span class="s2"> | Cell link </span><span class="si">{}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>
-                <span class="n">row</span><span class="o">.</span><span class="n">id</span><span class="p">,</span> <span class="n">col</span><span class="p">,</span> <span class="n">link_cell</span><span class="o">.</span><span class="n">link_in_from_cell</span><span class="p">)</span>
+            <span class="n">msg</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="s2">&quot;No Cell Link: Row ID </span><span class="si">{}</span><span class="s2"> | Row Number </span><span class="si">{}</span><span class="s2"> | &quot;</span>
+                      <span class="s2">&quot;ColName </span><span class="si">{}</span><span class="s2"> | Cell link </span><span class="si">{}</span><span class="s2">&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>
+                <span class="n">row</span><span class="o">.</span><span class="n">id</span><span class="p">,</span> <span class="n">row</span><span class="o">.</span><span class="n">row_number</span><span class="p">,</span> <span class="n">col</span><span class="p">,</span> <span class="n">link_cell</span><span class="o">.</span><span class="n">link_in_from_cell</span><span class="p">)</span>
             <span class="n">logging</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
         <span class="k">elif</span> <span class="n">cell_check</span> <span class="o">==</span> <span class="s2">&quot;Broken&quot;</span><span class="p">:</span>
             <span class="n">unlink_cell</span> <span class="o">=</span> <span class="n">smartsheet_client</span><span class="o">.</span><span class="n">models</span><span class="o">.</span><span class="n">Cell</span><span class="p">()</span>
             <span class="n">unlink_cell</span><span class="o">.</span><span class="n">id</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">dest_col_map</span><span class="p">[</span><span class="n">col</span><span class="p">])</span>
             <span class="n">unlink_cell</span><span class="o">.</span><span class="n">value</span> <span class="o">=</span> <span class="n">old_cell</span><span class="o">.</span><span class="n">value</span>
             <span class="n">new_row</span><span class="o">.</span><span class="n">cells</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">unlink_cell</span><span class="p">)</span>
-            <span class="n">msg</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="s2">&quot;Broken Cell Link: Row ID </span><span class="si">{}</span><span class="s2"> | ColName </span><span class="si">{}</span><span class="s2"> | &quot;</span>
-                      <span class="s2">&quot;Cell link </span><span class="si">{}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">row</span><span class="o">.</span><span class="n">id</span><span class="p">,</span> <span class="n">col</span><span class="p">,</span>
-                                            <span class="n">unlink_cell</span><span class="o">.</span><span class="n">link_in_from_cell</span><span class="p">))</span>
+            <span class="n">msg</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="s2">&quot;Broken Cell Link: Row ID </span><span class="si">{}</span><span class="s2"> | Row Number </span><span class="si">{}</span><span class="s2"> | &quot;</span>
+                      <span class="s2">&quot;ColName </span><span class="si">{}</span><span class="s2"> | Cell link </span><span class="si">{}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">row</span><span class="o">.</span><span class="n">id</span><span class="p">,</span>
+                                                         <span class="n">row</span><span class="o">.</span><span class="n">row_number</span><span class="p">,</span> <span class="n">col</span><span class="p">,</span>
+                                                         <span class="n">unlink_cell</span><span class="o">.</span>
+                                                         <span class="n">link_in_from_cell</span><span class="p">))</span>
             <span class="n">logging</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
         <span class="k">elif</span> <span class="n">cell_check</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
             <span class="n">msg</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="s2">&quot;Cell is valid and unlinked, but is </span><span class="si">{}</span><span class="s2">. Continuing &quot;</span>
@@ -294,7 +288,8 @@ with the API</li>
             <summary>View Source</summary>
             <div class="codehilite"><pre><span></span><span class="k">def</span> <span class="nf">dest_indexes</span><span class="p">(</span><span class="n">project_data</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;Helper function to create indexes on the destination sheet</span>
-<span class="sd">       and rows.</span>
+<span class="sd">       and rows. Faster than pulling data from the API because the app</span>
+<span class="sd">       already has the data from the project_data dictionary</span>
 
 <span class="sd">    Args:</span>
 <span class="sd">        project_data (dict): The dictionary with all project rows</span>
@@ -308,17 +303,19 @@ with the API</li>
     <span class="n">dest_sheet_index</span> <span class="o">=</span> <span class="n">defaultdict</span><span class="p">(</span><span class="nb">list</span><span class="p">)</span>
     <span class="c1"># dest_row_index = defaultdict(list)</span>
     <span class="k">for</span> <span class="n">uuid</span><span class="p">,</span> <span class="n">ticket</span> <span class="ow">in</span> <span class="n">project_data</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
-        <span class="n">dest_sheet_id</span> <span class="o">=</span> <span class="n">uuid</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s2">&quot;-&quot;</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
-        <span class="c1"># dest_row_id = uuid.split(&quot;-&quot;)[1]</span>
-        <span class="n">dest_sheet_index</span><span class="p">[</span><span class="n">dest_sheet_id</span><span class="p">]</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">ticket</span><span class="p">)</span>
-        <span class="c1"># dest_row_index[dest_row_id].append(ticket)</span>
+        <span class="k">if</span> <span class="n">uuid</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">continue</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">dest_sheet_id</span> <span class="o">=</span> <span class="n">uuid</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s2">&quot;-&quot;</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
+            <span class="n">dest_sheet_index</span><span class="p">[</span><span class="n">dest_sheet_id</span><span class="p">]</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">ticket</span><span class="p">)</span>
     <span class="k">return</span> <span class="n">dest_sheet_index</span><span class="p">,</span>  <span class="c1"># dest_row_index</span>
 </pre></div>
 
         </details>
 
             <div class="docstring"><p>Helper function to create indexes on the destination sheet
-   and rows.</p>
+   and rows. Faster than pulling data from the API because the app
+   already has the data from the project_data dictionary</p>
 
 <h6 id="args">Args</h6>
 
@@ -387,9 +384,11 @@ get_all_row_data function.</li>
         <span class="n">old_cell</span> <span class="o">=</span> <span class="n">get_cell_data</span><span class="p">(</span><span class="n">row</span><span class="p">,</span> <span class="n">col</span><span class="p">,</span> <span class="n">dest_col_map</span><span class="p">)</span>
         <span class="n">cell_check</span> <span class="o">=</span> <span class="n">has_cell_link</span><span class="p">(</span><span class="n">old_cell</span><span class="p">,</span> <span class="s1">&#39;In&#39;</span><span class="p">)</span>
         <span class="k">if</span> <span class="n">cell_check</span> <span class="o">==</span> <span class="s2">&quot;Linked&quot;</span><span class="p">:</span>
-            <span class="n">msg</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="s2">&quot;Valid cell link: RowID </span><span class="si">{}</span><span class="s2"> | ColName </span><span class="si">{}</span><span class="s2"> | &quot;</span>
-                      <span class="s2">&quot;Cell Value </span><span class="si">{}</span><span class="s2">&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">row</span><span class="o">.</span><span class="n">id</span><span class="p">,</span> <span class="n">col</span><span class="p">,</span>
-                                              <span class="n">old_cell</span><span class="o">.</span><span class="n">link_in_from_cell</span><span class="p">)</span>
+            <span class="n">msg</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="s2">&quot;Valid cell link: RowID </span><span class="si">{}</span><span class="s2"> | Row Number </span><span class="si">{}</span><span class="s2"> | &quot;</span>
+                      <span class="s2">&quot;ColName </span><span class="si">{}</span><span class="s2"> | Cell Value </span><span class="si">{}</span><span class="s2">&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">row</span><span class="o">.</span><span class="n">id</span><span class="p">,</span>
+                                                           <span class="n">row</span><span class="o">.</span><span class="n">row_number</span><span class="p">,</span> <span class="n">col</span><span class="p">,</span>
+                                                           <span class="n">old_cell</span><span class="o">.</span>
+                                                           <span class="n">link_in_from_cell</span><span class="p">)</span>
             <span class="n">logging</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
         <span class="k">elif</span> <span class="n">cell_check</span> <span class="o">==</span> <span class="s2">&quot;Unlinked&quot;</span><span class="p">:</span>
             <span class="n">link_cell</span> <span class="o">=</span> <span class="n">build_linked_cell</span><span class="p">(</span><span class="n">jira_index_sheet</span><span class="p">,</span>
@@ -399,17 +398,20 @@ get_all_row_data function.</li>
                                           <span class="n">col</span><span class="p">,</span>
                                           <span class="n">smartsheet_client</span><span class="p">)</span>
             <span class="n">new_row</span><span class="o">.</span><span class="n">cells</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">link_cell</span><span class="p">)</span>
-            <span class="n">msg</span> <span class="o">=</span> <span class="s2">&quot;No Cell Link: Row ID </span><span class="si">{}</span><span class="s2"> | ColName </span><span class="si">{}</span><span class="s2"> | Cell link </span><span class="si">{}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>
-                <span class="n">row</span><span class="o">.</span><span class="n">id</span><span class="p">,</span> <span class="n">col</span><span class="p">,</span> <span class="n">link_cell</span><span class="o">.</span><span class="n">link_in_from_cell</span><span class="p">)</span>
+            <span class="n">msg</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="s2">&quot;No Cell Link: Row ID </span><span class="si">{}</span><span class="s2"> | Row Number </span><span class="si">{}</span><span class="s2"> | &quot;</span>
+                      <span class="s2">&quot;ColName </span><span class="si">{}</span><span class="s2"> | Cell link </span><span class="si">{}</span><span class="s2">&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>
+                <span class="n">row</span><span class="o">.</span><span class="n">id</span><span class="p">,</span> <span class="n">row</span><span class="o">.</span><span class="n">row_number</span><span class="p">,</span> <span class="n">col</span><span class="p">,</span> <span class="n">link_cell</span><span class="o">.</span><span class="n">link_in_from_cell</span><span class="p">)</span>
             <span class="n">logging</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
         <span class="k">elif</span> <span class="n">cell_check</span> <span class="o">==</span> <span class="s2">&quot;Broken&quot;</span><span class="p">:</span>
             <span class="n">unlink_cell</span> <span class="o">=</span> <span class="n">smartsheet_client</span><span class="o">.</span><span class="n">models</span><span class="o">.</span><span class="n">Cell</span><span class="p">()</span>
             <span class="n">unlink_cell</span><span class="o">.</span><span class="n">id</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">dest_col_map</span><span class="p">[</span><span class="n">col</span><span class="p">])</span>
             <span class="n">unlink_cell</span><span class="o">.</span><span class="n">value</span> <span class="o">=</span> <span class="n">old_cell</span><span class="o">.</span><span class="n">value</span>
             <span class="n">new_row</span><span class="o">.</span><span class="n">cells</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">unlink_cell</span><span class="p">)</span>
-            <span class="n">msg</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="s2">&quot;Broken Cell Link: Row ID </span><span class="si">{}</span><span class="s2"> | ColName </span><span class="si">{}</span><span class="s2"> | &quot;</span>
-                      <span class="s2">&quot;Cell link </span><span class="si">{}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">row</span><span class="o">.</span><span class="n">id</span><span class="p">,</span> <span class="n">col</span><span class="p">,</span>
-                                            <span class="n">unlink_cell</span><span class="o">.</span><span class="n">link_in_from_cell</span><span class="p">))</span>
+            <span class="n">msg</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="s2">&quot;Broken Cell Link: Row ID </span><span class="si">{}</span><span class="s2"> | Row Number </span><span class="si">{}</span><span class="s2"> | &quot;</span>
+                      <span class="s2">&quot;ColName </span><span class="si">{}</span><span class="s2"> | Cell link </span><span class="si">{}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">row</span><span class="o">.</span><span class="n">id</span><span class="p">,</span>
+                                                         <span class="n">row</span><span class="o">.</span><span class="n">row_number</span><span class="p">,</span> <span class="n">col</span><span class="p">,</span>
+                                                         <span class="n">unlink_cell</span><span class="o">.</span>
+                                                         <span class="n">link_in_from_cell</span><span class="p">))</span>
             <span class="n">logging</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
         <span class="k">elif</span> <span class="n">cell_check</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
             <span class="n">msg</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="s2">&quot;Cell is valid and unlinked, but is </span><span class="si">{}</span><span class="s2">. Continuing &quot;</span>

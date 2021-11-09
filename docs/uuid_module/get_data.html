@@ -31,6 +31,9 @@
                     <h2>API Documentation</h2>
                         <ul class="memberlist">
             <li>
+                    <a class="function" href="#refresh_source_sheets">refresh_source_sheets</a>
+            </li>
+            <li>
                     <a class="function" href="#get_all_row_data">get_all_row_data</a>
             </li>
             <li>
@@ -40,22 +43,16 @@
                     <a class="function" href="#load_jira_index">load_jira_index</a>
             </li>
             <li>
-                    <a class="function" href="#get_sub_indexs">get_sub_indexs</a>
+                    <a class="function" href="#get_sub_indexes">get_sub_indexes</a>
             </li>
             <li>
                     <a class="function" href="#get_all_sheet_ids">get_all_sheet_ids</a>
             </li>
             <li>
-                    <a class="function" href="#get_ws_folder_map">get_ws_folder_map</a>
+                    <a class="function" href="#get_secret">get_secret</a>
             </li>
             <li>
-                    <a class="function" href="#get_folder_sheet_map">get_folder_sheet_map</a>
-            </li>
-            <li>
-                    <a class="function" href="#get_ws_sheet_map">get_ws_sheet_map</a>
-            </li>
-            <li>
-                    <a class="function" href="#get_subfolder_map">get_subfolder_map</a>
+                    <a class="function" href="#get_secret_name">get_secret_name</a>
             </li>
     </ul>
 
@@ -75,60 +72,111 @@
                 
                         <details>
             <summary>View Source</summary>
-            <div class="codehilite"><pre><span></span><span class="kn">import</span> <span class="nn">json</span>
+            <div class="codehilite"><pre><span></span><span class="kn">import</span> <span class="nn">base64</span>
+<span class="kn">import</span> <span class="nn">json</span>
 <span class="kn">import</span> <span class="nn">logging</span>
 <span class="kn">import</span> <span class="nn">os</span>
 <span class="kn">from</span> <span class="nn">collections</span> <span class="kn">import</span> <span class="n">defaultdict</span>
+<span class="kn">from</span> <span class="nn">datetime</span> <span class="kn">import</span> <span class="n">datetime</span>
 
-<span class="kn">import</span> <span class="nn">smartsheet</span>
+<span class="kn">import</span> <span class="nn">boto3</span>
+<span class="kn">import</span> <span class="nn">pytz</span>
+<span class="kn">from</span> <span class="nn">botocore.exceptions</span> <span class="kn">import</span> <span class="n">ClientError</span>
 
-<span class="kn">from</span> <span class="nn">uuid_module.helper</span> <span class="kn">import</span> <span class="n">get_cell_value</span><span class="p">,</span> <span class="n">get_cell_data</span><span class="p">,</span> <span class="n">get_column_map</span>
+<span class="kn">from</span> <span class="nn">uuid_module.helper</span> <span class="kn">import</span> <span class="p">(</span><span class="n">get_cell_data</span><span class="p">,</span> <span class="n">get_cell_value</span><span class="p">,</span> <span class="n">get_column_map</span><span class="p">,</span>
+                                <span class="n">get_timestamp</span><span class="p">,</span> <span class="n">json_extract</span><span class="p">)</span>
 <span class="kn">from</span> <span class="nn">uuid_module.variables</span> <span class="kn">import</span> <span class="p">(</span><span class="n">jira_col</span><span class="p">,</span> <span class="n">jira_idx_sheet</span><span class="p">,</span> <span class="n">summary_col</span><span class="p">,</span>
                                    <span class="n">uuid_col</span><span class="p">,</span> <span class="n">workspace_id</span><span class="p">)</span>
 
 <span class="n">logger</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">(</span><span class="vm">__name__</span><span class="p">)</span>
 
-<span class="c1"># jira_col = os.getenv(&#39;JIRA_COL&#39;)</span>
-<span class="c1"># jira_idx_sheet = os.getenv(&#39;JIRA_IDX_SHEET&#39;)</span>
-<span class="c1"># summary_col = os.getenv(&#39;SUMMARY_COL&#39;)</span>
-<span class="c1"># uuid_col = os.getenv(&#39;UUID_COL&#39;)</span>
-<span class="c1"># workspace_id = os.getenv(&#39;WORKSPACE_ID&#39;)</span>
+<span class="n">utc</span> <span class="o">=</span> <span class="n">pytz</span><span class="o">.</span><span class="n">UTC</span>
 
 
-<span class="k">def</span> <span class="nf">get_all_row_data</span><span class="p">(</span><span class="n">source_sheets</span><span class="p">,</span> <span class="n">columns</span><span class="p">,</span> <span class="n">smartsheet_client</span><span class="p">):</span>
+<span class="k">def</span> <span class="nf">refresh_source_sheets</span><span class="p">(</span><span class="n">smartsheet_client</span><span class="p">,</span> <span class="n">sheet_ids</span><span class="p">,</span> <span class="n">minutes</span><span class="o">=</span><span class="mi">0</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Creates a dict of source sheets. If minutes is defined, only gathers </span>
+<span class="sd">       sheets modified since the minutes value. Otherwise pulls all sheets</span>
+<span class="sd">       from the workspaces.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        smartsheet_client (client): Allows interaction with the Smartsheet API</span>
+<span class="sd">        sheet_ids (list): The list of Smartsheet sheet IDs to parse</span>
+<span class="sd">        minutes (int, optional): Number of minutes into the past that the API</span>
+<span class="sd">                                 should pull sheet and row data, if greater </span>
+<span class="sd">                                 than 0. Defaults to 0.</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        source_sheets (list): The list of sheets, including row data for rows </span>
+<span class="sd">                              modified since the minutes value, if greater </span>
+<span class="sd">                              than 0</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">source_sheets</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="k">if</span> <span class="n">minutes</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+        <span class="n">_</span><span class="p">,</span> <span class="n">modified_since</span> <span class="o">=</span> <span class="n">get_timestamp</span><span class="p">(</span><span class="n">minutes</span><span class="p">)</span>
+        <span class="k">for</span> <span class="n">sheet_id</span> <span class="ow">in</span> <span class="n">sheet_ids</span><span class="p">:</span>
+            <span class="c1"># Query the Smartsheet API for the sheet details</span>
+            <span class="n">sheet</span> <span class="o">=</span> <span class="n">smartsheet_client</span><span class="o">.</span>\
+                <span class="n">Sheets</span><span class="o">.</span><span class="n">get_sheet</span><span class="p">(</span>
+                    <span class="n">sheet_id</span><span class="p">,</span> <span class="n">rows_modified_since</span><span class="o">=</span><span class="n">modified_since</span><span class="p">)</span>
+            <span class="n">source_sheets</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">sheet</span><span class="p">)</span>
+            <span class="n">logging</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">&quot;Loading Sheet ID: </span><span class="si">{}</span><span class="s2"> | &quot;</span>
+                          <span class="s2">&quot;Sheet Name: </span><span class="si">{}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">sheet</span><span class="o">.</span><span class="n">id</span><span class="p">,</span> <span class="n">sheet</span><span class="o">.</span><span class="n">name</span><span class="p">))</span>
+    <span class="k">elif</span> <span class="n">minutes</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+        <span class="k">for</span> <span class="n">sheet_id</span> <span class="ow">in</span> <span class="n">sheet_ids</span><span class="p">:</span>
+            <span class="c1"># Query the Smartsheet API for the sheet details</span>
+            <span class="n">sheet</span> <span class="o">=</span> <span class="n">smartsheet_client</span><span class="o">.</span>\
+                <span class="n">Sheets</span><span class="o">.</span><span class="n">get_sheet</span><span class="p">(</span><span class="n">sheet_id</span><span class="p">)</span>
+            <span class="n">source_sheets</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">sheet</span><span class="p">)</span>
+            <span class="n">logging</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">&quot;Loading Sheet ID: </span><span class="si">{}</span><span class="s2"> | &quot;</span>
+                          <span class="s2">&quot;Sheet Name: </span><span class="si">{}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">sheet</span><span class="o">.</span><span class="n">id</span><span class="p">,</span> <span class="n">sheet</span><span class="o">.</span><span class="n">name</span><span class="p">))</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">msg</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="s2">&quot;Invalid value for minutes. Value was </span><span class="si">{}</span><span class="s2">&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">minutes</span><span class="p">)</span>
+        <span class="n">logging</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">source_sheets</span>
+
+
+<span class="k">def</span> <span class="nf">get_all_row_data</span><span class="p">(</span><span class="n">source_sheets</span><span class="p">,</span> <span class="n">columns</span><span class="p">,</span> <span class="n">minutes</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;Parses through all source sheets and gets specific data from the</span>
 <span class="sd">       columns provided.</span>
 
 <span class="sd">    Args:</span>
 <span class="sd">        source_sheets (list): A list of Sheet objects to parse</span>
 <span class="sd">        columns (list): A list of column names to extract data from.</span>
-<span class="sd">        smartsheet_client (Object): The Smartsheeet client, required for</span>
-<span class="sd">                                    reading and writing to the Smartsheet API</span>
+<span class="sd">        minutes (int): The number of minutes to look back when collecting</span>
+<span class="sd">                       row data.</span>
 
 <span class="sd">    Returns:</span>
-<span class="sd">        dict: Returns a dict in the format of</span>
-<span class="sd">              7208979009955716-3683235938232196-7010994181433220-202105112138550000,</span>
-<span class="sd">              {</span>
-<span class="sd">                  &quot;UUID&quot;: &quot;7208979009955716-3683235938232196-7010994181433220-</span>
-<span class="sd">                           202105112138550000&quot;,  # type: str</span>
-<span class="sd">                  &quot;Tasks&quot;: &quot;Retrospective&quot;, # type: str</span>
-<span class="sd">                  &quot;Description&quot;: None, # type: str</span>
-<span class="sd">                  &quot;Status&quot;: None, # type: str</span>
-<span class="sd">                  &quot;Assigned To&quot;: None, # type: str</span>
-<span class="sd">                  &quot;Jira Ticket&quot;: None, # type: str</span>
-<span class="sd">                  &quot;Duration&quot;: None, # type: str</span>
-<span class="sd">                  &quot;Start&quot;: None, # type: str</span>
-<span class="sd">                  &quot;Finish&quot;: None, # type: str</span>
-<span class="sd">                  &quot;Predecessors&quot;: &quot;38FS +1w&quot;, # type: str</span>
-<span class="sd">                  &quot;Summary&quot;: &quot;False&quot; # type: str</span>
-<span class="sd">              }</span>
+<span class="sd">        dict: Returns a dict of UUIDs and the row values</span>
+<span class="sd">        none: There is no row data in any source sheet.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
+    <span class="c1"># TODO: Write a test to validated the dictionary structure</span>
+    <span class="c1"># 7208979009955716-3683235938232196-7010994181433220-202105112138550000,</span>
+    <span class="c1"># {</span>
+    <span class="c1">#   &quot;UUID&quot;: &quot;7208979009955716-3683235938232196-7010994181433220-</span>
+    <span class="c1">#            202105112138550000&quot;,  # type: str</span>
+    <span class="c1">#   &quot;Tasks&quot;: &quot;Retrospective&quot;, # type: str</span>
+    <span class="c1">#   &quot;Description&quot;: None, # type: str</span>
+    <span class="c1">#   &quot;Status&quot;: None, # type: str</span>
+    <span class="c1">#   &quot;Assigned To&quot;: None, # type: str</span>
+    <span class="c1">#   &quot;Jira Ticket&quot;: None, # type: str</span>
+    <span class="c1">#   &quot;Duration&quot;: None, # type: str</span>
+    <span class="c1">#   &quot;Start&quot;: None, # type: str</span>
+    <span class="c1">#   &quot;Finish&quot;: None, # type: str</span>
+    <span class="c1">#   &quot;Predecessors&quot;: &quot;38FS +1w&quot;, # type: str</span>
+    <span class="c1">#   &quot;Summary&quot;: &quot;False&quot; # type: str</span>
+    <span class="c1">#       }</span>
     <span class="k">if</span> <span class="n">source_sheets</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
         <span class="k">raise</span> <span class="ne">ValueError</span>
     <span class="k">elif</span> <span class="n">columns</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
         <span class="k">raise</span> <span class="ne">ValueError</span>
-    <span class="c1"># Create the empty list we&#39;ll pass back</span>
+
+    <span class="c1"># Create the empty dict we&#39;ll pass back</span>
     <span class="n">all_row_data</span> <span class="o">=</span> <span class="p">{}</span>
+
+    <span class="n">modified_since</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="n">get_timestamp</span><span class="p">(</span><span class="n">minutes</span><span class="p">)</span>
+    <span class="n">modified_since</span> <span class="o">=</span> <span class="n">utc</span><span class="o">.</span><span class="n">localize</span><span class="p">(</span><span class="n">modified_since</span><span class="p">)</span>
+    <span class="n">modified_since</span> <span class="o">=</span> <span class="n">modified_since</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="n">tzinfo</span><span class="o">=</span><span class="n">utc</span><span class="p">)</span>
 
     <span class="k">for</span> <span class="n">sheet</span> <span class="ow">in</span> <span class="n">source_sheets</span><span class="p">:</span>
         <span class="c1"># Iterate through the columns and map the column ID to the column name</span>
@@ -139,6 +187,12 @@
                 <span class="n">row</span><span class="p">,</span> <span class="n">summary_col</span><span class="p">,</span> <span class="n">col_map</span><span class="p">)</span>
             <span class="n">uuid_cell</span> <span class="o">=</span> <span class="n">get_cell_data</span><span class="p">(</span><span class="n">row</span><span class="p">,</span> <span class="n">uuid_col</span><span class="p">,</span> <span class="n">col_map</span><span class="p">)</span>
 
+            <span class="k">if</span> <span class="n">uuid_cell</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="n">logging</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">&quot;Sheet ID </span><span class="si">{}</span><span class="s2"> | Sheet Name </span><span class="si">{}</span><span class="s2"> &quot;</span>
+                              <span class="s2">&quot;doesn&#39;t have UUID column. &quot;</span>
+                              <span class="s2">&quot;Skipping sheet.&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">sheet</span><span class="o">.</span><span class="n">id</span><span class="p">,</span> <span class="n">sheet</span><span class="o">.</span><span class="n">name</span><span class="p">))</span>
+                <span class="k">break</span>
+
             <span class="k">if</span> <span class="n">summary_cell</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
                 <span class="n">logging</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">&quot;Summary row is </span><span class="si">{}</span><span class="s2">. Continuing to next &quot;</span>
                               <span class="s2">&quot;row.&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">summary_cell</span><span class="p">))</span>
@@ -148,14 +202,26 @@
                               <span class="s2">&quot;row.&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">summary_cell</span><span class="p">))</span>
                 <span class="k">continue</span>
 
-            <span class="k">if</span> <span class="n">uuid_cell</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
-                <span class="n">logging</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">&quot;Sheet ID </span><span class="si">{}</span><span class="s2"> | Sheet Name </span><span class="si">{}</span><span class="s2"> &quot;</span>
-                              <span class="s2">&quot;doesn&#39;t have UUID column. &quot;</span>
-                              <span class="s2">&quot;Skipping sheet.&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">sheet</span><span class="o">.</span><span class="n">id</span><span class="p">,</span> <span class="n">sheet</span><span class="o">.</span><span class="n">name</span><span class="p">))</span>
-                <span class="k">break</span>
+            <span class="n">row_modified</span> <span class="o">=</span> <span class="n">row</span><span class="o">.</span><span class="n">modified_at</span>
 
-            <span class="n">row_data</span> <span class="o">=</span> <span class="p">{}</span>
-            <span class="n">all_row_data</span><span class="p">[</span><span class="n">uuid_cell</span><span class="o">.</span><span class="n">value</span><span class="p">]</span> <span class="o">=</span> <span class="n">row_data</span>
+            <span class="c1"># If the row was modified in the last N minutes, add</span>
+            <span class="c1"># it to the index. Otherwise, skip it.</span>
+            <span class="k">if</span> <span class="n">row_modified</span> <span class="o">&gt;=</span> <span class="n">modified_since</span><span class="p">:</span>
+                <span class="n">msg</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="s2">&quot;True | Cutoff: </span><span class="si">{}</span><span class="s2"> | Row Modified Date: &quot;</span>
+                          <span class="s2">&quot;</span><span class="si">{}</span><span class="s2"> | Row Number: </span><span class="si">{}</span><span class="s2"> |Sheet Name: </span><span class="si">{}</span><span class="s2">&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>
+                    <span class="n">modified_since</span><span class="p">,</span> <span class="n">row_modified</span><span class="p">,</span> <span class="n">row</span><span class="o">.</span><span class="n">row_number</span><span class="p">,</span>
+                    <span class="n">sheet</span><span class="o">.</span><span class="n">name</span><span class="p">)</span>
+                <span class="n">logging</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
+                <span class="n">row_data</span> <span class="o">=</span> <span class="p">{}</span>
+                <span class="n">all_row_data</span><span class="p">[</span><span class="n">uuid_cell</span><span class="o">.</span><span class="n">value</span><span class="p">]</span> <span class="o">=</span> <span class="n">row_data</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">msg</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="s2">&quot;False | Cutoff: </span><span class="si">{}</span><span class="s2"> | Row Modified Date: &quot;</span>
+                          <span class="s2">&quot;</span><span class="si">{}</span><span class="s2"> | Row Number: </span><span class="si">{}</span><span class="s2"> |Sheet Name: </span><span class="si">{}</span><span class="s2">&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>
+                    <span class="n">modified_since</span><span class="p">,</span> <span class="n">row_modified</span><span class="p">,</span> <span class="n">row</span><span class="o">.</span><span class="n">row_number</span><span class="p">,</span>
+                    <span class="n">sheet</span><span class="o">.</span><span class="n">name</span><span class="p">)</span>
+                <span class="n">logging</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
+                <span class="k">continue</span>
+
             <span class="c1"># Iterate through each column passed in.</span>
             <span class="k">for</span> <span class="n">col_name</span> <span class="ow">in</span> <span class="n">columns</span><span class="p">:</span>
                 <span class="k">if</span> <span class="n">col_name</span> <span class="ow">in</span> <span class="n">col_map</span><span class="o">.</span><span class="n">keys</span><span class="p">():</span>
@@ -189,16 +255,16 @@
         <span class="k">return</span> <span class="kc">None</span>
 
 
-<span class="k">def</span> <span class="nf">get_blank_uuids</span><span class="p">(</span><span class="n">source_sheets</span><span class="p">,</span> <span class="n">smartsheet_client</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;Creates nested dicts with all rows that require a new UUID to</span>
-<span class="sd">       be generated.</span>
+<span class="k">def</span> <span class="nf">get_blank_uuids</span><span class="p">(</span><span class="n">source_sheets</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;For all rows that need a UUID generated, creates nested dicts with the</span>
+<span class="sd">       necessary data to generate the UUID.</span>
 
 <span class="sd">    Args:</span>
 <span class="sd">        source_sheets (list): A list of Sheet objects</span>
-<span class="sd">        smartsheet_client (Object): The Smartsheet client to call the API</span>
 
 <span class="sd">    Returns:</span>
 <span class="sd">        dict: A nested set of dictionaries</span>
+<span class="sd">        none: There are no sheets to update.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="c1"># TODO: Write a test to validate the dict.</span>
     <span class="c1"># 7637702645442436,  (Sheet ID, int)</span>
@@ -215,8 +281,10 @@
     <span class="k">if</span> <span class="n">source_sheets</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
         <span class="k">raise</span> <span class="ne">ValueError</span>
 
+    <span class="c1"># Create an empty dict of sheets to update</span>
     <span class="n">sheets_to_update</span> <span class="o">=</span> <span class="p">{}</span>
 
+    <span class="c1"># Iterate through each sheet in the source_sheets dict</span>
     <span class="k">for</span> <span class="n">sheet</span> <span class="ow">in</span> <span class="n">source_sheets</span><span class="p">:</span>
         <span class="n">logging</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">&quot;Loaded &quot;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">sheet</span><span class="o">.</span><span class="n">rows</span><span class="p">))</span> <span class="o">+</span> <span class="s2">&quot; rows from sheet: &quot;</span>
                       <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="n">sheet</span><span class="o">.</span><span class="n">id</span><span class="p">)</span> <span class="o">+</span> <span class="s2">&quot; | Sheet Name: &quot;</span> <span class="o">+</span> <span class="n">sheet</span><span class="o">.</span><span class="n">name</span><span class="p">)</span>
@@ -229,30 +297,52 @@
                           <span class="s2">&quot;Skipping sheet. (KeyError)&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">sheet</span><span class="o">.</span><span class="n">id</span><span class="p">,</span>
                                                               <span class="n">sheet</span><span class="o">.</span><span class="n">name</span><span class="p">))</span>
             <span class="k">continue</span>
+        <span class="c1"># Create an empty dict for rows to update inside the sheet</span>
         <span class="n">rows_to_update</span> <span class="o">=</span> <span class="p">{}</span>
+
+        <span class="c1"># Iterate through each row in the sheet</span>
         <span class="k">for</span> <span class="n">row</span> <span class="ow">in</span> <span class="n">sheet</span><span class="o">.</span><span class="n">rows</span><span class="p">:</span>
+            <span class="c1"># Get the existing UUID value and the timestamp when the row was</span>
+            <span class="c1"># created.</span>
             <span class="n">uuid_value</span> <span class="o">=</span> <span class="n">get_cell_value</span><span class="p">(</span><span class="n">row</span><span class="p">,</span> <span class="n">uuid_col</span><span class="p">,</span> <span class="n">col_map</span><span class="p">)</span>
             <span class="n">created_at</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">row</span><span class="o">.</span><span class="n">created_at</span><span class="p">)</span>
+
+            <span class="c1"># Strip out all characters except the numbers in the timestamp.</span>
             <span class="n">created_at</span> <span class="o">=</span> <span class="n">created_at</span><span class="o">.</span><span class="n">translate</span><span class="p">(</span>
                 <span class="p">{</span><span class="nb">ord</span><span class="p">(</span><span class="n">i</span><span class="p">):</span> <span class="kc">None</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="s1">&#39;+-T:Z &#39;</span><span class="p">})</span>
+
+            <span class="c1"># Format the UUID as sheet_id, row_id, column_id, and modified</span>
+            <span class="c1"># timestamp, separated by dashes.</span>
             <span class="n">uuid</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="s2">&quot;</span><span class="si">{}</span><span class="s2">-</span><span class="si">{}</span><span class="s2">-</span><span class="si">{}</span><span class="s2">-</span><span class="si">{}</span><span class="s2">&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">sheet</span><span class="o">.</span><span class="n">id</span><span class="p">,</span>
                                              <span class="n">row</span><span class="o">.</span><span class="n">id</span><span class="p">,</span> <span class="n">column_id</span><span class="p">,</span> <span class="n">created_at</span><span class="p">)</span>
+
+            <span class="c1"># Check if the UUID already exists. If there&#39;s a match, skip</span>
+            <span class="c1"># updating the cell / row.</span>
             <span class="k">if</span> <span class="n">uuid_value</span> <span class="o">==</span> <span class="n">uuid</span><span class="p">:</span>
-                <span class="n">msg</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="s2">&quot;Cell at Column Name: </span><span class="si">{}</span><span class="s2"> and Row ID: &quot;</span>
-                          <span class="s2">&quot;</span><span class="si">{}</span><span class="s2"> matches existing UUID. Cell skipped.&quot;</span>
-                          <span class="s2">&quot;&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">uuid_col</span><span class="p">,</span> <span class="n">row</span><span class="o">.</span><span class="n">id</span><span class="p">)</span>
+                <span class="n">msg</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="s2">&quot;Cell at Column Name: </span><span class="si">{}</span><span class="s2"> | Row ID: </span><span class="si">{}</span><span class="s2"> | &quot;</span>
+                          <span class="s2">&quot;Row Number: </span><span class="si">{}</span><span class="s2">, </span><span class="si">{}</span><span class="s2"> matches existing UUID. &quot;</span>
+                          <span class="s2">&quot;Cell skipped.&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">uuid_col</span><span class="p">,</span> <span class="n">row</span><span class="o">.</span><span class="n">id</span><span class="p">,</span>
+                                                  <span class="n">row</span><span class="o">.</span><span class="n">row_number</span><span class="p">,</span> <span class="n">uuid</span><span class="p">)</span>
                 <span class="n">logging</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
             <span class="k">elif</span> <span class="n">uuid_value</span> <span class="o">!=</span> <span class="n">uuid</span><span class="p">:</span>
-                <span class="n">msg</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="s2">&quot;Cell at column name: </span><span class="si">{}</span><span class="s2"> and row ID: </span><span class="si">{}</span><span class="s2"> has an &quot;</span>
-                          <span class="s2">&quot;existing value of </span><span class="si">{}</span><span class="s2">. Tagging for update.&quot;</span>
-                          <span class="s2">&quot;</span><span class="si">{}</span><span class="s2">.&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">uuid_col</span><span class="p">,</span> <span class="n">row</span><span class="o">.</span><span class="n">id</span><span class="p">,</span> <span class="n">uuid_value</span><span class="p">,</span> <span class="n">uuid</span><span class="p">)</span>
+                <span class="n">msg</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="s2">&quot;Cell at Column Name: </span><span class="si">{}</span><span class="s2"> | Row ID: </span><span class="si">{}</span><span class="s2"> | &quot;</span>
+                          <span class="s2">&quot;Row Number: </span><span class="si">{}</span><span class="s2"> has an existing value of </span><span class="si">{}</span><span class="s2">. &quot;</span>
+                          <span class="s2">&quot;Tagging for update.&quot;</span>
+                          <span class="s2">&quot;</span><span class="si">{}</span><span class="s2">.&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">uuid_col</span><span class="p">,</span> <span class="n">row</span><span class="o">.</span><span class="n">id</span><span class="p">,</span> <span class="n">row</span><span class="o">.</span><span class="n">row_number</span><span class="p">,</span>
+                                        <span class="n">uuid_value</span><span class="p">,</span> <span class="n">uuid</span><span class="p">)</span>
                 <span class="n">logging</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
                 <span class="n">rows_to_update</span><span class="p">[</span><span class="n">row</span><span class="o">.</span><span class="n">id</span><span class="p">]</span> <span class="o">=</span> <span class="p">{</span>
                     <span class="s2">&quot;column_id&quot;</span><span class="p">:</span> <span class="n">col_map</span><span class="p">[</span><span class="n">uuid_col</span><span class="p">],</span> <span class="s2">&quot;uuid&quot;</span><span class="p">:</span> <span class="n">uuid</span><span class="p">}</span>
             <span class="k">else</span><span class="p">:</span>
                 <span class="n">msg</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="s2">&quot;There was an issue parsing rows in the sheet. &quot;</span>
-                          <span class="s2">&quot;Sheet ID: </span><span class="si">{}</span><span class="s2"> | Row Data: </span><span class="si">{}</span><span class="s2">&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">sheet</span><span class="o">.</span><span class="n">id</span><span class="p">,</span> <span class="n">row</span><span class="p">)</span>
+                          <span class="s2">&quot;Sheet ID: </span><span class="si">{}</span><span class="s2"> | Sheet Name: </span><span class="si">{}</span><span class="s2">&quot;</span>
+                          <span class="s2">&quot;&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">sheet</span><span class="o">.</span><span class="n">id</span><span class="p">,</span> <span class="n">sheet</span><span class="o">.</span><span class="n">name</span><span class="p">)</span>
                 <span class="n">logging</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
+                <span class="n">msg</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="s2">&quot;Dumping Row Data: </span><span class="si">{}</span><span class="s2">&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">row</span><span class="p">)</span>
+                <span class="n">logging</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
+
+        <span class="c1"># Collect all rows to update and parse them into a dict of sheets</span>
+        <span class="c1"># to update.</span>
         <span class="k">if</span> <span class="n">rows_to_update</span><span class="p">:</span>
             <span class="n">sheets_to_update</span><span class="p">[</span><span class="n">sheet</span><span class="o">.</span><span class="n">id</span><span class="p">]</span> <span class="o">=</span> <span class="p">{</span>
                 <span class="s2">&quot;sheet_name&quot;</span><span class="p">:</span> <span class="n">sheet</span><span class="o">.</span><span class="n">name</span><span class="p">,</span> <span class="s2">&quot;row_data&quot;</span><span class="p">:</span> <span class="n">rows_to_update</span><span class="p">}</span>
@@ -263,34 +353,48 @@
 
 
 <span class="k">def</span> <span class="nf">load_jira_index</span><span class="p">(</span><span class="n">smartsheet_client</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;Helper function to create indexes on the Jira index rows. Pulls from</span>
-<span class="sd">       the API every time to get the most up-to-date version of the sheet</span>
-<span class="sd">       data.</span>
+    <span class="sd">&quot;&quot;&quot;Create indexes on the Jira index rows. Pulls from the Smartsheet API</span>
+<span class="sd">       every time to get the most up-to-date version of the sheet data.</span>
 
 <span class="sd">    Args:</span>
 <span class="sd">        smartsheet_client (Object): The Smartsheet client to query the API</span>
 
 <span class="sd">    Returns:</span>
+<span class="sd">        sheet: A Smartsheet Sheet object that includes all data for the Jira</span>
+<span class="sd">               Index Sheet</span>
+<span class="sd">        dict: A dictionary containing mapped column IDs to column names</span>
 <span class="sd">        dict: A dictionary containing the Jira ticket as the key and the</span>
 <span class="sd">              row ID as the value.</span>
+
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="n">jira_index_sheet</span> <span class="o">=</span> <span class="n">smartsheet_client</span><span class="o">.</span><span class="n">Sheets</span><span class="o">.</span><span class="n">get_sheet</span><span class="p">(</span><span class="n">jira_idx_sheet</span><span class="p">)</span>
+    <span class="n">msg</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="s2">&quot;</span><span class="si">{}</span><span class="s2"> rows loaded from sheet ID: </span><span class="si">{}</span><span class="s2"> | Sheet name: </span><span class="si">{}</span><span class="s2">&quot;</span>
+              <span class="s2">&quot;&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">jira_index_sheet</span><span class="o">.</span><span class="n">rows</span><span class="p">),</span> <span class="n">jira_index_sheet</span><span class="o">.</span><span class="n">id</span><span class="p">,</span>
+                         <span class="n">jira_index_sheet</span><span class="o">.</span><span class="n">name</span><span class="p">)</span>
+    <span class="n">logging</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
     <span class="n">jira_index_col_map</span> <span class="o">=</span> <span class="n">get_column_map</span><span class="p">(</span><span class="n">jira_index_sheet</span><span class="p">)</span>
+
+    <span class="c1"># Create a dict of rows where the values are lists.</span>
     <span class="n">jira_index_rows</span> <span class="o">=</span> <span class="n">defaultdict</span><span class="p">(</span><span class="nb">list</span><span class="p">)</span>
+
+    <span class="c1"># Iterate through the rows on the Index sheet. If there&#39;s a Jira ticket</span>
+    <span class="c1"># in the row, return it and its details.</span>
     <span class="k">for</span> <span class="n">row</span> <span class="ow">in</span> <span class="n">jira_index_sheet</span><span class="o">.</span><span class="n">rows</span><span class="p">:</span>
         <span class="n">jira_cell</span> <span class="o">=</span> <span class="n">get_cell_data</span><span class="p">(</span>
             <span class="n">row</span><span class="p">,</span> <span class="n">jira_col</span><span class="p">,</span> <span class="n">jira_index_col_map</span><span class="p">)</span>
         <span class="k">if</span> <span class="n">jira_cell</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
             <span class="n">logging</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">&quot;Jira cell doesn&#39;t exist. Skipping.&quot;</span><span class="p">)</span>
+            <span class="k">continue</span>
         <span class="k">elif</span> <span class="n">jira_cell</span><span class="o">.</span><span class="n">value</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
             <span class="n">logging</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">&quot;Jira value doesn&#39;t exist. Skipping.&quot;</span><span class="p">)</span>
+            <span class="k">continue</span>
         <span class="k">else</span><span class="p">:</span>
             <span class="n">jira_value</span> <span class="o">=</span> <span class="n">jira_cell</span><span class="o">.</span><span class="n">value</span>
             <span class="n">jira_index_rows</span><span class="p">[</span><span class="n">jira_value</span><span class="p">]</span> <span class="o">=</span> <span class="n">row</span><span class="o">.</span><span class="n">id</span>
     <span class="k">return</span> <span class="n">jira_index_sheet</span><span class="p">,</span> <span class="n">jira_index_col_map</span><span class="p">,</span> <span class="n">jira_index_rows</span>
 
 
-<span class="k">def</span> <span class="nf">get_sub_indexs</span><span class="p">(</span><span class="n">project_data</span><span class="p">):</span>
+<span class="k">def</span> <span class="nf">get_sub_indexes</span><span class="p">(</span><span class="n">project_data</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;Read all rows from the full project data index. If the Jira</span>
 <span class="sd">       column exists in the dict values, create two sub-indexes.</span>
 
@@ -300,8 +404,9 @@
 
 <span class="sd">    Returns:</span>
 <span class="sd">        dict: jira_sub_index in the form of Jira Ticket: [UUID(s)] (list)</span>
-<span class="sd">              project_sub_index in the form of UUID: Jira Ticket (str)</span>
+<span class="sd">        dict: project_sub_index in the form of UUID: Jira Ticket (str)</span>
 <span class="sd">    &quot;&quot;&quot;</span>
+
     <span class="n">jira_sub_index</span> <span class="o">=</span> <span class="n">defaultdict</span><span class="p">(</span><span class="nb">list</span><span class="p">)</span>
     <span class="n">project_sub_index</span> <span class="o">=</span> <span class="n">defaultdict</span><span class="p">(</span><span class="nb">list</span><span class="p">)</span>
 
@@ -322,9 +427,9 @@
     <span class="k">return</span> <span class="n">jira_sub_index</span><span class="p">,</span> <span class="n">project_sub_index</span>
 
 
-<span class="k">def</span> <span class="nf">get_all_sheet_ids</span><span class="p">(</span><span class="n">smartsheet_client</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;Gets all the sheet IDs from every sheet in every folder,</span>
-<span class="sd">       subfolder and workspace as defined in the workspace_id.</span>
+<span class="k">def</span> <span class="nf">get_all_sheet_ids</span><span class="p">(</span><span class="n">smartsheet_client</span><span class="p">,</span> <span class="n">minutes</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Get all the sheet IDs from every sheet in every folder, subfolder and</span>
+<span class="sd">       workspace as defined in the workspace_id.</span>
 
 <span class="sd">    Args:</span>
 <span class="sd">        smartsheet_client (Object): The Smartsheet client to interact</span>
@@ -333,221 +438,293 @@
 <span class="sd">    Returns:</span>
 <span class="sd">        list: A list of all sheet IDs across every workspace</span>
 <span class="sd">    &quot;&quot;&quot;</span>
-    <span class="n">folder_map</span> <span class="o">=</span> <span class="p">[]</span>
-    <span class="n">sheet_ids</span> <span class="o">=</span> <span class="p">[]</span>
 
     <span class="c1"># Get the workspace Smartsheet object from the workspace_id</span>
     <span class="c1"># configured in our variables.</span>
-    <span class="k">for</span> <span class="n">ws</span> <span class="ow">in</span> <span class="n">workspace_id</span><span class="p">:</span>
-        <span class="n">workspace</span> <span class="o">=</span> <span class="n">smartsheet_client</span><span class="o">.</span><span class="n">Workspaces</span><span class="o">.</span><span class="n">get_workspace</span><span class="p">(</span><span class="n">ws</span><span class="p">)</span>
+    <span class="n">modified_since</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="n">get_timestamp</span><span class="p">(</span><span class="n">minutes</span><span class="p">)</span>
+    <span class="n">modified_since</span> <span class="o">=</span> <span class="n">utc</span><span class="o">.</span><span class="n">localize</span><span class="p">(</span><span class="n">modified_since</span><span class="p">)</span>
+    <span class="n">modified_since</span> <span class="o">=</span> <span class="n">modified_since</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="n">tzinfo</span><span class="o">=</span><span class="n">utc</span><span class="p">)</span>
+    <span class="n">sheet_ids</span> <span class="o">=</span> <span class="p">[]</span>
 
-        <span class="c1"># Get the top-level folders from the workspace. If the function</span>
-        <span class="c1"># returns any values, append it to the folder map. Skip if None.</span>
-        <span class="n">ws_folder_ids</span> <span class="o">=</span> <span class="n">get_ws_folder_map</span><span class="p">(</span><span class="n">workspace</span><span class="p">)</span>
-        <span class="k">if</span> <span class="n">ws_folder_ids</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
-            <span class="n">folder_map</span><span class="o">.</span><span class="n">extend</span><span class="p">(</span><span class="n">ws_folder_ids</span><span class="p">)</span>
+    <span class="k">for</span> <span class="n">ws_id</span> <span class="ow">in</span> <span class="n">workspace_id</span><span class="p">:</span>
+        <span class="n">workspace</span> <span class="o">=</span> <span class="n">smartsheet_client</span><span class="o">.</span><span class="n">Workspaces</span><span class="o">.</span><span class="n">get_workspace</span><span class="p">(</span>
+            <span class="n">ws_id</span><span class="p">,</span> <span class="n">load_all</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
 
-        <span class="c1"># Iterate through the top-level folders from the workspace.</span>
-        <span class="c1"># Find any folder IDs nested anywhere in the workspace. If the function</span>
-        <span class="c1"># returns any values, append it to the folder map. Skip if None.</span>
-        <span class="n">all_folder_ids</span> <span class="o">=</span> <span class="n">get_subfolder_map</span><span class="p">(</span><span class="n">ws_folder_ids</span><span class="p">,</span> <span class="n">smartsheet_client</span><span class="p">)</span>
-        <span class="k">if</span> <span class="n">all_folder_ids</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
-            <span class="n">folder_map</span><span class="o">.</span><span class="n">extend</span><span class="p">(</span><span class="n">all_folder_ids</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">workspace</span><span class="o">.</span><span class="n">folders</span><span class="p">:</span>
+            <span class="n">ws</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">workspace</span><span class="p">)</span>
+            <span class="n">ws_json</span> <span class="o">=</span> <span class="n">json</span><span class="o">.</span><span class="n">loads</span><span class="p">(</span><span class="n">ws</span><span class="p">)</span>
 
-        <span class="c1"># Iterate through the folder map, and the top-level workspace.</span>
-        <span class="c1"># Find all sheet IDs nested anywhere in the workspace. If the function</span>
-        <span class="c1"># returns any values, append it to the sheet map. Skip if None.</span>
-        <span class="n">folder_sheet_ids</span> <span class="o">=</span> <span class="n">get_folder_sheet_map</span><span class="p">(</span><span class="n">folder_map</span><span class="p">,</span> <span class="n">smartsheet_client</span><span class="p">)</span>
-        <span class="n">ws_sheet_ids</span> <span class="o">=</span> <span class="n">get_ws_sheet_map</span><span class="p">(</span><span class="n">ws</span><span class="p">,</span> <span class="n">smartsheet_client</span><span class="p">)</span>
-        <span class="k">if</span> <span class="n">folder_sheet_ids</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
-            <span class="n">sheet_ids</span><span class="o">.</span><span class="n">extend</span><span class="p">(</span><span class="n">folder_sheet_ids</span><span class="p">)</span>
-        <span class="k">if</span> <span class="n">ws_sheet_ids</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
-            <span class="n">sheet_ids</span><span class="o">.</span><span class="n">extend</span><span class="p">(</span><span class="n">ws_sheet_ids</span><span class="p">)</span>
+            <span class="k">for</span> <span class="n">subfolder</span> <span class="ow">in</span> <span class="n">ws_json</span><span class="p">[</span><span class="s1">&#39;folders&#39;</span><span class="p">]:</span>
+                <span class="k">try</span><span class="p">:</span>
+                    <span class="k">for</span> <span class="n">sheet</span> <span class="ow">in</span> <span class="n">subfolder</span><span class="p">[</span><span class="s1">&#39;sheets&#39;</span><span class="p">]:</span>
+                        <span class="n">modified_at</span> <span class="o">=</span> <span class="n">sheet</span><span class="p">[</span><span class="s1">&#39;modifiedAt&#39;</span><span class="p">]</span>
+                        <span class="n">head</span><span class="p">,</span> <span class="n">sep</span><span class="p">,</span> <span class="n">tail</span> <span class="o">=</span> <span class="n">modified_at</span><span class="o">.</span><span class="n">partition</span><span class="p">(</span><span class="s1">&#39;+&#39;</span><span class="p">)</span>
+                        <span class="n">sheet_modified</span> <span class="o">=</span> <span class="n">datetime</span><span class="o">.</span><span class="n">strptime</span><span class="p">(</span>
+                            <span class="n">head</span><span class="p">,</span> <span class="s1">&#39;%Y-%m-</span><span class="si">%d</span><span class="s1">T%H:%M:%S&#39;</span><span class="p">)</span>
+                        <span class="n">sheet_modified</span> <span class="o">=</span> <span class="n">utc</span><span class="o">.</span><span class="n">localize</span><span class="p">(</span><span class="n">sheet_modified</span><span class="p">)</span>
+                        <span class="n">sheet_modified</span> <span class="o">=</span> <span class="n">sheet_modified</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="n">tzinfo</span><span class="o">=</span><span class="n">utc</span><span class="p">)</span>
 
-        <span class="c1"># Don&#39;t include the JIRA index sheet as</span>
-        <span class="c1"># part of the sheet collection, if present.</span>
-        <span class="k">try</span><span class="p">:</span>
-            <span class="n">sheet_ids</span><span class="o">.</span><span class="n">remove</span><span class="p">(</span><span class="n">jira_idx_sheet</span><span class="p">)</span>
-        <span class="k">except</span> <span class="ne">ValueError</span><span class="p">:</span>
-            <span class="n">logging</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span>
-                <span class="s2">&quot;</span><span class="si">{}</span><span class="s2"> not found in Sheet IDs list&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">jira_idx_sheet</span><span class="p">))</span>
+                        <span class="c1"># If the sheet was modified in the last N minutes, add</span>
+                        <span class="c1"># it to the index. Otherwise, skip it.</span>
+                        <span class="k">if</span> <span class="n">sheet_modified</span> <span class="o">&gt;=</span> <span class="n">modified_since</span><span class="p">:</span>
+                            <span class="n">msg</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="s2">&quot;True | Cutoff: </span><span class="si">{}</span><span class="s2"> | Sheet Modified &quot;</span>
+                                      <span class="s2">&quot;Date: </span><span class="si">{}</span><span class="s2"> | Sheet Name: </span><span class="si">{}</span><span class="s2">&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>
+                                <span class="n">modified_since</span><span class="p">,</span> <span class="n">sheet_modified</span><span class="p">,</span> <span class="n">sheet</span><span class="p">[</span><span class="s1">&#39;name&#39;</span><span class="p">])</span>
+                            <span class="n">logging</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
+                            <span class="n">sheet_ids</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">sheet</span><span class="p">[</span><span class="s1">&#39;id&#39;</span><span class="p">])</span>
+                        <span class="k">else</span><span class="p">:</span>
+                            <span class="n">msg</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="s2">&quot;False | Cutoff: </span><span class="si">{}</span><span class="s2"> | Sheet Modified &quot;</span>
+                                      <span class="s2">&quot;Date: </span><span class="si">{}</span><span class="s2"> | Sheet Name: </span><span class="si">{}</span><span class="s2">&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>
+                                <span class="n">modified_since</span><span class="p">,</span> <span class="n">sheet_modified</span><span class="p">,</span> <span class="n">sheet</span><span class="p">[</span><span class="s1">&#39;name&#39;</span><span class="p">])</span>
+                            <span class="n">logging</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
+                            <span class="k">continue</span>
+                <span class="c1"># Handle empty workspaces</span>
+                <span class="k">except</span> <span class="ne">KeyError</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+                    <span class="n">msg</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="s2">&quot;Dictionary key </span><span class="si">{}</span><span class="s2"> not found in &quot;</span>
+                              <span class="s2">&quot;subfolders for workspace ID </span><span class="si">{}</span><span class="s2">&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">e</span><span class="p">,</span>
+                                                                       <span class="n">ws_id</span><span class="p">)</span>
+                    <span class="n">logging</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
+
+    <span class="c1"># Don&#39;t include the JIRA index sheet as</span>
+    <span class="c1"># part of the sheet collection, if present.</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="n">sheet_ids</span><span class="o">.</span><span class="n">remove</span><span class="p">(</span><span class="n">jira_idx_sheet</span><span class="p">)</span>
+    <span class="k">except</span> <span class="ne">ValueError</span><span class="p">:</span>
+        <span class="n">logging</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span>
+            <span class="s2">&quot;</span><span class="si">{}</span><span class="s2"> not found in Sheet IDs list&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">jira_idx_sheet</span><span class="p">))</span>
 
     <span class="k">return</span> <span class="n">sheet_ids</span>
 
 
-<span class="k">def</span> <span class="nf">get_ws_folder_map</span><span class="p">(</span><span class="n">workspace</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;Get all of the folder IDs within the root Workspace, for each</span>
-<span class="sd">       workspace provided.</span>
+<span class="k">def</span> <span class="nf">get_secret</span><span class="p">(</span><span class="n">secret_name</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Gets the API token from AWS Secrets Manager.</span>
 
-<span class="sd">    Args:</span>
-<span class="sd">        workspace (Workspace object): The workspace to parse for folder</span>
-<span class="sd">                                      IDs.</span>
-
-<span class="sd">    Returns:</span>
-<span class="sd">        list: A list of folder IDs found in the workspace.</span>
-<span class="sd">    &quot;&quot;&quot;</span>
-    <span class="n">ws_folder_map</span> <span class="o">=</span> <span class="p">[]</span>
-    <span class="k">if</span> <span class="n">workspace</span><span class="o">.</span><span class="n">folders</span><span class="p">:</span>
-        <span class="n">logging</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">&quot;Importing Folders from Workspace ID: &quot;</span>
-                      <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="n">workspace</span><span class="o">.</span><span class="n">id</span><span class="p">)</span> <span class="o">+</span> <span class="s2">&quot; | &quot;</span> <span class="o">+</span> <span class="n">workspace</span><span class="o">.</span><span class="n">name</span><span class="p">)</span>
-        <span class="k">for</span> <span class="n">folders</span> <span class="ow">in</span> <span class="n">workspace</span><span class="o">.</span><span class="n">folders</span><span class="p">:</span>
-            <span class="n">logging</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">&quot;Appended Folder ID: &quot;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="n">folders</span><span class="o">.</span><span class="n">id</span><span class="p">)</span> <span class="o">+</span> <span class="s2">&quot; | &quot;</span>
-                          <span class="o">+</span> <span class="n">folders</span><span class="o">.</span><span class="n">name</span> <span class="o">+</span> <span class="s2">&quot; to ws_folder_map.&quot;</span><span class="p">)</span>
-            <span class="n">ws_folder_map</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">folders</span><span class="o">.</span><span class="n">id</span><span class="p">)</span>
-        <span class="k">return</span> <span class="n">ws_folder_map</span>
-    <span class="k">else</span><span class="p">:</span>
-        <span class="n">logging</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">&quot;No folders in workspace.&quot;</span><span class="p">)</span>
-        <span class="k">return</span> <span class="kc">None</span>
-
-
-<span class="k">def</span> <span class="nf">get_folder_sheet_map</span><span class="p">(</span><span class="n">folder_map</span><span class="p">,</span> <span class="n">smartsheet_client</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;Get all sheets from each folder in the folder map.</span>
-
-<span class="sd">    Args:</span>
-<span class="sd">        folder_map (list): A list of folder IDs found in the workspace</span>
-<span class="sd">        smartsheet_client (Object): The Smartsheet client to interact</span>
-<span class="sd">                                    with the API</span>
+<span class="sd">    Raises:</span>
+<span class="sd">        e: DecryptionFailureException.</span>
+<span class="sd">        e: InternalServiceErrorException</span>
+<span class="sd">        e: InvalidParameterException</span>
+<span class="sd">        e: InvalidRequestException</span>
+<span class="sd">        e: ResourceNotFoundException</span>
 
 <span class="sd">    Returns:</span>
-<span class="sd">        list: A list of sheet IDs from every folder in the workspace.</span>
+<span class="sd">        str: The Smartsheet API key</span>
 <span class="sd">    &quot;&quot;&quot;</span>
-    <span class="n">folder_sheet_map</span> <span class="o">=</span> <span class="p">[]</span>
-    <span class="k">if</span> <span class="ow">not</span> <span class="n">folder_map</span><span class="p">:</span>
-        <span class="n">logging</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">&quot;Folder map is empty. Skipping.&quot;</span><span class="p">)</span>
-        <span class="k">return</span> <span class="kc">None</span>
+
+    <span class="n">region_name</span> <span class="o">=</span> <span class="s2">&quot;us-west-2&quot;</span>
+    <span class="n">ACCESS_KEY</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">environ</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;ACCESS_KEY&#39;</span><span class="p">)</span>
+    <span class="n">SECRET_KEY</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">environ</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;SECRET_KEY&#39;</span><span class="p">)</span>
+
+    <span class="c1"># Create a Secrets Manager client</span>
+    <span class="n">session</span> <span class="o">=</span> <span class="n">boto3</span><span class="o">.</span><span class="n">session</span><span class="o">.</span><span class="n">Session</span><span class="p">()</span>
+    <span class="n">client</span> <span class="o">=</span> <span class="n">session</span><span class="o">.</span><span class="n">client</span><span class="p">(</span>
+        <span class="n">service_name</span><span class="o">=</span><span class="s1">&#39;secretsmanager&#39;</span><span class="p">,</span>
+        <span class="n">region_name</span><span class="o">=</span><span class="n">region_name</span><span class="p">,</span>
+        <span class="n">aws_access_key_id</span><span class="o">=</span><span class="n">ACCESS_KEY</span><span class="p">,</span>
+        <span class="n">aws_secret_access_key</span><span class="o">=</span><span class="n">SECRET_KEY</span><span class="p">,</span>
+    <span class="p">)</span>
+
+    <span class="c1"># In this sample we only handle the specific exceptions for the</span>
+    <span class="c1"># &#39;GetSecretValue&#39; API.</span>
+    <span class="c1"># See https://docs.aws.amazon.com/secretsmanager/latest/</span>
+    <span class="c1"># apireference/API_GetSecretValue.html</span>
+    <span class="c1"># We rethrow the exception by default.</span>
+
+    <span class="k">try</span><span class="p">:</span>
+        <span class="n">get_secret_value_response</span> <span class="o">=</span> <span class="n">client</span><span class="o">.</span><span class="n">get_secret_value</span><span class="p">(</span>
+            <span class="n">SecretId</span><span class="o">=</span><span class="n">secret_name</span>
+        <span class="p">)</span>
+    <span class="k">except</span> <span class="n">ClientError</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">e</span><span class="o">.</span><span class="n">response</span><span class="p">[</span><span class="s1">&#39;Error&#39;</span><span class="p">][</span><span class="s1">&#39;Code&#39;</span><span class="p">]</span> <span class="o">==</span> <span class="s1">&#39;DecryptionFailureException&#39;</span><span class="p">:</span>
+            <span class="c1"># Secrets Manager can&#39;t decrypt the protected secret text using</span>
+            <span class="c1"># the provided KMS key.</span>
+            <span class="c1"># Deal with the exception here, and/or rethrow at your discretion.</span>
+            <span class="k">raise</span> <span class="n">e</span>
+        <span class="k">elif</span> <span class="n">e</span><span class="o">.</span><span class="n">response</span><span class="p">[</span><span class="s1">&#39;Error&#39;</span><span class="p">][</span><span class="s1">&#39;Code&#39;</span><span class="p">]</span> <span class="o">==</span> <span class="s1">&#39;InternalServiceErrorException&#39;</span><span class="p">:</span>
+            <span class="c1"># An error occurred on the server side.</span>
+            <span class="c1"># Deal with the exception here, and/or rethrow at your discretion.</span>
+            <span class="k">raise</span> <span class="n">e</span>
+        <span class="k">elif</span> <span class="n">e</span><span class="o">.</span><span class="n">response</span><span class="p">[</span><span class="s1">&#39;Error&#39;</span><span class="p">][</span><span class="s1">&#39;Code&#39;</span><span class="p">]</span> <span class="o">==</span> <span class="s1">&#39;InvalidParameterException&#39;</span><span class="p">:</span>
+            <span class="c1"># You provided an invalid value for a parameter.</span>
+            <span class="c1"># Deal with the exception here, and/or rethrow at your discretion.</span>
+            <span class="k">raise</span> <span class="n">e</span>
+        <span class="k">elif</span> <span class="n">e</span><span class="o">.</span><span class="n">response</span><span class="p">[</span><span class="s1">&#39;Error&#39;</span><span class="p">][</span><span class="s1">&#39;Code&#39;</span><span class="p">]</span> <span class="o">==</span> <span class="s1">&#39;InvalidRequestException&#39;</span><span class="p">:</span>
+            <span class="c1"># You provided a parameter value that is not valid for the current</span>
+            <span class="c1"># state of the resource.</span>
+            <span class="c1"># Deal with the exception here, and/or rethrow at your discretion.</span>
+            <span class="k">raise</span> <span class="n">e</span>
+        <span class="k">elif</span> <span class="n">e</span><span class="o">.</span><span class="n">response</span><span class="p">[</span><span class="s1">&#39;Error&#39;</span><span class="p">][</span><span class="s1">&#39;Code&#39;</span><span class="p">]</span> <span class="o">==</span> <span class="s1">&#39;ResourceNotFoundException&#39;</span><span class="p">:</span>
+            <span class="c1"># We can&#39;t find the resource that you asked for.</span>
+            <span class="c1"># Deal with the exception here, and/or rethrow at your discretion.</span>
+            <span class="k">raise</span> <span class="n">e</span>
     <span class="k">else</span><span class="p">:</span>
-        <span class="k">for</span> <span class="n">folder_id</span> <span class="ow">in</span> <span class="n">folder_map</span><span class="p">:</span>
-            <span class="k">try</span><span class="p">:</span>
-                <span class="n">folder</span> <span class="o">=</span> <span class="n">smartsheet_client</span><span class="o">.</span><span class="n">Folders</span><span class="o">.</span><span class="n">get_folder</span><span class="p">(</span><span class="n">folder_id</span><span class="p">)</span>
-            <span class="k">except</span> <span class="n">smartsheet_client</span><span class="o">.</span><span class="n">exceptions</span><span class="o">.</span><span class="n">ApiError</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
-                <span class="n">logging</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">&quot;Error on API request.&quot;</span><span class="p">)</span>
-                <span class="n">logging</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">&quot;Status Code: &quot;</span> <span class="o">+</span> <span class="n">e</span><span class="o">.</span><span class="n">statusCode</span>
-                              <span class="o">+</span> <span class="s2">&quot; Reason: &quot;</span> <span class="o">+</span> <span class="n">e</span><span class="o">.</span><span class="n">Reason</span>
-                              <span class="o">+</span> <span class="s2">&quot; Message: &quot;</span> <span class="o">+</span> <span class="n">e</span><span class="o">.</span><span class="n">message</span><span class="p">())</span>
-                <span class="k">return</span>
-            <span class="k">else</span><span class="p">:</span>
-                <span class="n">logging</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">&quot;Importing SheetIDs from FolderID: &quot;</span>
-                              <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="n">folder_id</span><span class="p">)</span> <span class="o">+</span> <span class="s2">&quot; | Folder Name: &quot;</span>
-                              <span class="o">+</span> <span class="n">folder</span><span class="o">.</span><span class="n">name</span><span class="p">)</span>
-                <span class="k">for</span> <span class="n">sheet</span> <span class="ow">in</span> <span class="n">folder</span><span class="o">.</span><span class="n">sheets</span><span class="p">:</span>
-                    <span class="n">sheet_id</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">sheet</span><span class="o">.</span><span class="n">id</span><span class="p">)</span>
-                    <span class="n">folder_sheet_map</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">sheet_id</span><span class="p">)</span>
-        <span class="n">logging</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;Loaded &quot;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">folder_sheet_map</span><span class="p">))</span>
-                     <span class="o">+</span> <span class="s2">&quot; sheets from &quot;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">folder_map</span><span class="p">))</span> <span class="o">+</span> <span class="s2">&quot; folders.&quot;</span><span class="p">)</span>
-    <span class="k">return</span> <span class="n">folder_sheet_map</span>
+        <span class="c1"># Decrypts secret using the associated KMS CMK.</span>
+        <span class="c1"># Depending on whether the secret is a string or binary, one of these</span>
+        <span class="c1"># fields will be populated.</span>
+        <span class="k">if</span> <span class="s1">&#39;SecretString&#39;</span> <span class="ow">in</span> <span class="n">get_secret_value_response</span><span class="p">:</span>
+            <span class="n">secret</span> <span class="o">=</span> <span class="n">get_secret_value_response</span><span class="p">[</span><span class="s1">&#39;SecretString&#39;</span><span class="p">]</span>
+
+            <span class="n">api_key</span> <span class="o">=</span> <span class="n">json</span><span class="o">.</span><span class="n">loads</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">secret</span><span class="p">))</span>
+            <span class="n">api_key</span> <span class="o">=</span> <span class="n">json_extract</span><span class="p">(</span><span class="n">api_key</span><span class="p">,</span> <span class="s2">&quot;SMARTSHEET_ACCESS_TOKEN&quot;</span><span class="p">)</span>
+            <span class="n">api_key</span> <span class="o">=</span> <span class="s1">&#39;&#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="nb">map</span><span class="p">(</span><span class="nb">str</span><span class="p">,</span> <span class="n">api_key</span><span class="p">))</span>
+            <span class="k">return</span> <span class="n">api_key</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">decoded_binary_secret</span> <span class="o">=</span> <span class="n">base64</span><span class="o">.</span><span class="n">b64decode</span><span class="p">(</span>
+                <span class="n">get_secret_value_response</span><span class="p">[</span><span class="s1">&#39;SecretBinary&#39;</span><span class="p">])</span>
+            <span class="k">return</span> <span class="n">decoded_binary_secret</span>
 
 
-<span class="k">def</span> <span class="nf">get_ws_sheet_map</span><span class="p">(</span><span class="n">workspace_id</span><span class="p">,</span> <span class="n">smartsheet_client</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;Gets all Sheet IDs from the root workspace, not located in a folder.</span>
+<span class="k">def</span> <span class="nf">get_secret_name</span><span class="p">(</span><span class="n">env</span><span class="p">):</span>
+    <span class="k">for</span> <span class="n">e</span> <span class="ow">in</span> <span class="n">env</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">e</span> <span class="ow">in</span> <span class="p">(</span><span class="s2">&quot;-s&quot;</span><span class="p">,</span> <span class="s2">&quot;--staging&quot;</span><span class="p">,</span> <span class="s2">&quot;-staging&quot;</span><span class="p">):</span>
+            <span class="n">secret_name</span> <span class="o">=</span> <span class="s2">&quot;staging/smartsheet-data-sync/svc-api-token&quot;</span>
+            <span class="k">return</span><span class="p">(</span><span class="n">secret_name</span><span class="p">)</span>
+        <span class="k">elif</span> <span class="n">e</span> <span class="ow">in</span> <span class="p">(</span><span class="s2">&quot;-p&quot;</span><span class="p">,</span> <span class="s2">&quot;--prod&quot;</span><span class="p">,</span> <span class="s2">&quot;-prod&quot;</span><span class="p">):</span>
+            <span class="n">secret_name</span> <span class="o">=</span> <span class="s2">&quot;prod/smartsheet-data-sync/svc-api-token&quot;</span>
+            <span class="k">return</span><span class="p">(</span><span class="n">secret_name</span><span class="p">)</span>
+        <span class="k">elif</span> <span class="n">e</span> <span class="ow">in</span> <span class="p">(</span><span class="s2">&quot;-d&quot;</span><span class="p">,</span> <span class="s2">&quot;--debug&quot;</span><span class="p">,</span> <span class="s2">&quot;-debug&quot;</span><span class="p">):</span>
+            <span class="n">secret_name</span> <span class="o">=</span> <span class="s2">&quot;staging/smartsheet-data-sync/svc-api-token&quot;</span>
+            <span class="k">return</span><span class="p">(</span><span class="n">secret_name</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">logging</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="s2">&quot;Failed to set API Key from AWS Secrets&quot;</span><span class="p">)</span>
+            <span class="n">secret_name</span> <span class="o">=</span> <span class="s2">&quot;&quot;</span>
 
-<span class="sd">    Args:</span>
-<span class="sd">        workspace_id (str): The ID or the workspace</span>
-<span class="sd">        smartsheet_client (Object): The Smartsheet client to interact</span>
-<span class="sd">                                    with the API</span>
-
-<span class="sd">    Returns:</span>
-<span class="sd">        list: A list of all sheet IDs in the root workspace</span>
-<span class="sd">    &quot;&quot;&quot;</span>
-    <span class="n">ws_sheet_map</span> <span class="o">=</span> <span class="p">[]</span>
-    <span class="n">workspace</span> <span class="o">=</span> <span class="n">smartsheet_client</span><span class="o">.</span><span class="n">Workspaces</span><span class="o">.</span><span class="n">get_workspace</span><span class="p">(</span><span class="n">workspace_id</span><span class="p">)</span>
-    <span class="n">logging</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;Importing Sheet IDs from WorkspaceID: &quot;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="n">workspace_id</span><span class="p">)</span>
-                 <span class="o">+</span> <span class="s2">&quot; | Workspace Name: &quot;</span> <span class="o">+</span> <span class="n">workspace</span><span class="o">.</span><span class="n">name</span><span class="p">)</span>
-    <span class="k">if</span> <span class="n">workspace</span><span class="o">.</span><span class="n">sheets</span><span class="p">:</span>
-        <span class="k">for</span> <span class="n">sheet</span> <span class="ow">in</span> <span class="n">workspace</span><span class="o">.</span><span class="n">sheets</span><span class="p">:</span>
-            <span class="n">sheet_id</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">sheet</span><span class="o">.</span><span class="n">id</span><span class="p">)</span>
-            <span class="n">ws_sheet_map</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">sheet_id</span><span class="p">)</span>
-        <span class="n">logging</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;Loaded &quot;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">ws_sheet_map</span><span class="p">))</span>
-                     <span class="o">+</span> <span class="s2">&quot; sheets from &quot;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="n">workspace_id</span><span class="p">)</span>
-                     <span class="o">+</span> <span class="s2">&quot; | Workspace Name: &quot;</span> <span class="o">+</span> <span class="n">workspace</span><span class="o">.</span><span class="n">name</span><span class="p">)</span>
-        <span class="k">return</span> <span class="n">ws_sheet_map</span>
-    <span class="k">else</span><span class="p">:</span>
-        <span class="n">logging</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">&quot;No sheets found in workspace.&quot;</span><span class="p">)</span>
-        <span class="k">return</span> <span class="kc">None</span>
-
-
-<span class="k">def</span> <span class="nf">get_subfolder_map</span><span class="p">(</span><span class="n">folder_ids</span><span class="p">,</span> <span class="n">smartsheet_client</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;Loops through folder IDs and finds any subfolders, and</span>
-<span class="sd">       appends the new folder ID to the list, if found</span>
-
-<span class="sd">    Args:</span>
-<span class="sd">        folder_ids (list): The List of folder IDs to parse through</span>
-<span class="sd">        smartsheet_client (Object): The Smartsheet client to interact</span>
-<span class="sd">                                    with the API</span>
-
-<span class="sd">    Returns:</span>
-<span class="sd">        list: A flat list of all folder IDs located within other</span>
-<span class="sd">              folders.</span>
-<span class="sd">    &quot;&quot;&quot;</span>
-    <span class="n">subfolder_map</span> <span class="o">=</span> <span class="p">[]</span>
-    <span class="k">if</span> <span class="ow">not</span> <span class="n">folder_ids</span><span class="p">:</span>
-        <span class="n">logging</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">&quot;Sub-folder map is empty. Skipping.&quot;</span><span class="p">)</span>
-        <span class="k">return</span> <span class="kc">None</span>
-    <span class="k">else</span><span class="p">:</span>
-        <span class="k">for</span> <span class="n">folder</span> <span class="ow">in</span> <span class="n">folder_ids</span><span class="p">:</span>
-            <span class="k">try</span><span class="p">:</span>
-                <span class="n">subfolders</span> <span class="o">=</span> <span class="n">smartsheet_client</span><span class="o">.</span>\
-                    <span class="n">Folders</span><span class="o">.</span><span class="n">list_folders</span><span class="p">(</span><span class="n">folder</span><span class="p">,</span>
-                                         <span class="n">include_all</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
-            <span class="k">except</span> <span class="n">smartsheet_client</span><span class="o">.</span><span class="n">exceptions</span><span class="o">.</span><span class="n">ApiError</span><span class="p">:</span>
-                <span class="n">logging</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">&quot;Subfolder data is None&quot;</span><span class="p">)</span>
-                <span class="n">subfolder_map</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">folder</span><span class="p">)</span>
-            <span class="k">else</span><span class="p">:</span>
-                <span class="k">for</span> <span class="n">subfolder</span> <span class="ow">in</span> <span class="n">subfolders</span><span class="o">.</span><span class="n">data</span><span class="p">:</span>
-                    <span class="n">subfolder_map</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">subfolder</span><span class="o">.</span><span class="n">id</span><span class="p">)</span>
-                    <span class="n">msg</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="s2">&quot;Appended Folder ID: </span><span class="si">{}</span><span class="s2"> | Folder Name: </span><span class="si">{}</span><span class="s2"> to &quot;</span>
-                              <span class="s2">&quot;subfolder map.&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">subfolder</span><span class="o">.</span><span class="n">id</span><span class="p">,</span>
-                                                       <span class="n">subfolder</span><span class="o">.</span><span class="n">name</span><span class="p">)</span>
-                    <span class="n">logging</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
-    <span class="k">return</span> <span class="n">subfolder_map</span>
+    <span class="k">return</span> <span class="n">secret_name</span>
 </pre></div>
 
         </details>
 
             </section>
+                <section id="refresh_source_sheets">
+                            <div class="attr function"><a class="headerlink" href="#refresh_source_sheets">#&nbsp;&nbsp</a>
+
+        
+            <span class="def">def</span>
+            <span class="name">refresh_source_sheets</span><span class="signature">(smartsheet_client, sheet_ids, minutes=0)</span>:
+    </div>
+
+                <details>
+            <summary>View Source</summary>
+            <div class="codehilite"><pre><span></span><span class="k">def</span> <span class="nf">refresh_source_sheets</span><span class="p">(</span><span class="n">smartsheet_client</span><span class="p">,</span> <span class="n">sheet_ids</span><span class="p">,</span> <span class="n">minutes</span><span class="o">=</span><span class="mi">0</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Creates a dict of source sheets. If minutes is defined, only gathers </span>
+<span class="sd">       sheets modified since the minutes value. Otherwise pulls all sheets</span>
+<span class="sd">       from the workspaces.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        smartsheet_client (client): Allows interaction with the Smartsheet API</span>
+<span class="sd">        sheet_ids (list): The list of Smartsheet sheet IDs to parse</span>
+<span class="sd">        minutes (int, optional): Number of minutes into the past that the API</span>
+<span class="sd">                                 should pull sheet and row data, if greater </span>
+<span class="sd">                                 than 0. Defaults to 0.</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        source_sheets (list): The list of sheets, including row data for rows </span>
+<span class="sd">                              modified since the minutes value, if greater </span>
+<span class="sd">                              than 0</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">source_sheets</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="k">if</span> <span class="n">minutes</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+        <span class="n">_</span><span class="p">,</span> <span class="n">modified_since</span> <span class="o">=</span> <span class="n">get_timestamp</span><span class="p">(</span><span class="n">minutes</span><span class="p">)</span>
+        <span class="k">for</span> <span class="n">sheet_id</span> <span class="ow">in</span> <span class="n">sheet_ids</span><span class="p">:</span>
+            <span class="c1"># Query the Smartsheet API for the sheet details</span>
+            <span class="n">sheet</span> <span class="o">=</span> <span class="n">smartsheet_client</span><span class="o">.</span>\
+                <span class="n">Sheets</span><span class="o">.</span><span class="n">get_sheet</span><span class="p">(</span>
+                    <span class="n">sheet_id</span><span class="p">,</span> <span class="n">rows_modified_since</span><span class="o">=</span><span class="n">modified_since</span><span class="p">)</span>
+            <span class="n">source_sheets</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">sheet</span><span class="p">)</span>
+            <span class="n">logging</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">&quot;Loading Sheet ID: </span><span class="si">{}</span><span class="s2"> | &quot;</span>
+                          <span class="s2">&quot;Sheet Name: </span><span class="si">{}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">sheet</span><span class="o">.</span><span class="n">id</span><span class="p">,</span> <span class="n">sheet</span><span class="o">.</span><span class="n">name</span><span class="p">))</span>
+    <span class="k">elif</span> <span class="n">minutes</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+        <span class="k">for</span> <span class="n">sheet_id</span> <span class="ow">in</span> <span class="n">sheet_ids</span><span class="p">:</span>
+            <span class="c1"># Query the Smartsheet API for the sheet details</span>
+            <span class="n">sheet</span> <span class="o">=</span> <span class="n">smartsheet_client</span><span class="o">.</span>\
+                <span class="n">Sheets</span><span class="o">.</span><span class="n">get_sheet</span><span class="p">(</span><span class="n">sheet_id</span><span class="p">)</span>
+            <span class="n">source_sheets</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">sheet</span><span class="p">)</span>
+            <span class="n">logging</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">&quot;Loading Sheet ID: </span><span class="si">{}</span><span class="s2"> | &quot;</span>
+                          <span class="s2">&quot;Sheet Name: </span><span class="si">{}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">sheet</span><span class="o">.</span><span class="n">id</span><span class="p">,</span> <span class="n">sheet</span><span class="o">.</span><span class="n">name</span><span class="p">))</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">msg</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="s2">&quot;Invalid value for minutes. Value was </span><span class="si">{}</span><span class="s2">&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">minutes</span><span class="p">)</span>
+        <span class="n">logging</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">source_sheets</span>
+</pre></div>
+
+        </details>
+
+            <div class="docstring"><p>Creates a dict of source sheets. If minutes is defined, only gathers 
+   sheets modified since the minutes value. Otherwise pulls all sheets
+   from the workspaces.</p>
+
+<h6 id="args">Args</h6>
+
+<ul>
+<li><strong>smartsheet_client (client):</strong>  Allows interaction with the Smartsheet API</li>
+<li><strong>sheet_ids (list):</strong>  The list of Smartsheet sheet IDs to parse</li>
+<li><strong>minutes (int, optional):</strong>  Number of minutes into the past that the API
+should pull sheet and row data, if greater 
+than 0. Defaults to 0.</li>
+</ul>
+
+<h6 id="returns">Returns</h6>
+
+<blockquote>
+  <p>source_sheets (list): The list of sheets, including row data for rows 
+                        modified since the minutes value, if greater 
+                        than 0</p>
+</blockquote>
+</div>
+
+
+                </section>
                 <section id="get_all_row_data">
                             <div class="attr function"><a class="headerlink" href="#get_all_row_data">#&nbsp;&nbsp</a>
 
         
             <span class="def">def</span>
-            <span class="name">get_all_row_data</span><span class="signature">(source_sheets, columns, smartsheet_client)</span>:
+            <span class="name">get_all_row_data</span><span class="signature">(source_sheets, columns, minutes)</span>:
     </div>
 
                 <details>
             <summary>View Source</summary>
-            <div class="codehilite"><pre><span></span><span class="k">def</span> <span class="nf">get_all_row_data</span><span class="p">(</span><span class="n">source_sheets</span><span class="p">,</span> <span class="n">columns</span><span class="p">,</span> <span class="n">smartsheet_client</span><span class="p">):</span>
+            <div class="codehilite"><pre><span></span><span class="k">def</span> <span class="nf">get_all_row_data</span><span class="p">(</span><span class="n">source_sheets</span><span class="p">,</span> <span class="n">columns</span><span class="p">,</span> <span class="n">minutes</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;Parses through all source sheets and gets specific data from the</span>
 <span class="sd">       columns provided.</span>
 
 <span class="sd">    Args:</span>
 <span class="sd">        source_sheets (list): A list of Sheet objects to parse</span>
 <span class="sd">        columns (list): A list of column names to extract data from.</span>
-<span class="sd">        smartsheet_client (Object): The Smartsheeet client, required for</span>
-<span class="sd">                                    reading and writing to the Smartsheet API</span>
+<span class="sd">        minutes (int): The number of minutes to look back when collecting</span>
+<span class="sd">                       row data.</span>
 
 <span class="sd">    Returns:</span>
-<span class="sd">        dict: Returns a dict in the format of</span>
-<span class="sd">              7208979009955716-3683235938232196-7010994181433220-202105112138550000,</span>
-<span class="sd">              {</span>
-<span class="sd">                  &quot;UUID&quot;: &quot;7208979009955716-3683235938232196-7010994181433220-</span>
-<span class="sd">                           202105112138550000&quot;,  # type: str</span>
-<span class="sd">                  &quot;Tasks&quot;: &quot;Retrospective&quot;, # type: str</span>
-<span class="sd">                  &quot;Description&quot;: None, # type: str</span>
-<span class="sd">                  &quot;Status&quot;: None, # type: str</span>
-<span class="sd">                  &quot;Assigned To&quot;: None, # type: str</span>
-<span class="sd">                  &quot;Jira Ticket&quot;: None, # type: str</span>
-<span class="sd">                  &quot;Duration&quot;: None, # type: str</span>
-<span class="sd">                  &quot;Start&quot;: None, # type: str</span>
-<span class="sd">                  &quot;Finish&quot;: None, # type: str</span>
-<span class="sd">                  &quot;Predecessors&quot;: &quot;38FS +1w&quot;, # type: str</span>
-<span class="sd">                  &quot;Summary&quot;: &quot;False&quot; # type: str</span>
-<span class="sd">              }</span>
+<span class="sd">        dict: Returns a dict of UUIDs and the row values</span>
+<span class="sd">        none: There is no row data in any source sheet.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
+    <span class="c1"># TODO: Write a test to validated the dictionary structure</span>
+    <span class="c1"># 7208979009955716-3683235938232196-7010994181433220-202105112138550000,</span>
+    <span class="c1"># {</span>
+    <span class="c1">#   &quot;UUID&quot;: &quot;7208979009955716-3683235938232196-7010994181433220-</span>
+    <span class="c1">#            202105112138550000&quot;,  # type: str</span>
+    <span class="c1">#   &quot;Tasks&quot;: &quot;Retrospective&quot;, # type: str</span>
+    <span class="c1">#   &quot;Description&quot;: None, # type: str</span>
+    <span class="c1">#   &quot;Status&quot;: None, # type: str</span>
+    <span class="c1">#   &quot;Assigned To&quot;: None, # type: str</span>
+    <span class="c1">#   &quot;Jira Ticket&quot;: None, # type: str</span>
+    <span class="c1">#   &quot;Duration&quot;: None, # type: str</span>
+    <span class="c1">#   &quot;Start&quot;: None, # type: str</span>
+    <span class="c1">#   &quot;Finish&quot;: None, # type: str</span>
+    <span class="c1">#   &quot;Predecessors&quot;: &quot;38FS +1w&quot;, # type: str</span>
+    <span class="c1">#   &quot;Summary&quot;: &quot;False&quot; # type: str</span>
+    <span class="c1">#       }</span>
     <span class="k">if</span> <span class="n">source_sheets</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
         <span class="k">raise</span> <span class="ne">ValueError</span>
     <span class="k">elif</span> <span class="n">columns</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
         <span class="k">raise</span> <span class="ne">ValueError</span>
-    <span class="c1"># Create the empty list we&#39;ll pass back</span>
+
+    <span class="c1"># Create the empty dict we&#39;ll pass back</span>
     <span class="n">all_row_data</span> <span class="o">=</span> <span class="p">{}</span>
+
+    <span class="n">modified_since</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="n">get_timestamp</span><span class="p">(</span><span class="n">minutes</span><span class="p">)</span>
+    <span class="n">modified_since</span> <span class="o">=</span> <span class="n">utc</span><span class="o">.</span><span class="n">localize</span><span class="p">(</span><span class="n">modified_since</span><span class="p">)</span>
+    <span class="n">modified_since</span> <span class="o">=</span> <span class="n">modified_since</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="n">tzinfo</span><span class="o">=</span><span class="n">utc</span><span class="p">)</span>
 
     <span class="k">for</span> <span class="n">sheet</span> <span class="ow">in</span> <span class="n">source_sheets</span><span class="p">:</span>
         <span class="c1"># Iterate through the columns and map the column ID to the column name</span>
@@ -558,6 +735,12 @@
                 <span class="n">row</span><span class="p">,</span> <span class="n">summary_col</span><span class="p">,</span> <span class="n">col_map</span><span class="p">)</span>
             <span class="n">uuid_cell</span> <span class="o">=</span> <span class="n">get_cell_data</span><span class="p">(</span><span class="n">row</span><span class="p">,</span> <span class="n">uuid_col</span><span class="p">,</span> <span class="n">col_map</span><span class="p">)</span>
 
+            <span class="k">if</span> <span class="n">uuid_cell</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="n">logging</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">&quot;Sheet ID </span><span class="si">{}</span><span class="s2"> | Sheet Name </span><span class="si">{}</span><span class="s2"> &quot;</span>
+                              <span class="s2">&quot;doesn&#39;t have UUID column. &quot;</span>
+                              <span class="s2">&quot;Skipping sheet.&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">sheet</span><span class="o">.</span><span class="n">id</span><span class="p">,</span> <span class="n">sheet</span><span class="o">.</span><span class="n">name</span><span class="p">))</span>
+                <span class="k">break</span>
+
             <span class="k">if</span> <span class="n">summary_cell</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
                 <span class="n">logging</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">&quot;Summary row is </span><span class="si">{}</span><span class="s2">. Continuing to next &quot;</span>
                               <span class="s2">&quot;row.&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">summary_cell</span><span class="p">))</span>
@@ -567,14 +750,26 @@
                               <span class="s2">&quot;row.&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">summary_cell</span><span class="p">))</span>
                 <span class="k">continue</span>
 
-            <span class="k">if</span> <span class="n">uuid_cell</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
-                <span class="n">logging</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">&quot;Sheet ID </span><span class="si">{}</span><span class="s2"> | Sheet Name </span><span class="si">{}</span><span class="s2"> &quot;</span>
-                              <span class="s2">&quot;doesn&#39;t have UUID column. &quot;</span>
-                              <span class="s2">&quot;Skipping sheet.&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">sheet</span><span class="o">.</span><span class="n">id</span><span class="p">,</span> <span class="n">sheet</span><span class="o">.</span><span class="n">name</span><span class="p">))</span>
-                <span class="k">break</span>
+            <span class="n">row_modified</span> <span class="o">=</span> <span class="n">row</span><span class="o">.</span><span class="n">modified_at</span>
 
-            <span class="n">row_data</span> <span class="o">=</span> <span class="p">{}</span>
-            <span class="n">all_row_data</span><span class="p">[</span><span class="n">uuid_cell</span><span class="o">.</span><span class="n">value</span><span class="p">]</span> <span class="o">=</span> <span class="n">row_data</span>
+            <span class="c1"># If the row was modified in the last N minutes, add</span>
+            <span class="c1"># it to the index. Otherwise, skip it.</span>
+            <span class="k">if</span> <span class="n">row_modified</span> <span class="o">&gt;=</span> <span class="n">modified_since</span><span class="p">:</span>
+                <span class="n">msg</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="s2">&quot;True | Cutoff: </span><span class="si">{}</span><span class="s2"> | Row Modified Date: &quot;</span>
+                          <span class="s2">&quot;</span><span class="si">{}</span><span class="s2"> | Row Number: </span><span class="si">{}</span><span class="s2"> |Sheet Name: </span><span class="si">{}</span><span class="s2">&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>
+                    <span class="n">modified_since</span><span class="p">,</span> <span class="n">row_modified</span><span class="p">,</span> <span class="n">row</span><span class="o">.</span><span class="n">row_number</span><span class="p">,</span>
+                    <span class="n">sheet</span><span class="o">.</span><span class="n">name</span><span class="p">)</span>
+                <span class="n">logging</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
+                <span class="n">row_data</span> <span class="o">=</span> <span class="p">{}</span>
+                <span class="n">all_row_data</span><span class="p">[</span><span class="n">uuid_cell</span><span class="o">.</span><span class="n">value</span><span class="p">]</span> <span class="o">=</span> <span class="n">row_data</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">msg</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="s2">&quot;False | Cutoff: </span><span class="si">{}</span><span class="s2"> | Row Modified Date: &quot;</span>
+                          <span class="s2">&quot;</span><span class="si">{}</span><span class="s2"> | Row Number: </span><span class="si">{}</span><span class="s2"> |Sheet Name: </span><span class="si">{}</span><span class="s2">&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>
+                    <span class="n">modified_since</span><span class="p">,</span> <span class="n">row_modified</span><span class="p">,</span> <span class="n">row</span><span class="o">.</span><span class="n">row_number</span><span class="p">,</span>
+                    <span class="n">sheet</span><span class="o">.</span><span class="n">name</span><span class="p">)</span>
+                <span class="n">logging</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
+                <span class="k">continue</span>
+
             <span class="c1"># Iterate through each column passed in.</span>
             <span class="k">for</span> <span class="n">col_name</span> <span class="ow">in</span> <span class="n">columns</span><span class="p">:</span>
                 <span class="k">if</span> <span class="n">col_name</span> <span class="ow">in</span> <span class="n">col_map</span><span class="o">.</span><span class="n">keys</span><span class="p">():</span>
@@ -618,29 +813,15 @@
 <ul>
 <li><strong>source_sheets (list):</strong>  A list of Sheet objects to parse</li>
 <li><strong>columns (list):</strong>  A list of column names to extract data from.</li>
-<li><strong>smartsheet_client (Object):</strong>  The Smartsheeet client, required for
-reading and writing to the Smartsheet API</li>
+<li><strong>minutes (int):</strong>  The number of minutes to look back when collecting
+row data.</li>
 </ul>
 
 <h6 id="returns">Returns</h6>
 
 <blockquote>
-  <p>dict: Returns a dict in the format of
-        7208979009955716-3683235938232196-7010994181433220-202105112138550000,
-        {
-            "UUID": "7208979009955716-3683235938232196-7010994181433220-
-                     202105112138550000",  # type: str
-            "Tasks": "Retrospective", # type: str
-            "Description": None, # type: str
-            "Status": None, # type: str
-            "Assigned To": None, # type: str
-            "Jira Ticket": None, # type: str
-            "Duration": None, # type: str
-            "Start": None, # type: str
-            "Finish": None, # type: str
-            "Predecessors": "38FS +1w", # type: str
-            "Summary": "False" # type: str
-        }</p>
+  <p>dict: Returns a dict of UUIDs and the row values
+  none: There is no row data in any source sheet.</p>
 </blockquote>
 </div>
 
@@ -651,21 +832,21 @@ reading and writing to the Smartsheet API</li>
 
         
             <span class="def">def</span>
-            <span class="name">get_blank_uuids</span><span class="signature">(source_sheets, smartsheet_client)</span>:
+            <span class="name">get_blank_uuids</span><span class="signature">(source_sheets)</span>:
     </div>
 
                 <details>
             <summary>View Source</summary>
-            <div class="codehilite"><pre><span></span><span class="k">def</span> <span class="nf">get_blank_uuids</span><span class="p">(</span><span class="n">source_sheets</span><span class="p">,</span> <span class="n">smartsheet_client</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;Creates nested dicts with all rows that require a new UUID to</span>
-<span class="sd">       be generated.</span>
+            <div class="codehilite"><pre><span></span><span class="k">def</span> <span class="nf">get_blank_uuids</span><span class="p">(</span><span class="n">source_sheets</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;For all rows that need a UUID generated, creates nested dicts with the</span>
+<span class="sd">       necessary data to generate the UUID.</span>
 
 <span class="sd">    Args:</span>
 <span class="sd">        source_sheets (list): A list of Sheet objects</span>
-<span class="sd">        smartsheet_client (Object): The Smartsheet client to call the API</span>
 
 <span class="sd">    Returns:</span>
 <span class="sd">        dict: A nested set of dictionaries</span>
+<span class="sd">        none: There are no sheets to update.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="c1"># TODO: Write a test to validate the dict.</span>
     <span class="c1"># 7637702645442436,  (Sheet ID, int)</span>
@@ -682,8 +863,10 @@ reading and writing to the Smartsheet API</li>
     <span class="k">if</span> <span class="n">source_sheets</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
         <span class="k">raise</span> <span class="ne">ValueError</span>
 
+    <span class="c1"># Create an empty dict of sheets to update</span>
     <span class="n">sheets_to_update</span> <span class="o">=</span> <span class="p">{}</span>
 
+    <span class="c1"># Iterate through each sheet in the source_sheets dict</span>
     <span class="k">for</span> <span class="n">sheet</span> <span class="ow">in</span> <span class="n">source_sheets</span><span class="p">:</span>
         <span class="n">logging</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">&quot;Loaded &quot;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">sheet</span><span class="o">.</span><span class="n">rows</span><span class="p">))</span> <span class="o">+</span> <span class="s2">&quot; rows from sheet: &quot;</span>
                       <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="n">sheet</span><span class="o">.</span><span class="n">id</span><span class="p">)</span> <span class="o">+</span> <span class="s2">&quot; | Sheet Name: &quot;</span> <span class="o">+</span> <span class="n">sheet</span><span class="o">.</span><span class="n">name</span><span class="p">)</span>
@@ -696,30 +879,52 @@ reading and writing to the Smartsheet API</li>
                           <span class="s2">&quot;Skipping sheet. (KeyError)&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">sheet</span><span class="o">.</span><span class="n">id</span><span class="p">,</span>
                                                               <span class="n">sheet</span><span class="o">.</span><span class="n">name</span><span class="p">))</span>
             <span class="k">continue</span>
+        <span class="c1"># Create an empty dict for rows to update inside the sheet</span>
         <span class="n">rows_to_update</span> <span class="o">=</span> <span class="p">{}</span>
+
+        <span class="c1"># Iterate through each row in the sheet</span>
         <span class="k">for</span> <span class="n">row</span> <span class="ow">in</span> <span class="n">sheet</span><span class="o">.</span><span class="n">rows</span><span class="p">:</span>
+            <span class="c1"># Get the existing UUID value and the timestamp when the row was</span>
+            <span class="c1"># created.</span>
             <span class="n">uuid_value</span> <span class="o">=</span> <span class="n">get_cell_value</span><span class="p">(</span><span class="n">row</span><span class="p">,</span> <span class="n">uuid_col</span><span class="p">,</span> <span class="n">col_map</span><span class="p">)</span>
             <span class="n">created_at</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">row</span><span class="o">.</span><span class="n">created_at</span><span class="p">)</span>
+
+            <span class="c1"># Strip out all characters except the numbers in the timestamp.</span>
             <span class="n">created_at</span> <span class="o">=</span> <span class="n">created_at</span><span class="o">.</span><span class="n">translate</span><span class="p">(</span>
                 <span class="p">{</span><span class="nb">ord</span><span class="p">(</span><span class="n">i</span><span class="p">):</span> <span class="kc">None</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="s1">&#39;+-T:Z &#39;</span><span class="p">})</span>
+
+            <span class="c1"># Format the UUID as sheet_id, row_id, column_id, and modified</span>
+            <span class="c1"># timestamp, separated by dashes.</span>
             <span class="n">uuid</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="s2">&quot;</span><span class="si">{}</span><span class="s2">-</span><span class="si">{}</span><span class="s2">-</span><span class="si">{}</span><span class="s2">-</span><span class="si">{}</span><span class="s2">&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">sheet</span><span class="o">.</span><span class="n">id</span><span class="p">,</span>
                                              <span class="n">row</span><span class="o">.</span><span class="n">id</span><span class="p">,</span> <span class="n">column_id</span><span class="p">,</span> <span class="n">created_at</span><span class="p">)</span>
+
+            <span class="c1"># Check if the UUID already exists. If there&#39;s a match, skip</span>
+            <span class="c1"># updating the cell / row.</span>
             <span class="k">if</span> <span class="n">uuid_value</span> <span class="o">==</span> <span class="n">uuid</span><span class="p">:</span>
-                <span class="n">msg</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="s2">&quot;Cell at Column Name: </span><span class="si">{}</span><span class="s2"> and Row ID: &quot;</span>
-                          <span class="s2">&quot;</span><span class="si">{}</span><span class="s2"> matches existing UUID. Cell skipped.&quot;</span>
-                          <span class="s2">&quot;&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">uuid_col</span><span class="p">,</span> <span class="n">row</span><span class="o">.</span><span class="n">id</span><span class="p">)</span>
+                <span class="n">msg</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="s2">&quot;Cell at Column Name: </span><span class="si">{}</span><span class="s2"> | Row ID: </span><span class="si">{}</span><span class="s2"> | &quot;</span>
+                          <span class="s2">&quot;Row Number: </span><span class="si">{}</span><span class="s2">, </span><span class="si">{}</span><span class="s2"> matches existing UUID. &quot;</span>
+                          <span class="s2">&quot;Cell skipped.&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">uuid_col</span><span class="p">,</span> <span class="n">row</span><span class="o">.</span><span class="n">id</span><span class="p">,</span>
+                                                  <span class="n">row</span><span class="o">.</span><span class="n">row_number</span><span class="p">,</span> <span class="n">uuid</span><span class="p">)</span>
                 <span class="n">logging</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
             <span class="k">elif</span> <span class="n">uuid_value</span> <span class="o">!=</span> <span class="n">uuid</span><span class="p">:</span>
-                <span class="n">msg</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="s2">&quot;Cell at column name: </span><span class="si">{}</span><span class="s2"> and row ID: </span><span class="si">{}</span><span class="s2"> has an &quot;</span>
-                          <span class="s2">&quot;existing value of </span><span class="si">{}</span><span class="s2">. Tagging for update.&quot;</span>
-                          <span class="s2">&quot;</span><span class="si">{}</span><span class="s2">.&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">uuid_col</span><span class="p">,</span> <span class="n">row</span><span class="o">.</span><span class="n">id</span><span class="p">,</span> <span class="n">uuid_value</span><span class="p">,</span> <span class="n">uuid</span><span class="p">)</span>
+                <span class="n">msg</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="s2">&quot;Cell at Column Name: </span><span class="si">{}</span><span class="s2"> | Row ID: </span><span class="si">{}</span><span class="s2"> | &quot;</span>
+                          <span class="s2">&quot;Row Number: </span><span class="si">{}</span><span class="s2"> has an existing value of </span><span class="si">{}</span><span class="s2">. &quot;</span>
+                          <span class="s2">&quot;Tagging for update.&quot;</span>
+                          <span class="s2">&quot;</span><span class="si">{}</span><span class="s2">.&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">uuid_col</span><span class="p">,</span> <span class="n">row</span><span class="o">.</span><span class="n">id</span><span class="p">,</span> <span class="n">row</span><span class="o">.</span><span class="n">row_number</span><span class="p">,</span>
+                                        <span class="n">uuid_value</span><span class="p">,</span> <span class="n">uuid</span><span class="p">)</span>
                 <span class="n">logging</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
                 <span class="n">rows_to_update</span><span class="p">[</span><span class="n">row</span><span class="o">.</span><span class="n">id</span><span class="p">]</span> <span class="o">=</span> <span class="p">{</span>
                     <span class="s2">&quot;column_id&quot;</span><span class="p">:</span> <span class="n">col_map</span><span class="p">[</span><span class="n">uuid_col</span><span class="p">],</span> <span class="s2">&quot;uuid&quot;</span><span class="p">:</span> <span class="n">uuid</span><span class="p">}</span>
             <span class="k">else</span><span class="p">:</span>
                 <span class="n">msg</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="s2">&quot;There was an issue parsing rows in the sheet. &quot;</span>
-                          <span class="s2">&quot;Sheet ID: </span><span class="si">{}</span><span class="s2"> | Row Data: </span><span class="si">{}</span><span class="s2">&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">sheet</span><span class="o">.</span><span class="n">id</span><span class="p">,</span> <span class="n">row</span><span class="p">)</span>
+                          <span class="s2">&quot;Sheet ID: </span><span class="si">{}</span><span class="s2"> | Sheet Name: </span><span class="si">{}</span><span class="s2">&quot;</span>
+                          <span class="s2">&quot;&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">sheet</span><span class="o">.</span><span class="n">id</span><span class="p">,</span> <span class="n">sheet</span><span class="o">.</span><span class="n">name</span><span class="p">)</span>
                 <span class="n">logging</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
+                <span class="n">msg</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="s2">&quot;Dumping Row Data: </span><span class="si">{}</span><span class="s2">&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">row</span><span class="p">)</span>
+                <span class="n">logging</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
+
+        <span class="c1"># Collect all rows to update and parse them into a dict of sheets</span>
+        <span class="c1"># to update.</span>
         <span class="k">if</span> <span class="n">rows_to_update</span><span class="p">:</span>
             <span class="n">sheets_to_update</span><span class="p">[</span><span class="n">sheet</span><span class="o">.</span><span class="n">id</span><span class="p">]</span> <span class="o">=</span> <span class="p">{</span>
                 <span class="s2">&quot;sheet_name&quot;</span><span class="p">:</span> <span class="n">sheet</span><span class="o">.</span><span class="n">name</span><span class="p">,</span> <span class="s2">&quot;row_data&quot;</span><span class="p">:</span> <span class="n">rows_to_update</span><span class="p">}</span>
@@ -731,20 +936,20 @@ reading and writing to the Smartsheet API</li>
 
         </details>
 
-            <div class="docstring"><p>Creates nested dicts with all rows that require a new UUID to
-   be generated.</p>
+            <div class="docstring"><p>For all rows that need a UUID generated, creates nested dicts with the
+   necessary data to generate the UUID.</p>
 
 <h6 id="args">Args</h6>
 
 <ul>
 <li><strong>source_sheets (list):</strong>  A list of Sheet objects</li>
-<li><strong>smartsheet_client (Object):</strong>  The Smartsheet client to call the API</li>
 </ul>
 
 <h6 id="returns">Returns</h6>
 
 <blockquote>
-  <p>dict: A nested set of dictionaries</p>
+  <p>dict: A nested set of dictionaries
+  none: There are no sheets to update.</p>
 </blockquote>
 </div>
 
@@ -761,27 +966,41 @@ reading and writing to the Smartsheet API</li>
                 <details>
             <summary>View Source</summary>
             <div class="codehilite"><pre><span></span><span class="k">def</span> <span class="nf">load_jira_index</span><span class="p">(</span><span class="n">smartsheet_client</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;Helper function to create indexes on the Jira index rows. Pulls from</span>
-<span class="sd">       the API every time to get the most up-to-date version of the sheet</span>
-<span class="sd">       data.</span>
+    <span class="sd">&quot;&quot;&quot;Create indexes on the Jira index rows. Pulls from the Smartsheet API</span>
+<span class="sd">       every time to get the most up-to-date version of the sheet data.</span>
 
 <span class="sd">    Args:</span>
 <span class="sd">        smartsheet_client (Object): The Smartsheet client to query the API</span>
 
 <span class="sd">    Returns:</span>
+<span class="sd">        sheet: A Smartsheet Sheet object that includes all data for the Jira</span>
+<span class="sd">               Index Sheet</span>
+<span class="sd">        dict: A dictionary containing mapped column IDs to column names</span>
 <span class="sd">        dict: A dictionary containing the Jira ticket as the key and the</span>
 <span class="sd">              row ID as the value.</span>
+
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="n">jira_index_sheet</span> <span class="o">=</span> <span class="n">smartsheet_client</span><span class="o">.</span><span class="n">Sheets</span><span class="o">.</span><span class="n">get_sheet</span><span class="p">(</span><span class="n">jira_idx_sheet</span><span class="p">)</span>
+    <span class="n">msg</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="s2">&quot;</span><span class="si">{}</span><span class="s2"> rows loaded from sheet ID: </span><span class="si">{}</span><span class="s2"> | Sheet name: </span><span class="si">{}</span><span class="s2">&quot;</span>
+              <span class="s2">&quot;&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">jira_index_sheet</span><span class="o">.</span><span class="n">rows</span><span class="p">),</span> <span class="n">jira_index_sheet</span><span class="o">.</span><span class="n">id</span><span class="p">,</span>
+                         <span class="n">jira_index_sheet</span><span class="o">.</span><span class="n">name</span><span class="p">)</span>
+    <span class="n">logging</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
     <span class="n">jira_index_col_map</span> <span class="o">=</span> <span class="n">get_column_map</span><span class="p">(</span><span class="n">jira_index_sheet</span><span class="p">)</span>
+
+    <span class="c1"># Create a dict of rows where the values are lists.</span>
     <span class="n">jira_index_rows</span> <span class="o">=</span> <span class="n">defaultdict</span><span class="p">(</span><span class="nb">list</span><span class="p">)</span>
+
+    <span class="c1"># Iterate through the rows on the Index sheet. If there&#39;s a Jira ticket</span>
+    <span class="c1"># in the row, return it and its details.</span>
     <span class="k">for</span> <span class="n">row</span> <span class="ow">in</span> <span class="n">jira_index_sheet</span><span class="o">.</span><span class="n">rows</span><span class="p">:</span>
         <span class="n">jira_cell</span> <span class="o">=</span> <span class="n">get_cell_data</span><span class="p">(</span>
             <span class="n">row</span><span class="p">,</span> <span class="n">jira_col</span><span class="p">,</span> <span class="n">jira_index_col_map</span><span class="p">)</span>
         <span class="k">if</span> <span class="n">jira_cell</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
             <span class="n">logging</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">&quot;Jira cell doesn&#39;t exist. Skipping.&quot;</span><span class="p">)</span>
+            <span class="k">continue</span>
         <span class="k">elif</span> <span class="n">jira_cell</span><span class="o">.</span><span class="n">value</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
             <span class="n">logging</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">&quot;Jira value doesn&#39;t exist. Skipping.&quot;</span><span class="p">)</span>
+            <span class="k">continue</span>
         <span class="k">else</span><span class="p">:</span>
             <span class="n">jira_value</span> <span class="o">=</span> <span class="n">jira_cell</span><span class="o">.</span><span class="n">value</span>
             <span class="n">jira_index_rows</span><span class="p">[</span><span class="n">jira_value</span><span class="p">]</span> <span class="o">=</span> <span class="n">row</span><span class="o">.</span><span class="n">id</span>
@@ -790,9 +1009,8 @@ reading and writing to the Smartsheet API</li>
 
         </details>
 
-            <div class="docstring"><p>Helper function to create indexes on the Jira index rows. Pulls from
-   the API every time to get the most up-to-date version of the sheet
-   data.</p>
+            <div class="docstring"><p>Create indexes on the Jira index rows. Pulls from the Smartsheet API
+   every time to get the most up-to-date version of the sheet data.</p>
 
 <h6 id="args">Args</h6>
 
@@ -803,24 +1021,27 @@ reading and writing to the Smartsheet API</li>
 <h6 id="returns">Returns</h6>
 
 <blockquote>
-  <p>dict: A dictionary containing the Jira ticket as the key and the
+  <p>sheet: A Smartsheet Sheet object that includes all data for the Jira
+         Index Sheet
+  dict: A dictionary containing mapped column IDs to column names
+  dict: A dictionary containing the Jira ticket as the key and the
         row ID as the value.</p>
 </blockquote>
 </div>
 
 
                 </section>
-                <section id="get_sub_indexs">
-                            <div class="attr function"><a class="headerlink" href="#get_sub_indexs">#&nbsp;&nbsp</a>
+                <section id="get_sub_indexes">
+                            <div class="attr function"><a class="headerlink" href="#get_sub_indexes">#&nbsp;&nbsp</a>
 
         
             <span class="def">def</span>
-            <span class="name">get_sub_indexs</span><span class="signature">(project_data)</span>:
+            <span class="name">get_sub_indexes</span><span class="signature">(project_data)</span>:
     </div>
 
                 <details>
             <summary>View Source</summary>
-            <div class="codehilite"><pre><span></span><span class="k">def</span> <span class="nf">get_sub_indexs</span><span class="p">(</span><span class="n">project_data</span><span class="p">):</span>
+            <div class="codehilite"><pre><span></span><span class="k">def</span> <span class="nf">get_sub_indexes</span><span class="p">(</span><span class="n">project_data</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;Read all rows from the full project data index. If the Jira</span>
 <span class="sd">       column exists in the dict values, create two sub-indexes.</span>
 
@@ -830,8 +1051,9 @@ reading and writing to the Smartsheet API</li>
 
 <span class="sd">    Returns:</span>
 <span class="sd">        dict: jira_sub_index in the form of Jira Ticket: [UUID(s)] (list)</span>
-<span class="sd">              project_sub_index in the form of UUID: Jira Ticket (str)</span>
+<span class="sd">        dict: project_sub_index in the form of UUID: Jira Ticket (str)</span>
 <span class="sd">    &quot;&quot;&quot;</span>
+
     <span class="n">jira_sub_index</span> <span class="o">=</span> <span class="n">defaultdict</span><span class="p">(</span><span class="nb">list</span><span class="p">)</span>
     <span class="n">project_sub_index</span> <span class="o">=</span> <span class="n">defaultdict</span><span class="p">(</span><span class="nb">list</span><span class="p">)</span>
 
@@ -868,7 +1090,7 @@ pulled from the API.</li>
 
 <blockquote>
   <p>dict: jira_sub_index in the form of Jira Ticket: [UUID(s)] (list)
-        project_sub_index in the form of UUID: Jira Ticket (str)</p>
+  dict: project_sub_index in the form of UUID: Jira Ticket (str)</p>
 </blockquote>
 </div>
 
@@ -879,14 +1101,14 @@ pulled from the API.</li>
 
         
             <span class="def">def</span>
-            <span class="name">get_all_sheet_ids</span><span class="signature">(smartsheet_client)</span>:
+            <span class="name">get_all_sheet_ids</span><span class="signature">(smartsheet_client, minutes)</span>:
     </div>
 
                 <details>
             <summary>View Source</summary>
-            <div class="codehilite"><pre><span></span><span class="k">def</span> <span class="nf">get_all_sheet_ids</span><span class="p">(</span><span class="n">smartsheet_client</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;Gets all the sheet IDs from every sheet in every folder,</span>
-<span class="sd">       subfolder and workspace as defined in the workspace_id.</span>
+            <div class="codehilite"><pre><span></span><span class="k">def</span> <span class="nf">get_all_sheet_ids</span><span class="p">(</span><span class="n">smartsheet_client</span><span class="p">,</span> <span class="n">minutes</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Get all the sheet IDs from every sheet in every folder, subfolder and</span>
+<span class="sd">       workspace as defined in the workspace_id.</span>
 
 <span class="sd">    Args:</span>
 <span class="sd">        smartsheet_client (Object): The Smartsheet client to interact</span>
@@ -895,52 +1117,68 @@ pulled from the API.</li>
 <span class="sd">    Returns:</span>
 <span class="sd">        list: A list of all sheet IDs across every workspace</span>
 <span class="sd">    &quot;&quot;&quot;</span>
-    <span class="n">folder_map</span> <span class="o">=</span> <span class="p">[]</span>
-    <span class="n">sheet_ids</span> <span class="o">=</span> <span class="p">[]</span>
 
     <span class="c1"># Get the workspace Smartsheet object from the workspace_id</span>
     <span class="c1"># configured in our variables.</span>
-    <span class="k">for</span> <span class="n">ws</span> <span class="ow">in</span> <span class="n">workspace_id</span><span class="p">:</span>
-        <span class="n">workspace</span> <span class="o">=</span> <span class="n">smartsheet_client</span><span class="o">.</span><span class="n">Workspaces</span><span class="o">.</span><span class="n">get_workspace</span><span class="p">(</span><span class="n">ws</span><span class="p">)</span>
+    <span class="n">modified_since</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="n">get_timestamp</span><span class="p">(</span><span class="n">minutes</span><span class="p">)</span>
+    <span class="n">modified_since</span> <span class="o">=</span> <span class="n">utc</span><span class="o">.</span><span class="n">localize</span><span class="p">(</span><span class="n">modified_since</span><span class="p">)</span>
+    <span class="n">modified_since</span> <span class="o">=</span> <span class="n">modified_since</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="n">tzinfo</span><span class="o">=</span><span class="n">utc</span><span class="p">)</span>
+    <span class="n">sheet_ids</span> <span class="o">=</span> <span class="p">[]</span>
 
-        <span class="c1"># Get the top-level folders from the workspace. If the function</span>
-        <span class="c1"># returns any values, append it to the folder map. Skip if None.</span>
-        <span class="n">ws_folder_ids</span> <span class="o">=</span> <span class="n">get_ws_folder_map</span><span class="p">(</span><span class="n">workspace</span><span class="p">)</span>
-        <span class="k">if</span> <span class="n">ws_folder_ids</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
-            <span class="n">folder_map</span><span class="o">.</span><span class="n">extend</span><span class="p">(</span><span class="n">ws_folder_ids</span><span class="p">)</span>
+    <span class="k">for</span> <span class="n">ws_id</span> <span class="ow">in</span> <span class="n">workspace_id</span><span class="p">:</span>
+        <span class="n">workspace</span> <span class="o">=</span> <span class="n">smartsheet_client</span><span class="o">.</span><span class="n">Workspaces</span><span class="o">.</span><span class="n">get_workspace</span><span class="p">(</span>
+            <span class="n">ws_id</span><span class="p">,</span> <span class="n">load_all</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
 
-        <span class="c1"># Iterate through the top-level folders from the workspace.</span>
-        <span class="c1"># Find any folder IDs nested anywhere in the workspace. If the function</span>
-        <span class="c1"># returns any values, append it to the folder map. Skip if None.</span>
-        <span class="n">all_folder_ids</span> <span class="o">=</span> <span class="n">get_subfolder_map</span><span class="p">(</span><span class="n">ws_folder_ids</span><span class="p">,</span> <span class="n">smartsheet_client</span><span class="p">)</span>
-        <span class="k">if</span> <span class="n">all_folder_ids</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
-            <span class="n">folder_map</span><span class="o">.</span><span class="n">extend</span><span class="p">(</span><span class="n">all_folder_ids</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">workspace</span><span class="o">.</span><span class="n">folders</span><span class="p">:</span>
+            <span class="n">ws</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">workspace</span><span class="p">)</span>
+            <span class="n">ws_json</span> <span class="o">=</span> <span class="n">json</span><span class="o">.</span><span class="n">loads</span><span class="p">(</span><span class="n">ws</span><span class="p">)</span>
 
-        <span class="c1"># Iterate through the folder map, and the top-level workspace.</span>
-        <span class="c1"># Find all sheet IDs nested anywhere in the workspace. If the function</span>
-        <span class="c1"># returns any values, append it to the sheet map. Skip if None.</span>
-        <span class="n">folder_sheet_ids</span> <span class="o">=</span> <span class="n">get_folder_sheet_map</span><span class="p">(</span><span class="n">folder_map</span><span class="p">,</span> <span class="n">smartsheet_client</span><span class="p">)</span>
-        <span class="n">ws_sheet_ids</span> <span class="o">=</span> <span class="n">get_ws_sheet_map</span><span class="p">(</span><span class="n">ws</span><span class="p">,</span> <span class="n">smartsheet_client</span><span class="p">)</span>
-        <span class="k">if</span> <span class="n">folder_sheet_ids</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
-            <span class="n">sheet_ids</span><span class="o">.</span><span class="n">extend</span><span class="p">(</span><span class="n">folder_sheet_ids</span><span class="p">)</span>
-        <span class="k">if</span> <span class="n">ws_sheet_ids</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
-            <span class="n">sheet_ids</span><span class="o">.</span><span class="n">extend</span><span class="p">(</span><span class="n">ws_sheet_ids</span><span class="p">)</span>
+            <span class="k">for</span> <span class="n">subfolder</span> <span class="ow">in</span> <span class="n">ws_json</span><span class="p">[</span><span class="s1">&#39;folders&#39;</span><span class="p">]:</span>
+                <span class="k">try</span><span class="p">:</span>
+                    <span class="k">for</span> <span class="n">sheet</span> <span class="ow">in</span> <span class="n">subfolder</span><span class="p">[</span><span class="s1">&#39;sheets&#39;</span><span class="p">]:</span>
+                        <span class="n">modified_at</span> <span class="o">=</span> <span class="n">sheet</span><span class="p">[</span><span class="s1">&#39;modifiedAt&#39;</span><span class="p">]</span>
+                        <span class="n">head</span><span class="p">,</span> <span class="n">sep</span><span class="p">,</span> <span class="n">tail</span> <span class="o">=</span> <span class="n">modified_at</span><span class="o">.</span><span class="n">partition</span><span class="p">(</span><span class="s1">&#39;+&#39;</span><span class="p">)</span>
+                        <span class="n">sheet_modified</span> <span class="o">=</span> <span class="n">datetime</span><span class="o">.</span><span class="n">strptime</span><span class="p">(</span>
+                            <span class="n">head</span><span class="p">,</span> <span class="s1">&#39;%Y-%m-</span><span class="si">%d</span><span class="s1">T%H:%M:%S&#39;</span><span class="p">)</span>
+                        <span class="n">sheet_modified</span> <span class="o">=</span> <span class="n">utc</span><span class="o">.</span><span class="n">localize</span><span class="p">(</span><span class="n">sheet_modified</span><span class="p">)</span>
+                        <span class="n">sheet_modified</span> <span class="o">=</span> <span class="n">sheet_modified</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="n">tzinfo</span><span class="o">=</span><span class="n">utc</span><span class="p">)</span>
 
-        <span class="c1"># Don&#39;t include the JIRA index sheet as</span>
-        <span class="c1"># part of the sheet collection, if present.</span>
-        <span class="k">try</span><span class="p">:</span>
-            <span class="n">sheet_ids</span><span class="o">.</span><span class="n">remove</span><span class="p">(</span><span class="n">jira_idx_sheet</span><span class="p">)</span>
-        <span class="k">except</span> <span class="ne">ValueError</span><span class="p">:</span>
-            <span class="n">logging</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span>
-                <span class="s2">&quot;</span><span class="si">{}</span><span class="s2"> not found in Sheet IDs list&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">jira_idx_sheet</span><span class="p">))</span>
+                        <span class="c1"># If the sheet was modified in the last N minutes, add</span>
+                        <span class="c1"># it to the index. Otherwise, skip it.</span>
+                        <span class="k">if</span> <span class="n">sheet_modified</span> <span class="o">&gt;=</span> <span class="n">modified_since</span><span class="p">:</span>
+                            <span class="n">msg</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="s2">&quot;True | Cutoff: </span><span class="si">{}</span><span class="s2"> | Sheet Modified &quot;</span>
+                                      <span class="s2">&quot;Date: </span><span class="si">{}</span><span class="s2"> | Sheet Name: </span><span class="si">{}</span><span class="s2">&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>
+                                <span class="n">modified_since</span><span class="p">,</span> <span class="n">sheet_modified</span><span class="p">,</span> <span class="n">sheet</span><span class="p">[</span><span class="s1">&#39;name&#39;</span><span class="p">])</span>
+                            <span class="n">logging</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
+                            <span class="n">sheet_ids</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">sheet</span><span class="p">[</span><span class="s1">&#39;id&#39;</span><span class="p">])</span>
+                        <span class="k">else</span><span class="p">:</span>
+                            <span class="n">msg</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="s2">&quot;False | Cutoff: </span><span class="si">{}</span><span class="s2"> | Sheet Modified &quot;</span>
+                                      <span class="s2">&quot;Date: </span><span class="si">{}</span><span class="s2"> | Sheet Name: </span><span class="si">{}</span><span class="s2">&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>
+                                <span class="n">modified_since</span><span class="p">,</span> <span class="n">sheet_modified</span><span class="p">,</span> <span class="n">sheet</span><span class="p">[</span><span class="s1">&#39;name&#39;</span><span class="p">])</span>
+                            <span class="n">logging</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
+                            <span class="k">continue</span>
+                <span class="c1"># Handle empty workspaces</span>
+                <span class="k">except</span> <span class="ne">KeyError</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+                    <span class="n">msg</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="s2">&quot;Dictionary key </span><span class="si">{}</span><span class="s2"> not found in &quot;</span>
+                              <span class="s2">&quot;subfolders for workspace ID </span><span class="si">{}</span><span class="s2">&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">e</span><span class="p">,</span>
+                                                                       <span class="n">ws_id</span><span class="p">)</span>
+                    <span class="n">logging</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
+
+    <span class="c1"># Don&#39;t include the JIRA index sheet as</span>
+    <span class="c1"># part of the sheet collection, if present.</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="n">sheet_ids</span><span class="o">.</span><span class="n">remove</span><span class="p">(</span><span class="n">jira_idx_sheet</span><span class="p">)</span>
+    <span class="k">except</span> <span class="ne">ValueError</span><span class="p">:</span>
+        <span class="n">logging</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span>
+            <span class="s2">&quot;</span><span class="si">{}</span><span class="s2"> not found in Sheet IDs list&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">jira_idx_sheet</span><span class="p">))</span>
 
     <span class="k">return</span> <span class="n">sheet_ids</span>
 </pre></div>
 
         </details>
 
-            <div class="docstring"><p>Gets all the sheet IDs from every sheet in every folder,
-   subfolder and workspace as defined in the workspace_id.</p>
+            <div class="docstring"><p>Get all the sheet IDs from every sheet in every folder, subfolder and
+   workspace as defined in the workspace_id.</p>
 
 <h6 id="args">Args</h6>
 
@@ -958,256 +1196,147 @@ with the API</li>
 
 
                 </section>
-                <section id="get_ws_folder_map">
-                            <div class="attr function"><a class="headerlink" href="#get_ws_folder_map">#&nbsp;&nbsp</a>
+                <section id="get_secret">
+                            <div class="attr function"><a class="headerlink" href="#get_secret">#&nbsp;&nbsp</a>
 
         
             <span class="def">def</span>
-            <span class="name">get_ws_folder_map</span><span class="signature">(workspace)</span>:
+            <span class="name">get_secret</span><span class="signature">(secret_name)</span>:
     </div>
 
                 <details>
             <summary>View Source</summary>
-            <div class="codehilite"><pre><span></span><span class="k">def</span> <span class="nf">get_ws_folder_map</span><span class="p">(</span><span class="n">workspace</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;Get all of the folder IDs within the root Workspace, for each</span>
-<span class="sd">       workspace provided.</span>
+            <div class="codehilite"><pre><span></span><span class="k">def</span> <span class="nf">get_secret</span><span class="p">(</span><span class="n">secret_name</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Gets the API token from AWS Secrets Manager.</span>
 
-<span class="sd">    Args:</span>
-<span class="sd">        workspace (Workspace object): The workspace to parse for folder</span>
-<span class="sd">                                      IDs.</span>
+<span class="sd">    Raises:</span>
+<span class="sd">        e: DecryptionFailureException.</span>
+<span class="sd">        e: InternalServiceErrorException</span>
+<span class="sd">        e: InvalidParameterException</span>
+<span class="sd">        e: InvalidRequestException</span>
+<span class="sd">        e: ResourceNotFoundException</span>
 
 <span class="sd">    Returns:</span>
-<span class="sd">        list: A list of folder IDs found in the workspace.</span>
+<span class="sd">        str: The Smartsheet API key</span>
 <span class="sd">    &quot;&quot;&quot;</span>
-    <span class="n">ws_folder_map</span> <span class="o">=</span> <span class="p">[]</span>
-    <span class="k">if</span> <span class="n">workspace</span><span class="o">.</span><span class="n">folders</span><span class="p">:</span>
-        <span class="n">logging</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">&quot;Importing Folders from Workspace ID: &quot;</span>
-                      <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="n">workspace</span><span class="o">.</span><span class="n">id</span><span class="p">)</span> <span class="o">+</span> <span class="s2">&quot; | &quot;</span> <span class="o">+</span> <span class="n">workspace</span><span class="o">.</span><span class="n">name</span><span class="p">)</span>
-        <span class="k">for</span> <span class="n">folders</span> <span class="ow">in</span> <span class="n">workspace</span><span class="o">.</span><span class="n">folders</span><span class="p">:</span>
-            <span class="n">logging</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">&quot;Appended Folder ID: &quot;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="n">folders</span><span class="o">.</span><span class="n">id</span><span class="p">)</span> <span class="o">+</span> <span class="s2">&quot; | &quot;</span>
-                          <span class="o">+</span> <span class="n">folders</span><span class="o">.</span><span class="n">name</span> <span class="o">+</span> <span class="s2">&quot; to ws_folder_map.&quot;</span><span class="p">)</span>
-            <span class="n">ws_folder_map</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">folders</span><span class="o">.</span><span class="n">id</span><span class="p">)</span>
-        <span class="k">return</span> <span class="n">ws_folder_map</span>
+
+    <span class="n">region_name</span> <span class="o">=</span> <span class="s2">&quot;us-west-2&quot;</span>
+    <span class="n">ACCESS_KEY</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">environ</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;ACCESS_KEY&#39;</span><span class="p">)</span>
+    <span class="n">SECRET_KEY</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">environ</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;SECRET_KEY&#39;</span><span class="p">)</span>
+
+    <span class="c1"># Create a Secrets Manager client</span>
+    <span class="n">session</span> <span class="o">=</span> <span class="n">boto3</span><span class="o">.</span><span class="n">session</span><span class="o">.</span><span class="n">Session</span><span class="p">()</span>
+    <span class="n">client</span> <span class="o">=</span> <span class="n">session</span><span class="o">.</span><span class="n">client</span><span class="p">(</span>
+        <span class="n">service_name</span><span class="o">=</span><span class="s1">&#39;secretsmanager&#39;</span><span class="p">,</span>
+        <span class="n">region_name</span><span class="o">=</span><span class="n">region_name</span><span class="p">,</span>
+        <span class="n">aws_access_key_id</span><span class="o">=</span><span class="n">ACCESS_KEY</span><span class="p">,</span>
+        <span class="n">aws_secret_access_key</span><span class="o">=</span><span class="n">SECRET_KEY</span><span class="p">,</span>
+    <span class="p">)</span>
+
+    <span class="c1"># In this sample we only handle the specific exceptions for the</span>
+    <span class="c1"># &#39;GetSecretValue&#39; API.</span>
+    <span class="c1"># See https://docs.aws.amazon.com/secretsmanager/latest/</span>
+    <span class="c1"># apireference/API_GetSecretValue.html</span>
+    <span class="c1"># We rethrow the exception by default.</span>
+
+    <span class="k">try</span><span class="p">:</span>
+        <span class="n">get_secret_value_response</span> <span class="o">=</span> <span class="n">client</span><span class="o">.</span><span class="n">get_secret_value</span><span class="p">(</span>
+            <span class="n">SecretId</span><span class="o">=</span><span class="n">secret_name</span>
+        <span class="p">)</span>
+    <span class="k">except</span> <span class="n">ClientError</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">e</span><span class="o">.</span><span class="n">response</span><span class="p">[</span><span class="s1">&#39;Error&#39;</span><span class="p">][</span><span class="s1">&#39;Code&#39;</span><span class="p">]</span> <span class="o">==</span> <span class="s1">&#39;DecryptionFailureException&#39;</span><span class="p">:</span>
+            <span class="c1"># Secrets Manager can&#39;t decrypt the protected secret text using</span>
+            <span class="c1"># the provided KMS key.</span>
+            <span class="c1"># Deal with the exception here, and/or rethrow at your discretion.</span>
+            <span class="k">raise</span> <span class="n">e</span>
+        <span class="k">elif</span> <span class="n">e</span><span class="o">.</span><span class="n">response</span><span class="p">[</span><span class="s1">&#39;Error&#39;</span><span class="p">][</span><span class="s1">&#39;Code&#39;</span><span class="p">]</span> <span class="o">==</span> <span class="s1">&#39;InternalServiceErrorException&#39;</span><span class="p">:</span>
+            <span class="c1"># An error occurred on the server side.</span>
+            <span class="c1"># Deal with the exception here, and/or rethrow at your discretion.</span>
+            <span class="k">raise</span> <span class="n">e</span>
+        <span class="k">elif</span> <span class="n">e</span><span class="o">.</span><span class="n">response</span><span class="p">[</span><span class="s1">&#39;Error&#39;</span><span class="p">][</span><span class="s1">&#39;Code&#39;</span><span class="p">]</span> <span class="o">==</span> <span class="s1">&#39;InvalidParameterException&#39;</span><span class="p">:</span>
+            <span class="c1"># You provided an invalid value for a parameter.</span>
+            <span class="c1"># Deal with the exception here, and/or rethrow at your discretion.</span>
+            <span class="k">raise</span> <span class="n">e</span>
+        <span class="k">elif</span> <span class="n">e</span><span class="o">.</span><span class="n">response</span><span class="p">[</span><span class="s1">&#39;Error&#39;</span><span class="p">][</span><span class="s1">&#39;Code&#39;</span><span class="p">]</span> <span class="o">==</span> <span class="s1">&#39;InvalidRequestException&#39;</span><span class="p">:</span>
+            <span class="c1"># You provided a parameter value that is not valid for the current</span>
+            <span class="c1"># state of the resource.</span>
+            <span class="c1"># Deal with the exception here, and/or rethrow at your discretion.</span>
+            <span class="k">raise</span> <span class="n">e</span>
+        <span class="k">elif</span> <span class="n">e</span><span class="o">.</span><span class="n">response</span><span class="p">[</span><span class="s1">&#39;Error&#39;</span><span class="p">][</span><span class="s1">&#39;Code&#39;</span><span class="p">]</span> <span class="o">==</span> <span class="s1">&#39;ResourceNotFoundException&#39;</span><span class="p">:</span>
+            <span class="c1"># We can&#39;t find the resource that you asked for.</span>
+            <span class="c1"># Deal with the exception here, and/or rethrow at your discretion.</span>
+            <span class="k">raise</span> <span class="n">e</span>
     <span class="k">else</span><span class="p">:</span>
-        <span class="n">logging</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">&quot;No folders in workspace.&quot;</span><span class="p">)</span>
-        <span class="k">return</span> <span class="kc">None</span>
+        <span class="c1"># Decrypts secret using the associated KMS CMK.</span>
+        <span class="c1"># Depending on whether the secret is a string or binary, one of these</span>
+        <span class="c1"># fields will be populated.</span>
+        <span class="k">if</span> <span class="s1">&#39;SecretString&#39;</span> <span class="ow">in</span> <span class="n">get_secret_value_response</span><span class="p">:</span>
+            <span class="n">secret</span> <span class="o">=</span> <span class="n">get_secret_value_response</span><span class="p">[</span><span class="s1">&#39;SecretString&#39;</span><span class="p">]</span>
+
+            <span class="n">api_key</span> <span class="o">=</span> <span class="n">json</span><span class="o">.</span><span class="n">loads</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">secret</span><span class="p">))</span>
+            <span class="n">api_key</span> <span class="o">=</span> <span class="n">json_extract</span><span class="p">(</span><span class="n">api_key</span><span class="p">,</span> <span class="s2">&quot;SMARTSHEET_ACCESS_TOKEN&quot;</span><span class="p">)</span>
+            <span class="n">api_key</span> <span class="o">=</span> <span class="s1">&#39;&#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="nb">map</span><span class="p">(</span><span class="nb">str</span><span class="p">,</span> <span class="n">api_key</span><span class="p">))</span>
+            <span class="k">return</span> <span class="n">api_key</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">decoded_binary_secret</span> <span class="o">=</span> <span class="n">base64</span><span class="o">.</span><span class="n">b64decode</span><span class="p">(</span>
+                <span class="n">get_secret_value_response</span><span class="p">[</span><span class="s1">&#39;SecretBinary&#39;</span><span class="p">])</span>
+            <span class="k">return</span> <span class="n">decoded_binary_secret</span>
 </pre></div>
 
         </details>
 
-            <div class="docstring"><p>Get all of the folder IDs within the root Workspace, for each
-   workspace provided.</p>
+            <div class="docstring"><p>Gets the API token from AWS Secrets Manager.</p>
 
-<h6 id="args">Args</h6>
+<h6 id="raises">Raises</h6>
 
 <ul>
-<li><strong>workspace (Workspace object):</strong>  The workspace to parse for folder
-IDs.</li>
+<li><strong>e:</strong>  DecryptionFailureException.</li>
+<li><strong>e:</strong>  InternalServiceErrorException</li>
+<li><strong>e:</strong>  InvalidParameterException</li>
+<li><strong>e:</strong>  InvalidRequestException</li>
+<li><strong>e:</strong>  ResourceNotFoundException</li>
 </ul>
 
 <h6 id="returns">Returns</h6>
 
 <blockquote>
-  <p>list: A list of folder IDs found in the workspace.</p>
+  <p>str: The Smartsheet API key</p>
 </blockquote>
 </div>
 
 
                 </section>
-                <section id="get_folder_sheet_map">
-                            <div class="attr function"><a class="headerlink" href="#get_folder_sheet_map">#&nbsp;&nbsp</a>
+                <section id="get_secret_name">
+                            <div class="attr function"><a class="headerlink" href="#get_secret_name">#&nbsp;&nbsp</a>
 
         
             <span class="def">def</span>
-            <span class="name">get_folder_sheet_map</span><span class="signature">(folder_map, smartsheet_client)</span>:
+            <span class="name">get_secret_name</span><span class="signature">(env)</span>:
     </div>
 
                 <details>
             <summary>View Source</summary>
-            <div class="codehilite"><pre><span></span><span class="k">def</span> <span class="nf">get_folder_sheet_map</span><span class="p">(</span><span class="n">folder_map</span><span class="p">,</span> <span class="n">smartsheet_client</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;Get all sheets from each folder in the folder map.</span>
+            <div class="codehilite"><pre><span></span><span class="k">def</span> <span class="nf">get_secret_name</span><span class="p">(</span><span class="n">env</span><span class="p">):</span>
+    <span class="k">for</span> <span class="n">e</span> <span class="ow">in</span> <span class="n">env</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">e</span> <span class="ow">in</span> <span class="p">(</span><span class="s2">&quot;-s&quot;</span><span class="p">,</span> <span class="s2">&quot;--staging&quot;</span><span class="p">,</span> <span class="s2">&quot;-staging&quot;</span><span class="p">):</span>
+            <span class="n">secret_name</span> <span class="o">=</span> <span class="s2">&quot;staging/smartsheet-data-sync/svc-api-token&quot;</span>
+            <span class="k">return</span><span class="p">(</span><span class="n">secret_name</span><span class="p">)</span>
+        <span class="k">elif</span> <span class="n">e</span> <span class="ow">in</span> <span class="p">(</span><span class="s2">&quot;-p&quot;</span><span class="p">,</span> <span class="s2">&quot;--prod&quot;</span><span class="p">,</span> <span class="s2">&quot;-prod&quot;</span><span class="p">):</span>
+            <span class="n">secret_name</span> <span class="o">=</span> <span class="s2">&quot;prod/smartsheet-data-sync/svc-api-token&quot;</span>
+            <span class="k">return</span><span class="p">(</span><span class="n">secret_name</span><span class="p">)</span>
+        <span class="k">elif</span> <span class="n">e</span> <span class="ow">in</span> <span class="p">(</span><span class="s2">&quot;-d&quot;</span><span class="p">,</span> <span class="s2">&quot;--debug&quot;</span><span class="p">,</span> <span class="s2">&quot;-debug&quot;</span><span class="p">):</span>
+            <span class="n">secret_name</span> <span class="o">=</span> <span class="s2">&quot;staging/smartsheet-data-sync/svc-api-token&quot;</span>
+            <span class="k">return</span><span class="p">(</span><span class="n">secret_name</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">logging</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="s2">&quot;Failed to set API Key from AWS Secrets&quot;</span><span class="p">)</span>
+            <span class="n">secret_name</span> <span class="o">=</span> <span class="s2">&quot;&quot;</span>
 
-<span class="sd">    Args:</span>
-<span class="sd">        folder_map (list): A list of folder IDs found in the workspace</span>
-<span class="sd">        smartsheet_client (Object): The Smartsheet client to interact</span>
-<span class="sd">                                    with the API</span>
-
-<span class="sd">    Returns:</span>
-<span class="sd">        list: A list of sheet IDs from every folder in the workspace.</span>
-<span class="sd">    &quot;&quot;&quot;</span>
-    <span class="n">folder_sheet_map</span> <span class="o">=</span> <span class="p">[]</span>
-    <span class="k">if</span> <span class="ow">not</span> <span class="n">folder_map</span><span class="p">:</span>
-        <span class="n">logging</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">&quot;Folder map is empty. Skipping.&quot;</span><span class="p">)</span>
-        <span class="k">return</span> <span class="kc">None</span>
-    <span class="k">else</span><span class="p">:</span>
-        <span class="k">for</span> <span class="n">folder_id</span> <span class="ow">in</span> <span class="n">folder_map</span><span class="p">:</span>
-            <span class="k">try</span><span class="p">:</span>
-                <span class="n">folder</span> <span class="o">=</span> <span class="n">smartsheet_client</span><span class="o">.</span><span class="n">Folders</span><span class="o">.</span><span class="n">get_folder</span><span class="p">(</span><span class="n">folder_id</span><span class="p">)</span>
-            <span class="k">except</span> <span class="n">smartsheet_client</span><span class="o">.</span><span class="n">exceptions</span><span class="o">.</span><span class="n">ApiError</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
-                <span class="n">logging</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">&quot;Error on API request.&quot;</span><span class="p">)</span>
-                <span class="n">logging</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">&quot;Status Code: &quot;</span> <span class="o">+</span> <span class="n">e</span><span class="o">.</span><span class="n">statusCode</span>
-                              <span class="o">+</span> <span class="s2">&quot; Reason: &quot;</span> <span class="o">+</span> <span class="n">e</span><span class="o">.</span><span class="n">Reason</span>
-                              <span class="o">+</span> <span class="s2">&quot; Message: &quot;</span> <span class="o">+</span> <span class="n">e</span><span class="o">.</span><span class="n">message</span><span class="p">())</span>
-                <span class="k">return</span>
-            <span class="k">else</span><span class="p">:</span>
-                <span class="n">logging</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">&quot;Importing SheetIDs from FolderID: &quot;</span>
-                              <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="n">folder_id</span><span class="p">)</span> <span class="o">+</span> <span class="s2">&quot; | Folder Name: &quot;</span>
-                              <span class="o">+</span> <span class="n">folder</span><span class="o">.</span><span class="n">name</span><span class="p">)</span>
-                <span class="k">for</span> <span class="n">sheet</span> <span class="ow">in</span> <span class="n">folder</span><span class="o">.</span><span class="n">sheets</span><span class="p">:</span>
-                    <span class="n">sheet_id</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">sheet</span><span class="o">.</span><span class="n">id</span><span class="p">)</span>
-                    <span class="n">folder_sheet_map</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">sheet_id</span><span class="p">)</span>
-        <span class="n">logging</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;Loaded &quot;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">folder_sheet_map</span><span class="p">))</span>
-                     <span class="o">+</span> <span class="s2">&quot; sheets from &quot;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">folder_map</span><span class="p">))</span> <span class="o">+</span> <span class="s2">&quot; folders.&quot;</span><span class="p">)</span>
-    <span class="k">return</span> <span class="n">folder_sheet_map</span>
+    <span class="k">return</span> <span class="n">secret_name</span>
 </pre></div>
 
         </details>
 
-            <div class="docstring"><p>Get all sheets from each folder in the folder map.</p>
-
-<h6 id="args">Args</h6>
-
-<ul>
-<li><strong>folder_map (list):</strong>  A list of folder IDs found in the workspace</li>
-<li><strong>smartsheet_client (Object):</strong>  The Smartsheet client to interact
-with the API</li>
-</ul>
-
-<h6 id="returns">Returns</h6>
-
-<blockquote>
-  <p>list: A list of sheet IDs from every folder in the workspace.</p>
-</blockquote>
-</div>
-
-
-                </section>
-                <section id="get_ws_sheet_map">
-                            <div class="attr function"><a class="headerlink" href="#get_ws_sheet_map">#&nbsp;&nbsp</a>
-
-        
-            <span class="def">def</span>
-            <span class="name">get_ws_sheet_map</span><span class="signature">(workspace_id, smartsheet_client)</span>:
-    </div>
-
-                <details>
-            <summary>View Source</summary>
-            <div class="codehilite"><pre><span></span><span class="k">def</span> <span class="nf">get_ws_sheet_map</span><span class="p">(</span><span class="n">workspace_id</span><span class="p">,</span> <span class="n">smartsheet_client</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;Gets all Sheet IDs from the root workspace, not located in a folder.</span>
-
-<span class="sd">    Args:</span>
-<span class="sd">        workspace_id (str): The ID or the workspace</span>
-<span class="sd">        smartsheet_client (Object): The Smartsheet client to interact</span>
-<span class="sd">                                    with the API</span>
-
-<span class="sd">    Returns:</span>
-<span class="sd">        list: A list of all sheet IDs in the root workspace</span>
-<span class="sd">    &quot;&quot;&quot;</span>
-    <span class="n">ws_sheet_map</span> <span class="o">=</span> <span class="p">[]</span>
-    <span class="n">workspace</span> <span class="o">=</span> <span class="n">smartsheet_client</span><span class="o">.</span><span class="n">Workspaces</span><span class="o">.</span><span class="n">get_workspace</span><span class="p">(</span><span class="n">workspace_id</span><span class="p">)</span>
-    <span class="n">logging</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;Importing Sheet IDs from WorkspaceID: &quot;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="n">workspace_id</span><span class="p">)</span>
-                 <span class="o">+</span> <span class="s2">&quot; | Workspace Name: &quot;</span> <span class="o">+</span> <span class="n">workspace</span><span class="o">.</span><span class="n">name</span><span class="p">)</span>
-    <span class="k">if</span> <span class="n">workspace</span><span class="o">.</span><span class="n">sheets</span><span class="p">:</span>
-        <span class="k">for</span> <span class="n">sheet</span> <span class="ow">in</span> <span class="n">workspace</span><span class="o">.</span><span class="n">sheets</span><span class="p">:</span>
-            <span class="n">sheet_id</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">sheet</span><span class="o">.</span><span class="n">id</span><span class="p">)</span>
-            <span class="n">ws_sheet_map</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">sheet_id</span><span class="p">)</span>
-        <span class="n">logging</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;Loaded &quot;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">ws_sheet_map</span><span class="p">))</span>
-                     <span class="o">+</span> <span class="s2">&quot; sheets from &quot;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="n">workspace_id</span><span class="p">)</span>
-                     <span class="o">+</span> <span class="s2">&quot; | Workspace Name: &quot;</span> <span class="o">+</span> <span class="n">workspace</span><span class="o">.</span><span class="n">name</span><span class="p">)</span>
-        <span class="k">return</span> <span class="n">ws_sheet_map</span>
-    <span class="k">else</span><span class="p">:</span>
-        <span class="n">logging</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">&quot;No sheets found in workspace.&quot;</span><span class="p">)</span>
-        <span class="k">return</span> <span class="kc">None</span>
-</pre></div>
-
-        </details>
-
-            <div class="docstring"><p>Gets all Sheet IDs from the root workspace, not located in a folder.</p>
-
-<h6 id="args">Args</h6>
-
-<ul>
-<li><strong>workspace_id (str):</strong>  The ID or the workspace</li>
-<li><strong>smartsheet_client (Object):</strong>  The Smartsheet client to interact
-with the API</li>
-</ul>
-
-<h6 id="returns">Returns</h6>
-
-<blockquote>
-  <p>list: A list of all sheet IDs in the root workspace</p>
-</blockquote>
-</div>
-
-
-                </section>
-                <section id="get_subfolder_map">
-                            <div class="attr function"><a class="headerlink" href="#get_subfolder_map">#&nbsp;&nbsp</a>
-
-        
-            <span class="def">def</span>
-            <span class="name">get_subfolder_map</span><span class="signature">(folder_ids, smartsheet_client)</span>:
-    </div>
-
-                <details>
-            <summary>View Source</summary>
-            <div class="codehilite"><pre><span></span><span class="k">def</span> <span class="nf">get_subfolder_map</span><span class="p">(</span><span class="n">folder_ids</span><span class="p">,</span> <span class="n">smartsheet_client</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;Loops through folder IDs and finds any subfolders, and</span>
-<span class="sd">       appends the new folder ID to the list, if found</span>
-
-<span class="sd">    Args:</span>
-<span class="sd">        folder_ids (list): The List of folder IDs to parse through</span>
-<span class="sd">        smartsheet_client (Object): The Smartsheet client to interact</span>
-<span class="sd">                                    with the API</span>
-
-<span class="sd">    Returns:</span>
-<span class="sd">        list: A flat list of all folder IDs located within other</span>
-<span class="sd">              folders.</span>
-<span class="sd">    &quot;&quot;&quot;</span>
-    <span class="n">subfolder_map</span> <span class="o">=</span> <span class="p">[]</span>
-    <span class="k">if</span> <span class="ow">not</span> <span class="n">folder_ids</span><span class="p">:</span>
-        <span class="n">logging</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">&quot;Sub-folder map is empty. Skipping.&quot;</span><span class="p">)</span>
-        <span class="k">return</span> <span class="kc">None</span>
-    <span class="k">else</span><span class="p">:</span>
-        <span class="k">for</span> <span class="n">folder</span> <span class="ow">in</span> <span class="n">folder_ids</span><span class="p">:</span>
-            <span class="k">try</span><span class="p">:</span>
-                <span class="n">subfolders</span> <span class="o">=</span> <span class="n">smartsheet_client</span><span class="o">.</span>\
-                    <span class="n">Folders</span><span class="o">.</span><span class="n">list_folders</span><span class="p">(</span><span class="n">folder</span><span class="p">,</span>
-                                         <span class="n">include_all</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
-            <span class="k">except</span> <span class="n">smartsheet_client</span><span class="o">.</span><span class="n">exceptions</span><span class="o">.</span><span class="n">ApiError</span><span class="p">:</span>
-                <span class="n">logging</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">&quot;Subfolder data is None&quot;</span><span class="p">)</span>
-                <span class="n">subfolder_map</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">folder</span><span class="p">)</span>
-            <span class="k">else</span><span class="p">:</span>
-                <span class="k">for</span> <span class="n">subfolder</span> <span class="ow">in</span> <span class="n">subfolders</span><span class="o">.</span><span class="n">data</span><span class="p">:</span>
-                    <span class="n">subfolder_map</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">subfolder</span><span class="o">.</span><span class="n">id</span><span class="p">)</span>
-                    <span class="n">msg</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="s2">&quot;Appended Folder ID: </span><span class="si">{}</span><span class="s2"> | Folder Name: </span><span class="si">{}</span><span class="s2"> to &quot;</span>
-                              <span class="s2">&quot;subfolder map.&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">subfolder</span><span class="o">.</span><span class="n">id</span><span class="p">,</span>
-                                                       <span class="n">subfolder</span><span class="o">.</span><span class="n">name</span><span class="p">)</span>
-                    <span class="n">logging</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
-    <span class="k">return</span> <span class="n">subfolder_map</span>
-</pre></div>
-
-        </details>
-
-            <div class="docstring"><p>Loops through folder IDs and finds any subfolders, and
-   appends the new folder ID to the list, if found</p>
-
-<h6 id="args">Args</h6>
-
-<ul>
-<li><strong>folder_ids (list):</strong>  The List of folder IDs to parse through</li>
-<li><strong>smartsheet_client (Object):</strong>  The Smartsheet client to interact
-with the API</li>
-</ul>
-
-<h6 id="returns">Returns</h6>
-
-<blockquote>
-  <p>list: A flat list of all folder IDs located within other
-        folders.</p>
-</blockquote>
-</div>
-
+    
 
                 </section>
     </main>

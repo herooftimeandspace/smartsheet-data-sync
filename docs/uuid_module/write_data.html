@@ -34,13 +34,10 @@
                     <a class="function" href="#write_uuids">write_uuids</a>
             </li>
             <li>
-                    <a class="function" href="#link_from_index">link_from_index</a>
+                    <a class="function" href="#write_jira_index_cell_links">write_jira_index_cell_links</a>
             </li>
             <li>
                     <a class="function" href="#check_uuid">check_uuid</a>
-            </li>
-            <li>
-                    <a class="function" href="#write_jira_uuids">write_jira_uuids</a>
             </li>
             <li>
                     <a class="function" href="#write_predecessor_dates">write_predecessor_dates</a>
@@ -65,32 +62,18 @@
             <summary>View Source</summary>
             <div class="codehilite"><pre><span></span><span class="kn">import</span> <span class="nn">json</span>
 <span class="kn">import</span> <span class="nn">logging</span>
-<span class="kn">import</span> <span class="nn">os</span>
 
 <span class="c1"># import smartsheet</span>
 <span class="kn">from</span> <span class="nn">uuid_module.build_data</span> <span class="kn">import</span> <span class="n">build_row</span><span class="p">,</span> <span class="n">dest_indexes</span>
 <span class="kn">from</span> <span class="nn">uuid_module.get_data</span> <span class="kn">import</span> <span class="n">load_jira_index</span>
-<span class="kn">from</span> <span class="nn">uuid_module.helper</span> <span class="kn">import</span> <span class="p">(</span><span class="n">get_cell_value</span><span class="p">,</span> <span class="n">get_cell_data</span><span class="p">,</span> <span class="n">get_column_map</span><span class="p">,</span>
-                                <span class="n">json_extract</span><span class="p">)</span>
-<span class="kn">from</span> <span class="nn">uuid_module.variables</span> <span class="kn">import</span> <span class="p">(</span><span class="n">assignee_col</span><span class="p">,</span> <span class="n">jira_col</span><span class="p">,</span> <span class="n">jira_idx_sheet</span><span class="p">,</span>
-                                   <span class="n">predecessor_col</span><span class="p">,</span> <span class="n">start_col</span><span class="p">,</span> <span class="n">status_col</span><span class="p">,</span>
-                                   <span class="n">task_col</span><span class="p">,</span> <span class="n">uuid_col</span><span class="p">)</span>
+<span class="kn">from</span> <span class="nn">uuid_module.helper</span> <span class="kn">import</span> <span class="p">(</span><span class="n">chunks</span><span class="p">,</span> <span class="n">get_cell_data</span><span class="p">,</span> <span class="n">get_cell_value</span><span class="p">,</span>
+                                <span class="n">get_column_map</span><span class="p">,</span> <span class="n">json_extract</span><span class="p">)</span>
+<span class="kn">from</span> <span class="nn">uuid_module.variables</span> <span class="kn">import</span> <span class="p">(</span><span class="n">assignee_col</span><span class="p">,</span> <span class="n">jira_col</span><span class="p">,</span> <span class="n">predecessor_col</span><span class="p">,</span>
+                                   <span class="n">start_col</span><span class="p">,</span> <span class="n">status_col</span><span class="p">,</span> <span class="n">task_col</span><span class="p">,</span> <span class="n">uuid_col</span><span class="p">)</span>
 
 <span class="n">logger</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">(</span><span class="vm">__name__</span><span class="p">)</span>
 
-<span class="c1"># assignee_col = os.getenv(&#39;ASSIGNEE_COL&#39;)</span>
-<span class="c1"># jira_col = os.getenv(&#39;JIRA_COL&#39;)</span>
-<span class="c1"># jira_idx_sheet = os.getenv(&#39;JIRA_IDX_SHEET&#39;)</span>
-<span class="c1"># predecessor_col = os.getenv(&#39;PREDECESSOR_COL&#39;)</span>
-<span class="c1"># sheet_columns = os.getenv(&#39;SHEET_COLUMNS&#39;)</span>
-<span class="c1"># start_col = os.getenv(&#39;START_COL&#39;)</span>
-<span class="c1"># status_col = os.getenv(&#39;STATUS_COL&#39;)</span>
-<span class="c1"># summary_col = os.getenv(&#39;SUMMARY_COL&#39;)</span>
-<span class="c1"># task_col = os.getenv(&#39;TASK_COL&#39;)</span>
-<span class="c1"># uuid_col = os.getenv(&#39;UUID_COL&#39;)</span>
 
-
-<span class="c1"># sheets_to_update is a dict in the format</span>
 <span class="k">def</span> <span class="nf">write_uuids</span><span class="p">(</span><span class="n">sheets_to_update</span><span class="p">,</span> <span class="n">smartsheet_client</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;Writes UUIDs back to a collection of Smartsheets</span>
 
@@ -102,12 +85,23 @@
 <span class="sd">    Returns:</span>
 <span class="sd">        int: The number of sheets that were updated.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
+    <span class="c1"># Reset the counter on each run</span>
     <span class="n">sheets_updated</span> <span class="o">=</span> <span class="mi">0</span>
+
+    <span class="c1"># Iterate through each set of sheet IDs and associated data from the</span>
+    <span class="c1"># dictionary</span>
     <span class="k">for</span> <span class="n">sheet_id</span><span class="p">,</span> <span class="n">sheet_data</span> <span class="ow">in</span> <span class="n">sheets_to_update</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+
+        <span class="c1"># Assign friendly names to make grokking easier.</span>
         <span class="n">sheet_name</span> <span class="o">=</span> <span class="n">sheet_data</span><span class="p">[</span><span class="s1">&#39;sheet_name&#39;</span><span class="p">]</span>
         <span class="n">row_data</span> <span class="o">=</span> <span class="n">sheet_data</span><span class="p">[</span><span class="s1">&#39;row_data&#39;</span><span class="p">]</span>
 
+        <span class="c1"># Create an empty list of rows to write back to the sheet.</span>
         <span class="n">rows_to_write</span> <span class="o">=</span> <span class="p">[]</span>
+
+        <span class="c1"># Iterate through each set of row IDs and assocaiated cell data,</span>
+        <span class="c1"># create new row and cell objects to overwrite the existing data,</span>
+        <span class="c1"># and update the UUID value for the row.</span>
         <span class="k">for</span> <span class="n">row_id</span><span class="p">,</span> <span class="n">cell_data</span> <span class="ow">in</span> <span class="n">row_data</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
             <span class="n">new_row</span> <span class="o">=</span> <span class="n">smartsheet_client</span><span class="o">.</span><span class="n">models</span><span class="o">.</span><span class="n">Row</span><span class="p">()</span>
             <span class="n">new_row</span><span class="o">.</span><span class="n">id</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">row_id</span><span class="p">)</span>
@@ -132,21 +126,17 @@
             <span class="n">logging</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
             <span class="n">sheets_updated</span> <span class="o">+=</span> <span class="mi">1</span>
         <span class="k">else</span><span class="p">:</span>
-            <span class="n">msg</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="s2">&quot;No updates required for Sheet ID: &quot;</span>
+            <span class="n">msg</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="s2">&quot;No UUID updates required for Sheet ID: &quot;</span>
                       <span class="s2">&quot;</span><span class="si">{}</span><span class="s2"> | Sheet Name: </span><span class="si">{}</span><span class="s2">&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">sheet_id</span><span class="p">,</span> <span class="n">sheet_name</span><span class="p">)</span>
             <span class="n">logging</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
     <span class="k">return</span> <span class="n">sheets_updated</span>
 
 
-<span class="c1"># Main function. For each Sheet in the destination sheet index,</span>
-<span class="c1"># parse through rows, determine if cells need to be linked, create</span>
-<span class="c1"># cell links and then write the rows back to the sheet.</span>
-<span class="k">def</span> <span class="nf">link_from_index</span><span class="p">(</span><span class="n">project_sub_index</span><span class="p">,</span>
-                    <span class="n">smartsheet_client</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;Main functionality. For each sheet in the destination sheet</span>
-<span class="sd">       index, parse through the rows, determine if cells need to be</span>
-<span class="sd">       linked, create cell links and then write the rows back to</span>
-<span class="sd">       the sheet.</span>
+<span class="k">def</span> <span class="nf">write_jira_index_cell_links</span><span class="p">(</span><span class="n">project_sub_index</span><span class="p">,</span>
+                                <span class="n">smartsheet_client</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;For each sheet in the destination sheet index, parse through the rows,</span>
+<span class="sd">       determine if cells need to be linked, create cell links and then write</span>
+<span class="sd">       the rows back to the sheet.</span>
 
 <span class="sd">    Args:</span>
 <span class="sd">        project_sub_index (dict): The list of projects that have a</span>
@@ -158,21 +148,34 @@
 <span class="sd">        bool: True if any links were written, False if no data was</span>
 <span class="sd">              written back to any sheet.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
-    <span class="c1"># index_data_copy = jira_index_data.copy()</span>
+
+    <span class="c1"># Create a copy of the project_sub_index so that we don&#39;t alter any</span>
+    <span class="c1"># other function&#39;s data set.</span>
     <span class="n">project_data_copy</span> <span class="o">=</span> <span class="n">project_sub_index</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
 
+    <span class="c1"># Create a list of columns that will be cell linked.</span>
     <span class="n">columns_to_link</span> <span class="o">=</span> <span class="p">[</span><span class="n">jira_col</span><span class="p">,</span> <span class="n">status_col</span><span class="p">,</span> <span class="n">task_col</span><span class="p">,</span> <span class="n">assignee_col</span><span class="p">]</span>
 
+    <span class="c1"># Create smaller indexes from the copy to speed up processing</span>
     <span class="n">dest_sheet_index</span> <span class="o">=</span> <span class="n">dest_indexes</span><span class="p">(</span><span class="n">project_data_copy</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
     <span class="n">jira_index_sheet</span><span class="p">,</span> <span class="n">jira_index_col_map</span><span class="p">,</span> <span class="n">jira_index_rows</span> <span class="o">=</span> <span class="n">load_jira_index</span><span class="p">(</span>
         <span class="n">smartsheet_client</span><span class="p">)</span>
 
+    <span class="c1"># Iterate through each sheet ID in the smaller sheet index.</span>
     <span class="k">for</span> <span class="n">sheet_id</span> <span class="ow">in</span> <span class="n">dest_sheet_index</span><span class="o">.</span><span class="n">keys</span><span class="p">():</span>
+        <span class="c1"># Get the sheet data for the ID.</span>
         <span class="n">dest_sheet</span> <span class="o">=</span> <span class="n">smartsheet_client</span><span class="o">.</span><span class="n">Sheets</span><span class="o">.</span><span class="n">get_sheet</span><span class="p">(</span><span class="n">sheet_id</span><span class="p">)</span>
+
+        <span class="c1"># Build a column map for easier column name to ID reference</span>
         <span class="n">dest_col_map</span> <span class="o">=</span> <span class="n">get_column_map</span><span class="p">(</span><span class="n">dest_sheet</span><span class="p">)</span>
+
+        <span class="c1"># Create an empty list of cell links to update.</span>
         <span class="n">cell_links_to_update</span> <span class="o">=</span> <span class="p">[]</span>
 
+        <span class="c1"># Iterate through each row in the sheet.</span>
         <span class="k">for</span> <span class="n">row</span> <span class="ow">in</span> <span class="n">dest_sheet</span><span class="o">.</span><span class="n">rows</span><span class="p">:</span>
+            <span class="c1"># Get the value of the Jira Ticket cell and validate that there</span>
+            <span class="c1"># is a value in the cell.</span>
             <span class="n">jira_cell</span> <span class="o">=</span> <span class="n">get_cell_data</span><span class="p">(</span>
                 <span class="n">row</span><span class="p">,</span> <span class="n">jira_col</span><span class="p">,</span> <span class="n">dest_col_map</span><span class="p">)</span>
             <span class="k">if</span> <span class="n">jira_cell</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">or</span> <span class="n">jira_cell</span><span class="o">.</span><span class="n">value</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
@@ -180,6 +183,9 @@
                     <span class="s2">&quot;Jira Ticket not found in Dest Sheet row. Skipping&quot;</span><span class="p">)</span>
                 <span class="k">continue</span>
             <span class="k">else</span><span class="p">:</span>
+                <span class="c1"># Set a friendly variable names, validate that the row ID is</span>
+                <span class="c1"># present in the sheet, and create a new row with the cell</span>
+                <span class="c1"># links.</span>
                 <span class="n">jira_value</span> <span class="o">=</span> <span class="n">jira_cell</span><span class="o">.</span><span class="n">value</span>
                 <span class="n">idx_row_id</span> <span class="o">=</span> <span class="n">jira_index_rows</span><span class="p">[</span><span class="n">jira_value</span><span class="p">]</span>
                 <span class="k">if</span> <span class="ow">not</span> <span class="n">idx_row_id</span><span class="p">:</span>
@@ -208,16 +214,31 @@
                       <span class="s2">&quot;&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">cell_links_to_update</span><span class="p">),</span> <span class="n">dest_sheet</span><span class="o">.</span><span class="n">id</span><span class="p">,</span>
                                  <span class="n">dest_sheet</span><span class="o">.</span><span class="n">name</span><span class="p">)</span>
             <span class="n">logging</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
-            <span class="n">result</span> <span class="o">=</span> <span class="n">smartsheet_client</span><span class="o">.</span><span class="n">Sheets</span><span class="o">.</span><span class="n">update_rows</span><span class="p">(</span><span class="n">dest_sheet</span><span class="o">.</span><span class="n">id</span><span class="p">,</span>
-                                                          <span class="n">cell_links_to_update</span><span class="p">)</span>
-            <span class="n">logging</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="n">result</span><span class="p">)</span>
+
+            <span class="c1"># If over 125 rows need to be written to a single sheet, chunk</span>
+            <span class="c1"># the rows into segments of 125. Anything over 125 will cause</span>
+            <span class="c1"># the API to fail.</span>
+            <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">cell_links_to_update</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">125</span><span class="p">:</span>
+                <span class="n">chunked_cells</span> <span class="o">=</span> <span class="n">chunks</span><span class="p">(</span><span class="n">cell_links_to_update</span><span class="p">,</span> <span class="mi">125</span><span class="p">)</span>
+                <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">chunked_cells</span><span class="p">:</span>
+                    <span class="k">try</span><span class="p">:</span>
+                        <span class="n">result</span> <span class="o">=</span> <span class="n">smartsheet_client</span><span class="o">.</span><span class="n">Sheets</span><span class="o">.</span>\
+                            <span class="n">update_rows</span><span class="p">(</span><span class="n">dest_sheet</span><span class="o">.</span><span class="n">id</span><span class="p">,</span> <span class="n">i</span><span class="p">)</span>
+                        <span class="n">logging</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="n">result</span><span class="p">)</span>
+                    <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+                        <span class="n">logging</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="n">e</span><span class="o">.</span><span class="n">message</span><span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="k">try</span><span class="p">:</span>
+                    <span class="n">result</span> <span class="o">=</span> <span class="n">smartsheet_client</span><span class="o">.</span><span class="n">Sheets</span><span class="o">.</span>\
+                        <span class="n">update_rows</span><span class="p">(</span><span class="n">dest_sheet</span><span class="o">.</span><span class="n">id</span><span class="p">,</span> <span class="n">cell_links_to_update</span><span class="p">)</span>
+                    <span class="n">logging</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="n">result</span><span class="p">)</span>
+                <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+                    <span class="n">logging</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="n">e</span><span class="o">.</span><span class="n">message</span><span class="p">)</span>
         <span class="k">else</span><span class="p">:</span>
-            <span class="n">msg</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="s2">&quot;No updates needed for Sheet ID: </span><span class="si">{}</span><span class="s2"> | &quot;</span>
+            <span class="n">msg</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="s2">&quot;No Jira Ticket updates needed for Sheet ID: </span><span class="si">{}</span><span class="s2"> | &quot;</span>
                       <span class="s2">&quot;Sheet Name </span><span class="si">{}</span><span class="s2">.&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">dest_sheet</span><span class="o">.</span><span class="n">id</span><span class="p">,</span>
                                                <span class="n">dest_sheet</span><span class="o">.</span><span class="n">name</span><span class="p">)</span>
-            <span class="n">logging</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
-
-    <span class="k">return</span> <span class="kc">True</span>
+            <span class="n">logging</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
 
 
 <span class="k">def</span> <span class="nf">check_uuid</span><span class="p">(</span><span class="n">uuid_value</span><span class="p">,</span> <span class="n">jira_value</span><span class="p">,</span> <span class="n">uuid_list</span><span class="p">,</span> <span class="n">jira_data_values</span><span class="p">):</span>
@@ -237,6 +258,7 @@
 <span class="sd">        list: uuid_list if the UUID is not found in the uuid_list after</span>
 <span class="sd">              appending the new UUID, or jira_data_values if the UUID</span>
 <span class="sd">              value is None</span>
+<span class="sd">        none: If the &#39;if&#39; checks fail.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="k">if</span> <span class="n">uuid_list</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
         <span class="n">msg</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="s2">&quot;UUID list is </span><span class="si">{}</span><span class="s2">. Cannot process against an empty &quot;</span>
@@ -276,94 +298,6 @@
         <span class="k">return</span> <span class="kc">None</span>
 
 
-<span class="k">def</span> <span class="nf">write_jira_uuids</span><span class="p">(</span><span class="n">jira_sub_index</span><span class="p">,</span> <span class="n">project_sub_index</span><span class="p">,</span> <span class="n">smartsheet_client</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;Checks each row of the index sheet for the Jira ticket</span>
-<span class="sd">       and UUID cells. Compares that against the UUIDs and Jira tickets of each</span>
-<span class="sd">       destination sheet. If there is a match, do nothing. If there isn&#39;t a</span>
-<span class="sd">       match, append or create the UUID value and write the UUID cell back to</span>
-<span class="sd">       the Index Sheet.</span>
-
-<span class="sd">    Args:</span>
-<span class="sd">        jira_sub_index (dict): A dict of Jira Tickets: UUID(s)</span>
-<span class="sd">        project_sub_index (dict): A dict of UUID: Jira Ticket</span>
-<span class="sd">        smartsheet_client (Object): The Smartsheet client to interact with the</span>
-<span class="sd">                                    API</span>
-<span class="sd">    &quot;&quot;&quot;</span>
-    <span class="c1"># Make copies for safekeeping, yeeeesss</span>
-    <span class="n">index_data_copy</span> <span class="o">=</span> <span class="n">jira_sub_index</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
-    <span class="c1"># project_data_copy = project_sub_index.copy()</span>
-
-    <span class="n">jira_index_sheet</span> <span class="o">=</span> <span class="n">smartsheet_client</span><span class="o">.</span><span class="n">Sheets</span><span class="o">.</span><span class="n">get_sheet</span><span class="p">(</span><span class="n">jira_idx_sheet</span><span class="p">)</span>
-    <span class="n">jira_index_col_map</span> <span class="o">=</span> <span class="n">get_column_map</span><span class="p">(</span><span class="n">jira_index_sheet</span><span class="p">)</span>
-    <span class="n">idx_rows_to_update</span> <span class="o">=</span> <span class="p">[]</span>
-
-    <span class="k">for</span> <span class="n">row</span> <span class="ow">in</span> <span class="n">jira_index_sheet</span><span class="o">.</span><span class="n">rows</span><span class="p">:</span>
-        <span class="n">jira_value</span> <span class="o">=</span> <span class="n">get_cell_value</span><span class="p">(</span><span class="n">row</span><span class="p">,</span> <span class="n">jira_col</span><span class="p">,</span> <span class="n">jira_index_col_map</span><span class="p">)</span>
-        <span class="n">uuid_value</span> <span class="o">=</span> <span class="n">get_cell_value</span><span class="p">(</span><span class="n">row</span><span class="p">,</span> <span class="n">uuid_col</span><span class="p">,</span> <span class="n">jira_index_col_map</span><span class="p">)</span>
-
-        <span class="k">if</span> <span class="ow">not</span> <span class="n">jira_value</span><span class="p">:</span>
-            <span class="n">logging</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">&quot;Jira value is </span><span class="si">{}</span><span class="s2">. Skipping row.&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">jira_value</span><span class="p">))</span>
-            <span class="k">continue</span>
-
-        <span class="n">idx_new_row</span> <span class="o">=</span> <span class="n">smartsheet_client</span><span class="o">.</span><span class="n">models</span><span class="o">.</span><span class="n">Row</span><span class="p">()</span>
-        <span class="n">idx_new_row</span><span class="o">.</span><span class="n">id</span> <span class="o">=</span> <span class="n">row</span><span class="o">.</span><span class="n">id</span>
-
-        <span class="k">if</span> <span class="n">jira_value</span> <span class="ow">in</span> <span class="n">index_data_copy</span><span class="o">.</span><span class="n">keys</span><span class="p">():</span>
-            <span class="n">msg</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="s2">&quot;Jira ticket </span><span class="si">{}</span><span class="s2"> matches a key in sheet index&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>
-                <span class="n">jira_value</span><span class="p">)</span>
-            <span class="n">logging</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
-            <span class="n">uuid_new_cell</span> <span class="o">=</span> <span class="n">smartsheet_client</span><span class="o">.</span><span class="n">models</span><span class="o">.</span><span class="n">Cell</span><span class="p">()</span>
-            <span class="n">uuid_new_cell</span><span class="o">.</span><span class="n">column_id</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span>
-                <span class="n">jira_index_col_map</span><span class="p">[</span><span class="n">uuid_col</span><span class="p">])</span>
-            <span class="n">jira_data_values</span> <span class="o">=</span> <span class="n">index_data_copy</span><span class="p">[</span><span class="n">jira_value</span><span class="p">]</span>
-            <span class="k">for</span> <span class="n">uuid_list</span> <span class="ow">in</span> <span class="n">jira_data_values</span><span class="p">:</span>
-                <span class="n">uuid_new_value</span> <span class="o">=</span> <span class="n">check_uuid</span><span class="p">(</span><span class="n">uuid_value</span><span class="p">,</span>
-                                            <span class="n">jira_value</span><span class="p">,</span>
-                                            <span class="n">uuid_list</span><span class="p">,</span>
-                                            <span class="n">jira_data_values</span><span class="p">)</span>
-
-                <span class="k">if</span> <span class="ow">not</span> <span class="n">uuid_new_value</span><span class="p">:</span>
-                    <span class="n">msg</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="s2">&quot;Found </span><span class="si">{}</span><span class="s2"> within the index for Jira Ticket </span><span class="si">{}</span><span class="s2">. &quot;</span>
-                              <span class="s2">&quot;Moving to next row&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">uuid_list</span><span class="p">,</span>
-                                                           <span class="n">jira_value</span><span class="p">)</span>
-                    <span class="n">logging</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
-                <span class="k">elif</span> <span class="n">uuid_new_value</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
-                    <span class="c1"># logging.debug(&quot;Check UUID returned TRUTHY&quot;)</span>
-                    <span class="c1"># Strip [] and &#39; from the string for future parsing.</span>
-                    <span class="n">uuid_new_value</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">uuid_new_value</span><span class="p">)</span><span class="o">.</span>\
-                        <span class="n">translate</span><span class="p">({</span><span class="nb">ord</span><span class="p">(</span><span class="n">i</span><span class="p">):</span> <span class="kc">None</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="s2">&quot;[]&#39;&quot;</span><span class="p">})</span>
-                    <span class="n">uuid_new_cell</span><span class="o">.</span><span class="n">value</span> <span class="o">=</span> <span class="n">uuid_new_value</span>
-                    <span class="c1"># Append the new cell to the row after all the parameters</span>
-                    <span class="c1"># have been set</span>
-                    <span class="n">idx_new_row</span><span class="o">.</span><span class="n">cells</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">uuid_new_cell</span><span class="p">)</span>
-                    <span class="c1"># Append the new row to the list of rows to update</span>
-                    <span class="n">idx_rows_to_update</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">idx_new_row</span><span class="p">)</span>
-                    <span class="k">break</span>
-                <span class="k">else</span><span class="p">:</span>
-                    <span class="n">msg</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="s2">&quot;Unknown error determining if UUID list value &quot;</span>
-                              <span class="s2">&quot;</span><span class="si">{}</span><span class="s2"> is in the Jira index at ticket </span><span class="si">{}</span><span class="s2">.&quot;</span>
-                              <span class="s2">&quot;&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">uuid_list</span><span class="p">,</span> <span class="n">jira_value</span><span class="p">)</span>
-                    <span class="n">logging</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
-
-    <span class="n">logging</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">&quot;Done checking index sheet for UUID updates.&quot;</span><span class="p">)</span>
-
-    <span class="c1"># Write back new UUIDs to the Index</span>
-    <span class="k">if</span> <span class="n">idx_rows_to_update</span><span class="p">:</span>
-        <span class="n">msg</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="s2">&quot;Writing </span><span class="si">{}</span><span class="s2"> index rows back to Sheet ID: </span><span class="si">{}</span><span class="s2"> &quot;</span>
-                  <span class="s2">&quot;Sheet Name: </span><span class="si">{}</span><span class="s2">&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">idx_rows_to_update</span><span class="p">),</span>
-                                           <span class="n">jira_index_sheet</span><span class="o">.</span><span class="n">id</span><span class="p">,</span>
-                                           <span class="n">jira_index_sheet</span><span class="o">.</span><span class="n">name</span><span class="p">)</span>
-        <span class="n">logging</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
-        <span class="n">result</span> <span class="o">=</span> <span class="n">smartsheet_client</span><span class="o">.</span><span class="n">Sheets</span><span class="o">.</span><span class="n">update_rows</span><span class="p">(</span><span class="n">jira_idx_sheet</span><span class="p">,</span>
-                                                      <span class="n">idx_rows_to_update</span><span class="p">)</span>
-        <span class="n">logging</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="n">result</span><span class="p">)</span>
-    <span class="k">else</span><span class="p">:</span>
-        <span class="n">msg</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="s2">&quot;No updates needed for Sheet ID: </span><span class="si">{}</span><span class="s2"> | &quot;</span>
-                  <span class="s2">&quot;Sheet Name </span><span class="si">{}</span><span class="s2">.&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">jira_index_sheet</span><span class="o">.</span><span class="n">id</span><span class="p">,</span>
-                                           <span class="n">jira_index_sheet</span><span class="o">.</span><span class="n">name</span><span class="p">)</span>
-        <span class="n">logging</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
-
-
 <span class="k">def</span> <span class="nf">write_predecessor_dates</span><span class="p">(</span><span class="n">src_data</span><span class="p">,</span> <span class="n">project_data_index</span><span class="p">,</span> <span class="n">smartsheet_client</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;Ensure predecessor start dates are updated across all linked sheets,</span>
 <span class="sd">       but only if the new start date is != the existing start date.</span>
@@ -397,19 +331,27 @@
     <span class="c1">#     &quot;Predecessors&quot;: &quot;38FS +1w&quot;,  # Type: str</span>
     <span class="c1">#     &quot;Summary&quot;: &quot;False&quot;  # Type: str</span>
     <span class="c1"># }</span>
+
+    <span class="c1"># Create friendly names for sheet ID, row ID and start date.</span>
     <span class="n">dest_sheet_id</span> <span class="o">=</span> <span class="n">src_data</span><span class="p">[</span><span class="n">uuid_col</span><span class="p">]</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s2">&quot;-&quot;</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
     <span class="n">dest_row_id</span> <span class="o">=</span> <span class="n">src_data</span><span class="p">[</span><span class="n">uuid_col</span><span class="p">]</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s2">&quot;-&quot;</span><span class="p">)[</span><span class="mi">1</span><span class="p">]</span>
     <span class="n">start_date</span> <span class="o">=</span> <span class="n">src_data</span><span class="p">[</span><span class="n">start_col</span><span class="p">]</span>
 
+    <span class="c1"># Query the API for the sheet data, get the column map, and get the row</span>
+    <span class="c1"># data. Include the objectValue so we can see the row predecessor(s).</span>
     <span class="n">dest_sheet</span> <span class="o">=</span> <span class="n">smartsheet_client</span><span class="o">.</span><span class="n">Sheets</span><span class="o">.</span><span class="n">get_sheet</span><span class="p">(</span><span class="n">dest_sheet_id</span><span class="p">)</span>
     <span class="n">dest_col_map</span> <span class="o">=</span> <span class="n">get_column_map</span><span class="p">(</span><span class="n">dest_sheet</span><span class="p">)</span>
     <span class="n">dest_row</span> <span class="o">=</span> <span class="n">smartsheet_client</span><span class="o">.</span><span class="n">Sheets</span><span class="o">.</span><span class="n">get_row</span><span class="p">(</span><span class="n">dest_sheet_id</span><span class="p">,</span>
                                                 <span class="n">dest_row_id</span><span class="p">,</span>
                                                 <span class="n">include</span><span class="o">=</span><span class="s1">&#39;objectValue&#39;</span><span class="p">)</span>
 
+    <span class="c1"># Validate that the start date is useful.</span>
     <span class="k">if</span> <span class="ow">not</span> <span class="n">start_date</span><span class="p">:</span>
         <span class="n">logging</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">&quot;Start date is </span><span class="si">{}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">start_date</span><span class="p">))</span>
         <span class="k">return</span> <span class="kc">False</span>
+
+    <span class="c1"># Get the start date of the row&#39;s predecessor. Verify that they are</span>
+    <span class="c1"># different.</span>
     <span class="n">pred_start_value</span> <span class="o">=</span> <span class="n">get_cell_value</span><span class="p">(</span><span class="n">dest_row</span><span class="p">,</span> <span class="n">start_col</span><span class="p">,</span> <span class="n">dest_col_map</span><span class="p">)</span>
     <span class="k">if</span> <span class="n">pred_start_value</span> <span class="o">==</span> <span class="n">start_date</span><span class="p">:</span>
         <span class="n">msg</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="s2">&quot;Start date </span><span class="si">{}</span><span class="s2"> matches the start date </span><span class="si">{}</span><span class="s2"> in the &quot;</span>
@@ -418,6 +360,7 @@
         <span class="n">logging</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
         <span class="k">return</span> <span class="kc">True</span>
 
+    <span class="c1"># Get the predecessor cell values.</span>
     <span class="n">pred_cell</span> <span class="o">=</span> <span class="n">get_cell_data</span><span class="p">(</span><span class="n">dest_row</span><span class="p">,</span> <span class="n">predecessor_col</span><span class="p">,</span> <span class="n">dest_col_map</span><span class="p">)</span>
 
     <span class="c1"># Evaluate the value of the predecessor cell. If it has a value other than</span>
@@ -425,6 +368,9 @@
     <span class="c1"># is None but there is no objectValue, the row doesn&#39;t have a predecessor</span>
     <span class="c1"># so we set the destination row ID to the final predecessor ID and break</span>
     <span class="c1"># the loop.</span>
+
+    <span class="c1"># TODO: Handle multiple predecessors. Find earliest predecessor and update</span>
+    <span class="c1"># that date, or update every predecessor.</span>
     <span class="k">while</span> <span class="n">pred_cell</span><span class="o">.</span><span class="n">value</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
         <span class="n">predecessor_row</span> <span class="o">=</span> <span class="n">smartsheet_client</span><span class="o">.</span><span class="n">Sheets</span><span class="o">.</span><span class="n">get_row</span><span class="p">(</span>
             <span class="n">dest_sheet_id</span><span class="p">,</span> <span class="n">dest_row_id</span><span class="p">,</span> <span class="n">include</span><span class="o">=</span><span class="s1">&#39;objectValue&#39;</span><span class="p">)</span>
@@ -451,6 +397,7 @@
             <span class="n">dest_row_id</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">dest_row_id</span><span class="p">)</span><span class="o">.</span><span class="n">translate</span><span class="p">(</span>
                 <span class="p">{</span><span class="nb">ord</span><span class="p">(</span><span class="n">i</span><span class="p">):</span> <span class="kc">None</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="s2">&quot;[]&#39;&quot;</span><span class="p">})</span>
 
+    <span class="c1"># Get the value of the destination Start Date cell.</span>
     <span class="n">dest_start_cell</span> <span class="o">=</span> <span class="n">get_cell_data</span><span class="p">(</span><span class="n">dest_row</span><span class="p">,</span> <span class="n">start_col</span><span class="p">,</span> <span class="n">dest_col_map</span><span class="p">)</span>
 
     <span class="k">try</span><span class="p">:</span>
@@ -525,12 +472,23 @@
 <span class="sd">    Returns:</span>
 <span class="sd">        int: The number of sheets that were updated.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
+    <span class="c1"># Reset the counter on each run</span>
     <span class="n">sheets_updated</span> <span class="o">=</span> <span class="mi">0</span>
+
+    <span class="c1"># Iterate through each set of sheet IDs and associated data from the</span>
+    <span class="c1"># dictionary</span>
     <span class="k">for</span> <span class="n">sheet_id</span><span class="p">,</span> <span class="n">sheet_data</span> <span class="ow">in</span> <span class="n">sheets_to_update</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+
+        <span class="c1"># Assign friendly names to make grokking easier.</span>
         <span class="n">sheet_name</span> <span class="o">=</span> <span class="n">sheet_data</span><span class="p">[</span><span class="s1">&#39;sheet_name&#39;</span><span class="p">]</span>
         <span class="n">row_data</span> <span class="o">=</span> <span class="n">sheet_data</span><span class="p">[</span><span class="s1">&#39;row_data&#39;</span><span class="p">]</span>
 
+        <span class="c1"># Create an empty list of rows to write back to the sheet.</span>
         <span class="n">rows_to_write</span> <span class="o">=</span> <span class="p">[]</span>
+
+        <span class="c1"># Iterate through each set of row IDs and assocaiated cell data,</span>
+        <span class="c1"># create new row and cell objects to overwrite the existing data,</span>
+        <span class="c1"># and update the UUID value for the row.</span>
         <span class="k">for</span> <span class="n">row_id</span><span class="p">,</span> <span class="n">cell_data</span> <span class="ow">in</span> <span class="n">row_data</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
             <span class="n">new_row</span> <span class="o">=</span> <span class="n">smartsheet_client</span><span class="o">.</span><span class="n">models</span><span class="o">.</span><span class="n">Row</span><span class="p">()</span>
             <span class="n">new_row</span><span class="o">.</span><span class="n">id</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">row_id</span><span class="p">)</span>
@@ -555,7 +513,7 @@
             <span class="n">logging</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
             <span class="n">sheets_updated</span> <span class="o">+=</span> <span class="mi">1</span>
         <span class="k">else</span><span class="p">:</span>
-            <span class="n">msg</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="s2">&quot;No updates required for Sheet ID: &quot;</span>
+            <span class="n">msg</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="s2">&quot;No UUID updates required for Sheet ID: &quot;</span>
                       <span class="s2">&quot;</span><span class="si">{}</span><span class="s2"> | Sheet Name: </span><span class="si">{}</span><span class="s2">&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">sheet_id</span><span class="p">,</span> <span class="n">sheet_name</span><span class="p">)</span>
             <span class="n">logging</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
     <span class="k">return</span> <span class="n">sheets_updated</span>
@@ -582,22 +540,21 @@ with the API</li>
 
 
                 </section>
-                <section id="link_from_index">
-                            <div class="attr function"><a class="headerlink" href="#link_from_index">#&nbsp;&nbsp</a>
+                <section id="write_jira_index_cell_links">
+                            <div class="attr function"><a class="headerlink" href="#write_jira_index_cell_links">#&nbsp;&nbsp</a>
 
         
             <span class="def">def</span>
-            <span class="name">link_from_index</span><span class="signature">(project_sub_index, smartsheet_client)</span>:
+            <span class="name">write_jira_index_cell_links</span><span class="signature">(project_sub_index, smartsheet_client)</span>:
     </div>
 
                 <details>
             <summary>View Source</summary>
-            <div class="codehilite"><pre><span></span><span class="k">def</span> <span class="nf">link_from_index</span><span class="p">(</span><span class="n">project_sub_index</span><span class="p">,</span>
-                    <span class="n">smartsheet_client</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;Main functionality. For each sheet in the destination sheet</span>
-<span class="sd">       index, parse through the rows, determine if cells need to be</span>
-<span class="sd">       linked, create cell links and then write the rows back to</span>
-<span class="sd">       the sheet.</span>
+            <div class="codehilite"><pre><span></span><span class="k">def</span> <span class="nf">write_jira_index_cell_links</span><span class="p">(</span><span class="n">project_sub_index</span><span class="p">,</span>
+                                <span class="n">smartsheet_client</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;For each sheet in the destination sheet index, parse through the rows,</span>
+<span class="sd">       determine if cells need to be linked, create cell links and then write</span>
+<span class="sd">       the rows back to the sheet.</span>
 
 <span class="sd">    Args:</span>
 <span class="sd">        project_sub_index (dict): The list of projects that have a</span>
@@ -609,21 +566,34 @@ with the API</li>
 <span class="sd">        bool: True if any links were written, False if no data was</span>
 <span class="sd">              written back to any sheet.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
-    <span class="c1"># index_data_copy = jira_index_data.copy()</span>
+
+    <span class="c1"># Create a copy of the project_sub_index so that we don&#39;t alter any</span>
+    <span class="c1"># other function&#39;s data set.</span>
     <span class="n">project_data_copy</span> <span class="o">=</span> <span class="n">project_sub_index</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
 
+    <span class="c1"># Create a list of columns that will be cell linked.</span>
     <span class="n">columns_to_link</span> <span class="o">=</span> <span class="p">[</span><span class="n">jira_col</span><span class="p">,</span> <span class="n">status_col</span><span class="p">,</span> <span class="n">task_col</span><span class="p">,</span> <span class="n">assignee_col</span><span class="p">]</span>
 
+    <span class="c1"># Create smaller indexes from the copy to speed up processing</span>
     <span class="n">dest_sheet_index</span> <span class="o">=</span> <span class="n">dest_indexes</span><span class="p">(</span><span class="n">project_data_copy</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
     <span class="n">jira_index_sheet</span><span class="p">,</span> <span class="n">jira_index_col_map</span><span class="p">,</span> <span class="n">jira_index_rows</span> <span class="o">=</span> <span class="n">load_jira_index</span><span class="p">(</span>
         <span class="n">smartsheet_client</span><span class="p">)</span>
 
+    <span class="c1"># Iterate through each sheet ID in the smaller sheet index.</span>
     <span class="k">for</span> <span class="n">sheet_id</span> <span class="ow">in</span> <span class="n">dest_sheet_index</span><span class="o">.</span><span class="n">keys</span><span class="p">():</span>
+        <span class="c1"># Get the sheet data for the ID.</span>
         <span class="n">dest_sheet</span> <span class="o">=</span> <span class="n">smartsheet_client</span><span class="o">.</span><span class="n">Sheets</span><span class="o">.</span><span class="n">get_sheet</span><span class="p">(</span><span class="n">sheet_id</span><span class="p">)</span>
+
+        <span class="c1"># Build a column map for easier column name to ID reference</span>
         <span class="n">dest_col_map</span> <span class="o">=</span> <span class="n">get_column_map</span><span class="p">(</span><span class="n">dest_sheet</span><span class="p">)</span>
+
+        <span class="c1"># Create an empty list of cell links to update.</span>
         <span class="n">cell_links_to_update</span> <span class="o">=</span> <span class="p">[]</span>
 
+        <span class="c1"># Iterate through each row in the sheet.</span>
         <span class="k">for</span> <span class="n">row</span> <span class="ow">in</span> <span class="n">dest_sheet</span><span class="o">.</span><span class="n">rows</span><span class="p">:</span>
+            <span class="c1"># Get the value of the Jira Ticket cell and validate that there</span>
+            <span class="c1"># is a value in the cell.</span>
             <span class="n">jira_cell</span> <span class="o">=</span> <span class="n">get_cell_data</span><span class="p">(</span>
                 <span class="n">row</span><span class="p">,</span> <span class="n">jira_col</span><span class="p">,</span> <span class="n">dest_col_map</span><span class="p">)</span>
             <span class="k">if</span> <span class="n">jira_cell</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">or</span> <span class="n">jira_cell</span><span class="o">.</span><span class="n">value</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
@@ -631,6 +601,9 @@ with the API</li>
                     <span class="s2">&quot;Jira Ticket not found in Dest Sheet row. Skipping&quot;</span><span class="p">)</span>
                 <span class="k">continue</span>
             <span class="k">else</span><span class="p">:</span>
+                <span class="c1"># Set a friendly variable names, validate that the row ID is</span>
+                <span class="c1"># present in the sheet, and create a new row with the cell</span>
+                <span class="c1"># links.</span>
                 <span class="n">jira_value</span> <span class="o">=</span> <span class="n">jira_cell</span><span class="o">.</span><span class="n">value</span>
                 <span class="n">idx_row_id</span> <span class="o">=</span> <span class="n">jira_index_rows</span><span class="p">[</span><span class="n">jira_value</span><span class="p">]</span>
                 <span class="k">if</span> <span class="ow">not</span> <span class="n">idx_row_id</span><span class="p">:</span>
@@ -659,24 +632,38 @@ with the API</li>
                       <span class="s2">&quot;&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">cell_links_to_update</span><span class="p">),</span> <span class="n">dest_sheet</span><span class="o">.</span><span class="n">id</span><span class="p">,</span>
                                  <span class="n">dest_sheet</span><span class="o">.</span><span class="n">name</span><span class="p">)</span>
             <span class="n">logging</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
-            <span class="n">result</span> <span class="o">=</span> <span class="n">smartsheet_client</span><span class="o">.</span><span class="n">Sheets</span><span class="o">.</span><span class="n">update_rows</span><span class="p">(</span><span class="n">dest_sheet</span><span class="o">.</span><span class="n">id</span><span class="p">,</span>
-                                                          <span class="n">cell_links_to_update</span><span class="p">)</span>
-            <span class="n">logging</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="n">result</span><span class="p">)</span>
+
+            <span class="c1"># If over 125 rows need to be written to a single sheet, chunk</span>
+            <span class="c1"># the rows into segments of 125. Anything over 125 will cause</span>
+            <span class="c1"># the API to fail.</span>
+            <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">cell_links_to_update</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">125</span><span class="p">:</span>
+                <span class="n">chunked_cells</span> <span class="o">=</span> <span class="n">chunks</span><span class="p">(</span><span class="n">cell_links_to_update</span><span class="p">,</span> <span class="mi">125</span><span class="p">)</span>
+                <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">chunked_cells</span><span class="p">:</span>
+                    <span class="k">try</span><span class="p">:</span>
+                        <span class="n">result</span> <span class="o">=</span> <span class="n">smartsheet_client</span><span class="o">.</span><span class="n">Sheets</span><span class="o">.</span>\
+                            <span class="n">update_rows</span><span class="p">(</span><span class="n">dest_sheet</span><span class="o">.</span><span class="n">id</span><span class="p">,</span> <span class="n">i</span><span class="p">)</span>
+                        <span class="n">logging</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="n">result</span><span class="p">)</span>
+                    <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+                        <span class="n">logging</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="n">e</span><span class="o">.</span><span class="n">message</span><span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="k">try</span><span class="p">:</span>
+                    <span class="n">result</span> <span class="o">=</span> <span class="n">smartsheet_client</span><span class="o">.</span><span class="n">Sheets</span><span class="o">.</span>\
+                        <span class="n">update_rows</span><span class="p">(</span><span class="n">dest_sheet</span><span class="o">.</span><span class="n">id</span><span class="p">,</span> <span class="n">cell_links_to_update</span><span class="p">)</span>
+                    <span class="n">logging</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="n">result</span><span class="p">)</span>
+                <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+                    <span class="n">logging</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="n">e</span><span class="o">.</span><span class="n">message</span><span class="p">)</span>
         <span class="k">else</span><span class="p">:</span>
-            <span class="n">msg</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="s2">&quot;No updates needed for Sheet ID: </span><span class="si">{}</span><span class="s2"> | &quot;</span>
+            <span class="n">msg</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="s2">&quot;No Jira Ticket updates needed for Sheet ID: </span><span class="si">{}</span><span class="s2"> | &quot;</span>
                       <span class="s2">&quot;Sheet Name </span><span class="si">{}</span><span class="s2">.&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">dest_sheet</span><span class="o">.</span><span class="n">id</span><span class="p">,</span>
                                                <span class="n">dest_sheet</span><span class="o">.</span><span class="n">name</span><span class="p">)</span>
-            <span class="n">logging</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
-
-    <span class="k">return</span> <span class="kc">True</span>
+            <span class="n">logging</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
 </pre></div>
 
         </details>
 
-            <div class="docstring"><p>Main functionality. For each sheet in the destination sheet
-   index, parse through the rows, determine if cells need to be
-   linked, create cell links and then write the rows back to
-   the sheet.</p>
+            <div class="docstring"><p>For each sheet in the destination sheet index, parse through the rows,
+   determine if cells need to be linked, create cell links and then write
+   the rows back to the sheet.</p>
 
 <h6 id="args">Args</h6>
 
@@ -724,6 +711,7 @@ with the API</li>
 <span class="sd">        list: uuid_list if the UUID is not found in the uuid_list after</span>
 <span class="sd">              appending the new UUID, or jira_data_values if the UUID</span>
 <span class="sd">              value is None</span>
+<span class="sd">        none: If the &#39;if&#39; checks fail.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="k">if</span> <span class="n">uuid_list</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
         <span class="n">msg</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="s2">&quot;UUID list is </span><span class="si">{}</span><span class="s2">. Cannot process against an empty &quot;</span>
@@ -785,126 +773,9 @@ from the Jira Index</li>
         in the UUID list.
   list: uuid_list if the UUID is not found in the uuid_list after
         appending the new UUID, or jira_data_values if the UUID
-        value is None</p>
+        value is None
+  none: If the 'if' checks fail.</p>
 </blockquote>
-</div>
-
-
-                </section>
-                <section id="write_jira_uuids">
-                            <div class="attr function"><a class="headerlink" href="#write_jira_uuids">#&nbsp;&nbsp</a>
-
-        
-            <span class="def">def</span>
-            <span class="name">write_jira_uuids</span><span class="signature">(jira_sub_index, project_sub_index, smartsheet_client)</span>:
-    </div>
-
-                <details>
-            <summary>View Source</summary>
-            <div class="codehilite"><pre><span></span><span class="k">def</span> <span class="nf">write_jira_uuids</span><span class="p">(</span><span class="n">jira_sub_index</span><span class="p">,</span> <span class="n">project_sub_index</span><span class="p">,</span> <span class="n">smartsheet_client</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;Checks each row of the index sheet for the Jira ticket</span>
-<span class="sd">       and UUID cells. Compares that against the UUIDs and Jira tickets of each</span>
-<span class="sd">       destination sheet. If there is a match, do nothing. If there isn&#39;t a</span>
-<span class="sd">       match, append or create the UUID value and write the UUID cell back to</span>
-<span class="sd">       the Index Sheet.</span>
-
-<span class="sd">    Args:</span>
-<span class="sd">        jira_sub_index (dict): A dict of Jira Tickets: UUID(s)</span>
-<span class="sd">        project_sub_index (dict): A dict of UUID: Jira Ticket</span>
-<span class="sd">        smartsheet_client (Object): The Smartsheet client to interact with the</span>
-<span class="sd">                                    API</span>
-<span class="sd">    &quot;&quot;&quot;</span>
-    <span class="c1"># Make copies for safekeeping, yeeeesss</span>
-    <span class="n">index_data_copy</span> <span class="o">=</span> <span class="n">jira_sub_index</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
-    <span class="c1"># project_data_copy = project_sub_index.copy()</span>
-
-    <span class="n">jira_index_sheet</span> <span class="o">=</span> <span class="n">smartsheet_client</span><span class="o">.</span><span class="n">Sheets</span><span class="o">.</span><span class="n">get_sheet</span><span class="p">(</span><span class="n">jira_idx_sheet</span><span class="p">)</span>
-    <span class="n">jira_index_col_map</span> <span class="o">=</span> <span class="n">get_column_map</span><span class="p">(</span><span class="n">jira_index_sheet</span><span class="p">)</span>
-    <span class="n">idx_rows_to_update</span> <span class="o">=</span> <span class="p">[]</span>
-
-    <span class="k">for</span> <span class="n">row</span> <span class="ow">in</span> <span class="n">jira_index_sheet</span><span class="o">.</span><span class="n">rows</span><span class="p">:</span>
-        <span class="n">jira_value</span> <span class="o">=</span> <span class="n">get_cell_value</span><span class="p">(</span><span class="n">row</span><span class="p">,</span> <span class="n">jira_col</span><span class="p">,</span> <span class="n">jira_index_col_map</span><span class="p">)</span>
-        <span class="n">uuid_value</span> <span class="o">=</span> <span class="n">get_cell_value</span><span class="p">(</span><span class="n">row</span><span class="p">,</span> <span class="n">uuid_col</span><span class="p">,</span> <span class="n">jira_index_col_map</span><span class="p">)</span>
-
-        <span class="k">if</span> <span class="ow">not</span> <span class="n">jira_value</span><span class="p">:</span>
-            <span class="n">logging</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">&quot;Jira value is </span><span class="si">{}</span><span class="s2">. Skipping row.&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">jira_value</span><span class="p">))</span>
-            <span class="k">continue</span>
-
-        <span class="n">idx_new_row</span> <span class="o">=</span> <span class="n">smartsheet_client</span><span class="o">.</span><span class="n">models</span><span class="o">.</span><span class="n">Row</span><span class="p">()</span>
-        <span class="n">idx_new_row</span><span class="o">.</span><span class="n">id</span> <span class="o">=</span> <span class="n">row</span><span class="o">.</span><span class="n">id</span>
-
-        <span class="k">if</span> <span class="n">jira_value</span> <span class="ow">in</span> <span class="n">index_data_copy</span><span class="o">.</span><span class="n">keys</span><span class="p">():</span>
-            <span class="n">msg</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="s2">&quot;Jira ticket </span><span class="si">{}</span><span class="s2"> matches a key in sheet index&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>
-                <span class="n">jira_value</span><span class="p">)</span>
-            <span class="n">logging</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
-            <span class="n">uuid_new_cell</span> <span class="o">=</span> <span class="n">smartsheet_client</span><span class="o">.</span><span class="n">models</span><span class="o">.</span><span class="n">Cell</span><span class="p">()</span>
-            <span class="n">uuid_new_cell</span><span class="o">.</span><span class="n">column_id</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span>
-                <span class="n">jira_index_col_map</span><span class="p">[</span><span class="n">uuid_col</span><span class="p">])</span>
-            <span class="n">jira_data_values</span> <span class="o">=</span> <span class="n">index_data_copy</span><span class="p">[</span><span class="n">jira_value</span><span class="p">]</span>
-            <span class="k">for</span> <span class="n">uuid_list</span> <span class="ow">in</span> <span class="n">jira_data_values</span><span class="p">:</span>
-                <span class="n">uuid_new_value</span> <span class="o">=</span> <span class="n">check_uuid</span><span class="p">(</span><span class="n">uuid_value</span><span class="p">,</span>
-                                            <span class="n">jira_value</span><span class="p">,</span>
-                                            <span class="n">uuid_list</span><span class="p">,</span>
-                                            <span class="n">jira_data_values</span><span class="p">)</span>
-
-                <span class="k">if</span> <span class="ow">not</span> <span class="n">uuid_new_value</span><span class="p">:</span>
-                    <span class="n">msg</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="s2">&quot;Found </span><span class="si">{}</span><span class="s2"> within the index for Jira Ticket </span><span class="si">{}</span><span class="s2">. &quot;</span>
-                              <span class="s2">&quot;Moving to next row&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">uuid_list</span><span class="p">,</span>
-                                                           <span class="n">jira_value</span><span class="p">)</span>
-                    <span class="n">logging</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
-                <span class="k">elif</span> <span class="n">uuid_new_value</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
-                    <span class="c1"># logging.debug(&quot;Check UUID returned TRUTHY&quot;)</span>
-                    <span class="c1"># Strip [] and &#39; from the string for future parsing.</span>
-                    <span class="n">uuid_new_value</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">uuid_new_value</span><span class="p">)</span><span class="o">.</span>\
-                        <span class="n">translate</span><span class="p">({</span><span class="nb">ord</span><span class="p">(</span><span class="n">i</span><span class="p">):</span> <span class="kc">None</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="s2">&quot;[]&#39;&quot;</span><span class="p">})</span>
-                    <span class="n">uuid_new_cell</span><span class="o">.</span><span class="n">value</span> <span class="o">=</span> <span class="n">uuid_new_value</span>
-                    <span class="c1"># Append the new cell to the row after all the parameters</span>
-                    <span class="c1"># have been set</span>
-                    <span class="n">idx_new_row</span><span class="o">.</span><span class="n">cells</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">uuid_new_cell</span><span class="p">)</span>
-                    <span class="c1"># Append the new row to the list of rows to update</span>
-                    <span class="n">idx_rows_to_update</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">idx_new_row</span><span class="p">)</span>
-                    <span class="k">break</span>
-                <span class="k">else</span><span class="p">:</span>
-                    <span class="n">msg</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="s2">&quot;Unknown error determining if UUID list value &quot;</span>
-                              <span class="s2">&quot;</span><span class="si">{}</span><span class="s2"> is in the Jira index at ticket </span><span class="si">{}</span><span class="s2">.&quot;</span>
-                              <span class="s2">&quot;&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">uuid_list</span><span class="p">,</span> <span class="n">jira_value</span><span class="p">)</span>
-                    <span class="n">logging</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
-
-    <span class="n">logging</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">&quot;Done checking index sheet for UUID updates.&quot;</span><span class="p">)</span>
-
-    <span class="c1"># Write back new UUIDs to the Index</span>
-    <span class="k">if</span> <span class="n">idx_rows_to_update</span><span class="p">:</span>
-        <span class="n">msg</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="s2">&quot;Writing </span><span class="si">{}</span><span class="s2"> index rows back to Sheet ID: </span><span class="si">{}</span><span class="s2"> &quot;</span>
-                  <span class="s2">&quot;Sheet Name: </span><span class="si">{}</span><span class="s2">&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">idx_rows_to_update</span><span class="p">),</span>
-                                           <span class="n">jira_index_sheet</span><span class="o">.</span><span class="n">id</span><span class="p">,</span>
-                                           <span class="n">jira_index_sheet</span><span class="o">.</span><span class="n">name</span><span class="p">)</span>
-        <span class="n">logging</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
-        <span class="n">result</span> <span class="o">=</span> <span class="n">smartsheet_client</span><span class="o">.</span><span class="n">Sheets</span><span class="o">.</span><span class="n">update_rows</span><span class="p">(</span><span class="n">jira_idx_sheet</span><span class="p">,</span>
-                                                      <span class="n">idx_rows_to_update</span><span class="p">)</span>
-        <span class="n">logging</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="n">result</span><span class="p">)</span>
-    <span class="k">else</span><span class="p">:</span>
-        <span class="n">msg</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="s2">&quot;No updates needed for Sheet ID: </span><span class="si">{}</span><span class="s2"> | &quot;</span>
-                  <span class="s2">&quot;Sheet Name </span><span class="si">{}</span><span class="s2">.&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">jira_index_sheet</span><span class="o">.</span><span class="n">id</span><span class="p">,</span>
-                                           <span class="n">jira_index_sheet</span><span class="o">.</span><span class="n">name</span><span class="p">)</span>
-        <span class="n">logging</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
-</pre></div>
-
-        </details>
-
-            <div class="docstring"><p>Checks each row of the index sheet for the Jira ticket
-   and UUID cells. Compares that against the UUIDs and Jira tickets of each
-   destination sheet. If there is a match, do nothing. If there isn't a
-   match, append or create the UUID value and write the UUID cell back to
-   the Index Sheet.</p>
-
-<h6 id="args">Args</h6>
-
-<ul>
-<li><strong>jira_sub_index (dict): A dict of Jira Tickets:</strong>  UUID(s)</li>
-<li><strong>project_sub_index (dict): A dict of UUID:</strong>  Jira Ticket</li>
-<li><strong>smartsheet_client (Object):</strong>  The Smartsheet client to interact with the
-API</li>
-</ul>
 </div>
 
 
@@ -952,19 +823,27 @@ API</li>
     <span class="c1">#     &quot;Predecessors&quot;: &quot;38FS +1w&quot;,  # Type: str</span>
     <span class="c1">#     &quot;Summary&quot;: &quot;False&quot;  # Type: str</span>
     <span class="c1"># }</span>
+
+    <span class="c1"># Create friendly names for sheet ID, row ID and start date.</span>
     <span class="n">dest_sheet_id</span> <span class="o">=</span> <span class="n">src_data</span><span class="p">[</span><span class="n">uuid_col</span><span class="p">]</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s2">&quot;-&quot;</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
     <span class="n">dest_row_id</span> <span class="o">=</span> <span class="n">src_data</span><span class="p">[</span><span class="n">uuid_col</span><span class="p">]</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s2">&quot;-&quot;</span><span class="p">)[</span><span class="mi">1</span><span class="p">]</span>
     <span class="n">start_date</span> <span class="o">=</span> <span class="n">src_data</span><span class="p">[</span><span class="n">start_col</span><span class="p">]</span>
 
+    <span class="c1"># Query the API for the sheet data, get the column map, and get the row</span>
+    <span class="c1"># data. Include the objectValue so we can see the row predecessor(s).</span>
     <span class="n">dest_sheet</span> <span class="o">=</span> <span class="n">smartsheet_client</span><span class="o">.</span><span class="n">Sheets</span><span class="o">.</span><span class="n">get_sheet</span><span class="p">(</span><span class="n">dest_sheet_id</span><span class="p">)</span>
     <span class="n">dest_col_map</span> <span class="o">=</span> <span class="n">get_column_map</span><span class="p">(</span><span class="n">dest_sheet</span><span class="p">)</span>
     <span class="n">dest_row</span> <span class="o">=</span> <span class="n">smartsheet_client</span><span class="o">.</span><span class="n">Sheets</span><span class="o">.</span><span class="n">get_row</span><span class="p">(</span><span class="n">dest_sheet_id</span><span class="p">,</span>
                                                 <span class="n">dest_row_id</span><span class="p">,</span>
                                                 <span class="n">include</span><span class="o">=</span><span class="s1">&#39;objectValue&#39;</span><span class="p">)</span>
 
+    <span class="c1"># Validate that the start date is useful.</span>
     <span class="k">if</span> <span class="ow">not</span> <span class="n">start_date</span><span class="p">:</span>
         <span class="n">logging</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">&quot;Start date is </span><span class="si">{}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">start_date</span><span class="p">))</span>
         <span class="k">return</span> <span class="kc">False</span>
+
+    <span class="c1"># Get the start date of the row&#39;s predecessor. Verify that they are</span>
+    <span class="c1"># different.</span>
     <span class="n">pred_start_value</span> <span class="o">=</span> <span class="n">get_cell_value</span><span class="p">(</span><span class="n">dest_row</span><span class="p">,</span> <span class="n">start_col</span><span class="p">,</span> <span class="n">dest_col_map</span><span class="p">)</span>
     <span class="k">if</span> <span class="n">pred_start_value</span> <span class="o">==</span> <span class="n">start_date</span><span class="p">:</span>
         <span class="n">msg</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="s2">&quot;Start date </span><span class="si">{}</span><span class="s2"> matches the start date </span><span class="si">{}</span><span class="s2"> in the &quot;</span>
@@ -973,6 +852,7 @@ API</li>
         <span class="n">logging</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
         <span class="k">return</span> <span class="kc">True</span>
 
+    <span class="c1"># Get the predecessor cell values.</span>
     <span class="n">pred_cell</span> <span class="o">=</span> <span class="n">get_cell_data</span><span class="p">(</span><span class="n">dest_row</span><span class="p">,</span> <span class="n">predecessor_col</span><span class="p">,</span> <span class="n">dest_col_map</span><span class="p">)</span>
 
     <span class="c1"># Evaluate the value of the predecessor cell. If it has a value other than</span>
@@ -980,6 +860,9 @@ API</li>
     <span class="c1"># is None but there is no objectValue, the row doesn&#39;t have a predecessor</span>
     <span class="c1"># so we set the destination row ID to the final predecessor ID and break</span>
     <span class="c1"># the loop.</span>
+
+    <span class="c1"># TODO: Handle multiple predecessors. Find earliest predecessor and update</span>
+    <span class="c1"># that date, or update every predecessor.</span>
     <span class="k">while</span> <span class="n">pred_cell</span><span class="o">.</span><span class="n">value</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
         <span class="n">predecessor_row</span> <span class="o">=</span> <span class="n">smartsheet_client</span><span class="o">.</span><span class="n">Sheets</span><span class="o">.</span><span class="n">get_row</span><span class="p">(</span>
             <span class="n">dest_sheet_id</span><span class="p">,</span> <span class="n">dest_row_id</span><span class="p">,</span> <span class="n">include</span><span class="o">=</span><span class="s1">&#39;objectValue&#39;</span><span class="p">)</span>
@@ -1006,6 +889,7 @@ API</li>
             <span class="n">dest_row_id</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">dest_row_id</span><span class="p">)</span><span class="o">.</span><span class="n">translate</span><span class="p">(</span>
                 <span class="p">{</span><span class="nb">ord</span><span class="p">(</span><span class="n">i</span><span class="p">):</span> <span class="kc">None</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="s2">&quot;[]&#39;&quot;</span><span class="p">})</span>
 
+    <span class="c1"># Get the value of the destination Start Date cell.</span>
     <span class="n">dest_start_cell</span> <span class="o">=</span> <span class="n">get_cell_data</span><span class="p">(</span><span class="n">dest_row</span><span class="p">,</span> <span class="n">start_col</span><span class="p">,</span> <span class="n">dest_col_map</span><span class="p">)</span>
 
     <span class="k">try</span><span class="p">:</span>

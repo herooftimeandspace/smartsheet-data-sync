@@ -87,6 +87,9 @@
             <li>
                     <a class="variable" href="#sync_columns">sync_columns</a>
             </li>
+            <li>
+                    <a class="variable" href="#minutes">minutes</a>
+            </li>
     </ul>
 
 
@@ -112,7 +115,7 @@
 <span class="sd">&quot;&quot;&quot;The main log written to disk</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
-<span class="n">workspace_id</span> <span class="o">=</span> <span class="p">[</span><span class="mi">1014869735565188</span><span class="p">,</span> <span class="mi">1498352056592260</span><span class="p">]</span>
+<span class="n">workspace_id</span> <span class="o">=</span> <span class="p">[</span><span class="mi">8158274374657924</span><span class="p">,</span> <span class="mi">1479840747546500</span><span class="p">,</span> <span class="mi">6569226535233412</span><span class="p">]</span>
 <span class="sd">&quot;&quot;&quot;List of workspace IDs. Workspace IDs are Type: int.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 <span class="n">uuid_col</span> <span class="o">=</span> <span class="s2">&quot;UUID&quot;</span>
@@ -173,6 +176,11 @@
                 <span class="n">start_col</span><span class="p">,</span> <span class="n">duration_col</span><span class="p">]</span>
 <span class="sd">&quot;&quot;&quot;List of columns to use during Cell link syncs. Type: list</span>
 <span class="sd">    &quot;&quot;&quot;</span>
+
+<span class="n">minutes</span> <span class="o">=</span> <span class="mi">65</span>
+<span class="sd">&quot;&quot;&quot;The maximum number of minutes into the past the get_timestamp function</span>
+<span class="sd">    should look before filtering out results. Type: int</span>
+<span class="sd">    &quot;&quot;&quot;</span>
 </pre></div>
 
         </details>
@@ -203,7 +211,7 @@
                 <section id="workspace_id">
                                 <div class="attr variable"><a class="headerlink" href="#workspace_id">#&nbsp;&nbsp</a>
 
-        <span class="name">workspace_id</span><span class="default_value"> = [1014869735565188, 1498352056592260]</span>
+        <span class="name">workspace_id</span><span class="default_value"> = [8158274374657924, 1479840747546500, 6569226535233412]</span>
     </div>
 
             <div class="docstring"><p>List of workspace IDs. Workspace IDs are Type: int.</p>
@@ -383,6 +391,18 @@
     </div>
 
             <div class="docstring"><p>List of columns to use during Cell link syncs. Type: list</p>
+</div>
+
+
+                </section>
+                <section id="minutes">
+                                <div class="attr variable"><a class="headerlink" href="#minutes">#&nbsp;&nbsp</a>
+
+        <span class="name">minutes</span><span class="default_value"> = 65</span>
+    </div>
+
+            <div class="docstring"><p>The maximum number of minutes into the past the get_timestamp function
+should look before filtering out results. Type: int</p>
 </div>
 
 
