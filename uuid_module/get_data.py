@@ -19,6 +19,33 @@ logger = logging.getLogger(__name__)
 utc = pytz.UTC
 
 
+def refresh_source_sheets(smartsheet_client, sheet_ids, minutes=0):
+    source_sheets = []
+    if minutes > 0:
+        _, modified_since = get_timestamp(minutes)
+        for sheet_id in sheet_ids:
+            # Query the Smartsheet API for the sheet details
+            sheet = smartsheet_client.\
+                Sheets.get_sheet(
+                    sheet_id, rows_modified_since=modified_since)
+            source_sheets.append(sheet)
+            logging.debug("Loading Sheet ID: {} | "
+                          "Sheet Name: {}".format(sheet.id, sheet.name))
+    elif minutes == 0:
+        for sheet_id in sheet_ids:
+            # Query the Smartsheet API for the sheet details
+            sheet = smartsheet_client.\
+                Sheets.get_sheet(sheet_id)
+            source_sheets.append(sheet)
+            logging.debug("Loading Sheet ID: {} | "
+                          "Sheet Name: {}".format(sheet.id, sheet.name))
+    else:
+        msg = str("Invalid value for minutes. Value was {}").format(minutes)
+        logging.warning(msg)
+
+    return source_sheets
+
+
 def get_all_row_data(source_sheets, columns, minutes):
     """Parses through all source sheets and gets specific data from the
        columns provided.

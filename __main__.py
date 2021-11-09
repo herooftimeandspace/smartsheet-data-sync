@@ -13,8 +13,8 @@ from apscheduler.schedulers.background import BlockingScheduler
 # from uuid_module.cell_link_sheet_data import write_uuid_cell_links
 from uuid_module.get_data import (get_all_row_data, get_all_sheet_ids,
                                   get_blank_uuids, get_secret, get_secret_name,
-                                  get_sub_indexes)
-from uuid_module.helper import get_timestamp, truncate
+                                  get_sub_indexes, refresh_source_sheets)
+from uuid_module.helper import truncate
 from uuid_module.variables import (log_location, minutes, module_log_name,
                                    sheet_columns)
 from uuid_module.write_data import write_jira_index_cell_links, write_uuids
@@ -195,23 +195,9 @@ def full_jira_sync(minutes):
     # Calculate a number minutes ago to get only the rows that were modified
     # since the last run.
 
-    def refresh_source_sheets(minutes):
-        _, modified_since = get_timestamp(minutes)
-        source_sheets = []
-        with sheet_index_lock:
-            source_sheets = []
-            # Iterate through each sheet ID.
-            for sheet_id in sheet_ids:
-                # Query the Smartsheet API for the sheet details
-                sheet = smartsheet_client.\
-                    Sheets.get_sheet(
-                        sheet_id, rows_modified_since=modified_since)
-                source_sheets.append(sheet)
-                logging.debug("Loading Sheet ID: {} | "
-                              "Sheet Name: {}".format(sheet.id, sheet.name))
-        return source_sheets
-
-    source_sheets = refresh_source_sheets(minutes)
+    with sheet_index_lock:
+        source_sheets = refresh_source_sheets(
+            smartsheet_client, sheet_ids, minutes)
 
     blank_uuid_index = get_blank_uuids(source_sheets)
     if blank_uuid_index:
