@@ -48,6 +48,12 @@
             <li>
                     <a class="function" href="#truncate">truncate</a>
             </li>
+            <li>
+                    <a class="function" href="#get_timestamp">get_timestamp</a>
+            </li>
+            <li>
+                    <a class="function" href="#chunks">chunks</a>
+            </li>
     </ul>
 
 
@@ -66,9 +72,12 @@
                 
                         <details>
             <summary>View Source</summary>
-            <div class="codehilite"><pre><span></span><span class="kn">import</span> <span class="nn">logging</span>
-<span class="kn">import</span> <span class="nn">json</span>
+            <div class="codehilite"><pre><span></span><span class="kn">import</span> <span class="nn">json</span>
+<span class="kn">import</span> <span class="nn">logging</span>
 <span class="kn">import</span> <span class="nn">math</span>
+<span class="kn">from</span> <span class="nn">datetime</span> <span class="kn">import</span> <span class="n">datetime</span><span class="p">,</span> <span class="n">timedelta</span>
+
+<span class="kn">import</span> <span class="nn">smartsheet</span>
 
 <span class="n">logger</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">(</span><span class="vm">__name__</span><span class="p">)</span>
 
@@ -85,10 +94,19 @@
 <span class="sd">        cell (Cell): A Cell object or None if the column is not found in the</span>
 <span class="sd">                     map.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">row</span><span class="p">,</span> <span class="n">smartsheet</span><span class="o">.</span><span class="n">models</span><span class="o">.</span><span class="n">row</span><span class="o">.</span><span class="n">Row</span><span class="p">):</span>
+        <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s2">&quot;Row is not a Smartsheet Row type object&quot;</span><span class="p">)</span>
+    <span class="k">elif</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">column_name</span><span class="p">,</span> <span class="nb">str</span><span class="p">):</span>
+        <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s2">&quot;Column name must be a string&quot;</span><span class="p">)</span>
+    <span class="k">elif</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">column_map</span><span class="p">,</span> <span class="nb">dict</span><span class="p">):</span>
+        <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s2">&quot;Column Map must be a dict of ColNames:ColIDs&quot;</span><span class="p">)</span>
+
     <span class="k">try</span><span class="p">:</span>
         <span class="n">column_id</span> <span class="o">=</span> <span class="n">column_map</span><span class="p">[</span><span class="n">column_name</span><span class="p">]</span>
     <span class="k">except</span> <span class="ne">KeyError</span><span class="p">:</span>
-        <span class="n">logging</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">&quot;Column not found: &quot;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="n">column_name</span><span class="p">))</span>
+        <span class="n">msg</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="s2">&quot;Column not found: </span><span class="si">{}</span><span class="s2">&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">column_name</span><span class="p">)</span>
+        <span class="n">logging</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
+        <span class="c1"># raise KeyError(msg)</span>
         <span class="k">return</span> <span class="kc">None</span>
     <span class="k">else</span><span class="p">:</span>
         <span class="k">return</span> <span class="n">row</span><span class="o">.</span><span class="n">get_column</span><span class="p">(</span><span class="n">column_id</span><span class="p">)</span>
@@ -103,6 +121,11 @@
 <span class="sd">    Returns:</span>
 <span class="sd">        dict: A map of Column Name: Column ID</span>
 <span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">sheet</span><span class="p">,</span> <span class="n">smartsheet</span><span class="o">.</span><span class="n">models</span><span class="o">.</span><span class="n">sheet</span><span class="o">.</span><span class="n">Sheet</span><span class="p">):</span>
+        <span class="n">err</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="s2">&quot;Sheet must be a Smartsheet Sheet object,&quot;</span>
+                  <span class="s2">&quot;not </span><span class="si">{}</span><span class="s2">&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="nb">type</span><span class="p">(</span><span class="n">sheet</span><span class="p">))</span>
+        <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="n">err</span><span class="p">)</span>
+
     <span class="n">column_map</span> <span class="o">=</span> <span class="p">{}</span>
     <span class="k">for</span> <span class="n">column</span> <span class="ow">in</span> <span class="n">sheet</span><span class="o">.</span><span class="n">columns</span><span class="p">:</span>
         <span class="n">column_map</span><span class="p">[</span><span class="n">column</span><span class="o">.</span><span class="n">title</span><span class="p">]</span> <span class="o">=</span> <span class="n">column</span><span class="o">.</span><span class="n">id</span>
@@ -110,8 +133,10 @@
 
 
 <span class="k">def</span> <span class="nf">has_cell_link</span><span class="p">(</span><span class="n">old_cell</span><span class="p">,</span> <span class="n">direction</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;Helper function to determine if an existing cell already has a cell</span>
-<span class="sd">       link.</span>
+    <span class="sd">&quot;&quot;&quot;Determine if an existing cell already has a cell link, which direction</span>
+<span class="sd">       and whether it needs to be repaired. Returning None currently disabled</span>
+<span class="sd">       because it caused the script to skip valid cells that should have been</span>
+<span class="sd">       linked.</span>
 
 <span class="sd">    Args:</span>
 <span class="sd">        old_cell (Cell): The Cell object to check.</span>
@@ -119,12 +144,15 @@
 
 <span class="sd">    Returns:</span>
 <span class="sd">        str: &quot;Linked&quot; if status is &quot;OK&quot;, &quot;Broken&quot; if staus is &quot;BROKEN&quot;,</span>
-<span class="sd">             None if the cell doesn&#39;t have a value and &quot;Unlinked&quot; if the</span>
-<span class="sd">             cell doesn&#39;t have a cell link property. If the cell link</span>
-<span class="sd">             type is &#39;linksOutToCells&#39;, always return &quot;Linked&quot;.</span>
+<span class="sd">             &quot;Unlinked&quot; if the cell doesn&#39;t have a cell link property. If the</span>
+<span class="sd">             cell link type is &#39;linksOutToCells&#39;, always return &quot;Linked&quot;.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="c1"># Load the cell values as a json object</span>
     <span class="n">cell_json</span> <span class="o">=</span> <span class="n">json</span><span class="o">.</span><span class="n">loads</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">old_cell</span><span class="p">))</span>
+
     <span class="k">if</span> <span class="n">direction</span> <span class="o">==</span> <span class="s2">&quot;In&quot;</span><span class="p">:</span>
+        <span class="c1"># Check the status of the link.</span>
         <span class="k">try</span><span class="p">:</span>
             <span class="n">linked_cell</span> <span class="o">=</span> <span class="n">cell_json</span><span class="p">[</span><span class="s1">&#39;linkInFromCell&#39;</span><span class="p">]</span>
             <span class="n">status</span> <span class="o">=</span> <span class="n">linked_cell</span><span class="p">[</span><span class="s1">&#39;status&#39;</span><span class="p">]</span>
@@ -133,16 +161,17 @@
             <span class="k">elif</span> <span class="n">status</span> <span class="o">==</span> <span class="s1">&#39;BROKEN&#39;</span><span class="p">:</span>
                 <span class="k">return</span> <span class="s2">&quot;Broken&quot;</span>
         <span class="k">except</span> <span class="ne">KeyError</span><span class="p">:</span>
-            <span class="k">if</span> <span class="n">old_cell</span><span class="o">.</span><span class="n">value</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
-                <span class="k">return</span> <span class="kc">None</span>
+            <span class="c1"># if old_cell.value is None:</span>
+            <span class="c1">#     return None</span>
             <span class="k">return</span> <span class="s2">&quot;Unlinked&quot;</span>
     <span class="k">elif</span> <span class="n">direction</span> <span class="o">==</span> <span class="s2">&quot;Out&quot;</span><span class="p">:</span>
+        <span class="c1"># Always set to Linked, unless it&#39;s invalid.</span>
         <span class="k">try</span><span class="p">:</span>
             <span class="n">linked_cell</span> <span class="o">=</span> <span class="n">cell_json</span><span class="p">[</span><span class="s1">&#39;linksOutToCells&#39;</span><span class="p">]</span>
             <span class="k">return</span> <span class="s2">&quot;Linked&quot;</span>
         <span class="k">except</span> <span class="ne">KeyError</span><span class="p">:</span>
-            <span class="k">if</span> <span class="n">old_cell</span><span class="o">.</span><span class="n">value</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
-                <span class="k">return</span> <span class="kc">None</span>
+            <span class="c1"># if old_cell.value is None:</span>
+            <span class="c1">#     return None</span>
             <span class="k">return</span> <span class="s2">&quot;Unlinked&quot;</span>
 
 
@@ -156,17 +185,22 @@
 <span class="sd">        col_map (dict): The map of Column Name: Column ID</span>
 
 <span class="sd">    Returns:</span>
-<span class="sd">        str: The Value of the cell.</span>
+<span class="sd">        str: The value of the cell.</span>
+<span class="sd">        none: If the cell doesn&#39;t exist or has a null value.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="c1"># Validate data types.</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">row</span><span class="p">,</span> <span class="n">smartsheet</span><span class="o">.</span><span class="n">models</span><span class="o">.</span><span class="n">row</span><span class="o">.</span><span class="n">Row</span><span class="p">):</span>
+        <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s2">&quot;Row is not a Smartsheet Row type object&quot;</span><span class="p">)</span>
+    <span class="k">elif</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">col_name</span><span class="p">,</span> <span class="nb">str</span><span class="p">):</span>
+        <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s2">&quot;Column name must be a string&quot;</span><span class="p">)</span>
+    <span class="k">elif</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">col_map</span><span class="p">,</span> <span class="nb">dict</span><span class="p">):</span>
+        <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s2">&quot;Column Map must be a dict of ColNames:ColIDs&quot;</span><span class="p">)</span>
+
     <span class="n">cell</span> <span class="o">=</span> <span class="n">get_cell_data</span><span class="p">(</span><span class="n">row</span><span class="p">,</span> <span class="n">col_name</span><span class="p">,</span> <span class="n">col_map</span><span class="p">)</span>
     <span class="k">if</span> <span class="n">cell</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">or</span> <span class="n">cell</span><span class="o">.</span><span class="n">value</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
-        <span class="k">try</span><span class="p">:</span>
-            <span class="n">msg</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="s2">&quot;Cell is </span><span class="si">{}</span><span class="s2"> or cell value is </span><span class="si">{}</span><span class="s2">. &quot;</span>
-                      <span class="s2">&quot;Returning &#39;None&#39;&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">cell</span><span class="p">,</span> <span class="n">cell</span><span class="o">.</span><span class="n">value</span><span class="p">)</span>
-        <span class="k">except</span> <span class="ne">AttributeError</span><span class="p">:</span>
-            <span class="n">msg</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="s2">&quot;Cell is </span><span class="si">{}</span><span class="s2">. Returning &#39;None&#39;&quot;</span>
-                      <span class="s2">&quot;&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">cell</span><span class="p">)</span>
-
+        <span class="n">msg</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="s2">&quot;Cell is &#39;None&#39; or cell value is &#39;None&#39;. &quot;</span>
+                  <span class="s2">&quot;Returning &#39;None&#39;&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">format</span><span class="p">()</span>
         <span class="n">logging</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
         <span class="k">return</span> <span class="kc">None</span>
     <span class="k">else</span><span class="p">:</span>
@@ -180,9 +214,21 @@
 <span class="sd">        obj (json): The JSON object to pars through</span>
 <span class="sd">        key (str): The key to search for</span>
 
+<span class="sd">    Raises:</span>
+<span class="sd">        TypeError: If the objects passed in aren&#39;t a dict or string,</span>
+<span class="sd">                   respectively.</span>
+
 <span class="sd">    Returns:</span>
 <span class="sd">        str: The value if a key matches inside the obj JSON</span>
 <span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="c1"># Validate data types before attempting to process.</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">obj</span><span class="p">,</span> <span class="nb">dict</span><span class="p">):</span>
+        <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s2">&quot;Obj must be a dict (json).&quot;</span><span class="p">)</span>
+    <span class="k">elif</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">key</span><span class="p">,</span> <span class="nb">str</span><span class="p">):</span>
+        <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s2">&quot;Key must be a string.&quot;</span><span class="p">)</span>
+
+    <span class="c1"># Create an empty list as an &#39;array&#39;</span>
     <span class="n">arr</span> <span class="o">=</span> <span class="p">[]</span>
 
     <span class="k">def</span> <span class="nf">extract</span><span class="p">(</span><span class="n">obj</span><span class="p">,</span> <span class="n">arr</span><span class="p">,</span> <span class="n">key</span><span class="p">):</span>
@@ -203,7 +249,7 @@
 
 
 <span class="k">def</span> <span class="nf">truncate</span><span class="p">(</span><span class="n">number</span><span class="p">,</span> <span class="n">decimals</span><span class="o">=</span><span class="mi">0</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;Returns a value truncated to a specific number of decimal places.</span>
+    <span class="sd">&quot;&quot;&quot;Return a value truncated to a specific number of decimal places.</span>
 
 <span class="sd">    Args:</span>
 <span class="sd">        number (int): The number to truncate</span>
@@ -217,6 +263,8 @@
 <span class="sd">    Returns:</span>
 <span class="sd">        int: The number, truncated to the number of decimal places.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="c1"># Validate data types before attempting to process.</span>
     <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">decimals</span><span class="p">,</span> <span class="nb">int</span><span class="p">):</span>
         <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s2">&quot;decimal places must be an integer.&quot;</span><span class="p">)</span>
     <span class="k">elif</span> <span class="n">decimals</span> <span class="o">&lt;</span> <span class="mi">0</span><span class="p">:</span>
@@ -226,6 +274,38 @@
 
     <span class="n">factor</span> <span class="o">=</span> <span class="mf">10.0</span> <span class="o">**</span> <span class="n">decimals</span>
     <span class="k">return</span> <span class="n">math</span><span class="o">.</span><span class="n">trunc</span><span class="p">(</span><span class="n">number</span> <span class="o">*</span> <span class="n">factor</span><span class="p">)</span> <span class="o">/</span> <span class="n">factor</span>
+
+
+<span class="k">def</span> <span class="nf">get_timestamp</span><span class="p">(</span><span class="n">number</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Subtracts the number intput from the current time to generate a</span>
+<span class="sd">       timestamp N number of minutes ago.</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        string: an ISO8601 compliant timestamp</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">number</span><span class="p">,</span> <span class="nb">int</span><span class="p">):</span>
+        <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s2">&quot;Number of minutes must be an integer.&quot;</span><span class="p">)</span>
+
+    <span class="n">date</span> <span class="o">=</span> <span class="n">datetime</span><span class="o">.</span><span class="n">now</span><span class="p">()</span>
+    <span class="n">delta</span> <span class="o">=</span> <span class="n">timedelta</span><span class="p">(</span><span class="n">minutes</span><span class="o">=</span><span class="n">number</span><span class="p">)</span>
+    <span class="n">modified_since</span> <span class="o">=</span> <span class="n">date</span> <span class="o">-</span> <span class="n">delta</span>
+    <span class="n">modified_since</span> <span class="o">=</span> <span class="n">modified_since</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="n">microsecond</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>  <span class="c1"># .isoformat()</span>
+    <span class="n">modified_since_iso</span> <span class="o">=</span> <span class="n">modified_since</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="n">microsecond</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span><span class="o">.</span><span class="n">isoformat</span><span class="p">()</span>
+    <span class="k">return</span> <span class="n">modified_since</span><span class="p">,</span> <span class="n">modified_since_iso</span>
+
+
+<span class="k">def</span> <span class="nf">chunks</span><span class="p">(</span><span class="n">lst</span><span class="p">,</span> <span class="n">n</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Yield successive n-sized chunks from lst.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        lst (list): The list of objects to chunk</span>
+<span class="sd">        n (int): The number of items in the list to chunk together</span>
+
+<span class="sd">    Yields:</span>
+<span class="sd">        lst (list): The sub-list of chunked items</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="n">lst</span><span class="p">),</span> <span class="n">n</span><span class="p">):</span>
+        <span class="k">yield</span> <span class="n">lst</span><span class="p">[</span><span class="n">i</span><span class="p">:</span><span class="n">i</span> <span class="o">+</span> <span class="n">n</span><span class="p">]</span>
 </pre></div>
 
         </details>
@@ -253,10 +333,19 @@
 <span class="sd">        cell (Cell): A Cell object or None if the column is not found in the</span>
 <span class="sd">                     map.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">row</span><span class="p">,</span> <span class="n">smartsheet</span><span class="o">.</span><span class="n">models</span><span class="o">.</span><span class="n">row</span><span class="o">.</span><span class="n">Row</span><span class="p">):</span>
+        <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s2">&quot;Row is not a Smartsheet Row type object&quot;</span><span class="p">)</span>
+    <span class="k">elif</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">column_name</span><span class="p">,</span> <span class="nb">str</span><span class="p">):</span>
+        <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s2">&quot;Column name must be a string&quot;</span><span class="p">)</span>
+    <span class="k">elif</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">column_map</span><span class="p">,</span> <span class="nb">dict</span><span class="p">):</span>
+        <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s2">&quot;Column Map must be a dict of ColNames:ColIDs&quot;</span><span class="p">)</span>
+
     <span class="k">try</span><span class="p">:</span>
         <span class="n">column_id</span> <span class="o">=</span> <span class="n">column_map</span><span class="p">[</span><span class="n">column_name</span><span class="p">]</span>
     <span class="k">except</span> <span class="ne">KeyError</span><span class="p">:</span>
-        <span class="n">logging</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">&quot;Column not found: &quot;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="n">column_name</span><span class="p">))</span>
+        <span class="n">msg</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="s2">&quot;Column not found: </span><span class="si">{}</span><span class="s2">&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">column_name</span><span class="p">)</span>
+        <span class="n">logging</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
+        <span class="c1"># raise KeyError(msg)</span>
         <span class="k">return</span> <span class="kc">None</span>
     <span class="k">else</span><span class="p">:</span>
         <span class="k">return</span> <span class="n">row</span><span class="o">.</span><span class="n">get_column</span><span class="p">(</span><span class="n">column_id</span><span class="p">)</span>
@@ -303,6 +392,11 @@
 <span class="sd">    Returns:</span>
 <span class="sd">        dict: A map of Column Name: Column ID</span>
 <span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">sheet</span><span class="p">,</span> <span class="n">smartsheet</span><span class="o">.</span><span class="n">models</span><span class="o">.</span><span class="n">sheet</span><span class="o">.</span><span class="n">Sheet</span><span class="p">):</span>
+        <span class="n">err</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="s2">&quot;Sheet must be a Smartsheet Sheet object,&quot;</span>
+                  <span class="s2">&quot;not </span><span class="si">{}</span><span class="s2">&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="nb">type</span><span class="p">(</span><span class="n">sheet</span><span class="p">))</span>
+        <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="n">err</span><span class="p">)</span>
+
     <span class="n">column_map</span> <span class="o">=</span> <span class="p">{}</span>
     <span class="k">for</span> <span class="n">column</span> <span class="ow">in</span> <span class="n">sheet</span><span class="o">.</span><span class="n">columns</span><span class="p">:</span>
         <span class="n">column_map</span><span class="p">[</span><span class="n">column</span><span class="o">.</span><span class="n">title</span><span class="p">]</span> <span class="o">=</span> <span class="n">column</span><span class="o">.</span><span class="n">id</span>
@@ -339,8 +433,10 @@
                 <details>
             <summary>View Source</summary>
             <div class="codehilite"><pre><span></span><span class="k">def</span> <span class="nf">has_cell_link</span><span class="p">(</span><span class="n">old_cell</span><span class="p">,</span> <span class="n">direction</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;Helper function to determine if an existing cell already has a cell</span>
-<span class="sd">       link.</span>
+    <span class="sd">&quot;&quot;&quot;Determine if an existing cell already has a cell link, which direction</span>
+<span class="sd">       and whether it needs to be repaired. Returning None currently disabled</span>
+<span class="sd">       because it caused the script to skip valid cells that should have been</span>
+<span class="sd">       linked.</span>
 
 <span class="sd">    Args:</span>
 <span class="sd">        old_cell (Cell): The Cell object to check.</span>
@@ -348,12 +444,15 @@
 
 <span class="sd">    Returns:</span>
 <span class="sd">        str: &quot;Linked&quot; if status is &quot;OK&quot;, &quot;Broken&quot; if staus is &quot;BROKEN&quot;,</span>
-<span class="sd">             None if the cell doesn&#39;t have a value and &quot;Unlinked&quot; if the</span>
-<span class="sd">             cell doesn&#39;t have a cell link property. If the cell link</span>
-<span class="sd">             type is &#39;linksOutToCells&#39;, always return &quot;Linked&quot;.</span>
+<span class="sd">             &quot;Unlinked&quot; if the cell doesn&#39;t have a cell link property. If the</span>
+<span class="sd">             cell link type is &#39;linksOutToCells&#39;, always return &quot;Linked&quot;.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="c1"># Load the cell values as a json object</span>
     <span class="n">cell_json</span> <span class="o">=</span> <span class="n">json</span><span class="o">.</span><span class="n">loads</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">old_cell</span><span class="p">))</span>
+
     <span class="k">if</span> <span class="n">direction</span> <span class="o">==</span> <span class="s2">&quot;In&quot;</span><span class="p">:</span>
+        <span class="c1"># Check the status of the link.</span>
         <span class="k">try</span><span class="p">:</span>
             <span class="n">linked_cell</span> <span class="o">=</span> <span class="n">cell_json</span><span class="p">[</span><span class="s1">&#39;linkInFromCell&#39;</span><span class="p">]</span>
             <span class="n">status</span> <span class="o">=</span> <span class="n">linked_cell</span><span class="p">[</span><span class="s1">&#39;status&#39;</span><span class="p">]</span>
@@ -362,23 +461,26 @@
             <span class="k">elif</span> <span class="n">status</span> <span class="o">==</span> <span class="s1">&#39;BROKEN&#39;</span><span class="p">:</span>
                 <span class="k">return</span> <span class="s2">&quot;Broken&quot;</span>
         <span class="k">except</span> <span class="ne">KeyError</span><span class="p">:</span>
-            <span class="k">if</span> <span class="n">old_cell</span><span class="o">.</span><span class="n">value</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
-                <span class="k">return</span> <span class="kc">None</span>
+            <span class="c1"># if old_cell.value is None:</span>
+            <span class="c1">#     return None</span>
             <span class="k">return</span> <span class="s2">&quot;Unlinked&quot;</span>
     <span class="k">elif</span> <span class="n">direction</span> <span class="o">==</span> <span class="s2">&quot;Out&quot;</span><span class="p">:</span>
+        <span class="c1"># Always set to Linked, unless it&#39;s invalid.</span>
         <span class="k">try</span><span class="p">:</span>
             <span class="n">linked_cell</span> <span class="o">=</span> <span class="n">cell_json</span><span class="p">[</span><span class="s1">&#39;linksOutToCells&#39;</span><span class="p">]</span>
             <span class="k">return</span> <span class="s2">&quot;Linked&quot;</span>
         <span class="k">except</span> <span class="ne">KeyError</span><span class="p">:</span>
-            <span class="k">if</span> <span class="n">old_cell</span><span class="o">.</span><span class="n">value</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
-                <span class="k">return</span> <span class="kc">None</span>
+            <span class="c1"># if old_cell.value is None:</span>
+            <span class="c1">#     return None</span>
             <span class="k">return</span> <span class="s2">&quot;Unlinked&quot;</span>
 </pre></div>
 
         </details>
 
-            <div class="docstring"><p>Helper function to determine if an existing cell already has a cell
-   link.</p>
+            <div class="docstring"><p>Determine if an existing cell already has a cell link, which direction
+   and whether it needs to be repaired. Returning None currently disabled
+   because it caused the script to skip valid cells that should have been
+   linked.</p>
 
 <h6 id="args">Args</h6>
 
@@ -391,9 +493,8 @@
 
 <blockquote>
   <p>str: "Linked" if status is "OK", "Broken" if staus is "BROKEN",
-       None if the cell doesn't have a value and "Unlinked" if the
-       cell doesn't have a cell link property. If the cell link
-       type is 'linksOutToCells', always return "Linked".</p>
+       "Unlinked" if the cell doesn't have a cell link property. If the
+       cell link type is 'linksOutToCells', always return "Linked".</p>
 </blockquote>
 </div>
 
@@ -419,17 +520,22 @@
 <span class="sd">        col_map (dict): The map of Column Name: Column ID</span>
 
 <span class="sd">    Returns:</span>
-<span class="sd">        str: The Value of the cell.</span>
+<span class="sd">        str: The value of the cell.</span>
+<span class="sd">        none: If the cell doesn&#39;t exist or has a null value.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="c1"># Validate data types.</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">row</span><span class="p">,</span> <span class="n">smartsheet</span><span class="o">.</span><span class="n">models</span><span class="o">.</span><span class="n">row</span><span class="o">.</span><span class="n">Row</span><span class="p">):</span>
+        <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s2">&quot;Row is not a Smartsheet Row type object&quot;</span><span class="p">)</span>
+    <span class="k">elif</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">col_name</span><span class="p">,</span> <span class="nb">str</span><span class="p">):</span>
+        <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s2">&quot;Column name must be a string&quot;</span><span class="p">)</span>
+    <span class="k">elif</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">col_map</span><span class="p">,</span> <span class="nb">dict</span><span class="p">):</span>
+        <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s2">&quot;Column Map must be a dict of ColNames:ColIDs&quot;</span><span class="p">)</span>
+
     <span class="n">cell</span> <span class="o">=</span> <span class="n">get_cell_data</span><span class="p">(</span><span class="n">row</span><span class="p">,</span> <span class="n">col_name</span><span class="p">,</span> <span class="n">col_map</span><span class="p">)</span>
     <span class="k">if</span> <span class="n">cell</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">or</span> <span class="n">cell</span><span class="o">.</span><span class="n">value</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
-        <span class="k">try</span><span class="p">:</span>
-            <span class="n">msg</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="s2">&quot;Cell is </span><span class="si">{}</span><span class="s2"> or cell value is </span><span class="si">{}</span><span class="s2">. &quot;</span>
-                      <span class="s2">&quot;Returning &#39;None&#39;&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">cell</span><span class="p">,</span> <span class="n">cell</span><span class="o">.</span><span class="n">value</span><span class="p">)</span>
-        <span class="k">except</span> <span class="ne">AttributeError</span><span class="p">:</span>
-            <span class="n">msg</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="s2">&quot;Cell is </span><span class="si">{}</span><span class="s2">. Returning &#39;None&#39;&quot;</span>
-                      <span class="s2">&quot;&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">cell</span><span class="p">)</span>
-
+        <span class="n">msg</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="s2">&quot;Cell is &#39;None&#39; or cell value is &#39;None&#39;. &quot;</span>
+                  <span class="s2">&quot;Returning &#39;None&#39;&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">format</span><span class="p">()</span>
         <span class="n">logging</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
         <span class="k">return</span> <span class="kc">None</span>
     <span class="k">else</span><span class="p">:</span>
@@ -451,7 +557,8 @@
 <h6 id="returns">Returns</h6>
 
 <blockquote>
-  <p>str: The Value of the cell.</p>
+  <p>str: The value of the cell.
+  none: If the cell doesn't exist or has a null value.</p>
 </blockquote>
 </div>
 
@@ -474,9 +581,21 @@
 <span class="sd">        obj (json): The JSON object to pars through</span>
 <span class="sd">        key (str): The key to search for</span>
 
+<span class="sd">    Raises:</span>
+<span class="sd">        TypeError: If the objects passed in aren&#39;t a dict or string,</span>
+<span class="sd">                   respectively.</span>
+
 <span class="sd">    Returns:</span>
 <span class="sd">        str: The value if a key matches inside the obj JSON</span>
 <span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="c1"># Validate data types before attempting to process.</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">obj</span><span class="p">,</span> <span class="nb">dict</span><span class="p">):</span>
+        <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s2">&quot;Obj must be a dict (json).&quot;</span><span class="p">)</span>
+    <span class="k">elif</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">key</span><span class="p">,</span> <span class="nb">str</span><span class="p">):</span>
+        <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s2">&quot;Key must be a string.&quot;</span><span class="p">)</span>
+
+    <span class="c1"># Create an empty list as an &#39;array&#39;</span>
     <span class="n">arr</span> <span class="o">=</span> <span class="p">[]</span>
 
     <span class="k">def</span> <span class="nf">extract</span><span class="p">(</span><span class="n">obj</span><span class="p">,</span> <span class="n">arr</span><span class="p">,</span> <span class="n">key</span><span class="p">):</span>
@@ -507,6 +626,13 @@
 <li><strong>key (str):</strong>  The key to search for</li>
 </ul>
 
+<h6 id="raises">Raises</h6>
+
+<ul>
+<li><strong>TypeError:</strong>  If the objects passed in aren't a dict or string,
+respectively.</li>
+</ul>
+
 <h6 id="returns">Returns</h6>
 
 <blockquote>
@@ -527,7 +653,7 @@
                 <details>
             <summary>View Source</summary>
             <div class="codehilite"><pre><span></span><span class="k">def</span> <span class="nf">truncate</span><span class="p">(</span><span class="n">number</span><span class="p">,</span> <span class="n">decimals</span><span class="o">=</span><span class="mi">0</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;Returns a value truncated to a specific number of decimal places.</span>
+    <span class="sd">&quot;&quot;&quot;Return a value truncated to a specific number of decimal places.</span>
 
 <span class="sd">    Args:</span>
 <span class="sd">        number (int): The number to truncate</span>
@@ -541,6 +667,8 @@
 <span class="sd">    Returns:</span>
 <span class="sd">        int: The number, truncated to the number of decimal places.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="c1"># Validate data types before attempting to process.</span>
     <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">decimals</span><span class="p">,</span> <span class="nb">int</span><span class="p">):</span>
         <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s2">&quot;decimal places must be an integer.&quot;</span><span class="p">)</span>
     <span class="k">elif</span> <span class="n">decimals</span> <span class="o">&lt;</span> <span class="mi">0</span><span class="p">:</span>
@@ -554,7 +682,7 @@
 
         </details>
 
-            <div class="docstring"><p>Returns a value truncated to a specific number of decimal places.</p>
+            <div class="docstring"><p>Return a value truncated to a specific number of decimal places.</p>
 
 <h6 id="args">Args</h6>
 
@@ -575,6 +703,92 @@ Defaults to 0.</li>
 
 <blockquote>
   <p>int: The number, truncated to the number of decimal places.</p>
+</blockquote>
+</div>
+
+
+                </section>
+                <section id="get_timestamp">
+                            <div class="attr function"><a class="headerlink" href="#get_timestamp">#&nbsp;&nbsp</a>
+
+        
+            <span class="def">def</span>
+            <span class="name">get_timestamp</span><span class="signature">(number)</span>:
+    </div>
+
+                <details>
+            <summary>View Source</summary>
+            <div class="codehilite"><pre><span></span><span class="k">def</span> <span class="nf">get_timestamp</span><span class="p">(</span><span class="n">number</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Subtracts the number intput from the current time to generate a</span>
+<span class="sd">       timestamp N number of minutes ago.</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        string: an ISO8601 compliant timestamp</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">number</span><span class="p">,</span> <span class="nb">int</span><span class="p">):</span>
+        <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s2">&quot;Number of minutes must be an integer.&quot;</span><span class="p">)</span>
+
+    <span class="n">date</span> <span class="o">=</span> <span class="n">datetime</span><span class="o">.</span><span class="n">now</span><span class="p">()</span>
+    <span class="n">delta</span> <span class="o">=</span> <span class="n">timedelta</span><span class="p">(</span><span class="n">minutes</span><span class="o">=</span><span class="n">number</span><span class="p">)</span>
+    <span class="n">modified_since</span> <span class="o">=</span> <span class="n">date</span> <span class="o">-</span> <span class="n">delta</span>
+    <span class="n">modified_since</span> <span class="o">=</span> <span class="n">modified_since</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="n">microsecond</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>  <span class="c1"># .isoformat()</span>
+    <span class="n">modified_since_iso</span> <span class="o">=</span> <span class="n">modified_since</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="n">microsecond</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span><span class="o">.</span><span class="n">isoformat</span><span class="p">()</span>
+    <span class="k">return</span> <span class="n">modified_since</span><span class="p">,</span> <span class="n">modified_since_iso</span>
+</pre></div>
+
+        </details>
+
+            <div class="docstring"><p>Subtracts the number intput from the current time to generate a
+   timestamp N number of minutes ago.</p>
+
+<h6 id="returns">Returns</h6>
+
+<blockquote>
+  <p>string: an ISO8601 compliant timestamp</p>
+</blockquote>
+</div>
+
+
+                </section>
+                <section id="chunks">
+                            <div class="attr function"><a class="headerlink" href="#chunks">#&nbsp;&nbsp</a>
+
+        
+            <span class="def">def</span>
+            <span class="name">chunks</span><span class="signature">(lst, n)</span>:
+    </div>
+
+                <details>
+            <summary>View Source</summary>
+            <div class="codehilite"><pre><span></span><span class="k">def</span> <span class="nf">chunks</span><span class="p">(</span><span class="n">lst</span><span class="p">,</span> <span class="n">n</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Yield successive n-sized chunks from lst.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        lst (list): The list of objects to chunk</span>
+<span class="sd">        n (int): The number of items in the list to chunk together</span>
+
+<span class="sd">    Yields:</span>
+<span class="sd">        lst (list): The sub-list of chunked items</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="n">lst</span><span class="p">),</span> <span class="n">n</span><span class="p">):</span>
+        <span class="k">yield</span> <span class="n">lst</span><span class="p">[</span><span class="n">i</span><span class="p">:</span><span class="n">i</span> <span class="o">+</span> <span class="n">n</span><span class="p">]</span>
+</pre></div>
+
+        </details>
+
+            <div class="docstring"><p>Yield successive n-sized chunks from lst.</p>
+
+<h6 id="args">Args</h6>
+
+<ul>
+<li><strong>lst (list):</strong>  The list of objects to chunk</li>
+<li><strong>n (int):</strong>  The number of items in the list to chunk together</li>
+</ul>
+
+<h6 id="yields">Yields</h6>
+
+<blockquote>
+  <p>lst (list): The sub-list of chunked items</p>
 </blockquote>
 </div>
 
