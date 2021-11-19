@@ -36,6 +36,19 @@ def refresh_source_sheets(smartsheet_client, sheet_ids, minutes=0):
                               modified since the minutes value, if greater
                               than 0
     """
+    if not isinstance(sheet_ids, list):
+        raise TypeError("Sheet IDs must be a list of IDs")
+    elif not all(isinstance(x, int) for x in sheet_ids):
+        raise ValueError("One or more values in the list are not type: int")
+    elif minutes is not None and not isinstance(minutes, int):
+        raise TypeError("Minutes must be type: int")
+    elif minutes is not None and minutes < 0:
+        raise ValueError("Minutes must be >= zero")
+    # TODO: Figure out how to validate a Smartsheet client.
+    # elif not isinstance(smartsheet_client, smartsheet.smartsheet()):
+    #     raise TypeError(
+    #         "smartsheet_client must be of type smartsheet.Smartsheet()")
+
     source_sheets = []
     if minutes > 0:
         _, modified_since = get_timestamp(minutes)
@@ -92,10 +105,19 @@ def get_all_row_data(source_sheets, columns, minutes):
     #   "Predecessors": "38FS +1w", # type: str
     #   "Summary": "False" # type: str
     #       }
-    if source_sheets is None:
-        raise ValueError
-    elif columns is None:
-        raise ValueError
+    if not isinstance(source_sheets, list):
+        msg = str("Source sheets should be type: list, not {}").format(
+            type(source_sheets))
+        raise TypeError(msg)
+    if not isinstance(columns, list):
+        msg = str("Columns should be type: list, not {}").format(type(columns))
+        raise TypeError(msg)
+    if not isinstance(minutes, int):
+        msg = str("Minutes should be type: int, not {}").format(type(minutes))
+        raise TypeError(msg)
+    if minutes < 0:
+        msg = str("Minutes should be >= 0, not {}").format(minutes)
+        raise ValueError(msg)
 
     # Create the empty dict we'll pass back
     all_row_data = {}
@@ -500,18 +522,26 @@ def get_secret(secret_name):
 
 
 def get_secret_name(env):
-    for e in env:
-        if e in ("-s", "--staging", "-staging"):
-            secret_name = "staging/smartsheet-data-sync/svc-api-token"
-            return(secret_name)
-        elif e in ("-p", "--prod", "-prod"):
-            secret_name = "prod/smartsheet-data-sync/svc-api-token"
-            return(secret_name)
-        elif e in ("-d", "--debug", "-debug"):
-            secret_name = "staging/smartsheet-data-sync/svc-api-token"
-            return(secret_name)
-        else:
-            logging.error("Failed to set API Key from AWS Secrets")
-            secret_name = ""
+    if not env:
+        msg = str("Env must be type: str. Env was {}").format(env)
+        raise ValueError(msg)
+    elif not isinstance(env, str):
+        raise TypeError("Env is not type: str")
+    elif env not in ("-d", "--debug", "-debug", "-p", "--prod", "-prod", "-s",
+                     "--staging", "-staging"):
+        raise ValueError(
+            "Invalid argument passed. Value passed was {}").format(env)
 
-    return secret_name
+    if env in ("-s", "--staging", "-staging"):
+        secret_name = "staging/smartsheet-data-sync/svc-api-token"
+        return secret_name
+    elif env in ("-p", "--prod", "-prod"):
+        secret_name = "prod/smartsheet-data-sync/svc-api-token"
+        return secret_name
+    elif env in ("-d", "--debug", "-debug"):
+        secret_name = "staging/smartsheet-data-sync/svc-api-token"
+        return secret_name
+    else:
+        logging.error("Failed to set API Key from AWS Secrets")
+        secret_name = ""
+        return secret_name

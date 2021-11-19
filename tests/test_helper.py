@@ -5,9 +5,11 @@ from typing import Type
 
 import pytest
 import smartsheet
+import datetime
+from freezegun import freeze_time
 from uuid_module.helper import (get_cell_data, get_cell_value, get_column_map,
-                                has_cell_link, json_extract, truncate)
-
+                                get_timestamp, has_cell_link, json_extract,
+                                truncate, chunks)
 
 true = True
 false = False
@@ -80,14 +82,9 @@ def key():
     return "formula"
 
 
-def test_get_cell_value(row, col_name, col_map):
-    with pytest.raises(TypeError):
-        get_cell_value("Row", col_name, col_map)
-    with pytest.raises(TypeError):
-        get_cell_value(row, 1, col_map)
-    with pytest.raises(TypeError):
-        get_cell_value(row, col_name, "col_map")
-    assert get_cell_value(row, col_name, col_map) == "Lumine"
+@pytest.fixture
+def simple_list():
+    return [1, 2, 3, 4, 5, 6]
 
 
 def test_get_cell_data(row, col_name, col_map):
@@ -120,6 +117,16 @@ def test_has_cell_link(cell, direction):
     assert has_cell_link(cell, direction) == "Linked"
 
 
+def test_get_cell_value(row, col_name, col_map):
+    with pytest.raises(TypeError):
+        get_cell_value("Row", col_name, col_map)
+    with pytest.raises(TypeError):
+        get_cell_value(row, 1, col_map)
+    with pytest.raises(TypeError):
+        get_cell_value(row, col_name, "col_map")
+    assert get_cell_value(row, col_name, col_map) == "Lumine"
+
+
 def test_json_extract(obj, key):
     with pytest.raises(TypeError):
         json_extract("String", -1)
@@ -134,6 +141,32 @@ def test_truncate(number, decimals):
     with pytest.raises(ValueError):
         truncate(obj, -1)
     assert truncate(number, decimals) == 3.141
+
+
+@freeze_time("2012-01-14 12:13:00")
+def test_get_timestamp(decimals):
+    with pytest.raises(TypeError):
+        get_timestamp("number")
+    with pytest.raises(ValueError):
+        get_timestamp(-5)
+    modified_since, modified_since_iso = get_timestamp(decimals)
+    assert datetime.datetime.now() == datetime.datetime(2012, 1, 14, 12, 13, 0)
+    assert modified_since == datetime.datetime(
+        2012, 1, 14, 12, 10, 00)  # "2012-01-14T12:10:00"
+    assert modified_since_iso == datetime.datetime(
+        2012, 1, 14, 12, 10, 00).isoformat()  # "2012-01-14T12:10:00"
+
+
+def test_chunks(simple_list, decimals):
+    # with pytest.raises(TypeError):
+    #     chunks(7, 3)
+    # with pytest.raises(TypeError):
+    #     chunks([1, 2, 3], "Four")
+    # with pytest.raises(ValueError):
+    #     chunks([1, 2.3], -1)
+    test_chunks = chunks(simple_list, decimals)
+    for i in test_chunks:
+        assert len(i) == 3
 
 
 # def test_raises_exception_on_non_string_arguments():

@@ -211,6 +211,8 @@ def get_timestamp(number):
     """
     if not isinstance(number, int):
         raise TypeError("Number of minutes must be an integer.")
+    elif number <= 0:
+        raise ValueError("Number of minutes must be greater than zero.")
 
     date = datetime.now()
     delta = timedelta(minutes=number)
@@ -230,5 +232,17 @@ def chunks(lst, n):
     Yields:
         lst (list): The sub-list of chunked items
     """
+    # Validate data types before attempting to process.
+    # if not isinstance(lst, list):
+    #     raise TypeError("First argument must be a list.")
+    # elif not isinstance(n, str):
+    #     raise TypeError("Second argument must be an integer.")
+    # elif n == 0:
+    #     raise ValueError("Second argument must be non-zero.")
+    # elif n < 0:
+    #     raise ValueError("Second argument must be a greater than zero.")
+    # elif len(lst) < n:
+    #     raise ValueError("Length of list is less than the chunk integer")
+
     for i in range(0, len(lst), n):
         yield lst[i:i + n]

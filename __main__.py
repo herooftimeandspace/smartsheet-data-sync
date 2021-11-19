@@ -9,6 +9,7 @@ from logging.config import dictConfig
 import smartsheet
 from apscheduler.executors.pool import ProcessPoolExecutor, ThreadPoolExecutor
 from apscheduler.schedulers.background import BlockingScheduler
+from uuid_module.cell_link_sheet_data import write_uuid_cell_links
 
 # from uuid_module.cell_link_sheet_data import write_uuid_cell_links
 from uuid_module.get_data import (get_all_row_data, get_all_sheet_ids,
@@ -283,6 +284,42 @@ def full_jira_sync(minutes):
     elapsed = truncate(elapsed, 3)
     logging.info(
         "Full Jira sync took: {} seconds.".format(elapsed))
+    gc.collect()
+
+
+def full_smartsheet_sync():
+    start = time.time()
+    msg = str("Starting refresh of Smartsheet project data.").format()
+    logging.debug(msg)
+
+    global sheet_id_lock
+    with sheet_id_lock:
+        sheet_ids = get_all_sheet_ids(smartsheet_client, minutes)
+        sheet_ids = list(set(sheet_ids))
+
+    global sheet_index_lock
+    # Calculate a number minutes ago to get only the rows that were modified
+    # since the last run.
+
+    with sheet_index_lock:
+        source_sheets = refresh_source_sheets(
+            smartsheet_client, sheet_ids, minutes)
+
+    with project_index_lock:
+        try:
+            project_uuid_index = get_all_row_data(
+                source_sheets, sheet_columns, minutes)
+        except ValueError as e:
+            msg = str("Getting all row data returned an error. {}").format(e)
+            logging.error(msg)
+
+    write_uuid_cell_links(project_uuid_index, source_sheets, smartsheet_client)
+
+    end = time.time()
+    elapsed = end - start
+    elapsed = truncate(elapsed, 3)
+    logging.info(
+        "Full Smartsheet cross-sheet sync took: {} seconds.".format(elapsed))
     gc.collect()
 
 
