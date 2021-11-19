@@ -42,6 +42,7 @@ coverage:
   needs: ["prep"]
   script:
     - pip install -r requirements.txt
+    - pip install -r test_requirements.txt
     - pytest --cov-config=.coveragerc --cov=./ -vvv
     - coverage xml --include="./**" -o coverage.xml
   artifacts:
