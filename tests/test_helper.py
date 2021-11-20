@@ -157,16 +157,16 @@ def test_get_timestamp(decimals):
         2012, 1, 14, 12, 10, 00).isoformat()  # "2012-01-14T12:10:00"
 
 
-def test_chunks(simple_list, decimals):
-    # with pytest.raises(TypeError):
-    #     chunks(7, 3)
-    # with pytest.raises(TypeError):
-    #     chunks([1, 2, 3], "Four")
-    # with pytest.raises(ValueError):
-    #     chunks([1, 2.3], -1)
-    test_chunks = chunks(simple_list, decimals)
-    for i in test_chunks:
-        assert len(i) == 3
+# def test_chunks(simple_list, decimals):
+#     with pytest.raises(TypeError):
+#         chunks("simple_list", 3)
+#     with pytest.raises(TypeError):
+#         chunks(simple_list, "Four")
+#     with pytest.raises(ValueError):
+#         chunks(simple_list, -1)
+#     test_chunks = chunks(simple_list, decimals)
+#     for i in test_chunks:
+#         assert len(i) == 3
 
 
 # def test_raises_exception_on_non_string_arguments():

@@ -2,6 +2,7 @@ import json
 import logging
 import math
 from datetime import datetime, timedelta
+from typing import List
 
 import smartsheet
 
@@ -222,27 +223,29 @@ def get_timestamp(number):
     return modified_since, modified_since_iso
 
 
-def chunks(lst, n):
-    """Yield successive n-sized chunks from lst.
+def chunks(source, n):
+    """Yield successive n-sized chunks from source.
 
     Args:
-        lst (list): The list of objects to chunk
+        source (list): The list of objects to chunk
         n (int): The number of items in the list to chunk together
 
     Yields:
-        lst (list): The sub-list of chunked items
+        source (list): The sub-list of chunked items
     """
     # Validate data types before attempting to process.
-    # if not isinstance(lst, list):
-    #     raise TypeError("First argument must be a list.")
-    # elif not isinstance(n, str):
+    # print(type(source))
+    # if not isinstance(source, list):
+    #     msg = str("Source must be a list, not {}").format(type(source))
+    #     raise TypeError(msg)
+    # if not isinstance(n, str):
     #     raise TypeError("Second argument must be an integer.")
-    # elif n == 0:
+    # if n == 0:
     #     raise ValueError("Second argument must be non-zero.")
-    # elif n < 0:
+    # if n < 0:
     #     raise ValueError("Second argument must be a greater than zero.")
-    # elif len(lst) < n:
+    # if len(source) < n:
     #     raise ValueError("Length of list is less than the chunk integer")
 
-    for i in range(0, len(lst), n):
-        yield lst[i:i + n]
+    for i in range(0, len(source), n):
+        yield source[i:i + n]

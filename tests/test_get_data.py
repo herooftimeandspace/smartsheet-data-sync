@@ -4,6 +4,7 @@ import logging
 import os
 from collections import defaultdict
 from datetime import datetime
+from freezegun import freeze_time
 
 import boto3
 import pytest
@@ -21,6 +22,41 @@ from uuid_module.variables import (jira_col, jira_idx_sheet, sheet_columns,
 logger = logging.getLogger(__name__)
 
 utc = pytz.UTC
+cwd = os.path.dirname(os.path.abspath(__file__))
+
+
+@pytest.fixture(scope="module")
+def sheet():
+    with open(cwd + '/sheet_response.json') as f:
+        sheet_json = json.load(f)
+    sheet = smartsheet.models.Sheet(sheet_json)
+    return sheet
+
+
+@pytest.fixture(scope="module")
+def sheet_list():
+    with open(cwd + '/sheet_response.json') as f:
+        sheet_json = json.load(f)
+    sheet = smartsheet.models.Sheet(sheet_json)
+    sheet_list = [sheet]
+    return sheet_list
+
+
+@pytest.fixture(scope="module")
+def row():
+    with open(cwd + '/row_response.json') as f:
+        row_json = json.load(f)
+    row = smartsheet.models.Row(row_json)
+    return row
+
+
+@pytest.fixture(scope="module")
+def row_list():
+    with open(cwd + '/row_response.json') as f:
+        row_json = json.load(f)
+    row = smartsheet.models.Row(row_json)
+    row_list = [row]
+    return row_list
 
 
 @pytest.fixture
@@ -33,7 +69,10 @@ def env():
 def smartsheet_client(env):
     secret_name = get_secret_name(env)
     print(secret_name)
-    os.environ["SMARTSHEET_ACCESS_TOKEN"] = get_secret(secret_name)
+    try:
+        os.environ["SMARTSHEET_ACCESS_TOKEN"] = get_secret(secret_name)
+    except TypeError:
+        raise ValueError("Refresh Isengard Auth")
     smartsheet_client = smartsheet.Smartsheet()
     # Make sure we don't miss any error
     smartsheet_client.errors_as_exceptions(True)
@@ -50,10 +89,10 @@ def minutes():
     return 5
 
 
-@pytest.fixture
-def source_sheets(smartsheet_client, sheet_ids):
-    source_sheets = refresh_source_sheets(smartsheet_client, sheet_ids)
-    return source_sheets
+# @pytest.fixture
+# def source_sheets(smartsheet_client, sheet_ids):
+#     source_sheets = refresh_source_sheets(smartsheet_client, sheet_ids)
+#     return source_sheets
 
 
 @pytest.fixture
@@ -63,34 +102,37 @@ def columns():
 
 
 # Type testing. Separate tests needed for integraiton.
+@freeze_time("2021-11-18 21:23:54")
 def test_refresh_source_sheets(smartsheet_client, sheet_ids, minutes=0):
     # Validate Smartsheet client.
     # with pytest.raises(TypeError):
     #     test_source_sheets = refresh_source_sheets(
     #         "smartsheet_client", sheet_ids, 0)
     with pytest.raises(TypeError):
-        test_source_sheets = refresh_source_sheets(
+        refresh_source_sheets(
             smartsheet_client, sheet_ids, "minutes")
     with pytest.raises(TypeError):
-        test_source_sheets = refresh_source_sheets(
+        refresh_source_sheets(
             smartsheet_client, 7, minutes)
     with pytest.raises(ValueError):
-        test_source_sheets = refresh_source_sheets(
+        refresh_source_sheets(
             smartsheet_client, ["One", "Two", "Three"], -1)
 
 
-def test_get_all_row_data(source_sheets, columns, minutes):
+@freeze_time("2021-11-18 21:23:54")
+def test_get_all_row_data(sheet_list, columns, minutes):
     with pytest.raises(TypeError):
         get_all_row_data("source_sheets", columns, minutes)
     with pytest.raises(TypeError):
-        get_all_row_data(source_sheets, "columns", minutes)
+        get_all_row_data(sheet_list, "columns", minutes)
     with pytest.raises(TypeError):
-        get_all_row_data(source_sheets, columns, "minutes")
+        get_all_row_data(sheet_list, columns, "minutes")
     with pytest.raises(ValueError):
-        get_all_row_data(source_sheets, columns, -1)
-    row_data = get_all_row_data(source_sheets, columns, minutes)
-    print(row_data)
-    # assert row_data is not None
+        get_all_row_data(sheet_list, columns, -1)
+
+    # Need to create assertions for data structure and valid return row values
+    row_data = get_all_row_data(sheet_list, columns, minutes)
+    assert row_data is not None
 
 
 # def test_get_blank_uuids(source_sheets):
