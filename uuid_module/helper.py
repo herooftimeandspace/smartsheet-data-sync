@@ -69,6 +69,13 @@ def has_cell_link(old_cell, direction):
         old_cell (Cell): The Cell object to check.
         direction (str): Whether to check incoming or outgoing cell links.
 
+    Raises:
+        TypeError: Validates old_cell is a Smartsheet cell object
+        TypeError: Validates direction is a string
+        ValueError: Validates direction is either 'In' or 'Out'
+        KeyError: If the old_cell doesn't have the extended attributes for
+                  cell links raises as 'Unlinked'
+
     Returns:
         str: "Linked" if status is "OK", "Broken" if staus is "BROKEN",
              "Unlinked" if the cell doesn't have a cell link property. If the
