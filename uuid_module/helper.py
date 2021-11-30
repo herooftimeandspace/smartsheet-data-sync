@@ -2,6 +2,7 @@ import json
 import logging
 import math
 from datetime import datetime, timedelta
+from typing import Type
 
 import smartsheet
 
@@ -32,8 +33,8 @@ def get_cell_data(row, column_name, column_map):
     except KeyError:
         msg = str("Column not found: {}").format(column_name)
         logging.debug(msg)
-        # raise KeyError(msg)
-        return None
+        raise KeyError(msg)
+        # return None
     else:
         return row.get_column(column_id)
 
@@ -73,6 +74,18 @@ def has_cell_link(old_cell, direction):
              "Unlinked" if the cell doesn't have a cell link property. If the
              cell link type is 'linksOutToCells', always return "Linked".
     """
+    if not isinstance(old_cell, smartsheet.models.cell.Cell):
+        msg = str("Old Cell should be type: Cell not type: {}"
+                  "").format(type(old_cell))
+        raise TypeError(msg)
+    if not isinstance(direction, str):
+        msg = str("Direction should type: str not type: {}"
+                  "").format(type(direction))
+        raise TypeError(msg)
+    if direction not in ("In", "Out"):
+        msg = str("Direction should be either 'In' or 'Out' not '{}'"
+                  "").format(direction)
+        raise ValueError(msg)
 
     # Load the cell values as a json object
     cell_json = json.loads(str(old_cell))
@@ -192,10 +205,14 @@ def truncate(number, decimals=0):
 
     # Validate data types before attempting to process.
     if not isinstance(decimals, int):
-        raise TypeError("decimal places must be an integer.")
-    elif decimals < 0:
+        msg = str("Decimal must be an int, not {}").format(type(decimals))
+        raise TypeError(msg)
+    if not isinstance(number, float):
+        msg = str("Number must be an float, not {}").format(type(number))
+        raise TypeError(msg)
+    if decimals < 0:
         raise ValueError("decimal places has to be 0 or more.")
-    elif decimals == 0:
+    if decimals == 0:
         return math.trunc(number)
 
     factor = 10.0 ** decimals
@@ -233,18 +250,25 @@ def chunks(source, n):
         source (list): The sub-list of chunked items
     """
     # Validate data types before attempting to process.
-    # print(type(source))
-    # if not isinstance(source, list):
-    #     msg = str("Source must be a list, not {}").format(type(source))
-    #     raise TypeError(msg)
-    # if not isinstance(n, str):
-    #     raise TypeError("Second argument must be an integer.")
-    # if n == 0:
-    #     raise ValueError("Second argument must be non-zero.")
-    # if n < 0:
-    #     raise ValueError("Second argument must be a greater than zero.")
-    # if len(source) < n:
-    #     raise ValueError("Length of list is less than the chunk integer")
+    if not isinstance(source, list):
+        msg = str("Source must be a list, not {}").format(type(source))
+        raise TypeError(msg)
+    if not isinstance(n, int):
+        msg = str("Second argument must be type: int, not {}"
+                  "").format(type(n))
+        raise TypeError(msg)
+    if n == 0:
+        msg = str("SSecond argument must be non-zero, not {}"
+                  "").format(type(n))
+        raise ValueError(msg)
+    if n < 0:
+        msg = str("SSecond argument must be greater than zero, not {}"
+                  "").format(type(n))
+        raise ValueError(msg)
+    if len(source) < n:
+        msg = str("Length of list is less than the chunk integer. "
+                  "List length: {}, chunk size: {}").format(len(source), n)
+        raise ValueError(msg)
 
     for i in range(0, len(source), n):
         yield source[i:i + n]
