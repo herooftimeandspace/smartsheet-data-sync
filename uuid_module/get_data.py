@@ -69,9 +69,6 @@ def refresh_source_sheets(smartsheet_client, sheet_ids, minutes=0):
             source_sheets.append(sheet)
             logging.debug("Loading Sheet ID: {} | "
                           "Sheet Name: {}".format(sheet.id, sheet.name))
-    else:
-        msg = str("Invalid value for minutes. Value was {}").format(minutes)
-        logging.warning(msg)
 
     return source_sheets
 

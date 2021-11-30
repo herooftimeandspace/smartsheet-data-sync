@@ -118,10 +118,18 @@ def test_refresh_source_sheets(smartsheet_client, sheet_ids, minutes=0):
             smartsheet_client, 7, minutes)
     with pytest.raises(ValueError):
         refresh_source_sheets(
-            smartsheet_client, ["One", "Two", "Three"], -1)
+            smartsheet_client, ["One", "Two", "Three"], minutes)
+    with pytest.raises(ValueError):
+        refresh_source_sheets(
+            smartsheet_client, sheet_ids, -1)
+
     source_sheets = refresh_source_sheets(
         smartsheet_client, sheet_ids, minutes)
+    # TODO: Fix to == real value
+    assert source_sheets is not None
 
+    source_sheets = refresh_source_sheets(
+        smartsheet_client, sheet_ids, 5)
     # TODO: Fix to == real value
     assert source_sheets is not None
 

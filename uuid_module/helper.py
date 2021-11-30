@@ -2,7 +2,6 @@ import json
 import logging
 import math
 from datetime import datetime, timedelta
-from typing import Type
 
 import smartsheet
 
