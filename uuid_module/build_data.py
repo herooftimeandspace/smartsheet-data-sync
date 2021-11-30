@@ -95,7 +95,11 @@ def build_row(row, columns_to_link, dest_col_map, jira_index_sheet,
         try:
             cell_check = has_cell_link(old_cell, 'In')
         except KeyError as e:
-            cell_check = e
+            if str(e) == str("'Unlinked'"):
+                cell_check = "Unlinked"
+            else:
+                raise KeyError
+
         if cell_check == "Linked":
             msg = str("Valid cell link: RowID {} | Row Number {} | "
                       "ColName {} | Cell Value {}").format(row.id,
