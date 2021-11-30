@@ -17,6 +17,12 @@ def get_cell_data(row, column_name, column_map):
         column_name (str): The name of the referenced column
         column_map (dict): The map of Column Name: Column ID
 
+    Raises:
+        TypeError: Validates row is a Smartsheet Row object
+        TypeError: Validates column_name is a string
+        TypeError: Validates column_map is a dict
+        KeyError: Raises KeyError if the column name isn't in the dictionary
+
     Returns:
         cell (Cell): A Cell object or None if the column is not found in the
                      map.
@@ -44,6 +50,9 @@ def get_column_map(sheet):
 
     Args:
         sheet (sheet): The sheet containing column names and IDs
+
+    Raises:
+        TypeError: Validates sheet is a Smartsheet Sheet object
 
     Returns:
         dict: A map of Column Name: Column ID
@@ -123,6 +132,11 @@ def get_cell_value(row, col_name, col_map):
         row (Row): The row of data that contains the IDs
         col_name (str): The name of the referenced column
         col_map (dict): The map of Column Name: Column ID
+
+    Raises:
+        TypeError: Validates row is a Smartsheet Row object
+        TypeError: Validates col_name is a string
+        TypeError: Validates col_map is a dict
 
     Returns:
         str: The value of the cell.
@@ -224,6 +238,13 @@ def get_timestamp(number):
     """Subtracts the number intput from the current time to generate a
        timestamp N number of minutes ago.
 
+    Args:
+        number (int): Number of seconds
+
+    Raises:
+        TypeError: Validates number is an int
+        ValueError: Ensures minutes is > 0
+
     Returns:
         string: an ISO8601 compliant timestamp
     """
@@ -247,6 +268,13 @@ def chunks(source, n):
         source (list): The list of objects to chunk
         n (int): The number of items in the list to chunk together
 
+    Raises:
+        TypeError: Validates source is a list
+        TypeError: Validates n is an int
+        ValueError: Validates n must be non-zero
+        ValueError: Validates n > 0
+        ValueError: Validates length of list is greater than n
+
     Yields:
         source (list): The sub-list of chunked items
     """
@@ -259,11 +287,11 @@ def chunks(source, n):
                   "").format(type(n))
         raise TypeError(msg)
     if n == 0:
-        msg = str("SSecond argument must be non-zero, not {}"
+        msg = str("Second argument must be non-zero, not {}"
                   "").format(type(n))
         raise ValueError(msg)
     if n < 0:
-        msg = str("SSecond argument must be greater than zero, not {}"
+        msg = str("Second argument must be greater than zero, not {}"
                   "").format(type(n))
         raise ValueError(msg)
     if len(source) < n:
