@@ -3,7 +3,8 @@ import json
 import logging
 import os
 # from collections import defaultdict
-from datetime import datetime
+# from datetime import datetime
+# from typing import Type
 
 # import boto3
 import pytest
@@ -12,7 +13,7 @@ import smartsheet
 # from botocore.exceptions import ClientError
 from freezegun import freeze_time
 from uuid_module.get_data import (get_all_row_data, get_blank_uuids,
-                                  get_secret, get_secret_name,
+                                  get_secret, get_secret_name, load_jira_index,
                                   refresh_source_sheets)
 from uuid_module.helper import (get_cell_data, get_cell_value, get_column_map,
                                 get_timestamp, json_extract)
@@ -28,20 +29,36 @@ cwd = os.path.dirname(os.path.abspath(__file__))
 
 
 @pytest.fixture(scope="module")
-def sheet():
+def sheet_fixture():
     with open(cwd + '/sheet_response.json') as f:
         sheet_json = json.load(f)
+
+    def no_uuid_col_fixture(sheet_json):
+        sheet_json['columns'][22]['name'] = "Not UUID"
+        no_uuid_col = smartsheet.models.Sheet(sheet_json)
+        return no_uuid_col
+
+    def no_summary_col_fixture(sheet_json):
+        sheet_json['columns'][4]['name'] = "Not Summary"
+        no_summary_col = smartsheet.models.Sheet(sheet_json)
+        return no_summary_col
+
     sheet = smartsheet.models.Sheet(sheet_json)
-    return sheet
+    sheet_list = [sheet]
+    sheet_no_uuid_col = no_uuid_col_fixture(sheet_json)
+    print(sheet_no_uuid_col)
+    sheet_no_summary_col = no_summary_col_fixture(sheet_json)
+    return sheet, sheet_list, sheet_no_uuid_col, sheet_no_summary_col
 
 
 @pytest.fixture(scope="module")
-def sheet_list():
-    with open(cwd + '/sheet_response.json') as f:
-        sheet_json = json.load(f)
-    sheet = smartsheet.models.Sheet(sheet_json)
-    sheet_list = [sheet]
-    return sheet_list
+def jira_index_sheet_fixture():
+    with open(cwd + '/dev_jira_index_sheet_response.json') as f:
+        jidx = json.load(f)
+    jidx_sheet = smartsheet.models.Sheet(jidx)
+    jidx_col_map = get_column_map(jidx_sheet)
+    jidx_rows = get_all_row_data(jidx_sheet)
+    return jidx_sheet, jidx_col_map, jidx_rows
 
 
 @pytest.fixture(scope="module")
@@ -135,7 +152,8 @@ def test_refresh_source_sheets(smartsheet_client, sheet_ids, minutes=0):
 
 
 @freeze_time("2021-11-18 21:23:54")
-def test_get_all_row_data(sheet_list, columns, minutes):
+def test_get_all_row_data(sheet_fixture, columns, minutes):
+    sheet, sheet_list, sheet_no_uuid_col, sheet_no_summary_col = sheet_fixture
     with pytest.raises(TypeError):
         get_all_row_data("source_sheets", columns, minutes)
     with pytest.raises(TypeError):
@@ -157,10 +175,12 @@ def test_get_all_row_data(sheet_list, columns, minutes):
                                'Duration': None, 'Start': None,
                                'Finish': None, 'Predecessors': None,
                                'Summary': 'False'}}
+    no_sheet_data = get_all_row_data([], columns, minutes)
+    assert no_sheet_data is None
 
 
 @freeze_time("2021-11-18 21:23:54")
-def test_get_blank_uuids(sheet_list):
+def test_get_blank_uuids(sheet_fixture):
     # TODO: Write a test to validate the dict.
     # 7637702645442436,  (Sheet ID, int)
     # {
@@ -173,28 +193,44 @@ def test_get_blank_uuids(sheet_list):
     #         }
     #     }
     # }
+    _, sheet_list, _, _ = sheet_fixture
     with pytest.raises(TypeError):
         get_blank_uuids("source_sheets")
     blank_uuids = get_blank_uuids(sheet_list)
     # with open(cwd + '/blank_uuids.txt') as f:
     #     print(f)
     assert blank_uuids is not None
+    no_uuids = get_blank_uuids([])
+    assert no_uuids is None
 
 
-# def test_load_jira_index(smartsheet_client):
-#     assert 0 == 0
+def test_load_jira_index(smartsheet_client, jira_index_sheet_fixture):
+
+    jidx_sheet, jidx_col_map, jidx_rows = jira_index_sheet_fixture
+    mocker.patch.object(uuid_module.load_jira_index,
+                        'jira_index_sheet', jidx_sheet)
+    with pytest.raises(TypeError):
+        load_jira_index("smartsheet_client")
+    jira_index_sheet, jira_index_col_map, jira_index_rows = load_jira_index(
+        smartsheet_client)
+    assert jira_index_sheet == jidx_sheet
+    assert jira_index_col_map == jidx_col_map
+    assert jira_index_rows == jidx_rows
 
 
-# def test_get_sub_indexes(project_data):
-#     assert 0 == 0
+def test_get_sub_indexes(project_data):
+    assert 0 == 0
 
 
-# def test_get_all_sheet_ids(smartsheet_client, minutes):
-#     assert 0 == 0
+def test_get_all_sheet_ids(smartsheet_client, minutes):
+    assert 0 == 0
 
 
-# def test_get_secret(secret_name):
-#     assert 0 == 0
+def test_get_secret(env):
+    secret_name = get_secret_name(env)
+    assert secret_name == "staging/smartsheet-data-sync/svc-api-token"
+    retrieved_secret = get_secret(secret_name)
+    assert retrieved_secret == os.environ["SMARTSHEET_ACCESS_TOKEN"]
 
 
 def test_get_secret_name(env):

@@ -303,6 +303,10 @@ def load_jira_index(smartsheet_client):
               row ID as the value.
 
     """
+    if not isinstance(smartsheet_client, smartsheet.Smartsheet):
+        msg = str("Smartsheet Client must be type: smartsheet.smartsheet, "
+                  "not type: {}").format(type(smartsheet_client))
+        raise TypeError(msg)
     jira_index_sheet = smartsheet_client.Sheets.get_sheet(jira_idx_sheet)
     msg = str("{} rows loaded from sheet ID: {} | Sheet name: {}"
               "").format(len(jira_index_sheet.rows), jira_index_sheet.id,
