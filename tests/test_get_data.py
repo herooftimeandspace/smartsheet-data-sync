@@ -107,9 +107,9 @@ def columns():
 @freeze_time("2021-11-18 21:23:54")
 def test_refresh_source_sheets(smartsheet_client, sheet_ids, minutes=0):
     # Validate Smartsheet client.
-    # with pytest.raises(TypeError):
-    #     test_source_sheets = refresh_source_sheets(
-    #         "smartsheet_client", sheet_ids, 0)
+    with pytest.raises(TypeError):
+        refresh_source_sheets(
+            "smartsheet_client", sheet_ids, 0)
     with pytest.raises(TypeError):
         refresh_source_sheets(
             smartsheet_client, sheet_ids, "minutes")
@@ -119,6 +119,11 @@ def test_refresh_source_sheets(smartsheet_client, sheet_ids, minutes=0):
     with pytest.raises(ValueError):
         refresh_source_sheets(
             smartsheet_client, ["One", "Two", "Three"], -1)
+    source_sheets = refresh_source_sheets(
+        smartsheet_client, sheet_ids, minutes)
+
+    # TODO: Fix to == real value
+    assert source_sheets is not None
 
 
 @freeze_time("2021-11-18 21:23:54")

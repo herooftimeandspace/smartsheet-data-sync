@@ -4,6 +4,7 @@ import logging
 import os
 from collections import defaultdict
 from datetime import datetime
+import smartsheet
 
 import boto3
 import pytz
@@ -38,16 +39,16 @@ def refresh_source_sheets(smartsheet_client, sheet_ids, minutes=0):
     """
     if not isinstance(sheet_ids, list):
         raise TypeError("Sheet IDs must be a list of IDs")
-    elif not all(isinstance(x, int) for x in sheet_ids):
+    if not all(isinstance(x, int) for x in sheet_ids):
         raise ValueError("One or more values in the list are not type: int")
-    elif minutes is not None and not isinstance(minutes, int):
+    if minutes is not None and not isinstance(minutes, int):
         raise TypeError("Minutes must be type: int")
-    elif minutes is not None and minutes < 0:
+    if minutes is not None and minutes < 0:
         raise ValueError("Minutes must be >= zero")
     # TODO: Figure out how to validate a Smartsheet client.
-    # elif not isinstance(smartsheet_client, smartsheet.smartsheet()):
-    #     raise TypeError(
-    #         "smartsheet_client must be of type smartsheet.Smartsheet()")
+    if not isinstance(smartsheet_client, smartsheet.Smartsheet):
+        raise TypeError(
+            "smartsheet_client must be of type smartsheet.Smartsheet")
 
     source_sheets = []
     if minutes > 0:
