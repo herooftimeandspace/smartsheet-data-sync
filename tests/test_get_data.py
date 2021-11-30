@@ -132,11 +132,18 @@ def test_get_all_row_data(sheet_list, columns, minutes, row_list):
 
     with open(cwd + '/row_response.json') as f:
         row_json = json.load(f)
+        row_json = dict(row_json)
 
     # Need to create assertions for data structure and valid return row values
     row_data = get_all_row_data(sheet_list, columns, minutes)
+
     if row_data:
-        assert row_data is not None
+        assert row_data == {None: {'UUID': None, 'Tasks': 'Retrospective',
+                                   'Description': None, 'Status': None,
+                                   'Assigned To': None, 'Jira Ticket': None,
+                                   'Duration': None, 'Start': None,
+                                   'Finish': None, 'Predecessors': None,
+                                   'Summary': 'False'}}
 
 
 # def test_get_blank_uuids(source_sheets):
