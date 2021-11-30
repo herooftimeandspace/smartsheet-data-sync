@@ -100,20 +100,14 @@ def has_cell_link(old_cell, direction):
             elif status == 'BROKEN':
                 return "Broken"
         except KeyError:
-            # if old_cell.value is None:
-            #     return None
             raise KeyError("Unlinked")
-            # return "Unlinked"
     elif direction == "Out":
         # Always set to Linked, unless it's invalid.
         try:
             linked_cell = cell_json['linksOutToCells']
             return "Linked"
         except KeyError:
-            # if old_cell.value is None:
-            #     return None
             raise KeyError("Unlinked")
-            # return "Unlinked"
 
 
 def get_cell_value(row, col_name, col_map):

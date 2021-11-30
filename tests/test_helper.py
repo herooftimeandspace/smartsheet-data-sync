@@ -160,6 +160,11 @@ def test_has_cell_link(cell, direction):
     except KeyError as k:
         assert str(k) == str("'Unlinked'")
 
+    try:
+        has_cell_link(bad_cell, "Out")
+    except KeyError as k:
+        assert str(k) == str("'Unlinked'")
+
 
 def test_get_cell_value(row, col_name, col_map):
     with pytest.raises(TypeError):
