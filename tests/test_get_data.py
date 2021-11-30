@@ -4,20 +4,22 @@ import logging
 import os
 from collections import defaultdict
 from datetime import datetime
-from freezegun import freeze_time
 
 import boto3
 import pytest
 import pytz
 import smartsheet
 from botocore.exceptions import ClientError
-from tests.test_helper import row, sheet
-from uuid_module.get_data import (get_all_row_data, get_secret,
-                                  get_secret_name, refresh_source_sheets)
+from freezegun import freeze_time
+from uuid_module.get_data import (get_all_row_data, get_blank_uuids,
+                                  get_secret, get_secret_name,
+                                  refresh_source_sheets)
 from uuid_module.helper import (get_cell_data, get_cell_value, get_column_map,
                                 get_timestamp, json_extract)
 from uuid_module.variables import (jira_col, jira_idx_sheet, sheet_columns,
                                    summary_col, uuid_col, workspace_id)
+
+from tests.test_helper import row, sheet
 
 logger = logging.getLogger(__name__)
 
@@ -144,8 +146,26 @@ def test_get_all_row_data(sheet_list, columns, minutes):
                                'Summary': 'False'}}
 
 
-# def test_get_blank_uuids(source_sheets):
-#     assert 0 == 0
+@freeze_time("2021-11-18 21:23:54")
+def test_get_blank_uuids(sheet_list):
+    # TODO: Write a test to validate the dict.
+    # 7637702645442436,  (Sheet ID, int)
+    # {
+    #     "sheet_name": "Cloudwatch: Distribution Project Plan", # type: str
+    #     "row_data": {  # type: dict
+    #         4733217466279812: { (Row ID, int)
+    #             "column_id": 2745267022784388, (int)
+    #             "uuid": "7637702645442436-4733217466279812-
+    #                      2745267022784388-202105112340380000" (str)
+    #         }
+    #     }
+    # }
+    with pytest.raises(TypeError):
+        get_blank_uuids("source_sheets")
+    blank_uuids = get_blank_uuids(sheet_list)
+    # with open(cwd + '/blank_uuids.txt') as f:
+    #     print(f)
+    assert blank_uuids is not None
 
 
 # def test_load_jira_index(smartsheet_client):
