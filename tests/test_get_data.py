@@ -2,14 +2,14 @@ import base64
 import json
 import logging
 import os
-from collections import defaultdict
+# from collections import defaultdict
 from datetime import datetime
 
-import boto3
+# import boto3
 import pytest
 import pytz
 import smartsheet
-from botocore.exceptions import ClientError
+# from botocore.exceptions import ClientError
 from freezegun import freeze_time
 from uuid_module.get_data import (get_all_row_data, get_blank_uuids,
                                   get_secret, get_secret_name,
