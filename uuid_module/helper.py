@@ -102,7 +102,8 @@ def has_cell_link(old_cell, direction):
         except KeyError:
             # if old_cell.value is None:
             #     return None
-            return "Unlinked"
+            raise KeyError("Unlinked")
+            # return "Unlinked"
     elif direction == "Out":
         # Always set to Linked, unless it's invalid.
         try:
@@ -111,7 +112,8 @@ def has_cell_link(old_cell, direction):
         except KeyError:
             # if old_cell.value is None:
             #     return None
-            return "Unlinked"
+            raise KeyError("Unlinked")
+            # return "Unlinked"
 
 
 def get_cell_value(row, col_name, col_map):

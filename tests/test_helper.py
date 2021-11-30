@@ -127,7 +127,38 @@ def test_has_cell_link(cell, direction):
         has_cell_link(cell, 7)
     with pytest.raises(ValueError):
         has_cell_link(cell, "Sideways")
+    with pytest.raises(KeyError):
+        bad_cell = {
+            "columnId": 752133921468837,
+            "columnType": "TEXT_NUMBER",
+            "displayValue": "Lumine",
+            "formula": "=UUID@row",
+            "hyperlink": {
+                "reportId": 674477165909395,
+                "sheetId": 117648125440672,
+                "sightId": 859583955564213,
+                "url": "https://genshin.gg"
+            },
+            "image": {
+                "altText": "Benny's favorite food",
+                "height": 25,
+                "id": "937767591144840",
+                "width": 25
+            },
+            "objectValue": {
+                "objectType": "ABSTRACT_DATETIME"
+            },
+            "overrideValidation": true,
+            "strict": true,
+            "value": "Lumine"
+        }
+        bad_cell = smartsheet.models.Cell(bad_cell)
+        has_cell_link(bad_cell, direction) == "Unlinked"
     assert has_cell_link(cell, direction) == "Linked"
+    try:
+        has_cell_link(bad_cell, direction)
+    except KeyError as k:
+        assert str(k) == str("'Unlinked'")
 
 
 def test_get_cell_value(row, col_name, col_map):
