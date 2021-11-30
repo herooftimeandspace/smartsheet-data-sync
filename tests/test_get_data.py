@@ -136,14 +136,12 @@ def test_get_all_row_data(sheet_list, columns, minutes, row_list):
 
     # Need to create assertions for data structure and valid return row values
     row_data = get_all_row_data(sheet_list, columns, minutes)
-
-    if row_data:
-        assert row_data == {None: {'UUID': None, 'Tasks': 'Retrospective',
-                                   'Description': None, 'Status': None,
-                                   'Assigned To': None, 'Jira Ticket': None,
-                                   'Duration': None, 'Start': None,
-                                   'Finish': None, 'Predecessors': None,
-                                   'Summary': 'False'}}
+    assert row_data == {None: {'UUID': None, 'Tasks': 'Retrospective',
+                               'Description': None, 'Status': None,
+                               'Assigned To': None, 'Jira Ticket': None,
+                               'Duration': None, 'Start': None,
+                               'Finish': None, 'Predecessors': None,
+                               'Summary': 'False'}}
 
 
 # def test_get_blank_uuids(source_sheets):
