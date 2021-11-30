@@ -210,10 +210,10 @@ def truncate(number, decimals=0):
     if not isinstance(number, float):
         msg = str("Number must be an float, not {}").format(type(number))
         raise TypeError(msg)
-    if decimals < 0:
-        raise ValueError("decimal places has to be 0 or more.")
-    if decimals == 0:
-        return math.trunc(number)
+    if decimals <= 0:
+        msg = str("Decimal places has to be 1 or more, not {}"
+                  "").format(decimals)
+        raise ValueError(msg)
 
     factor = 10.0 ** decimals
     return math.trunc(number * factor) / factor
