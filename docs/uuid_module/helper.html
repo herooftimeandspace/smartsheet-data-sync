@@ -76,6 +76,7 @@
 <span class="kn">import</span> <span class="nn">logging</span>
 <span class="kn">import</span> <span class="nn">math</span>
 <span class="kn">from</span> <span class="nn">datetime</span> <span class="kn">import</span> <span class="n">datetime</span><span class="p">,</span> <span class="n">timedelta</span>
+<span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">Type</span>
 
 <span class="kn">import</span> <span class="nn">smartsheet</span>
 
@@ -89,6 +90,12 @@
 <span class="sd">        row (Row): The row of data that contains the IDs</span>
 <span class="sd">        column_name (str): The name of the referenced column</span>
 <span class="sd">        column_map (dict): The map of Column Name: Column ID</span>
+
+<span class="sd">    Raises:</span>
+<span class="sd">        TypeError: Validates row is a Smartsheet Row object</span>
+<span class="sd">        TypeError: Validates column_name is a string</span>
+<span class="sd">        TypeError: Validates column_map is a dict</span>
+<span class="sd">        KeyError: Raises KeyError if the column name isn&#39;t in the dictionary</span>
 
 <span class="sd">    Returns:</span>
 <span class="sd">        cell (Cell): A Cell object or None if the column is not found in the</span>
@@ -106,8 +113,8 @@
     <span class="k">except</span> <span class="ne">KeyError</span><span class="p">:</span>
         <span class="n">msg</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="s2">&quot;Column not found: </span><span class="si">{}</span><span class="s2">&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">column_name</span><span class="p">)</span>
         <span class="n">logging</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
-        <span class="c1"># raise KeyError(msg)</span>
-        <span class="k">return</span> <span class="kc">None</span>
+        <span class="k">raise</span> <span class="ne">KeyError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
+        <span class="c1"># return None</span>
     <span class="k">else</span><span class="p">:</span>
         <span class="k">return</span> <span class="n">row</span><span class="o">.</span><span class="n">get_column</span><span class="p">(</span><span class="n">column_id</span><span class="p">)</span>
 
@@ -117,6 +124,9 @@
 
 <span class="sd">    Args:</span>
 <span class="sd">        sheet (sheet): The sheet containing column names and IDs</span>
+
+<span class="sd">    Raises:</span>
+<span class="sd">        TypeError: Validates sheet is a Smartsheet Sheet object</span>
 
 <span class="sd">    Returns:</span>
 <span class="sd">        dict: A map of Column Name: Column ID</span>
@@ -142,37 +152,50 @@
 <span class="sd">        old_cell (Cell): The Cell object to check.</span>
 <span class="sd">        direction (str): Whether to check incoming or outgoing cell links.</span>
 
+<span class="sd">    Raises:</span>
+<span class="sd">        TypeError: Validates old_cell is a Smartsheet cell object</span>
+<span class="sd">        TypeError: Validates direction is a string</span>
+<span class="sd">        ValueError: Validates direction is either &#39;In&#39; or &#39;Out&#39;</span>
+<span class="sd">        KeyError: If the old_cell doesn&#39;t have the extended attributes for</span>
+<span class="sd">                  cell links raises as &#39;Unlinked&#39;</span>
+
 <span class="sd">    Returns:</span>
 <span class="sd">        str: &quot;Linked&quot; if status is &quot;OK&quot;, &quot;Broken&quot; if staus is &quot;BROKEN&quot;,</span>
 <span class="sd">             &quot;Unlinked&quot; if the cell doesn&#39;t have a cell link property. If the</span>
 <span class="sd">             cell link type is &#39;linksOutToCells&#39;, always return &quot;Linked&quot;.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">old_cell</span><span class="p">,</span> <span class="n">smartsheet</span><span class="o">.</span><span class="n">models</span><span class="o">.</span><span class="n">cell</span><span class="o">.</span><span class="n">Cell</span><span class="p">):</span>
+        <span class="n">msg</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="s2">&quot;Old Cell should be type: Cell not type: </span><span class="si">{}</span><span class="s2">&quot;</span>
+                  <span class="s2">&quot;&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="nb">type</span><span class="p">(</span><span class="n">old_cell</span><span class="p">))</span>
+        <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">direction</span><span class="p">,</span> <span class="nb">str</span><span class="p">):</span>
+        <span class="n">msg</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="s2">&quot;Direction should type: str not type: </span><span class="si">{}</span><span class="s2">&quot;</span>
+                  <span class="s2">&quot;&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="nb">type</span><span class="p">(</span><span class="n">direction</span><span class="p">))</span>
+        <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">direction</span> <span class="ow">not</span> <span class="ow">in</span> <span class="p">(</span><span class="s2">&quot;In&quot;</span><span class="p">,</span> <span class="s2">&quot;Out&quot;</span><span class="p">):</span>
+        <span class="n">msg</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="s2">&quot;Direction should be either &#39;In&#39; or &#39;Out&#39; not &#39;</span><span class="si">{}</span><span class="s2">&#39;&quot;</span>
+                  <span class="s2">&quot;&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">direction</span><span class="p">)</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
 
     <span class="c1"># Load the cell values as a json object</span>
     <span class="n">cell_json</span> <span class="o">=</span> <span class="n">json</span><span class="o">.</span><span class="n">loads</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">old_cell</span><span class="p">))</span>
 
-    <span class="k">if</span> <span class="n">direction</span> <span class="o">==</span> <span class="s2">&quot;In&quot;</span><span class="p">:</span>
-        <span class="c1"># Check the status of the link.</span>
-        <span class="k">try</span><span class="p">:</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">direction</span> <span class="o">==</span> <span class="s2">&quot;In&quot;</span><span class="p">:</span>
+            <span class="c1"># Check the status of the link.</span>
             <span class="n">linked_cell</span> <span class="o">=</span> <span class="n">cell_json</span><span class="p">[</span><span class="s1">&#39;linkInFromCell&#39;</span><span class="p">]</span>
             <span class="n">status</span> <span class="o">=</span> <span class="n">linked_cell</span><span class="p">[</span><span class="s1">&#39;status&#39;</span><span class="p">]</span>
+            <span class="c1"># TODO: return status, fix upstream code to accept status values</span>
             <span class="k">if</span> <span class="n">status</span> <span class="o">==</span> <span class="s1">&#39;OK&#39;</span><span class="p">:</span>
                 <span class="k">return</span> <span class="s2">&quot;Linked&quot;</span>
             <span class="k">elif</span> <span class="n">status</span> <span class="o">==</span> <span class="s1">&#39;BROKEN&#39;</span><span class="p">:</span>
                 <span class="k">return</span> <span class="s2">&quot;Broken&quot;</span>
-        <span class="k">except</span> <span class="ne">KeyError</span><span class="p">:</span>
-            <span class="c1"># if old_cell.value is None:</span>
-            <span class="c1">#     return None</span>
-            <span class="k">return</span> <span class="s2">&quot;Unlinked&quot;</span>
-    <span class="k">elif</span> <span class="n">direction</span> <span class="o">==</span> <span class="s2">&quot;Out&quot;</span><span class="p">:</span>
-        <span class="c1"># Always set to Linked, unless it&#39;s invalid.</span>
-        <span class="k">try</span><span class="p">:</span>
+        <span class="k">elif</span> <span class="n">direction</span> <span class="o">==</span> <span class="s2">&quot;Out&quot;</span><span class="p">:</span>
+            <span class="c1"># Always set to Linked, unless it&#39;s invalid.</span>
             <span class="n">linked_cell</span> <span class="o">=</span> <span class="n">cell_json</span><span class="p">[</span><span class="s1">&#39;linksOutToCells&#39;</span><span class="p">]</span>
             <span class="k">return</span> <span class="s2">&quot;Linked&quot;</span>
-        <span class="k">except</span> <span class="ne">KeyError</span><span class="p">:</span>
-            <span class="c1"># if old_cell.value is None:</span>
-            <span class="c1">#     return None</span>
-            <span class="k">return</span> <span class="s2">&quot;Unlinked&quot;</span>
+    <span class="k">except</span> <span class="ne">KeyError</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">KeyError</span><span class="p">(</span><span class="s2">&quot;Unlinked&quot;</span><span class="p">)</span>
 
 
 <span class="k">def</span> <span class="nf">get_cell_value</span><span class="p">(</span><span class="n">row</span><span class="p">,</span> <span class="n">col_name</span><span class="p">,</span> <span class="n">col_map</span><span class="p">):</span>
@@ -183,6 +206,11 @@
 <span class="sd">        row (Row): The row of data that contains the IDs</span>
 <span class="sd">        col_name (str): The name of the referenced column</span>
 <span class="sd">        col_map (dict): The map of Column Name: Column ID</span>
+
+<span class="sd">    Raises:</span>
+<span class="sd">        TypeError: Validates row is a Smartsheet Row object</span>
+<span class="sd">        TypeError: Validates col_name is a string</span>
+<span class="sd">        TypeError: Validates col_map is a dict</span>
 
 <span class="sd">    Returns:</span>
 <span class="sd">        str: The value of the cell.</span>
@@ -266,11 +294,15 @@
 
     <span class="c1"># Validate data types before attempting to process.</span>
     <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">decimals</span><span class="p">,</span> <span class="nb">int</span><span class="p">):</span>
-        <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s2">&quot;decimal places must be an integer.&quot;</span><span class="p">)</span>
-    <span class="k">elif</span> <span class="n">decimals</span> <span class="o">&lt;</span> <span class="mi">0</span><span class="p">:</span>
-        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;decimal places has to be 0 or more.&quot;</span><span class="p">)</span>
-    <span class="k">elif</span> <span class="n">decimals</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
-        <span class="k">return</span> <span class="n">math</span><span class="o">.</span><span class="n">trunc</span><span class="p">(</span><span class="n">number</span><span class="p">)</span>
+        <span class="n">msg</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="s2">&quot;Decimal must be an int, not </span><span class="si">{}</span><span class="s2">&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="nb">type</span><span class="p">(</span><span class="n">decimals</span><span class="p">))</span>
+        <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">number</span><span class="p">,</span> <span class="nb">float</span><span class="p">):</span>
+        <span class="n">msg</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="s2">&quot;Number must be an float, not </span><span class="si">{}</span><span class="s2">&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="nb">type</span><span class="p">(</span><span class="n">number</span><span class="p">))</span>
+        <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">decimals</span> <span class="o">&lt;=</span> <span class="mi">0</span><span class="p">:</span>
+        <span class="n">msg</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="s2">&quot;Decimal places has to be 1 or more, not </span><span class="si">{}</span><span class="s2">&quot;</span>
+                  <span class="s2">&quot;&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">decimals</span><span class="p">)</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
 
     <span class="n">factor</span> <span class="o">=</span> <span class="mf">10.0</span> <span class="o">**</span> <span class="n">decimals</span>
     <span class="k">return</span> <span class="n">math</span><span class="o">.</span><span class="n">trunc</span><span class="p">(</span><span class="n">number</span> <span class="o">*</span> <span class="n">factor</span><span class="p">)</span> <span class="o">/</span> <span class="n">factor</span>
@@ -280,11 +312,20 @@
     <span class="sd">&quot;&quot;&quot;Subtracts the number intput from the current time to generate a</span>
 <span class="sd">       timestamp N number of minutes ago.</span>
 
+<span class="sd">    Args:</span>
+<span class="sd">        number (int): Number of seconds</span>
+
+<span class="sd">    Raises:</span>
+<span class="sd">        TypeError: Validates number is an int</span>
+<span class="sd">        ValueError: Ensures minutes is &gt; 0</span>
+
 <span class="sd">    Returns:</span>
 <span class="sd">        string: an ISO8601 compliant timestamp</span>
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">number</span><span class="p">,</span> <span class="nb">int</span><span class="p">):</span>
         <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s2">&quot;Number of minutes must be an integer.&quot;</span><span class="p">)</span>
+    <span class="k">elif</span> <span class="n">number</span> <span class="o">&lt;=</span> <span class="mi">0</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Number of minutes must be greater than zero.&quot;</span><span class="p">)</span>
 
     <span class="n">date</span> <span class="o">=</span> <span class="n">datetime</span><span class="o">.</span><span class="n">now</span><span class="p">()</span>
     <span class="n">delta</span> <span class="o">=</span> <span class="n">timedelta</span><span class="p">(</span><span class="n">minutes</span><span class="o">=</span><span class="n">number</span><span class="p">)</span>
@@ -294,18 +335,46 @@
     <span class="k">return</span> <span class="n">modified_since</span><span class="p">,</span> <span class="n">modified_since_iso</span>
 
 
-<span class="k">def</span> <span class="nf">chunks</span><span class="p">(</span><span class="n">lst</span><span class="p">,</span> <span class="n">n</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;Yield successive n-sized chunks from lst.</span>
+<span class="k">def</span> <span class="nf">chunks</span><span class="p">(</span><span class="n">source</span><span class="p">,</span> <span class="n">n</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Yield successive n-sized chunks from source.</span>
 
 <span class="sd">    Args:</span>
-<span class="sd">        lst (list): The list of objects to chunk</span>
+<span class="sd">        source (list): The list of objects to chunk</span>
 <span class="sd">        n (int): The number of items in the list to chunk together</span>
 
+<span class="sd">    Raises:</span>
+<span class="sd">        TypeError: Validates source is a list</span>
+<span class="sd">        TypeError: Validates n is an int</span>
+<span class="sd">        ValueError: Validates n must be non-zero</span>
+<span class="sd">        ValueError: Validates n &gt; 0</span>
+<span class="sd">        ValueError: Validates length of list is greater than n</span>
+
 <span class="sd">    Yields:</span>
-<span class="sd">        lst (list): The sub-list of chunked items</span>
+<span class="sd">        source (list): The sub-list of chunked items</span>
 <span class="sd">    &quot;&quot;&quot;</span>
-    <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="n">lst</span><span class="p">),</span> <span class="n">n</span><span class="p">):</span>
-        <span class="k">yield</span> <span class="n">lst</span><span class="p">[</span><span class="n">i</span><span class="p">:</span><span class="n">i</span> <span class="o">+</span> <span class="n">n</span><span class="p">]</span>
+    <span class="c1"># Validate data types before attempting to process.</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">source</span><span class="p">,</span> <span class="nb">list</span><span class="p">):</span>
+        <span class="n">msg</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="s2">&quot;Source must be a list, not </span><span class="si">{}</span><span class="s2">&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="nb">type</span><span class="p">(</span><span class="n">source</span><span class="p">))</span>
+        <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">n</span><span class="p">,</span> <span class="nb">int</span><span class="p">):</span>
+        <span class="n">msg</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="s2">&quot;Second argument must be type: int, not </span><span class="si">{}</span><span class="s2">&quot;</span>
+                  <span class="s2">&quot;&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="nb">type</span><span class="p">(</span><span class="n">n</span><span class="p">))</span>
+        <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">n</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+        <span class="n">msg</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="s2">&quot;Second argument must be non-zero, not </span><span class="si">{}</span><span class="s2">&quot;</span>
+                  <span class="s2">&quot;&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="nb">type</span><span class="p">(</span><span class="n">n</span><span class="p">))</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">n</span> <span class="o">&lt;</span> <span class="mi">0</span><span class="p">:</span>
+        <span class="n">msg</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="s2">&quot;Second argument must be greater than zero, not </span><span class="si">{}</span><span class="s2">&quot;</span>
+                  <span class="s2">&quot;&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="nb">type</span><span class="p">(</span><span class="n">n</span><span class="p">))</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
+    <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">source</span><span class="p">)</span> <span class="o">&lt;</span> <span class="n">n</span><span class="p">:</span>
+        <span class="n">msg</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="s2">&quot;Length of list is less than the chunk integer. &quot;</span>
+                  <span class="s2">&quot;List length: </span><span class="si">{}</span><span class="s2">, chunk size: </span><span class="si">{}</span><span class="s2">&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">source</span><span class="p">),</span> <span class="n">n</span><span class="p">)</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
+
+    <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="n">source</span><span class="p">),</span> <span class="n">n</span><span class="p">):</span>
+        <span class="k">yield</span> <span class="n">source</span><span class="p">[</span><span class="n">i</span><span class="p">:</span><span class="n">i</span> <span class="o">+</span> <span class="n">n</span><span class="p">]</span>
 </pre></div>
 
         </details>
@@ -329,6 +398,12 @@
 <span class="sd">        column_name (str): The name of the referenced column</span>
 <span class="sd">        column_map (dict): The map of Column Name: Column ID</span>
 
+<span class="sd">    Raises:</span>
+<span class="sd">        TypeError: Validates row is a Smartsheet Row object</span>
+<span class="sd">        TypeError: Validates column_name is a string</span>
+<span class="sd">        TypeError: Validates column_map is a dict</span>
+<span class="sd">        KeyError: Raises KeyError if the column name isn&#39;t in the dictionary</span>
+
 <span class="sd">    Returns:</span>
 <span class="sd">        cell (Cell): A Cell object or None if the column is not found in the</span>
 <span class="sd">                     map.</span>
@@ -345,8 +420,8 @@
     <span class="k">except</span> <span class="ne">KeyError</span><span class="p">:</span>
         <span class="n">msg</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="s2">&quot;Column not found: </span><span class="si">{}</span><span class="s2">&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">column_name</span><span class="p">)</span>
         <span class="n">logging</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
-        <span class="c1"># raise KeyError(msg)</span>
-        <span class="k">return</span> <span class="kc">None</span>
+        <span class="k">raise</span> <span class="ne">KeyError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
+        <span class="c1"># return None</span>
     <span class="k">else</span><span class="p">:</span>
         <span class="k">return</span> <span class="n">row</span><span class="o">.</span><span class="n">get_column</span><span class="p">(</span><span class="n">column_id</span><span class="p">)</span>
 </pre></div>
@@ -361,6 +436,15 @@
 <li><strong>row (Row):</strong>  The row of data that contains the IDs</li>
 <li><strong>column_name (str):</strong>  The name of the referenced column</li>
 <li><strong>column_map (dict): The map of Column Name:</strong>  Column ID</li>
+</ul>
+
+<h6 id="raises">Raises</h6>
+
+<ul>
+<li><strong>TypeError:</strong>  Validates row is a Smartsheet Row object</li>
+<li><strong>TypeError:</strong>  Validates column_name is a string</li>
+<li><strong>TypeError:</strong>  Validates column_map is a dict</li>
+<li><strong>KeyError:</strong>  Raises KeyError if the column name isn't in the dictionary</li>
 </ul>
 
 <h6 id="returns">Returns</h6>
@@ -389,6 +473,9 @@
 <span class="sd">    Args:</span>
 <span class="sd">        sheet (sheet): The sheet containing column names and IDs</span>
 
+<span class="sd">    Raises:</span>
+<span class="sd">        TypeError: Validates sheet is a Smartsheet Sheet object</span>
+
 <span class="sd">    Returns:</span>
 <span class="sd">        dict: A map of Column Name: Column ID</span>
 <span class="sd">    &quot;&quot;&quot;</span>
@@ -411,6 +498,12 @@
 
 <ul>
 <li><strong>sheet (sheet):</strong>  The sheet containing column names and IDs</li>
+</ul>
+
+<h6 id="raises">Raises</h6>
+
+<ul>
+<li><strong>TypeError:</strong>  Validates sheet is a Smartsheet Sheet object</li>
 </ul>
 
 <h6 id="returns">Returns</h6>
@@ -442,37 +535,50 @@
 <span class="sd">        old_cell (Cell): The Cell object to check.</span>
 <span class="sd">        direction (str): Whether to check incoming or outgoing cell links.</span>
 
+<span class="sd">    Raises:</span>
+<span class="sd">        TypeError: Validates old_cell is a Smartsheet cell object</span>
+<span class="sd">        TypeError: Validates direction is a string</span>
+<span class="sd">        ValueError: Validates direction is either &#39;In&#39; or &#39;Out&#39;</span>
+<span class="sd">        KeyError: If the old_cell doesn&#39;t have the extended attributes for</span>
+<span class="sd">                  cell links raises as &#39;Unlinked&#39;</span>
+
 <span class="sd">    Returns:</span>
 <span class="sd">        str: &quot;Linked&quot; if status is &quot;OK&quot;, &quot;Broken&quot; if staus is &quot;BROKEN&quot;,</span>
 <span class="sd">             &quot;Unlinked&quot; if the cell doesn&#39;t have a cell link property. If the</span>
 <span class="sd">             cell link type is &#39;linksOutToCells&#39;, always return &quot;Linked&quot;.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">old_cell</span><span class="p">,</span> <span class="n">smartsheet</span><span class="o">.</span><span class="n">models</span><span class="o">.</span><span class="n">cell</span><span class="o">.</span><span class="n">Cell</span><span class="p">):</span>
+        <span class="n">msg</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="s2">&quot;Old Cell should be type: Cell not type: </span><span class="si">{}</span><span class="s2">&quot;</span>
+                  <span class="s2">&quot;&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="nb">type</span><span class="p">(</span><span class="n">old_cell</span><span class="p">))</span>
+        <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">direction</span><span class="p">,</span> <span class="nb">str</span><span class="p">):</span>
+        <span class="n">msg</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="s2">&quot;Direction should type: str not type: </span><span class="si">{}</span><span class="s2">&quot;</span>
+                  <span class="s2">&quot;&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="nb">type</span><span class="p">(</span><span class="n">direction</span><span class="p">))</span>
+        <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">direction</span> <span class="ow">not</span> <span class="ow">in</span> <span class="p">(</span><span class="s2">&quot;In&quot;</span><span class="p">,</span> <span class="s2">&quot;Out&quot;</span><span class="p">):</span>
+        <span class="n">msg</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="s2">&quot;Direction should be either &#39;In&#39; or &#39;Out&#39; not &#39;</span><span class="si">{}</span><span class="s2">&#39;&quot;</span>
+                  <span class="s2">&quot;&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">direction</span><span class="p">)</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
 
     <span class="c1"># Load the cell values as a json object</span>
     <span class="n">cell_json</span> <span class="o">=</span> <span class="n">json</span><span class="o">.</span><span class="n">loads</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">old_cell</span><span class="p">))</span>
 
-    <span class="k">if</span> <span class="n">direction</span> <span class="o">==</span> <span class="s2">&quot;In&quot;</span><span class="p">:</span>
-        <span class="c1"># Check the status of the link.</span>
-        <span class="k">try</span><span class="p">:</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">direction</span> <span class="o">==</span> <span class="s2">&quot;In&quot;</span><span class="p">:</span>
+            <span class="c1"># Check the status of the link.</span>
             <span class="n">linked_cell</span> <span class="o">=</span> <span class="n">cell_json</span><span class="p">[</span><span class="s1">&#39;linkInFromCell&#39;</span><span class="p">]</span>
             <span class="n">status</span> <span class="o">=</span> <span class="n">linked_cell</span><span class="p">[</span><span class="s1">&#39;status&#39;</span><span class="p">]</span>
+            <span class="c1"># TODO: return status, fix upstream code to accept status values</span>
             <span class="k">if</span> <span class="n">status</span> <span class="o">==</span> <span class="s1">&#39;OK&#39;</span><span class="p">:</span>
                 <span class="k">return</span> <span class="s2">&quot;Linked&quot;</span>
             <span class="k">elif</span> <span class="n">status</span> <span class="o">==</span> <span class="s1">&#39;BROKEN&#39;</span><span class="p">:</span>
                 <span class="k">return</span> <span class="s2">&quot;Broken&quot;</span>
-        <span class="k">except</span> <span class="ne">KeyError</span><span class="p">:</span>
-            <span class="c1"># if old_cell.value is None:</span>
-            <span class="c1">#     return None</span>
-            <span class="k">return</span> <span class="s2">&quot;Unlinked&quot;</span>
-    <span class="k">elif</span> <span class="n">direction</span> <span class="o">==</span> <span class="s2">&quot;Out&quot;</span><span class="p">:</span>
-        <span class="c1"># Always set to Linked, unless it&#39;s invalid.</span>
-        <span class="k">try</span><span class="p">:</span>
+        <span class="k">elif</span> <span class="n">direction</span> <span class="o">==</span> <span class="s2">&quot;Out&quot;</span><span class="p">:</span>
+            <span class="c1"># Always set to Linked, unless it&#39;s invalid.</span>
             <span class="n">linked_cell</span> <span class="o">=</span> <span class="n">cell_json</span><span class="p">[</span><span class="s1">&#39;linksOutToCells&#39;</span><span class="p">]</span>
             <span class="k">return</span> <span class="s2">&quot;Linked&quot;</span>
-        <span class="k">except</span> <span class="ne">KeyError</span><span class="p">:</span>
-            <span class="c1"># if old_cell.value is None:</span>
-            <span class="c1">#     return None</span>
-            <span class="k">return</span> <span class="s2">&quot;Unlinked&quot;</span>
+    <span class="k">except</span> <span class="ne">KeyError</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">KeyError</span><span class="p">(</span><span class="s2">&quot;Unlinked&quot;</span><span class="p">)</span>
 </pre></div>
 
         </details>
@@ -487,6 +593,16 @@
 <ul>
 <li><strong>old_cell (Cell):</strong>  The Cell object to check.</li>
 <li><strong>direction (str):</strong>  Whether to check incoming or outgoing cell links.</li>
+</ul>
+
+<h6 id="raises">Raises</h6>
+
+<ul>
+<li><strong>TypeError:</strong>  Validates old_cell is a Smartsheet cell object</li>
+<li><strong>TypeError:</strong>  Validates direction is a string</li>
+<li><strong>ValueError:</strong>  Validates direction is either 'In' or 'Out'</li>
+<li><strong>KeyError:</strong>  If the old_cell doesn't have the extended attributes for
+cell links raises as 'Unlinked'</li>
 </ul>
 
 <h6 id="returns">Returns</h6>
@@ -518,6 +634,11 @@
 <span class="sd">        row (Row): The row of data that contains the IDs</span>
 <span class="sd">        col_name (str): The name of the referenced column</span>
 <span class="sd">        col_map (dict): The map of Column Name: Column ID</span>
+
+<span class="sd">    Raises:</span>
+<span class="sd">        TypeError: Validates row is a Smartsheet Row object</span>
+<span class="sd">        TypeError: Validates col_name is a string</span>
+<span class="sd">        TypeError: Validates col_map is a dict</span>
 
 <span class="sd">    Returns:</span>
 <span class="sd">        str: The value of the cell.</span>
@@ -552,6 +673,14 @@
 <li><strong>row (Row):</strong>  The row of data that contains the IDs</li>
 <li><strong>col_name (str):</strong>  The name of the referenced column</li>
 <li><strong>col_map (dict): The map of Column Name:</strong>  Column ID</li>
+</ul>
+
+<h6 id="raises">Raises</h6>
+
+<ul>
+<li><strong>TypeError:</strong>  Validates row is a Smartsheet Row object</li>
+<li><strong>TypeError:</strong>  Validates col_name is a string</li>
+<li><strong>TypeError:</strong>  Validates col_map is a dict</li>
 </ul>
 
 <h6 id="returns">Returns</h6>
@@ -670,11 +799,15 @@ respectively.</li>
 
     <span class="c1"># Validate data types before attempting to process.</span>
     <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">decimals</span><span class="p">,</span> <span class="nb">int</span><span class="p">):</span>
-        <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s2">&quot;decimal places must be an integer.&quot;</span><span class="p">)</span>
-    <span class="k">elif</span> <span class="n">decimals</span> <span class="o">&lt;</span> <span class="mi">0</span><span class="p">:</span>
-        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;decimal places has to be 0 or more.&quot;</span><span class="p">)</span>
-    <span class="k">elif</span> <span class="n">decimals</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
-        <span class="k">return</span> <span class="n">math</span><span class="o">.</span><span class="n">trunc</span><span class="p">(</span><span class="n">number</span><span class="p">)</span>
+        <span class="n">msg</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="s2">&quot;Decimal must be an int, not </span><span class="si">{}</span><span class="s2">&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="nb">type</span><span class="p">(</span><span class="n">decimals</span><span class="p">))</span>
+        <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">number</span><span class="p">,</span> <span class="nb">float</span><span class="p">):</span>
+        <span class="n">msg</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="s2">&quot;Number must be an float, not </span><span class="si">{}</span><span class="s2">&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="nb">type</span><span class="p">(</span><span class="n">number</span><span class="p">))</span>
+        <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">decimals</span> <span class="o">&lt;=</span> <span class="mi">0</span><span class="p">:</span>
+        <span class="n">msg</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="s2">&quot;Decimal places has to be 1 or more, not </span><span class="si">{}</span><span class="s2">&quot;</span>
+                  <span class="s2">&quot;&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">decimals</span><span class="p">)</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
 
     <span class="n">factor</span> <span class="o">=</span> <span class="mf">10.0</span> <span class="o">**</span> <span class="n">decimals</span>
     <span class="k">return</span> <span class="n">math</span><span class="o">.</span><span class="n">trunc</span><span class="p">(</span><span class="n">number</span> <span class="o">*</span> <span class="n">factor</span><span class="p">)</span> <span class="o">/</span> <span class="n">factor</span>
@@ -722,11 +855,20 @@ Defaults to 0.</li>
     <span class="sd">&quot;&quot;&quot;Subtracts the number intput from the current time to generate a</span>
 <span class="sd">       timestamp N number of minutes ago.</span>
 
+<span class="sd">    Args:</span>
+<span class="sd">        number (int): Number of seconds</span>
+
+<span class="sd">    Raises:</span>
+<span class="sd">        TypeError: Validates number is an int</span>
+<span class="sd">        ValueError: Ensures minutes is &gt; 0</span>
+
 <span class="sd">    Returns:</span>
 <span class="sd">        string: an ISO8601 compliant timestamp</span>
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">number</span><span class="p">,</span> <span class="nb">int</span><span class="p">):</span>
         <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s2">&quot;Number of minutes must be an integer.&quot;</span><span class="p">)</span>
+    <span class="k">elif</span> <span class="n">number</span> <span class="o">&lt;=</span> <span class="mi">0</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Number of minutes must be greater than zero.&quot;</span><span class="p">)</span>
 
     <span class="n">date</span> <span class="o">=</span> <span class="n">datetime</span><span class="o">.</span><span class="n">now</span><span class="p">()</span>
     <span class="n">delta</span> <span class="o">=</span> <span class="n">timedelta</span><span class="p">(</span><span class="n">minutes</span><span class="o">=</span><span class="n">number</span><span class="p">)</span>
@@ -740,6 +882,19 @@ Defaults to 0.</li>
 
             <div class="docstring"><p>Subtracts the number intput from the current time to generate a
    timestamp N number of minutes ago.</p>
+
+<h6 id="args">Args</h6>
+
+<ul>
+<li><strong>number (int):</strong>  Number of seconds</li>
+</ul>
+
+<h6 id="raises">Raises</h6>
+
+<ul>
+<li><strong>TypeError:</strong>  Validates number is an int</li>
+<li><strong>ValueError:</strong>  Ensures minutes is &gt; 0</li>
+</ul>
 
 <h6 id="returns">Returns</h6>
 
@@ -755,40 +910,78 @@ Defaults to 0.</li>
 
         
             <span class="def">def</span>
-            <span class="name">chunks</span><span class="signature">(lst, n)</span>:
+            <span class="name">chunks</span><span class="signature">(source, n)</span>:
     </div>
 
                 <details>
             <summary>View Source</summary>
-            <div class="codehilite"><pre><span></span><span class="k">def</span> <span class="nf">chunks</span><span class="p">(</span><span class="n">lst</span><span class="p">,</span> <span class="n">n</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;Yield successive n-sized chunks from lst.</span>
+            <div class="codehilite"><pre><span></span><span class="k">def</span> <span class="nf">chunks</span><span class="p">(</span><span class="n">source</span><span class="p">,</span> <span class="n">n</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Yield successive n-sized chunks from source.</span>
 
 <span class="sd">    Args:</span>
-<span class="sd">        lst (list): The list of objects to chunk</span>
+<span class="sd">        source (list): The list of objects to chunk</span>
 <span class="sd">        n (int): The number of items in the list to chunk together</span>
 
+<span class="sd">    Raises:</span>
+<span class="sd">        TypeError: Validates source is a list</span>
+<span class="sd">        TypeError: Validates n is an int</span>
+<span class="sd">        ValueError: Validates n must be non-zero</span>
+<span class="sd">        ValueError: Validates n &gt; 0</span>
+<span class="sd">        ValueError: Validates length of list is greater than n</span>
+
 <span class="sd">    Yields:</span>
-<span class="sd">        lst (list): The sub-list of chunked items</span>
+<span class="sd">        source (list): The sub-list of chunked items</span>
 <span class="sd">    &quot;&quot;&quot;</span>
-    <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="n">lst</span><span class="p">),</span> <span class="n">n</span><span class="p">):</span>
-        <span class="k">yield</span> <span class="n">lst</span><span class="p">[</span><span class="n">i</span><span class="p">:</span><span class="n">i</span> <span class="o">+</span> <span class="n">n</span><span class="p">]</span>
+    <span class="c1"># Validate data types before attempting to process.</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">source</span><span class="p">,</span> <span class="nb">list</span><span class="p">):</span>
+        <span class="n">msg</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="s2">&quot;Source must be a list, not </span><span class="si">{}</span><span class="s2">&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="nb">type</span><span class="p">(</span><span class="n">source</span><span class="p">))</span>
+        <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">n</span><span class="p">,</span> <span class="nb">int</span><span class="p">):</span>
+        <span class="n">msg</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="s2">&quot;Second argument must be type: int, not </span><span class="si">{}</span><span class="s2">&quot;</span>
+                  <span class="s2">&quot;&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="nb">type</span><span class="p">(</span><span class="n">n</span><span class="p">))</span>
+        <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">n</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+        <span class="n">msg</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="s2">&quot;Second argument must be non-zero, not </span><span class="si">{}</span><span class="s2">&quot;</span>
+                  <span class="s2">&quot;&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="nb">type</span><span class="p">(</span><span class="n">n</span><span class="p">))</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">n</span> <span class="o">&lt;</span> <span class="mi">0</span><span class="p">:</span>
+        <span class="n">msg</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="s2">&quot;Second argument must be greater than zero, not </span><span class="si">{}</span><span class="s2">&quot;</span>
+                  <span class="s2">&quot;&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="nb">type</span><span class="p">(</span><span class="n">n</span><span class="p">))</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
+    <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">source</span><span class="p">)</span> <span class="o">&lt;</span> <span class="n">n</span><span class="p">:</span>
+        <span class="n">msg</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="s2">&quot;Length of list is less than the chunk integer. &quot;</span>
+                  <span class="s2">&quot;List length: </span><span class="si">{}</span><span class="s2">, chunk size: </span><span class="si">{}</span><span class="s2">&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">source</span><span class="p">),</span> <span class="n">n</span><span class="p">)</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
+
+    <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="n">source</span><span class="p">),</span> <span class="n">n</span><span class="p">):</span>
+        <span class="k">yield</span> <span class="n">source</span><span class="p">[</span><span class="n">i</span><span class="p">:</span><span class="n">i</span> <span class="o">+</span> <span class="n">n</span><span class="p">]</span>
 </pre></div>
 
         </details>
 
-            <div class="docstring"><p>Yield successive n-sized chunks from lst.</p>
+            <div class="docstring"><p>Yield successive n-sized chunks from source.</p>
 
 <h6 id="args">Args</h6>
 
 <ul>
-<li><strong>lst (list):</strong>  The list of objects to chunk</li>
+<li><strong>source (list):</strong>  The list of objects to chunk</li>
 <li><strong>n (int):</strong>  The number of items in the list to chunk together</li>
+</ul>
+
+<h6 id="raises">Raises</h6>
+
+<ul>
+<li><strong>TypeError:</strong>  Validates source is a list</li>
+<li><strong>TypeError:</strong>  Validates n is an int</li>
+<li><strong>ValueError:</strong>  Validates n must be non-zero</li>
+<li><strong>ValueError:</strong>  Validates n &gt; 0</li>
+<li><strong>ValueError:</strong>  Validates length of list is greater than n</li>
 </ul>
 
 <h6 id="yields">Yields</h6>
 
 <blockquote>
-  <p>lst (list): The sub-list of chunked items</p>
+  <p>source (list): The sub-list of chunked items</p>
 </blockquote>
 </div>
 

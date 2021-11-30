@@ -94,7 +94,7 @@
 
 
 <span class="k">def</span> <span class="nf">refresh_source_sheets</span><span class="p">(</span><span class="n">smartsheet_client</span><span class="p">,</span> <span class="n">sheet_ids</span><span class="p">,</span> <span class="n">minutes</span><span class="o">=</span><span class="mi">0</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;Creates a dict of source sheets. If minutes is defined, only gathers </span>
+    <span class="sd">&quot;&quot;&quot;Creates a dict of source sheets. If minutes is defined, only gathers</span>
 <span class="sd">       sheets modified since the minutes value. Otherwise pulls all sheets</span>
 <span class="sd">       from the workspaces.</span>
 
@@ -102,14 +102,27 @@
 <span class="sd">        smartsheet_client (client): Allows interaction with the Smartsheet API</span>
 <span class="sd">        sheet_ids (list): The list of Smartsheet sheet IDs to parse</span>
 <span class="sd">        minutes (int, optional): Number of minutes into the past that the API</span>
-<span class="sd">                                 should pull sheet and row data, if greater </span>
+<span class="sd">                                 should pull sheet and row data, if greater</span>
 <span class="sd">                                 than 0. Defaults to 0.</span>
 
 <span class="sd">    Returns:</span>
-<span class="sd">        source_sheets (list): The list of sheets, including row data for rows </span>
-<span class="sd">                              modified since the minutes value, if greater </span>
+<span class="sd">        source_sheets (list): The list of sheets, including row data for rows</span>
+<span class="sd">                              modified since the minutes value, if greater</span>
 <span class="sd">                              than 0</span>
 <span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">sheet_ids</span><span class="p">,</span> <span class="nb">list</span><span class="p">):</span>
+        <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s2">&quot;Sheet IDs must be a list of IDs&quot;</span><span class="p">)</span>
+    <span class="k">elif</span> <span class="ow">not</span> <span class="nb">all</span><span class="p">(</span><span class="nb">isinstance</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="nb">int</span><span class="p">)</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">sheet_ids</span><span class="p">):</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;One or more values in the list are not type: int&quot;</span><span class="p">)</span>
+    <span class="k">elif</span> <span class="n">minutes</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">minutes</span><span class="p">,</span> <span class="nb">int</span><span class="p">):</span>
+        <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s2">&quot;Minutes must be type: int&quot;</span><span class="p">)</span>
+    <span class="k">elif</span> <span class="n">minutes</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="n">minutes</span> <span class="o">&lt;</span> <span class="mi">0</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Minutes must be &gt;= zero&quot;</span><span class="p">)</span>
+    <span class="c1"># TODO: Figure out how to validate a Smartsheet client.</span>
+    <span class="c1"># elif not isinstance(smartsheet_client, smartsheet.smartsheet()):</span>
+    <span class="c1">#     raise TypeError(</span>
+    <span class="c1">#         &quot;smartsheet_client must be of type smartsheet.Smartsheet()&quot;)</span>
+
     <span class="n">source_sheets</span> <span class="o">=</span> <span class="p">[]</span>
     <span class="k">if</span> <span class="n">minutes</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
         <span class="n">_</span><span class="p">,</span> <span class="n">modified_since</span> <span class="o">=</span> <span class="n">get_timestamp</span><span class="p">(</span><span class="n">minutes</span><span class="p">)</span>
@@ -166,10 +179,19 @@
     <span class="c1">#   &quot;Predecessors&quot;: &quot;38FS +1w&quot;, # type: str</span>
     <span class="c1">#   &quot;Summary&quot;: &quot;False&quot; # type: str</span>
     <span class="c1">#       }</span>
-    <span class="k">if</span> <span class="n">source_sheets</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
-        <span class="k">raise</span> <span class="ne">ValueError</span>
-    <span class="k">elif</span> <span class="n">columns</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
-        <span class="k">raise</span> <span class="ne">ValueError</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">source_sheets</span><span class="p">,</span> <span class="nb">list</span><span class="p">):</span>
+        <span class="n">msg</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="s2">&quot;Source sheets should be type: list, not </span><span class="si">{}</span><span class="s2">&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>
+            <span class="nb">type</span><span class="p">(</span><span class="n">source_sheets</span><span class="p">))</span>
+        <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">columns</span><span class="p">,</span> <span class="nb">list</span><span class="p">):</span>
+        <span class="n">msg</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="s2">&quot;Columns should be type: list, not </span><span class="si">{}</span><span class="s2">&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="nb">type</span><span class="p">(</span><span class="n">columns</span><span class="p">))</span>
+        <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">minutes</span><span class="p">,</span> <span class="nb">int</span><span class="p">):</span>
+        <span class="n">msg</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="s2">&quot;Minutes should be type: int, not </span><span class="si">{}</span><span class="s2">&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="nb">type</span><span class="p">(</span><span class="n">minutes</span><span class="p">))</span>
+        <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">minutes</span> <span class="o">&lt;</span> <span class="mi">0</span><span class="p">:</span>
+        <span class="n">msg</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="s2">&quot;Minutes should be &gt;= 0, not </span><span class="si">{}</span><span class="s2">&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">minutes</span><span class="p">)</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
 
     <span class="c1"># Create the empty dict we&#39;ll pass back</span>
     <span class="n">all_row_data</span> <span class="o">=</span> <span class="p">{}</span>
@@ -266,20 +288,10 @@
 <span class="sd">        dict: A nested set of dictionaries</span>
 <span class="sd">        none: There are no sheets to update.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
-    <span class="c1"># TODO: Write a test to validate the dict.</span>
-    <span class="c1"># 7637702645442436,  (Sheet ID, int)</span>
-    <span class="c1"># {</span>
-    <span class="c1">#     &quot;sheet_name&quot;: &quot;Cloudwatch: Distribution Project Plan&quot;, # type: str</span>
-    <span class="c1">#     &quot;row_data&quot;: {  # type: dict</span>
-    <span class="c1">#         4733217466279812: { (Row ID, int)</span>
-    <span class="c1">#             &quot;column_id&quot;: 2745267022784388, (int)</span>
-    <span class="c1">#             &quot;uuid&quot;: &quot;7637702645442436-4733217466279812-</span>
-    <span class="c1">#                      2745267022784388-202105112340380000&quot; (str)</span>
-    <span class="c1">#         }</span>
-    <span class="c1">#     }</span>
-    <span class="c1"># }</span>
-    <span class="k">if</span> <span class="n">source_sheets</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
-        <span class="k">raise</span> <span class="ne">ValueError</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">source_sheets</span><span class="p">,</span> <span class="nb">list</span><span class="p">):</span>
+        <span class="n">msg</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="s2">&quot;Source Sheets should be type: list not type </span><span class="si">{}</span><span class="s2">&quot;</span>
+                  <span class="s2">&quot;&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="nb">type</span><span class="p">(</span><span class="n">source_sheets</span><span class="p">))</span>
+        <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
 
     <span class="c1"># Create an empty dict of sheets to update</span>
     <span class="n">sheets_to_update</span> <span class="o">=</span> <span class="p">{}</span>
@@ -574,21 +586,29 @@
 
 
 <span class="k">def</span> <span class="nf">get_secret_name</span><span class="p">(</span><span class="n">env</span><span class="p">):</span>
-    <span class="k">for</span> <span class="n">e</span> <span class="ow">in</span> <span class="n">env</span><span class="p">:</span>
-        <span class="k">if</span> <span class="n">e</span> <span class="ow">in</span> <span class="p">(</span><span class="s2">&quot;-s&quot;</span><span class="p">,</span> <span class="s2">&quot;--staging&quot;</span><span class="p">,</span> <span class="s2">&quot;-staging&quot;</span><span class="p">):</span>
-            <span class="n">secret_name</span> <span class="o">=</span> <span class="s2">&quot;staging/smartsheet-data-sync/svc-api-token&quot;</span>
-            <span class="k">return</span><span class="p">(</span><span class="n">secret_name</span><span class="p">)</span>
-        <span class="k">elif</span> <span class="n">e</span> <span class="ow">in</span> <span class="p">(</span><span class="s2">&quot;-p&quot;</span><span class="p">,</span> <span class="s2">&quot;--prod&quot;</span><span class="p">,</span> <span class="s2">&quot;-prod&quot;</span><span class="p">):</span>
-            <span class="n">secret_name</span> <span class="o">=</span> <span class="s2">&quot;prod/smartsheet-data-sync/svc-api-token&quot;</span>
-            <span class="k">return</span><span class="p">(</span><span class="n">secret_name</span><span class="p">)</span>
-        <span class="k">elif</span> <span class="n">e</span> <span class="ow">in</span> <span class="p">(</span><span class="s2">&quot;-d&quot;</span><span class="p">,</span> <span class="s2">&quot;--debug&quot;</span><span class="p">,</span> <span class="s2">&quot;-debug&quot;</span><span class="p">):</span>
-            <span class="n">secret_name</span> <span class="o">=</span> <span class="s2">&quot;staging/smartsheet-data-sync/svc-api-token&quot;</span>
-            <span class="k">return</span><span class="p">(</span><span class="n">secret_name</span><span class="p">)</span>
-        <span class="k">else</span><span class="p">:</span>
-            <span class="n">logging</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="s2">&quot;Failed to set API Key from AWS Secrets&quot;</span><span class="p">)</span>
-            <span class="n">secret_name</span> <span class="o">=</span> <span class="s2">&quot;&quot;</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">env</span><span class="p">:</span>
+        <span class="n">msg</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="s2">&quot;Env must be type: str. Env was </span><span class="si">{}</span><span class="s2">&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">env</span><span class="p">)</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
+    <span class="k">elif</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">env</span><span class="p">,</span> <span class="nb">str</span><span class="p">):</span>
+        <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s2">&quot;Env is not type: str&quot;</span><span class="p">)</span>
+    <span class="k">elif</span> <span class="n">env</span> <span class="ow">not</span> <span class="ow">in</span> <span class="p">(</span><span class="s2">&quot;-d&quot;</span><span class="p">,</span> <span class="s2">&quot;--debug&quot;</span><span class="p">,</span> <span class="s2">&quot;-debug&quot;</span><span class="p">,</span> <span class="s2">&quot;-p&quot;</span><span class="p">,</span> <span class="s2">&quot;--prod&quot;</span><span class="p">,</span> <span class="s2">&quot;-prod&quot;</span><span class="p">,</span> <span class="s2">&quot;-s&quot;</span><span class="p">,</span>
+                     <span class="s2">&quot;--staging&quot;</span><span class="p">,</span> <span class="s2">&quot;-staging&quot;</span><span class="p">):</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+            <span class="s2">&quot;Invalid argument passed. Value passed was </span><span class="si">{}</span><span class="s2">&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">env</span><span class="p">)</span>
 
-    <span class="k">return</span> <span class="n">secret_name</span>
+    <span class="k">if</span> <span class="n">env</span> <span class="ow">in</span> <span class="p">(</span><span class="s2">&quot;-s&quot;</span><span class="p">,</span> <span class="s2">&quot;--staging&quot;</span><span class="p">,</span> <span class="s2">&quot;-staging&quot;</span><span class="p">):</span>
+        <span class="n">secret_name</span> <span class="o">=</span> <span class="s2">&quot;staging/smartsheet-data-sync/svc-api-token&quot;</span>
+        <span class="k">return</span> <span class="n">secret_name</span>
+    <span class="k">elif</span> <span class="n">env</span> <span class="ow">in</span> <span class="p">(</span><span class="s2">&quot;-p&quot;</span><span class="p">,</span> <span class="s2">&quot;--prod&quot;</span><span class="p">,</span> <span class="s2">&quot;-prod&quot;</span><span class="p">):</span>
+        <span class="n">secret_name</span> <span class="o">=</span> <span class="s2">&quot;prod/smartsheet-data-sync/svc-api-token&quot;</span>
+        <span class="k">return</span> <span class="n">secret_name</span>
+    <span class="k">elif</span> <span class="n">env</span> <span class="ow">in</span> <span class="p">(</span><span class="s2">&quot;-d&quot;</span><span class="p">,</span> <span class="s2">&quot;--debug&quot;</span><span class="p">,</span> <span class="s2">&quot;-debug&quot;</span><span class="p">):</span>
+        <span class="n">secret_name</span> <span class="o">=</span> <span class="s2">&quot;staging/smartsheet-data-sync/svc-api-token&quot;</span>
+        <span class="k">return</span> <span class="n">secret_name</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">logging</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="s2">&quot;Failed to set API Key from AWS Secrets&quot;</span><span class="p">)</span>
+        <span class="n">secret_name</span> <span class="o">=</span> <span class="s2">&quot;&quot;</span>
+        <span class="k">return</span> <span class="n">secret_name</span>
 </pre></div>
 
         </details>
@@ -605,7 +625,7 @@
                 <details>
             <summary>View Source</summary>
             <div class="codehilite"><pre><span></span><span class="k">def</span> <span class="nf">refresh_source_sheets</span><span class="p">(</span><span class="n">smartsheet_client</span><span class="p">,</span> <span class="n">sheet_ids</span><span class="p">,</span> <span class="n">minutes</span><span class="o">=</span><span class="mi">0</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;Creates a dict of source sheets. If minutes is defined, only gathers </span>
+    <span class="sd">&quot;&quot;&quot;Creates a dict of source sheets. If minutes is defined, only gathers</span>
 <span class="sd">       sheets modified since the minutes value. Otherwise pulls all sheets</span>
 <span class="sd">       from the workspaces.</span>
 
@@ -613,14 +633,27 @@
 <span class="sd">        smartsheet_client (client): Allows interaction with the Smartsheet API</span>
 <span class="sd">        sheet_ids (list): The list of Smartsheet sheet IDs to parse</span>
 <span class="sd">        minutes (int, optional): Number of minutes into the past that the API</span>
-<span class="sd">                                 should pull sheet and row data, if greater </span>
+<span class="sd">                                 should pull sheet and row data, if greater</span>
 <span class="sd">                                 than 0. Defaults to 0.</span>
 
 <span class="sd">    Returns:</span>
-<span class="sd">        source_sheets (list): The list of sheets, including row data for rows </span>
-<span class="sd">                              modified since the minutes value, if greater </span>
+<span class="sd">        source_sheets (list): The list of sheets, including row data for rows</span>
+<span class="sd">                              modified since the minutes value, if greater</span>
 <span class="sd">                              than 0</span>
 <span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">sheet_ids</span><span class="p">,</span> <span class="nb">list</span><span class="p">):</span>
+        <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s2">&quot;Sheet IDs must be a list of IDs&quot;</span><span class="p">)</span>
+    <span class="k">elif</span> <span class="ow">not</span> <span class="nb">all</span><span class="p">(</span><span class="nb">isinstance</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="nb">int</span><span class="p">)</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">sheet_ids</span><span class="p">):</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;One or more values in the list are not type: int&quot;</span><span class="p">)</span>
+    <span class="k">elif</span> <span class="n">minutes</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">minutes</span><span class="p">,</span> <span class="nb">int</span><span class="p">):</span>
+        <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s2">&quot;Minutes must be type: int&quot;</span><span class="p">)</span>
+    <span class="k">elif</span> <span class="n">minutes</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="n">minutes</span> <span class="o">&lt;</span> <span class="mi">0</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Minutes must be &gt;= zero&quot;</span><span class="p">)</span>
+    <span class="c1"># TODO: Figure out how to validate a Smartsheet client.</span>
+    <span class="c1"># elif not isinstance(smartsheet_client, smartsheet.smartsheet()):</span>
+    <span class="c1">#     raise TypeError(</span>
+    <span class="c1">#         &quot;smartsheet_client must be of type smartsheet.Smartsheet()&quot;)</span>
+
     <span class="n">source_sheets</span> <span class="o">=</span> <span class="p">[]</span>
     <span class="k">if</span> <span class="n">minutes</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
         <span class="n">_</span><span class="p">,</span> <span class="n">modified_since</span> <span class="o">=</span> <span class="n">get_timestamp</span><span class="p">(</span><span class="n">minutes</span><span class="p">)</span>
@@ -649,7 +682,7 @@
 
         </details>
 
-            <div class="docstring"><p>Creates a dict of source sheets. If minutes is defined, only gathers 
+            <div class="docstring"><p>Creates a dict of source sheets. If minutes is defined, only gathers
    sheets modified since the minutes value. Otherwise pulls all sheets
    from the workspaces.</p>
 
@@ -659,15 +692,15 @@
 <li><strong>smartsheet_client (client):</strong>  Allows interaction with the Smartsheet API</li>
 <li><strong>sheet_ids (list):</strong>  The list of Smartsheet sheet IDs to parse</li>
 <li><strong>minutes (int, optional):</strong>  Number of minutes into the past that the API
-should pull sheet and row data, if greater 
+should pull sheet and row data, if greater
 than 0. Defaults to 0.</li>
 </ul>
 
 <h6 id="returns">Returns</h6>
 
 <blockquote>
-  <p>source_sheets (list): The list of sheets, including row data for rows 
-                        modified since the minutes value, if greater 
+  <p>source_sheets (list): The list of sheets, including row data for rows
+                        modified since the minutes value, if greater
                         than 0</p>
 </blockquote>
 </div>
@@ -714,10 +747,19 @@ than 0. Defaults to 0.</li>
     <span class="c1">#   &quot;Predecessors&quot;: &quot;38FS +1w&quot;, # type: str</span>
     <span class="c1">#   &quot;Summary&quot;: &quot;False&quot; # type: str</span>
     <span class="c1">#       }</span>
-    <span class="k">if</span> <span class="n">source_sheets</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
-        <span class="k">raise</span> <span class="ne">ValueError</span>
-    <span class="k">elif</span> <span class="n">columns</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
-        <span class="k">raise</span> <span class="ne">ValueError</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">source_sheets</span><span class="p">,</span> <span class="nb">list</span><span class="p">):</span>
+        <span class="n">msg</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="s2">&quot;Source sheets should be type: list, not </span><span class="si">{}</span><span class="s2">&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>
+            <span class="nb">type</span><span class="p">(</span><span class="n">source_sheets</span><span class="p">))</span>
+        <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">columns</span><span class="p">,</span> <span class="nb">list</span><span class="p">):</span>
+        <span class="n">msg</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="s2">&quot;Columns should be type: list, not </span><span class="si">{}</span><span class="s2">&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="nb">type</span><span class="p">(</span><span class="n">columns</span><span class="p">))</span>
+        <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">minutes</span><span class="p">,</span> <span class="nb">int</span><span class="p">):</span>
+        <span class="n">msg</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="s2">&quot;Minutes should be type: int, not </span><span class="si">{}</span><span class="s2">&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="nb">type</span><span class="p">(</span><span class="n">minutes</span><span class="p">))</span>
+        <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">minutes</span> <span class="o">&lt;</span> <span class="mi">0</span><span class="p">:</span>
+        <span class="n">msg</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="s2">&quot;Minutes should be &gt;= 0, not </span><span class="si">{}</span><span class="s2">&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">minutes</span><span class="p">)</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
 
     <span class="c1"># Create the empty dict we&#39;ll pass back</span>
     <span class="n">all_row_data</span> <span class="o">=</span> <span class="p">{}</span>
@@ -848,20 +890,10 @@ row data.</li>
 <span class="sd">        dict: A nested set of dictionaries</span>
 <span class="sd">        none: There are no sheets to update.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
-    <span class="c1"># TODO: Write a test to validate the dict.</span>
-    <span class="c1"># 7637702645442436,  (Sheet ID, int)</span>
-    <span class="c1"># {</span>
-    <span class="c1">#     &quot;sheet_name&quot;: &quot;Cloudwatch: Distribution Project Plan&quot;, # type: str</span>
-    <span class="c1">#     &quot;row_data&quot;: {  # type: dict</span>
-    <span class="c1">#         4733217466279812: { (Row ID, int)</span>
-    <span class="c1">#             &quot;column_id&quot;: 2745267022784388, (int)</span>
-    <span class="c1">#             &quot;uuid&quot;: &quot;7637702645442436-4733217466279812-</span>
-    <span class="c1">#                      2745267022784388-202105112340380000&quot; (str)</span>
-    <span class="c1">#         }</span>
-    <span class="c1">#     }</span>
-    <span class="c1"># }</span>
-    <span class="k">if</span> <span class="n">source_sheets</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
-        <span class="k">raise</span> <span class="ne">ValueError</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">source_sheets</span><span class="p">,</span> <span class="nb">list</span><span class="p">):</span>
+        <span class="n">msg</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="s2">&quot;Source Sheets should be type: list not type </span><span class="si">{}</span><span class="s2">&quot;</span>
+                  <span class="s2">&quot;&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="nb">type</span><span class="p">(</span><span class="n">source_sheets</span><span class="p">))</span>
+        <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
 
     <span class="c1"># Create an empty dict of sheets to update</span>
     <span class="n">sheets_to_update</span> <span class="o">=</span> <span class="p">{}</span>
@@ -1317,21 +1349,29 @@ with the API</li>
                 <details>
             <summary>View Source</summary>
             <div class="codehilite"><pre><span></span><span class="k">def</span> <span class="nf">get_secret_name</span><span class="p">(</span><span class="n">env</span><span class="p">):</span>
-    <span class="k">for</span> <span class="n">e</span> <span class="ow">in</span> <span class="n">env</span><span class="p">:</span>
-        <span class="k">if</span> <span class="n">e</span> <span class="ow">in</span> <span class="p">(</span><span class="s2">&quot;-s&quot;</span><span class="p">,</span> <span class="s2">&quot;--staging&quot;</span><span class="p">,</span> <span class="s2">&quot;-staging&quot;</span><span class="p">):</span>
-            <span class="n">secret_name</span> <span class="o">=</span> <span class="s2">&quot;staging/smartsheet-data-sync/svc-api-token&quot;</span>
-            <span class="k">return</span><span class="p">(</span><span class="n">secret_name</span><span class="p">)</span>
-        <span class="k">elif</span> <span class="n">e</span> <span class="ow">in</span> <span class="p">(</span><span class="s2">&quot;-p&quot;</span><span class="p">,</span> <span class="s2">&quot;--prod&quot;</span><span class="p">,</span> <span class="s2">&quot;-prod&quot;</span><span class="p">):</span>
-            <span class="n">secret_name</span> <span class="o">=</span> <span class="s2">&quot;prod/smartsheet-data-sync/svc-api-token&quot;</span>
-            <span class="k">return</span><span class="p">(</span><span class="n">secret_name</span><span class="p">)</span>
-        <span class="k">elif</span> <span class="n">e</span> <span class="ow">in</span> <span class="p">(</span><span class="s2">&quot;-d&quot;</span><span class="p">,</span> <span class="s2">&quot;--debug&quot;</span><span class="p">,</span> <span class="s2">&quot;-debug&quot;</span><span class="p">):</span>
-            <span class="n">secret_name</span> <span class="o">=</span> <span class="s2">&quot;staging/smartsheet-data-sync/svc-api-token&quot;</span>
-            <span class="k">return</span><span class="p">(</span><span class="n">secret_name</span><span class="p">)</span>
-        <span class="k">else</span><span class="p">:</span>
-            <span class="n">logging</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="s2">&quot;Failed to set API Key from AWS Secrets&quot;</span><span class="p">)</span>
-            <span class="n">secret_name</span> <span class="o">=</span> <span class="s2">&quot;&quot;</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">env</span><span class="p">:</span>
+        <span class="n">msg</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="s2">&quot;Env must be type: str. Env was </span><span class="si">{}</span><span class="s2">&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">env</span><span class="p">)</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
+    <span class="k">elif</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">env</span><span class="p">,</span> <span class="nb">str</span><span class="p">):</span>
+        <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s2">&quot;Env is not type: str&quot;</span><span class="p">)</span>
+    <span class="k">elif</span> <span class="n">env</span> <span class="ow">not</span> <span class="ow">in</span> <span class="p">(</span><span class="s2">&quot;-d&quot;</span><span class="p">,</span> <span class="s2">&quot;--debug&quot;</span><span class="p">,</span> <span class="s2">&quot;-debug&quot;</span><span class="p">,</span> <span class="s2">&quot;-p&quot;</span><span class="p">,</span> <span class="s2">&quot;--prod&quot;</span><span class="p">,</span> <span class="s2">&quot;-prod&quot;</span><span class="p">,</span> <span class="s2">&quot;-s&quot;</span><span class="p">,</span>
+                     <span class="s2">&quot;--staging&quot;</span><span class="p">,</span> <span class="s2">&quot;-staging&quot;</span><span class="p">):</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+            <span class="s2">&quot;Invalid argument passed. Value passed was </span><span class="si">{}</span><span class="s2">&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">env</span><span class="p">)</span>
 
-    <span class="k">return</span> <span class="n">secret_name</span>
+    <span class="k">if</span> <span class="n">env</span> <span class="ow">in</span> <span class="p">(</span><span class="s2">&quot;-s&quot;</span><span class="p">,</span> <span class="s2">&quot;--staging&quot;</span><span class="p">,</span> <span class="s2">&quot;-staging&quot;</span><span class="p">):</span>
+        <span class="n">secret_name</span> <span class="o">=</span> <span class="s2">&quot;staging/smartsheet-data-sync/svc-api-token&quot;</span>
+        <span class="k">return</span> <span class="n">secret_name</span>
+    <span class="k">elif</span> <span class="n">env</span> <span class="ow">in</span> <span class="p">(</span><span class="s2">&quot;-p&quot;</span><span class="p">,</span> <span class="s2">&quot;--prod&quot;</span><span class="p">,</span> <span class="s2">&quot;-prod&quot;</span><span class="p">):</span>
+        <span class="n">secret_name</span> <span class="o">=</span> <span class="s2">&quot;prod/smartsheet-data-sync/svc-api-token&quot;</span>
+        <span class="k">return</span> <span class="n">secret_name</span>
+    <span class="k">elif</span> <span class="n">env</span> <span class="ow">in</span> <span class="p">(</span><span class="s2">&quot;-d&quot;</span><span class="p">,</span> <span class="s2">&quot;--debug&quot;</span><span class="p">,</span> <span class="s2">&quot;-debug&quot;</span><span class="p">):</span>
+        <span class="n">secret_name</span> <span class="o">=</span> <span class="s2">&quot;staging/smartsheet-data-sync/svc-api-token&quot;</span>
+        <span class="k">return</span> <span class="n">secret_name</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">logging</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="s2">&quot;Failed to set API Key from AWS Secrets&quot;</span><span class="p">)</span>
+        <span class="n">secret_name</span> <span class="o">=</span> <span class="s2">&quot;&quot;</span>
+        <span class="k">return</span> <span class="n">secret_name</span>
 </pre></div>
 
         </details>
