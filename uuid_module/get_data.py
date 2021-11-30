@@ -214,20 +214,10 @@ def get_blank_uuids(source_sheets):
         dict: A nested set of dictionaries
         none: There are no sheets to update.
     """
-    # TODO: Write a test to validate the dict.
-    # 7637702645442436,  (Sheet ID, int)
-    # {
-    #     "sheet_name": "Cloudwatch: Distribution Project Plan", # type: str
-    #     "row_data": {  # type: dict
-    #         4733217466279812: { (Row ID, int)
-    #             "column_id": 2745267022784388, (int)
-    #             "uuid": "7637702645442436-4733217466279812-
-    #                      2745267022784388-202105112340380000" (str)
-    #         }
-    #     }
-    # }
-    if source_sheets is None:
-        raise ValueError
+    if not isinstance(source_sheets, list):
+        msg = str("Source Sheets should be type: list not type {}"
+                  "").format(type(source_sheets))
+        raise TypeError(msg)
 
     # Create an empty dict of sheets to update
     sheets_to_update = {}
