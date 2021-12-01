@@ -6,7 +6,7 @@ logger = logging.getLogger(__name__)
 
 
 def build_linked_cell(jira_index_sheet, jira_index_col_map, dest_col_map,
-                      idx_row_id, colunn, smartsheet_client):
+                      idx_row_id, column, smartsheet_client):
     """Helper function to build the Cell object and cell link properties
 
     Args:
@@ -17,7 +17,7 @@ def build_linked_cell(jira_index_sheet, jira_index_col_map, dest_col_map,
         dest_col_map (dict): The column name:id map for the destination sheet
         idx_row_id (str): The row ID in the Jira Index sheet where the cell
                           link will pull data
-        colunn (str): The name of the column to write to in both sheets
+        column (str): The name of the column to write to in both sheets
         smartsheet_client (Object): The Smartsheet client to interact
                                     with the API
 
@@ -28,10 +28,10 @@ def build_linked_cell(jira_index_sheet, jira_index_col_map, dest_col_map,
     new_cell_link = smartsheet_client.models.CellLink()
     new_cell_link.sheet_id = jira_index_sheet.id
     new_cell_link.row_id = int(idx_row_id)
-    new_cell_link.column_id = int(jira_index_col_map[colunn])
+    new_cell_link.column_id = int(jira_index_col_map[column])
 
     new_cell = smartsheet_client.models.Cell()
-    new_cell.column_id = int(dest_col_map[colunn])
+    new_cell.column_id = int(dest_col_map[column])
     new_cell.value = smartsheet_client.models.ExplicitNull()
     new_cell.link_in_from_cell = new_cell_link
 
