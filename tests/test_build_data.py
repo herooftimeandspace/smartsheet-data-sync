@@ -9,7 +9,7 @@ import pytz
 import smartsheet
 from freezegun import freeze_time
 from pytest_mock import mocker
-from uuid_module.build_data import build_linked_cell
+from uuid_module.build_data import build_linked_cell, dest_indexes, build_row
 from uuid_module.get_data import (get_all_row_data, get_all_sheet_ids,
                                   get_blank_uuids, get_secret, get_secret_name,
                                   get_sub_indexes, load_jira_index,
@@ -19,7 +19,7 @@ from uuid_module.helper import (get_cell_data, get_cell_value, get_column_map,
 from uuid_module.variables import (assignee_col, jira_col, jira_idx_sheet,
                                    jira_index_columns, sheet_columns,
                                    status_col, summary_col, task_col, uuid_col,
-                                   workspace_id)
+                                   workspace_id, minutes)
 
 logger = logging.getLogger(__name__)
 cwd = os.path.dirname(os.path.abspath(__file__))
@@ -71,6 +71,14 @@ def dest_col_map(sheet_fixture):
 
 
 @pytest.fixture
+def row():
+    with open(cwd + '/row_response.json') as f:
+        row_json = json.load(f)
+    row = smartsheet.models.Row(row_json)
+    return row
+
+
+@pytest.fixture
 def idx_row_id():
     with open(cwd + '/dev_idx_row_response.json') as f:
         row_json = json.load(f)
@@ -94,6 +102,12 @@ def column():
     return jira_col
 
 
+@pytest.fixture
+def minutes_fixture():
+    min = minutes
+    return min
+
+
 # Need Mock
 @pytest.fixture
 def smartsheet_client(env):
@@ -113,6 +127,7 @@ def env():
     return "-debug"
 
 
+# TODO: Validate returned data is not malformed
 def test_build_linked_cell(jira_index_sheet, jira_index_col_map,
                            dest_col_map, idx_row_id, column,
                            smartsheet_client):
@@ -147,72 +162,45 @@ def test_build_linked_cell(jira_index_sheet, jira_index_col_map,
     assert type(link_cell) == smartsheet.models.cell.Cell
 
 
-# def test_dest_indexes(project_data):
-#     # dest_sheet_index = defaultdict(list)
-#     # # dest_row_index = defaultdict(list)
-#     # for uuid, ticket in project_data.items():
-#     #     if uuid is None:
-#     #         continue
-#     #     else:
-#     #         dest_sheet_id = uuid.split("-")[0]
-#     #         dest_sheet_index[dest_sheet_id].append(ticket)
-#     # return dest_sheet_index,  # dest_row_index
-#     assert 0 == 0
+# TODO: Validate returned data is not malformed
+@freeze_time("2021-11-18 21:23:54")
+def test_dest_indexes(sheet_fixture, columns, minutes_fixture):
+    _, sheet_list, _, _ = sheet_fixture
+    project_data = get_all_row_data(sheet_list, columns, minutes_fixture)
+
+    with pytest.raises(TypeError):
+        dest_indexes("project_data")
+
+    dest_sheet_index = dest_indexes(project_data)
+    assert type(dest_sheet_index) == tuple
 
 
-# def test_build_row(row, columns_to_link, dest_col_map, jira_index_sheet,
-#                    jira_index_col_map, idx_row_id, smartsheet_client):
-    # new_row = smartsheet_client.models.Row()
-    # new_row.id = row.id
-    # for col in columns_to_link:
-    #     old_cell = get_cell_data(row, col, dest_col_map)
-    #     try:
-    #         cell_check = has_cell_link(old_cell, 'In')
-    #     except KeyError as e:
-    #         if str(e) == str("'Unlinked'"):
-    #             cell_check = "Unlinked"
-    #         else:
-    #             raise KeyError
+# TODO: Valdate returned data is not malformed
+def test_build_row(row, columns_to_link, dest_col_map, jira_index_sheet,
+                   jira_index_col_map, idx_row_id, smartsheet_client):
+    jira_index_sheet, _ = jira_index_sheet
+    with pytest.raises(TypeError):
+        build_row("row", columns_to_link, dest_col_map, jira_index_sheet,
+                  jira_index_col_map, idx_row_id, smartsheet_client)
+    with pytest.raises(TypeError):
+        build_row(row, "columns_to_link", dest_col_map, jira_index_sheet,
+                  jira_index_col_map, idx_row_id, smartsheet_client)
+    with pytest.raises(TypeError):
+        build_row(row, columns_to_link, "dest_col_map", jira_index_sheet,
+                  jira_index_col_map, idx_row_id, smartsheet_client)
+    with pytest.raises(TypeError):
+        build_row(row, columns_to_link, dest_col_map, "jira_index_sheet",
+                  jira_index_col_map, idx_row_id, smartsheet_client)
+    with pytest.raises(TypeError):
+        build_row(row, columns_to_link, dest_col_map, jira_index_sheet,
+                  "jira_index_col_map", idx_row_id, smartsheet_client)
+    with pytest.raises(TypeError):
+        build_row(row, columns_to_link, dest_col_map, jira_index_sheet,
+                  jira_index_col_map, 7, smartsheet_client)
+    with pytest.raises(TypeError):
+        build_row(row, columns_to_link, dest_col_map, jira_index_sheet,
+                  jira_index_col_map, idx_row_id, "smartsheet_client")
 
-    #     if cell_check == "Linked":
-    #         msg = str("Valid cell link: RowID {} | Row Number {} | "
-    #                   "ColName {} | Cell Value {}").format(row.id,
-    #                                                        row.row_number,
-    #                                                        col,
-    #                                                        old_cell.
-    #                                                        link_in_from_cell)
-    #         logging.debug(msg)
-    #     elif cell_check == "Unlinked":
-    #         link_cell = build_linked_cell(jira_index_sheet,
-    #                                       jira_index_col_map,
-    #                                       dest_col_map,
-    #                                       idx_row_id,
-    #                                       col,
-    #                                       smartsheet_client)
-    #         new_row.cells.append(link_cell)
-    #         msg = str("No Cell Link: Row ID {} | Row Number {} | "
-    #                   "ColName {} | Cell link {}").format(
-    #             row.id, row.row_number, col, link_cell.link_in_from_cell)
-    #         logging.debug(msg)
-    #     elif cell_check == "Broken":
-    #         unlink_cell = smartsheet_client.models.Cell()
-    #         unlink_cell.id = int(dest_col_map[col])
-    #         unlink_cell.value = old_cell.value
-    #         new_row.cells.append(unlink_cell)
-    #         msg = str("Broken Cell Link: Row ID {} | Row Number {} | "
-    #                   "ColName {} | Cell link {}".format(row.id,
-    #                                                      row.row_number, col,
-    #                                                      unlink_cell.
-    #                                                      link_in_from_cell))
-    #         logging.debug(msg)
-    #     elif cell_check is None:
-    #         msg = str("Cell is valid and unlinked, but is {}. Continuing "
-    #                   "to the next cell.").format(cell_check)
-    #         logging.debug(msg)
-    #     else:
-    #         logging.warning("Unknown state for cell links.")
-    # if new_row.cells:
-    #     return new_row
-    # else:
-    #     return None
-#     assert 0 == 0
+    new_row = build_row(row, columns_to_link, dest_col_map, jira_index_sheet,
+                        jira_index_col_map, idx_row_id, smartsheet_client)
+    assert type(new_row) == smartsheet.models.row.Row

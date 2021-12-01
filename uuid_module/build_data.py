@@ -78,6 +78,11 @@ def dest_indexes(project_data):
         dict: a list of destination sheet IDs and a list of
               destination row IDs.
     """
+    if not isinstance(project_data, dict):
+        msg = str("Project data must be type: dict, not"
+                  " {}").format(type(project_data))
+        raise TypeError(msg)
+
     dest_sheet_index = defaultdict(list)
     # dest_row_index = defaultdict(list)
     for uuid, ticket in project_data.items():
@@ -114,6 +119,35 @@ def build_row(row, columns_to_link, dest_col_map, jira_index_sheet,
         Row: If cells were appended to the row, returns the new row, otherwise
              returns None.
     """
+    if not isinstance(row, smartsheet.models.row.Row):
+        msg = str("Row must be type: smartsheet.models.row, not"
+                  " {}").format(type(row))
+        raise TypeError(msg)
+    if not isinstance(columns_to_link, list):
+        msg = str("Columns to link must be type: list, not"
+                  " {}").format(type(columns_to_link))
+        raise TypeError(msg)
+    if not isinstance(dest_col_map, dict):
+        msg = str("Destination column map must be type: dict, not"
+                  " {}").format(type(jira_index_sheet))
+        raise TypeError(msg)
+    if not isinstance(jira_index_sheet, smartsheet.models.sheet.Sheet):
+        msg = str("Jira Index Sheet must be type: smartsheet.models.sheet, not"
+                  " {}").format(type(jira_index_sheet))
+        raise TypeError(msg)
+    if not isinstance(jira_index_col_map, dict):
+        msg = str("Jira Index Column Map must be type: dict, not"
+                  " {}").format(type(jira_index_col_map))
+        raise TypeError(msg)
+    if not isinstance(idx_row_id, str):
+        msg = str("Jira Index Row ID must be type: str, not"
+                  " {}").format(type(idx_row_id))
+        raise TypeError(msg)
+    if not isinstance(smartsheet_client, smartsheet.Smartsheet):
+        msg = str("Smartsheet Client must be type: smartsheet.Smartsheet, not"
+                  " {}").format(type(smartsheet_client))
+        raise TypeError(msg)
+
     new_row = smartsheet_client.models.Row()
     new_row.id = row.id
     for col in columns_to_link:
