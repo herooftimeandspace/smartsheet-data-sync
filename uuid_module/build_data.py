@@ -27,17 +27,29 @@ def build_linked_cell(jira_index_sheet, jira_index_col_map, dest_col_map,
               link to the Jira Index Sheet.
     """
     if not isinstance(jira_index_sheet, smartsheet.models.sheet.Sheet):
-        raise TypeError
+        msg = str("Jira Index Sheet must be type: smartsheet.models.sheet, not"
+                  " {}").format(type(jira_index_sheet))
+        raise TypeError(msg)
     if not isinstance(jira_index_col_map, dict):
-        raise TypeError
+        msg = str("Jira Index column map must be type: dict, not"
+                  " {}").format(type(jira_index_col_map))
+        raise TypeError(msg)
     if not isinstance(dest_col_map, dict):
-        raise TypeError
+        msg = str("Destination column map must be type: dict, not"
+                  " {}").format(type(jira_index_sheet))
+        raise TypeError(msg)
     if not isinstance(idx_row_id, str):
-        raise TypeError
+        msg = str("Jira Index Row ID must be type: str, not"
+                  " {}").format(type(idx_row_id))
+        raise TypeError(msg)
     if not isinstance(column, str):
-        raise TypeError
+        msg = str("Column must be type: str, not"
+                  " {}").format(type(column))
+        raise TypeError(msg)
     if not isinstance(smartsheet_client, smartsheet.Smartsheet):
-        raise TypeError
+        msg = str("Smartsheet Client must be type: smartsheet.Smartsheet, not"
+                  " {}").format(type(smartsheet_client))
+        raise TypeError(msg)
 
     new_cell_link = smartsheet_client.models.CellLink()
     new_cell_link.sheet_id = jira_index_sheet.id

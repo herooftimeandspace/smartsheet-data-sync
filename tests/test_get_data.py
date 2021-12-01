@@ -90,7 +90,6 @@ def env():
 @pytest.fixture
 def smartsheet_client(env):
     secret_name = get_secret_name(env)
-    print(secret_name)
     try:
         os.environ["SMARTSHEET_ACCESS_TOKEN"] = get_secret(secret_name)
     except TypeError:
