@@ -10,8 +10,8 @@ import smartsheet
 # from botocore.exceptions import ClientError
 from freezegun import freeze_time
 from pytest_mock import mocker
-from uuid_module.get_data import (get_all_row_data, get_blank_uuids,
-                                  get_secret, get_secret_name, load_jira_index,
+from uuid_module.get_data import (get_all_row_data, get_all_sheet_ids, get_blank_uuids,
+                                  get_secret, get_secret_name, get_sub_indexes, load_jira_index,
                                   refresh_source_sheets)
 from uuid_module.helper import (get_cell_data, get_cell_value, get_column_map,
                                 get_timestamp, json_extract)
@@ -53,6 +53,14 @@ def sheet_fixture():
     print(sheet_no_uuid_col)
     sheet_no_summary_col = no_summary_col_fixture(sheet_json)
     return sheet, sheet_list, sheet_no_uuid_col, sheet_no_summary_col
+
+
+@pytest.fixture(scope="module")
+def jira_index_sheet_fixture():
+    with open(cwd + '/dev_jira_index_sheet_response.json') as f:
+        dev_idx_sheet = json.load(f)
+        dev_idx_sheet = smartsheet.models.Sheet(dev_idx_sheet)
+    return dev_idx_sheet
 
 
 @pytest.fixture(scope="module")
@@ -198,16 +206,40 @@ def test_get_blank_uuids(sheet_fixture):
     assert no_uuids is None
 
 
-# def test_load_jira_index(smartsheet_client, jira_index_sheet_fixture):
-#     assert 0 == 0
+# TODO: Static return and check for actual values
+def test_load_jira_index(smartsheet_client):
+    with pytest.raises(TypeError):
+        load_jira_index("smartsheet_client")
+    dev_idx_sheet, dev_idx_col_map, dev_idx_rows = load_jira_index(
+        smartsheet_client)
+
+    assert dev_idx_sheet
+    assert dev_idx_col_map
+    assert dev_idx_rows
 
 
-# def test_get_sub_indexes(project_data):
-#     assert 0 == 0
+# TODO: Static return and check for actual values
+@freeze_time("2021-11-18 21:23:54")
+def test_get_sub_indexes(sheet_fixture, columns):
+    with pytest.raises(TypeError):
+        get_sub_indexes("project_data")
+    _, sheet_list, _, _ = sheet_fixture
+    project_uuid_index = get_all_row_data(sheet_list, columns, 65)
+    jira_sub_index, project_sub_index = get_sub_indexes(project_uuid_index)
+    assert jira_sub_index is not None
+    assert project_sub_index is not None
 
 
-# def test_get_all_sheet_ids(smartsheet_client, minutes):
-#     assert 0 == 0
+# TODO: Static return and check for actual values
+def test_get_all_sheet_ids(smartsheet_client, minutes):
+    with pytest.raises(TypeError):
+        get_all_sheet_ids("smartsheet_client", minutes)
+    with pytest.raises(TypeError):
+        get_all_sheet_ids(smartsheet_client, "minutes")
+    with pytest.raises(ValueError):
+        get_all_sheet_ids(smartsheet_client, -1)
+    sheet_ids = get_all_sheet_ids(smartsheet_client, minutes)
+    assert sheet_ids is not None
 
 
 def test_get_secret(env):

@@ -295,6 +295,9 @@ def load_jira_index(smartsheet_client):
     Args:
         smartsheet_client (Object): The Smartsheet client to query the API
 
+    Raises:
+        TypeError: Validates smartsheet_client is a Smartsheet Client object.
+
     Returns:
         sheet: A Smartsheet Sheet object that includes all data for the Jira
                Index Sheet
@@ -304,9 +307,10 @@ def load_jira_index(smartsheet_client):
 
     """
     if not isinstance(smartsheet_client, smartsheet.Smartsheet):
-        msg = str("Smartsheet Client must be type: smartsheet.smartsheet, "
+        msg = str("Smartsheet Client must be type: smartsheet.Smartsheet, "
                   "not type: {}").format(type(smartsheet_client))
         raise TypeError(msg)
+
     jira_index_sheet = smartsheet_client.Sheets.get_sheet(jira_idx_sheet)
     msg = str("{} rows loaded from sheet ID: {} | Sheet name: {}"
               "").format(len(jira_index_sheet.rows), jira_index_sheet.id,
@@ -346,6 +350,10 @@ def get_sub_indexes(project_data):
         dict: jira_sub_index in the form of Jira Ticket: [UUID(s)] (list)
         dict: project_sub_index in the form of UUID: Jira Ticket (str)
     """
+    if not isinstance(project_data, dict):
+        msg = str("Project data must be type: dict not type: {}."
+                  "").format(type(project_data))
+        raise TypeError(msg)
 
     jira_sub_index = defaultdict(list)
     project_sub_index = defaultdict(list)
@@ -378,6 +386,16 @@ def get_all_sheet_ids(smartsheet_client, minutes):
     Returns:
         list: A list of all sheet IDs across every workspace
     """
+    if not isinstance(smartsheet_client, smartsheet.Smartsheet):
+        msg = str("Smartsheet Client must be type: smartsheet.Smartsheet, "
+                  "not type: {}").format(type(smartsheet_client))
+        raise TypeError(msg)
+    if not isinstance(minutes, int):
+        msg = str("Minutes should be type: int, not {}").format(type(minutes))
+        raise TypeError(msg)
+    if minutes < 0:
+        msg = str("Minutes should be >= 0, not {}").format(minutes)
+        raise ValueError(msg)
 
     # Get the workspace Smartsheet object from the workspace_id
     # configured in our variables.
