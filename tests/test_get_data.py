@@ -51,7 +51,6 @@ def sheet_fixture():
     sheet = smartsheet.models.Sheet(sheet_json)
     sheet_list = [sheet]
     sheet_no_uuid_col = no_uuid_col_fixture(sheet_json)
-    print(sheet_no_uuid_col)
     sheet_no_summary_col = no_summary_col_fixture(sheet_json)
     return sheet, sheet_list, sheet_no_uuid_col, sheet_no_summary_col
 

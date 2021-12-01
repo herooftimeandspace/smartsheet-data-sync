@@ -41,6 +41,7 @@ def write_uuid_cell_links(project_data_index, source_sheets,
         msg = str("Smartsheet Client must be type: smartsheet.Smartsheet, not"
                   " {}").format(type(smartsheet_client))
         raise TypeError(msg)
+
     # dest_uuid = sheet_id, row_id where we create the cell links. Data is
     # pulled INTO this row with the cell link.
 

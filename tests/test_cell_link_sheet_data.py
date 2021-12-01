@@ -36,7 +36,51 @@ cwd = os.path.dirname(os.path.abspath(__file__))
 logger = logging.getLogger(__name__)
 
 
+@pytest.fixture(scope="module")
+def sheet_fixture():
+    with open(cwd + '/sheet_response.json') as f:
+        sheet_json = json.load(f)
+
+    def no_uuid_col_fixture(sheet_json):
+        sheet_json['columns'][22]['name'] = "Not UUID"
+        no_uuid_col = smartsheet.models.Sheet(sheet_json)
+        return no_uuid_col
+
+    def no_summary_col_fixture(sheet_json):
+        sheet_json['columns'][4]['name'] = "Not Summary"
+        no_summary_col = smartsheet.models.Sheet(sheet_json)
+        return no_summary_col
+
+    sheet = smartsheet.models.Sheet(sheet_json)
+    sheet_list = [sheet]
+    sheet_no_uuid_col = no_uuid_col_fixture(sheet_json)
+    sheet_no_summary_col = no_summary_col_fixture(sheet_json)
+    return sheet, sheet_list, sheet_no_uuid_col, sheet_no_summary_col
+
+
+@pytest.fixture
+def minutes_fixture():
+    min = minutes
+    return min
+
+
+@pytest.fixture
+def project_data_index(sheet_fixture, minutes_fixture):
+    _, source_sheets, _, _ = sheet_fixture
+    project_uuid_index = get_all_row_data(
+        source_sheets, sheet_columns, minutes_fixture)
+    return project_uuid_index
+
+
 def test_write_uuid_cell_links(project_data_index, source_sheets,
                                smartsheet_client):
-    write_uuid_cell_links(project_data_index, source_sheets,
-                          smartsheet_client)
+    _, source_sheets, _, _ = sheet_fixture
+    with pytest.raises(TypeError):
+        write_uuid_cell_links("project_data_index", source_sheets,
+                              smartsheet_client)
+    with pytest.raises(TypeError):
+        write_uuid_cell_links(project_data_index, "source_sheets",
+                              smartsheet_client)
+    with pytest.raises(TypeError):
+        write_uuid_cell_links(project_data_index, source_sheets,
+                              "smartsheet_client")
