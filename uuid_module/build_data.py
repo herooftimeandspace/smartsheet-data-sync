@@ -1,4 +1,5 @@
 import logging
+import smartsheet
 from collections import defaultdict
 from uuid_module.helper import get_cell_data, has_cell_link
 
@@ -25,6 +26,19 @@ def build_linked_cell(jira_index_sheet, jira_index_col_map, dest_col_map,
         Cell: The cell object to be written back to the destination, with
               link to the Jira Index Sheet.
     """
+    if not isinstance(jira_index_sheet, smartsheet.models.sheet.Sheet):
+        raise TypeError
+    if not isinstance(jira_index_col_map, dict):
+        raise TypeError
+    if not isinstance(dest_col_map, dict):
+        raise TypeError
+    if not isinstance(idx_row_id, str):
+        raise TypeError
+    if not isinstance(column, str):
+        raise TypeError
+    if not isinstance(smartsheet_client, smartsheet.Smartsheet):
+        raise TypeError
+
     new_cell_link = smartsheet_client.models.CellLink()
     new_cell_link.sheet_id = jira_index_sheet.id
     new_cell_link.row_id = int(idx_row_id)

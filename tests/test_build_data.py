@@ -21,11 +21,15 @@ from uuid_module.variables import (jira_col, jira_idx_sheet,
                                    summary_col, uuid_col, workspace_id)
 
 logger = logging.getLogger(__name__)
+cwd = os.path.dirname(os.path.abspath(__file__))
 
 
-@pytest.fixture
-def jira_index_sheet():
-    return
+@pytest.fixture(scope="module")
+def jira_index_sheet_fixture():
+    with open(cwd + '/dev_jira_index_sheet_response.json') as f:
+        dev_idx_sheet = json.load(f)
+        dev_idx_sheet = smartsheet.models.Sheet(dev_idx_sheet)
+    return dev_idx_sheet
 
 
 @pytest.fixture
@@ -69,19 +73,32 @@ def env():
     return "-debug"
 
 
-def test_build_linked_cell(jira_index_sheet, jira_index_col_map, dest_col_map,
+def test_build_linked_cell(jira_index_sheet_fixture, jira_index_col_map,
+                           dest_col_map,
                            idx_row_id, colunn, smartsheet_client):
-    # new_cell_link = smartsheet_client.models.CellLink()
-    # new_cell_link.sheet_id = jira_index_sheet.id
-    # new_cell_link.row_id = int(idx_row_id)
-    # new_cell_link.column_id = int(jira_index_col_map[colunn])
-
-    # new_cell = smartsheet_client.models.Cell()
-    # new_cell.column_id = int(dest_col_map[colunn])
-    # new_cell.value = smartsheet_client.models.ExplicitNull()
-    # new_cell.link_in_from_cell = new_cell_link
-
-    # return new_cell
+    with pytest.raises(TypeError):
+        build_linked_cell("jira_index_sheet", jira_index_col_map, dest_col_map,
+                          idx_row_id, colunn, smartsheet_client)
+    with pytest.raises(TypeError):
+        build_linked_cell(jira_index_sheet_fixture, "jira_index_col_map",
+                          dest_col_map,
+                          idx_row_id, colunn, smartsheet_client)
+    with pytest.raises(TypeError):
+        build_linked_cell(jira_index_sheet_fixture, jira_index_col_map,
+                          "dest_col_map",
+                          idx_row_id, colunn, smartsheet_client)
+    with pytest.raises(TypeError):
+        build_linked_cell(jira_index_sheet_fixture, jira_index_col_map,
+                          dest_col_map,
+                          7, colunn, smartsheet_client)
+    with pytest.raises(TypeError):
+        build_linked_cell(jira_index_sheet_fixture, jira_index_col_map,
+                          dest_col_map,
+                          idx_row_id, 7, smartsheet_client)
+    with pytest.raises(TypeError):
+        build_linked_cell(jira_index_sheet_fixture, jira_index_col_map,
+                          dest_col_map,
+                          idx_row_id, colunn, "smartsheet_client")
     assert 0 == 0
 
 
