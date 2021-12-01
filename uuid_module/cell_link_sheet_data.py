@@ -30,9 +30,13 @@ def write_uuid_cell_links(project_data_index, source_sheets,
                     raises and logs an error.
     """
     if not isinstance(project_data_index, dict):
-        raise TypeError
+        msg = str("Project data index must be type: dict, not"
+                  " {}").format(type(project_data_index))
+        raise TypeError(msg)
     if not isinstance(source_sheets, list):
-        raise TypeError
+        msg = str("Source sheets should be type: list, not {}").format(
+            type(source_sheets))
+        raise TypeError(msg)
     if not isinstance(smartsheet_client, smartsheet.Smartsheet):
         msg = str("Smartsheet Client must be type: smartsheet.Smartsheet, not"
                   " {}").format(type(smartsheet_client))
