@@ -45,10 +45,10 @@ def refresh_source_sheets(smartsheet_client, sheet_ids, minutes=0):
         raise TypeError("Minutes must be type: int")
     if minutes is not None and minutes < 0:
         raise ValueError("Minutes must be >= zero")
-    # TODO: Figure out how to validate a Smartsheet client.
     if not isinstance(smartsheet_client, smartsheet.Smartsheet):
-        raise TypeError(
-            "smartsheet_client must be of type smartsheet.Smartsheet")
+        msg = str("Smartsheet Client must be type: smartsheet.Smartsheet, not"
+                  " {}").format(type(smartsheet_client))
+        raise TypeError(msg)
 
     source_sheets = []
     if minutes > 0:
