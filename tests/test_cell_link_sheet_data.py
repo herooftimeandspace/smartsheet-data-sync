@@ -58,6 +58,25 @@ def sheet_fixture():
     return sheet, sheet_list, sheet_no_uuid_col, sheet_no_summary_col
 
 
+# Need Mock
+@pytest.fixture
+def smartsheet_client(env):
+    secret_name = get_secret_name(env)
+    try:
+        os.environ["SMARTSHEET_ACCESS_TOKEN"] = get_secret(secret_name)
+    except TypeError:
+        raise ValueError("Refresh Isengard Auth")
+    smartsheet_client = smartsheet.Smartsheet()
+    # Make sure we don't miss any error
+    smartsheet_client.errors_as_exceptions(True)
+    return smartsheet_client
+
+
+@pytest.fixture
+def env():
+    return "-debug"
+
+
 @pytest.fixture
 def minutes_fixture():
     min = minutes
@@ -65,14 +84,20 @@ def minutes_fixture():
 
 
 @pytest.fixture
-def project_data_index(sheet_fixture, minutes_fixture):
+def columns():
+    columns = sheet_columns
+    return columns
+
+
+@pytest.fixture
+def project_data_index(sheet_fixture, columns, minutes_fixture):
     _, source_sheets, _, _ = sheet_fixture
     project_uuid_index = get_all_row_data(
-        source_sheets, sheet_columns, minutes_fixture)
+        source_sheets, columns, minutes_fixture)
     return project_uuid_index
 
 
-def test_write_uuid_cell_links(project_data_index, source_sheets,
+def test_write_uuid_cell_links(project_data_index, sheet_fixture,
                                smartsheet_client):
     _, source_sheets, _, _ = sheet_fixture
     with pytest.raises(TypeError):

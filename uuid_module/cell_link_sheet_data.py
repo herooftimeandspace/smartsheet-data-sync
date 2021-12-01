@@ -32,6 +32,9 @@ def write_uuid_cell_links(project_data_index, source_sheets,
     if not isinstance(project_data_index, dict):
         msg = str("Project data index must be type: dict, not"
                   " {}").format(type(project_data_index))
+        log_msg = str("Project index data is None. Aborting the process for "
+                      "linking cells by UUID.")
+        logging.info(log_msg)
         raise TypeError(msg)
     if not isinstance(source_sheets, list):
         msg = str("Source sheets should be type: list, not {}").format(
@@ -48,12 +51,6 @@ def write_uuid_cell_links(project_data_index, source_sheets,
     # source_uuid = sheet_id, row_id where the data is coming FROM via
     # the cell link. source_uuid is located in the description column
     # of the uuid:row_data.
-    if project_data_index is None:
-        msg = str("Project index data is None. Aborting the process for "
-                  "linking cells by UUID.")
-        logging.info(msg)
-        raise ValueError(msg)
-
     for dest_uuid, row_data in project_data_index.items():
         rows_to_update = []
         sync_columns = None
