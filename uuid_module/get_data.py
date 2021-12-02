@@ -469,16 +469,12 @@ def get_secret(secret_name):
     """
 
     region_name = "us-west-2"
-    ACCESS_KEY = os.environ.get('ACCESS_KEY')
-    SECRET_KEY = os.environ.get('SECRET_KEY')
 
     # Create a Secrets Manager client
     session = boto3.session.Session()
     client = session.client(
         service_name='secretsmanager',
         region_name=region_name,
-        aws_access_key_id=ACCESS_KEY,
-        aws_secret_access_key=SECRET_KEY,
     )
 
     # In this sample we only handle the specific exceptions for the
