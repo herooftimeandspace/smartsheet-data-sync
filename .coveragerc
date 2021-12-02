@@ -1,11 +1,11 @@
 [run]
 include =
     ./*
-    ../__main__.py
 omit = 
     *tests*
     *variables*
     __main__.py
+    ./uuid_module/cell_link_sheet_data.py
 
 [report]
 show_missing = true
