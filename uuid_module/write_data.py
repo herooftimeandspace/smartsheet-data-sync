@@ -1,5 +1,6 @@
 import json
 import logging
+import smartsheet
 
 # import smartsheet
 from uuid_module.build_data import build_row, dest_indexes
@@ -23,6 +24,14 @@ def write_uuids(sheets_to_update, smartsheet_client):
     Returns:
         int: The number of sheets that were updated.
     """
+    if not isinstance(sheets_to_update, dict):
+        msg = str("Sheets to Update must be type: dict, not"
+                  " {}").format(type(sheets_to_update))
+        raise TypeError(msg)
+    if not isinstance(smartsheet_client, smartsheet.Smartsheet):
+        msg = str("Smartsheet Client must be type: smartsheet.Smartsheet, not"
+                  " {}").format(type(smartsheet_client))
+        raise TypeError(msg)
     # Reset the counter on each run
     sheets_updated = 0
 
@@ -86,6 +95,14 @@ def write_jira_index_cell_links(project_sub_index,
         bool: True if any links were written, False if no data was
               written back to any sheet.
     """
+    if not isinstance(project_sub_index, dict):
+        msg = str("Project sub-index must be type: dict, not"
+                  " {}").format(type(project_sub_index))
+        raise TypeError(msg)
+    if not isinstance(smartsheet_client, smartsheet.Smartsheet):
+        msg = str("Smartsheet Client must be type: smartsheet.Smartsheet, not"
+                  " {}").format(type(smartsheet_client))
+        raise TypeError(msg)
 
     # Create a copy of the project_sub_index so that we don't alter any
     # other function's data set.
@@ -198,6 +215,24 @@ def check_uuid(uuid_value, jira_value, uuid_list, jira_data_values):
               value is None
         none: If the 'if' checks fail.
     """
+    if not isinstance(uuid_value, list):
+        msg = str("UUID Value must be type: list, not"
+                  " {}").format(type(uuid_value))
+        raise TypeError(msg)
+    if not isinstance(jira_value, str):
+        msg = str("Jira value must be type: str, not"
+                  " {}").format(type(jira_value))
+        raise TypeError(msg)
+    if not isinstance(uuid_list, list):
+        msg = str("UUID list must be type: list, not"
+                  " {}").format(type(uuid_list))
+        raise TypeError(msg)
+    if not isinstance(jira_data_values, list):
+        msg = str("Jira data values must be type: list, not"
+                  " {}").format(type(jira_data_values))
+        raise TypeError(msg)
+
+    # Raise error if none / empty, try-catch the caller
     if uuid_list is None:
         msg = str("UUID list is {}. Cannot process against an empty "
                   "list.").format(uuid_list)
@@ -252,23 +287,18 @@ def write_predecessor_dates(src_data, project_data_index, smartsheet_client):
               written back via API. False if the Start Date was not
               written due to failure.
     """
-
-    # TODO: Write a test to validate the format instead.
-    #     Format of the src_data should be:
-    # {
-    #     "UUID": "7208979009955716-3683235938232196-
-    #             7010994181433220-202105112138550000",  # Type: str
-    #     "Tasks": "Retrospective", # Type: str
-    #     "Description": "Thoughts on how the project went.",  # Type: str
-    #     "Status": "In Progress",  # Type: str
-    #     "Assigned To": "link@twitch.tv",  # Type: str
-    #     "Jira Ticket": "ING-12342",  # Type: str
-    #     "Duration": None,  # Type: str
-    #     "Start": "2021-03-31T08:00:00",  # Type: str
-    #     "Finish": "2021-03-31T08:00:00",  # Type: str
-    #     "Predecessors": "38FS +1w",  # Type: str
-    #     "Summary": "False"  # Type: str
-    # }
+    if not isinstance(src_data, dict):
+        msg = str("Source data must be type: dict, not"
+                  " {}").format(type(src_data))
+        raise TypeError(msg)
+    if not isinstance(project_data_index, dict):
+        msg = str("Sheets to Update must be type: dict, not"
+                  " {}").format(type(project_data_index))
+        raise TypeError(msg)
+    if not isinstance(smartsheet_client, smartsheet.Smartsheet):
+        msg = str("Smartsheet Client must be type: smartsheet.Smartsheet, not"
+                  " {}").format(type(smartsheet_client))
+        raise TypeError(msg)
 
     # Create friendly names for sheet ID, row ID and start date.
     dest_sheet_id = src_data[uuid_col].split("-")[0]
