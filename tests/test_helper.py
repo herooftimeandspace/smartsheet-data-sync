@@ -1,8 +1,5 @@
 import json
 import os
-import sys
-from typing import Type
-from attr import has
 
 import pytest
 import smartsheet

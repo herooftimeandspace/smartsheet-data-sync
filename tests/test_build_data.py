@@ -1,14 +1,11 @@
-import base64
+
 import json
 import logging
 import os
-from collections import defaultdict
 
 import pytest
-import pytz
 import smartsheet
 from freezegun import freeze_time
-from pytest_mock import mocker
 from uuid_module.build_data import build_linked_cell, dest_indexes, build_row
 from uuid_module.get_data import (get_all_row_data, get_all_sheet_ids,
                                   get_blank_uuids, get_secret, get_secret_name,

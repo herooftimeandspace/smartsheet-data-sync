@@ -336,23 +336,20 @@ def full_smartsheet_sync():
 
 
 def track_time(func, **args):
-    if not isinstance(func, function):
+    if not callable(func):
         msg = str("Func should be type: function, not {}").format(type(func))
-        raise TypeError(msg)
-    if not isinstance(**args, any):
-        msg = str("**args should be type: any, not {}").format(type(**args))
         raise TypeError(msg)
 
     """Helper function to track how long each task takes
 
     Args:
-        function (function): The function to time
+        func (function): The function to time
 
     Returns:
         float: The amount of time in seconds, truncated to 3 decimal places.
     """
     start = time.time()
-    function(**args)
+    func(**args)
     end = time.time()
     elapsed = end - start
     elapsed = truncate(elapsed, 3)

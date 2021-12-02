@@ -1,24 +1,16 @@
-import base64
 import json
 import logging
 import os
 
-# import boto3
 import pytest
 import pytz
 import smartsheet
-# from botocore.exceptions import ClientError
 from freezegun import freeze_time
-from pytest_mock import mocker
 from uuid_module.get_data import (get_all_row_data, get_all_sheet_ids,
                                   get_blank_uuids, get_secret, get_secret_name,
                                   get_sub_indexes, load_jira_index,
                                   refresh_source_sheets)
-from uuid_module.helper import (get_cell_data, get_cell_value, get_column_map,
-                                get_timestamp, json_extract)
-from uuid_module.variables import (jira_col, jira_idx_sheet,
-                                   jira_index_columns, sheet_columns,
-                                   summary_col, uuid_col, workspace_id)
+from uuid_module.variables import sheet_columns
 
 from tests.test_helper import row, sheet
 

@@ -1,12 +1,10 @@
 import json
 import logging
 import os
-from typing import Type
 
 import pytest
 import smartsheet
 from freezegun import freeze_time
-from pytest_mock import mocker
 from uuid_module.get_data import (get_all_row_data, get_secret,
                                   get_secret_name, get_sub_indexes)
 from uuid_module.variables import (minutes, sheet_columns)
@@ -82,13 +80,20 @@ def uuids():
 
 
 @pytest.fixture
+def src_data():
+    data = {}
+    data['UUID'] = "7208979009955716-3683235938232196"
+    return data
+
+
+@pytest.fixture
 @freeze_time("2021-11-18 21:23:54")
 # TODO: Static return and check for actual values
-def project_sub_index(sheet_fixture, columns, minutes_fixture):
+def project_indexes(sheet_fixture, columns, minutes_fixture):
     _, sheet_list, _, _ = sheet_fixture
     project_uuid_index = get_all_row_data(sheet_list, columns, minutes_fixture)
     _, sub_index = get_sub_indexes(project_uuid_index)
-    return sub_index
+    return project_uuid_index, sub_index
 
 
 def test_write_uuids(sheet_fixture, smartsheet_client):
@@ -100,8 +105,9 @@ def test_write_uuids(sheet_fixture, smartsheet_client):
     return
 
 
-def test_write_jira_index_cell_links(project_sub_index,
+def test_write_jira_index_cell_links(project_indexes,
                                      smartsheet_client):
+    _, project_sub_index = project_indexes
     with pytest.raises(TypeError):
         write_jira_index_cell_links("project_sub_index", smartsheet_client)
     with pytest.raises(TypeError):
@@ -122,31 +128,32 @@ def test_check_uuid(uuids):
     return
 
 
-# def test_write_predecessor_dates(src_data, project_data_index,
-#                                  smartsheet_client):
-#     with pytest.raises(TypeError):
-#         write_predecessor_dates("src_data", project_data_index,
-#                                 smartsheet_client)
-#     with pytest.raises(TypeError):
-#         write_predecessor_dates(src_data, "project_data_index",
-#                                 smartsheet_client)
-#     with pytest.raises(TypeError):
-#         write_predecessor_dates(src_data, project_data_index,
-#                                 "smartsheet_client")
-#     # TODO: Write a test to validate the format instead.
-#     #     Format of the src_data should be:
-#     # {
-#     #     "UUID": "7208979009955716-3683235938232196-
-#     #             7010994181433220-202105112138550000",  # Type: str
-#     #     "Tasks": "Retrospective", # Type: str
-#     #     "Description": "Thoughts on how the project went.",  # Type: str
-#     #     "Status": "In Progress",  # Type: str
-#     #     "Assigned To": "link@twitch.tv",  # Type: str
-#     #     "Jira Ticket": "ING-12342",  # Type: str
-#     #     "Duration": None,  # Type: str
-#     #     "Start": "2021-03-31T08:00:00",  # Type: str
-#     #     "Finish": "2021-03-31T08:00:00",  # Type: str
-#     #     "Predecessors": "38FS +1w",  # Type: str
-#     #     "Summary": "False"  # Type: str
-#     # }
-#     return
+def test_write_predecessor_dates(src_data, project_indexes,
+                                 smartsheet_client):
+    project_data_index, _ = project_indexes
+    with pytest.raises(TypeError):
+        write_predecessor_dates("src_data", project_data_index,
+                                smartsheet_client)
+    with pytest.raises(TypeError):
+        write_predecessor_dates(src_data, "project_data_index",
+                                smartsheet_client)
+    with pytest.raises(TypeError):
+        write_predecessor_dates(src_data, project_data_index,
+                                "smartsheet_client")
+    # TODO: Write a test to validate the format instead.
+    #     Format of the src_data should be:
+    # {
+    #     "UUID": "7208979009955716-3683235938232196-
+    #             7010994181433220-202105112138550000",  # Type: str
+    #     "Tasks": "Retrospective", # Type: str
+    #     "Description": "Thoughts on how the project went.",  # Type: str
+    #     "Status": "In Progress",  # Type: str
+    #     "Assigned To": "link@twitch.tv",  # Type: str
+    #     "Jira Ticket": "ING-12342",  # Type: str
+    #     "Duration": None,  # Type: str
+    #     "Start": "2021-03-31T08:00:00",  # Type: str
+    #     "Finish": "2021-03-31T08:00:00",  # Type: str
+    #     "Predecessors": "38FS +1w",  # Type: str
+    #     "Summary": "False"  # Type: str
+    # }
+    return
