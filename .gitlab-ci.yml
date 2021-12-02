@@ -11,26 +11,22 @@ cache:
   paths:
   - ".cache/pip"
   - venv/
+  - "~/.local/bin"
 
-stages:
-- prep
-- lint
-- pages
-- test
-- deploy
-# - pages
-
-prep:
-  stage: prep
-  tags:
-    - copilot
-  script:
-    - export PATH=$PATH:~/.local/bin
+before_script:
     - python3 -V  # Print out python version for debugging
     - python3 -m pip install virtualenv
     - virtualenv venv
     - source venv/bin/activate
     - python3 -m pip install -r requirements.txt
+
+
+stages:
+- lint
+- pages
+- test
+- deploy
+
 
 flake8:
   stage: lint
@@ -38,7 +34,7 @@ flake8:
   script:
     - export PATH=$PATH:~/.local/bin
     - python3 -m pip install flake8
-    - python3 -m pip install -r requirements.txt
+    - python3 -m pip install -r test_requirements.txt
     - flake8 --max-line-length=80 --per-file-ignores="__init__.py:F401" ./*.py
     - flake8 --max-line-length=80 --per-file-ignores="__init__.py:F401" ./uuid_module/*.py
 
@@ -49,9 +45,7 @@ coverage:
   tags:
     - copilot
   script:
-    - export PATH=$PATH:~/.local/bin
-    - python3 -m pip install -r requirements.txt
-    - python3 -m pip install -r test_requirements.txt
+    # - export PATH=$PATH:~/.local/bin
     - pytest --cov-config=.coveragerc --cov=./ -vvv
     - coverage xml --include="./**" -o coverage.xml
   artifacts:
