@@ -25,6 +25,7 @@ prep:
   tags:
     - copilot
   script:
+    - export $PATH=$PATH:/home/gitlab-runner/.local/lib/python3.7/site-packages
     - python3 -V  # Print out python version for debugging
     - python3 -m pip install virtualenv
     - python3 -m pip show virtualenv
