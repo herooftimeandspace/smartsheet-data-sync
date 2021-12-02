@@ -22,18 +22,20 @@ stages:
 
 prep:
   stage: prep
+  tags:
+    - copilot
   script:
     - python -V  # Print out python version for debugging
-    - pip install virtualenv
+    - pip3 install virtualenv
     - virtualenv venv
     - source venv/bin/activate
-    - pip install -r requirements.txt
+    - pip3 install -r requirements.txt
 
 flake8:
   stage: lint
   needs: ["prep"]
   script:
-    - pip install flake8
+    - pip3 install flake8
     - flake8 --max-line-length=80 --per-file-ignores="__init__.py:F401" ./*.py
     - flake8 --max-line-length=80 --per-file-ignores="__init__.py:F401" ./uuid_module/*.py
 
@@ -45,11 +47,11 @@ coverage:
     - copilot
   script:
     # - python -V  # Print out python version for debugging
-    # - pip install virtualenv
+    # - pip3 install virtualenv
     # - virtualenv venv
     # - source venv/bin/activate
-    - pip install -r requirements.txt
-    - pip install -r test_requirements.txt
+    # - pip3 install -r requirements.txt
+    - pip3 install -r test_requirements.txt
     - pytest --cov-config=.coveragerc --cov=./ -vvv
     - coverage xml --include="./**" -o coverage.xml
   artifacts:
