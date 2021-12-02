@@ -22,17 +22,22 @@ from uuid_module.write_data import write_jira_index_cell_links, write_uuids
 
 start = time.time()
 
-# Use this code snippet in your app.
-# If you need more information about configurations or implementing the sample
-# code, visit the AWS docs:
-# https://aws.amazon.com/developers/getting-started/python/
-
-
 cwd = os.path.dirname(os.path.abspath(__file__))
 log_location = os.path.join(cwd, log_location)
 
 
 def set_logging_config(env):
+    if not isinstance(env, str):
+        msg = str("Environment should be type: str, not {}").format(
+            type(env))
+        raise TypeError(msg)
+    if env not in ("-s", "--staging", "-staging", "-p", "--prod", "-prod",
+                   "-d", "--debug", "-debug"):
+        msg = str("Invalid environment flag. '{}' was passed but it should "
+                  "be '--debug', '--staging' or '--prod'").format(
+            type(env))
+        raise ValueError(msg)
+
     logging_config = dict(
         version=1,
         formatters={
@@ -179,6 +184,13 @@ logging.debug("Initialization took: {}".format(elapsed))
 
 
 def full_jira_sync(minutes):
+    if not isinstance(minutes, int):
+        msg = str("Minutes should be type: int, not {}").format(type(minutes))
+        raise TypeError(msg)
+    if minutes < 0:
+        msg = str("Minutes should be >= 0, not {}").format(minutes)
+        raise ValueError(msg)
+
     start = time.time()
     msg = str("Starting refresh of Smartsheet project data. "
               "Looking back {} minutes from {}"
@@ -323,7 +335,14 @@ def full_smartsheet_sync():
     gc.collect()
 
 
-def track_time(function, **args):
+def track_time(func, **args):
+    if not isinstance(func, function):
+        msg = str("Func should be type: function, not {}").format(type(func))
+        raise TypeError(msg)
+    if not isinstance(**args, any):
+        msg = str("**args should be type: any, not {}").format(type(**args))
+        raise TypeError(msg)
+
     """Helper function to track how long each task takes
 
     Args:

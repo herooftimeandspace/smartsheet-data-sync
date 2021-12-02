@@ -1,8 +1,11 @@
 [run]
-include = ./*
+include =
+    ./*
+    ../__main__.py
 omit = 
     *tests*
     *variables*
+    __main__.py
 
 [report]
 show_missing = true
