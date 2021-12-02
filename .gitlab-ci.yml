@@ -38,6 +38,7 @@ flake8:
   script:
     - export PATH=$PATH:~/.local/bin
     - python3 -m pip install flake8
+    - python3 -m pip install -r requirements.txt
     - flake8 --max-line-length=80 --per-file-ignores="__init__.py:F401" ./*.py
     - flake8 --max-line-length=80 --per-file-ignores="__init__.py:F401" ./uuid_module/*.py
 
@@ -49,6 +50,7 @@ coverage:
     - copilot
   script:
     - export PATH=$PATH:~/.local/bin
+    - python3 -m pip install -r requirements.txt
     - python3 -m pip install -r test_requirements.txt
     - pytest --cov-config=.coveragerc --cov=./ -vvv
     - coverage xml --include="./**" -o coverage.xml
