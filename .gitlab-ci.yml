@@ -27,6 +27,7 @@ prep:
   script:
     - python3 -V  # Print out python version for debugging
     - python3 -m pip install virtualenv
+    - python3 -m pip show virtualenv
     - virtualenv venv
     - source venv/bin/activate
     - python3 -m pip install -r requirements.txt
