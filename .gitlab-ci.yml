@@ -40,6 +40,8 @@ flake8:
 coverage:
   stage: lint
   needs: ["prep"]
+  tags:
+    - copilot
   script:
     - pip install -r requirements.txt
     - pip install -r test_requirements.txt
@@ -97,9 +99,6 @@ deploy_staging:
   tags:
     - copilot
   script:
-    # - export AWS_REGION=$AWS_REGION
-    # - export AWS_ACCESS_KEY_ID=$ACCESS_KEY
-    # - export AWS_SECRET_ACCESS_KEY=$SECRET_KEY
     - copilot svc deploy --name smartsheet-data-sync-backend --env staging
     - docker rm -v $(docker ps -a -q -f status=exited) || true
     - docker rmi $(docker images -f "dangling=true" -q) || true
@@ -114,9 +113,6 @@ deploy_prod:
   tags:
     - copilot
   script:
-    # - export AWS_REGION=$AWS_REGION
-    # - export AWS_ACCESS_KEY_ID=$ACCESS_KEY
-    # - export AWS_SECRET_ACCESS_KEY=$SECRET_KEY
     - copilot svc deploy --name smartsheet-data-sync-backend --env prod
     - docker rm -v $(docker ps -a -q -f status=exited) || true
     - docker rmi $(docker images -f "dangling=true" -q) || true
