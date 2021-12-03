@@ -43,7 +43,7 @@ coverage:
   tags:
     - copilot
   script:
-    # - export PATH=$PATH:~/.local/bin
+    - export PATH=$PATH:~/.local/bin
     - pytest --cov-config=.coveragerc --cov=./ -vvv
     - coverage xml --include="./**" -o coverage.xml
   artifacts:
