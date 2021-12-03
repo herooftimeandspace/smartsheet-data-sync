@@ -32,6 +32,7 @@ flake8:
   stage: lint
   script:
     - export PATH=$PATH:~/.local/bin
+
     - python3 -m pip install flake8
     - python3 -m pip install -r test_requirements.txt
     - flake8 --max-line-length=80 --per-file-ignores="__init__.py:F401" ./*.py
@@ -44,6 +45,7 @@ coverage:
     - copilot
   script:
     - export PATH=$PATH:~/.local/bin
+    - python3 -m pip install -r test_requirements.txt
     - pytest --cov-config=.coveragerc --cov=./ -vvv
     - coverage xml --include="./**" -o coverage.xml
   artifacts:
