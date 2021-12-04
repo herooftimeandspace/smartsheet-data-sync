@@ -197,6 +197,26 @@ def test_get_blank_uuids(sheet_fixture):
     assert no_uuids is None
 
 
+# import os
+# import pytest
+# from unittest.mock import patch
+
+# class Worker:
+#     def work_on(self):
+#         path = os.getcwd()
+#         print(f'Working on {path}')
+#         return path
+
+# @pytest.fixture()
+# def mocked_worker(mocker):  # mocker is pytest-mock fixture
+#     mocker.patch('test_file.os.getcwd', return_value="Testing")
+
+# def test_work_on(mocked_worker):
+#     worker = Worker()  # here we create instance of Worker, not mock itself!!
+#     ans = worker.work_on()
+#     assert ans == "Testing"
+
+
 # TODO: Static return and check for actual values
 def test_load_jira_index(smartsheet_client):
     with pytest.raises(TypeError):

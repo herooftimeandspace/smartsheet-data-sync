@@ -310,6 +310,7 @@ def load_jira_index(smartsheet_client):
                   "not type: {}").format(type(smartsheet_client))
         raise TypeError(msg)
 
+    # TODO: Abstract this into a separate object and call it in.
     jira_index_sheet = smartsheet_client.Sheets.get_sheet(jira_idx_sheet)
     msg = str("{} rows loaded from sheet ID: {} | Sheet name: {}"
               "").format(len(jira_index_sheet.rows), jira_index_sheet.id,
