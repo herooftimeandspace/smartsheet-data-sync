@@ -285,6 +285,9 @@ def full_jira_sync(minutes):
         logging.info(msg)
         return
 
+    # TODO: Load Jira Index Sheet HERE by calling the API. Pass the object into
+    # creating the Jira Index objects, then write the cell links
+    # Centralize smartsheet_client calls, quit passing the object around
     logging.debug("Writing Jira cell links.")
     write_jira_index_cell_links(project_sub_index, smartsheet_client)
     # logging.debug("Writing UUID cell links.")
