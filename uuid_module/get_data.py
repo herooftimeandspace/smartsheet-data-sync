@@ -287,16 +287,16 @@ def get_blank_uuids(source_sheets):
         return None
 
 
-def get_jira_index_sheet(smartsheet_client, idx_sheet=dev_jira_idx_sheet):
+def get_jira_index_sheet(smartsheet_client, index_sheet=dev_jira_idx_sheet):
     if not isinstance(smartsheet_client, smartsheet.Smartsheet):
         msg = str("Smartsheet Client must be type: smartsheet.Smartsheet, "
                   "not type: {}").format(type(smartsheet_client))
         raise TypeError(msg)
-    jira_index_sheet = smartsheet_client.Sheets.get_sheet(idx_sheet)
-    return jira_index_sheet
+    index_sheet = smartsheet_client.Sheets.get_sheet(index_sheet)
+    return index_sheet
 
 
-def load_jira_index(smartsheet_client):
+def load_jira_index(smartsheet_client, index_sheet=dev_jira_idx_sheet):
     """Create indexes on the Jira index rows. Pulls from the Smartsheet API
        every time to get the most up-to-date version of the sheet data.
 
@@ -319,7 +319,8 @@ def load_jira_index(smartsheet_client):
                   "not type: {}").format(type(smartsheet_client))
         raise TypeError(msg)
 
-    jira_index_sheet = get_jira_index_sheet(smartsheet_client)
+    jira_index_sheet = get_jira_index_sheet(
+        smartsheet_client, index_sheet)
     msg = str("{} rows loaded from sheet ID: {} | Sheet name: {}"
               "").format(len(jira_index_sheet.rows), jira_index_sheet.id,
                          jira_index_sheet.name)
