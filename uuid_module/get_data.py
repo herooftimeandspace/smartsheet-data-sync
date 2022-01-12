@@ -11,8 +11,8 @@ from botocore.exceptions import ClientError
 
 from uuid_module.helper import (get_cell_data, get_cell_value, get_column_map,
                                 get_timestamp, json_extract)
-from uuid_module.variables import (jira_col, jira_idx_sheet, summary_col,
-                                   uuid_col, workspace_id)
+from uuid_module.variables import (jira_col, dev_jira_idx_sheet, summary_col,
+                                   uuid_col, dev_workspace_id)
 
 logger = logging.getLogger(__name__)
 
@@ -58,7 +58,7 @@ def refresh_source_sheets(smartsheet_client, sheet_ids, minutes=0):
                 Sheets.get_sheet(
                     sheet_id, rows_modified_since=modified_since)
             source_sheets.append(sheet)
-            logging.debug("Loading Sheet ID: {} | "
+            logging.debug("Loaded Sheet ID: {} | "
                           "Sheet Name: {}".format(sheet.id, sheet.name))
     elif minutes == 0:
         for sheet_id in sheet_ids:
@@ -66,7 +66,7 @@ def refresh_source_sheets(smartsheet_client, sheet_ids, minutes=0):
             sheet = smartsheet_client.\
                 Sheets.get_sheet(sheet_id)
             source_sheets.append(sheet)
-            logging.debug("Loading Sheet ID: {} | "
+            logging.debug("Loaded Sheet ID: {} | "
                           "Sheet Name: {}".format(sheet.id, sheet.name))
 
     return source_sheets
@@ -287,12 +287,12 @@ def get_blank_uuids(source_sheets):
         return None
 
 
-def get_jira_index_sheet(smartsheet_client):
+def get_jira_index_sheet(smartsheet_client, idx_sheet=dev_jira_idx_sheet):
     if not isinstance(smartsheet_client, smartsheet.Smartsheet):
         msg = str("Smartsheet Client must be type: smartsheet.Smartsheet, "
                   "not type: {}").format(type(smartsheet_client))
         raise TypeError(msg)
-    jira_index_sheet = smartsheet_client.Sheets.get_sheet(jira_idx_sheet)
+    jira_index_sheet = smartsheet_client.Sheets.get_sheet(idx_sheet)
     return jira_index_sheet
 
 
@@ -383,7 +383,9 @@ def get_sub_indexes(project_data):
     return jira_sub_index, project_sub_index
 
 
-def get_all_sheet_ids(smartsheet_client, minutes):
+def get_all_sheet_ids(smartsheet_client, minutes,
+                      workspace_id=dev_workspace_id,
+                      jira_idx_sheet=dev_jira_idx_sheet):
     """Get all the sheet IDs from every sheet in every folder, subfolder and
        workspace as defined in the workspace_id.
 
@@ -455,6 +457,8 @@ def get_all_sheet_ids(smartsheet_client, minutes):
     # part of the sheet collection, if present.
     try:
         sheet_ids.remove(jira_idx_sheet)
+        msg = str("{} removed from Sheet ID list").format(jira_idx_sheet)
+        logging.debug(msg)
     except ValueError:
         logging.debug(
             "{} not found in Sheet IDs list".format(jira_idx_sheet))
