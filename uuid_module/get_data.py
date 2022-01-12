@@ -385,7 +385,7 @@ def get_sub_indexes(project_data):
 
 def get_all_sheet_ids(smartsheet_client, minutes,
                       workspace_id=dev_workspace_id,
-                      jira_idx_sheet=dev_jira_idx_sheet):
+                      jira_index_sheet=dev_jira_idx_sheet):
     """Get all the sheet IDs from every sheet in every folder, subfolder and
        workspace as defined in the workspace_id.
 
@@ -456,12 +456,12 @@ def get_all_sheet_ids(smartsheet_client, minutes,
     # Don't include the JIRA index sheet as
     # part of the sheet collection, if present.
     try:
-        sheet_ids.remove(jira_idx_sheet)
-        msg = str("{} removed from Sheet ID list").format(jira_idx_sheet)
+        sheet_ids.remove(jira_index_sheet)
+        msg = str("{} removed from Sheet ID list").format(jira_index_sheet)
         logging.debug(msg)
     except ValueError:
         logging.debug(
-            "{} not found in Sheet IDs list".format(jira_idx_sheet))
+            "{} not found in Sheet IDs list".format(jira_index_sheet))
 
     return sheet_ids
 
