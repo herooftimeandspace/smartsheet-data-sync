@@ -9,14 +9,17 @@ from logging.config import dictConfig
 import smartsheet
 from apscheduler.executors.pool import ProcessPoolExecutor, ThreadPoolExecutor
 from apscheduler.schedulers.background import BlockingScheduler
-from uuid_module.cell_link_sheet_data import write_uuid_cell_links
+from tests.test_build_data import jira_index_sheet
 
+from uuid_module.cell_link_sheet_data import write_uuid_cell_links
 # from uuid_module.cell_link_sheet_data import write_uuid_cell_links
 from uuid_module.get_data import (get_all_row_data, get_all_sheet_ids,
                                   get_blank_uuids, get_secret, get_secret_name,
                                   get_sub_indexes, refresh_source_sheets)
 from uuid_module.helper import truncate
-from uuid_module.variables import (log_location, minutes, module_log_name,
+from uuid_module.variables import (dev_jira_idx_sheet, dev_workspace_id,
+                                   log_location, minutes, module_log_name,
+                                   prod_jira_idx_sheet, prod_workspace_id,
                                    sheet_columns)
 from uuid_module.write_data import write_jira_index_cell_links, write_uuids
 
@@ -24,6 +27,8 @@ start = time.time()
 
 cwd = os.path.dirname(os.path.abspath(__file__))
 log_location = os.path.join(cwd, log_location)
+
+# TODO: Remove for e in env and replace with if env
 
 
 def set_logging_config(env):
@@ -156,13 +161,25 @@ job_defaults = {
 }
 scheduler = BlockingScheduler(executors=executors, job_defaults=job_defaults)
 
-for e in env:
-    if e in ("--", None):
-        logging.error("No environment flag set. Please use --debug, --staging "
-                      "or --prod. Terminating app.")
-        quit()
-    else:
-        msg = str("The {} flag was passed from the command line").format(env)
+
+if env in ("--", None):
+    logging.error("No environment flag set. Please use --debug, --staging "
+                  "or --prod. Terminating app.")
+    quit()
+else:
+    msg = str("The {} flag was passed from the command line").format(env)
+    logging.info(msg)
+    if env in ("-s", "--staging", "-staging", "-d", "--debug", "-debug"):
+        workspace_id = dev_workspace_id
+        index_sheet = dev_jira_idx_sheet
+        msg = str("Set workspace_id to: {} and index_sheet to: {}"
+                  "").format(workspace_id, index_sheet)
+        logging.info(msg)
+    elif env in ("-p", "--prod", "-prod"):
+        workspace_id = prod_workspace_id
+        index_sheet = prod_jira_idx_sheet
+        msg = str("Set workspace_id to: {} and index_sheet to: {}"
+                  "").format(workspace_id, index_sheet)
         logging.info(msg)
 
 logging.debug("------------------------")
@@ -181,6 +198,11 @@ end = time.time()
 elapsed = end - start
 elapsed = truncate(elapsed, 2)
 logging.debug("Initialization took: {}".format(elapsed))
+
+# TODO: Refactor so that dev_index_sheet and dev_workspace_id
+# are used by default. Only if --prod is passed does the prod_index_sheet
+# and prod_workspace_ids get used. Do this by making those variables
+# optional inside the functions and defaul to the dev environment.
 
 
 def full_jira_sync(minutes):
@@ -201,7 +223,8 @@ def full_jira_sync(minutes):
 
     global sheet_id_lock
     with sheet_id_lock:
-        sheet_ids = get_all_sheet_ids(smartsheet_client, minutes)
+        sheet_ids = get_all_sheet_ids(
+            smartsheet_client, minutes, workspace_id, index_sheet)
         sheet_ids = list(set(sheet_ids))
 
     global sheet_index_lock
@@ -309,7 +332,7 @@ def full_smartsheet_sync():
 
     global sheet_id_lock
     with sheet_id_lock:
-        sheet_ids = get_all_sheet_ids(smartsheet_client, minutes)
+        sheet_ids = get_all_sheet_ids(smartsheet_client, minutes, workspace_id)
         sheet_ids = list(set(sheet_ids))
 
     global sheet_index_lock
@@ -348,6 +371,9 @@ def track_time(func, **args):
     Args:
         func (function): The function to time
 
+    Raises:
+        TypeError: If func isn't a function
+
     Returns:
         float: The amount of time in seconds, truncated to 3 decimal places.
     """
@@ -360,9 +386,10 @@ def track_time(func, **args):
 
 
 def main():
-    """Configures the scheduler to run two jobs. One job runs every 30 seconds
-       and looks back based on the minutes defined in variables. The second
-       job runs every day at 1:00am UTC and looks back 1 week.
+    """Configures the scheduler to run two jobs. One job runs full_jira_sync
+       every 30 seconds and looks back based on the minutes defined in
+       variables. The second job runs full_jira_sync every day at 1:00am UTC
+       and looks back 1 week.
 
     Returns:
         bool: Returns True if main successfully initialized and scheduled jobs,
@@ -390,7 +417,8 @@ def main():
 
 
 if __name__ == '__main__':
-    """Runs main() and then starts the scheduler.
+    """Runs main(). If main returns True, starts the scheduler. If main
+       returns False, logs an error and terminates the application.
     """
     main = main()
     if main:
@@ -400,10 +428,11 @@ if __name__ == '__main__':
             logging.debug("------------------------")
             scheduler.start()
         except KeyboardInterrupt:
-            logging.info("------------------------")
-            logging.info("Scheduled Jobs shut down due "
-                         "to Keyboard Interrupt.")
-            logging.info("------------------------")
+            logging.warning("------------------------")
+            logging.warning("Scheduled Jobs shut down due "
+                            "to Keyboard Interrupt.")
+            logging.warning("------------------------")
             scheduler.shutdown()
     else:
         logging.error("Issue with running MAIN. Process terminated.")
+        exit()
