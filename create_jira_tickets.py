@@ -1,19 +1,11 @@
-import base64
-import json
 import logging
 import os
-import sys
-import threading
-from collections import defaultdict
-from datetime import datetime
 from logging.config import dictConfig
 
-import boto3
 import pytz
 import smartsheet
 from apscheduler.executors.pool import ProcessPoolExecutor, ThreadPoolExecutor
 from apscheduler.schedulers.background import BlockingScheduler
-from botocore.exceptions import ClientError
 
 from uuid_module.get_data import (get_all_sheet_ids, get_jira_index_sheet,
                                   get_secret, get_secret_name,
