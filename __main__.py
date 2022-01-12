@@ -170,16 +170,14 @@ else:
     msg = str("The {} flag was passed from the command line").format(env)
     logging.info(msg)
     if env in ("-s", "--staging", "-staging", "-d", "--debug", "-debug"):
-        workspace_id = dev_workspace_id
-        index_sheet = dev_jira_idx_sheet
-        msg = str("Set workspace_id to: {} and index_sheet to: {}"
-                  "").format(workspace_id, index_sheet)
+        msg = str("Using default debug/staging variables for workspace_id "
+                  "and Jira index sheet").format()
         logging.info(msg)
     elif env in ("-p", "--prod", "-prod"):
         workspace_id = prod_workspace_id
         index_sheet = prod_jira_idx_sheet
-        msg = str("Set workspace_id to: {} and index_sheet to: {}"
-                  "").format(workspace_id, index_sheet)
+        msg = str("Set workspace_id to: {} and index_sheet to: {} "
+                  "for Prod environment").format(workspace_id, index_sheet)
         logging.info(msg)
 
 logging.debug("------------------------")
