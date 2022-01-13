@@ -150,7 +150,7 @@ def write_jira_index_cell_links(project_sub_index,
                     continue
                 new_row = build_row(row, columns_to_link, dest_col_map,
                                     jira_index_sheet, jira_index_col_map,
-                                    idx_row_id, smartsheet_client)
+                                    idx_row_id)
                 if new_row:
                     cell_links_to_update.append(new_row)
                     msg = str("Writing {} cells to Row ID: {} | "
