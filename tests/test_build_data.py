@@ -6,17 +6,11 @@ import os
 import pytest
 import smartsheet
 from freezegun import freeze_time
-from uuid_module.build_data import build_linked_cell, dest_indexes, build_row
-from uuid_module.get_data import (get_all_row_data, get_all_sheet_ids,
-                                  get_blank_uuids, get_secret, get_secret_name,
-                                  get_sub_indexes, load_jira_index,
-                                  refresh_source_sheets)
-from uuid_module.helper import (get_cell_data, get_cell_value, get_column_map,
-                                get_timestamp, has_cell_link, json_extract)
-from uuid_module.variables import (assignee_col, jira_col, jira_idx_sheet,
-                                   jira_index_columns, sheet_columns,
-                                   status_col, summary_col, task_col, uuid_col,
-                                   workspace_id, minutes)
+from uuid_module.build_data import build_linked_cell, build_row, dest_indexes
+from uuid_module.get_data import get_all_row_data, get_secret, get_secret_name
+from uuid_module.helper import get_column_map
+from uuid_module.variables import (assignee_col, jira_col, minutes,
+                                   sheet_columns, status_col, task_col)
 
 logger = logging.getLogger(__name__)
 cwd = os.path.dirname(os.path.abspath(__file__))
