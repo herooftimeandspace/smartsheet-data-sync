@@ -47,14 +47,14 @@ def sheet_fixture():
     return sheet, sheet_list, sheet_no_uuid_col, sheet_no_summary_col
 
 
-@pytest.fixture
+@pytest.fixture(scope="module")
 def jira_index_col_map(jira_index_sheet):
     jira_index_sheet, _ = jira_index_sheet
     jira_index_col_map = get_column_map(jira_index_sheet)
     return jira_index_col_map
 
 
-@pytest.fixture
+@pytest.fixture(scope="module")
 def dest_col_map(sheet_fixture):
     sheet, _, _, _ = sheet_fixture
     dest_col_map = get_column_map(sheet)
@@ -69,7 +69,7 @@ def row():
     return row
 
 
-@pytest.fixture
+@pytest.fixture(scope="module")
 def idx_row_id():
     with open(cwd + '/dev_idx_row_response.json') as f:
         row_json = json.load(f)
@@ -120,36 +120,30 @@ def env():
 
 # TODO: Validate returned data is not malformed
 def test_build_linked_cell(jira_index_sheet, jira_index_col_map,
-                           dest_col_map, idx_row_id, column,
-                           smartsheet_client):
+                           dest_col_map, idx_row_id, column):
     jira_index_sheet, _ = jira_index_sheet
     with pytest.raises(TypeError):
         build_linked_cell("jira_index_sheet", jira_index_col_map, dest_col_map,
-                          idx_row_id, column, smartsheet_client)
+                          idx_row_id, column)
     with pytest.raises(TypeError):
         build_linked_cell(jira_index_sheet, "jira_index_col_map",
                           dest_col_map,
-                          idx_row_id, column, smartsheet_client)
+                          idx_row_id, column)
     with pytest.raises(TypeError):
         build_linked_cell(jira_index_sheet, jira_index_col_map,
                           "dest_col_map",
-                          idx_row_id, column, smartsheet_client)
+                          idx_row_id, column)
     with pytest.raises(TypeError):
         build_linked_cell(jira_index_sheet, jira_index_col_map,
                           dest_col_map,
-                          7, column, smartsheet_client)
+                          7, column)
     with pytest.raises(TypeError):
         build_linked_cell(jira_index_sheet, jira_index_col_map,
                           dest_col_map,
-                          idx_row_id, 7, smartsheet_client)
-    with pytest.raises(TypeError):
-        build_linked_cell(jira_index_sheet, jira_index_col_map,
-                          dest_col_map,
-                          idx_row_id, column, "smartsheet_client")
+                          idx_row_id, 7)
 
     link_cell = build_linked_cell(jira_index_sheet, jira_index_col_map,
-                                  dest_col_map, idx_row_id, column,
-                                  smartsheet_client)
+                                  dest_col_map, idx_row_id, column)
     assert type(link_cell) == smartsheet.models.cell.Cell
 
 
@@ -168,30 +162,27 @@ def test_dest_indexes(sheet_fixture, columns, minutes_fixture):
 
 # TODO: Valdate returned data is not malformed
 def test_build_row(row, columns_to_link, dest_col_map, jira_index_sheet,
-                   jira_index_col_map, idx_row_id, smartsheet_client):
+                   jira_index_col_map, idx_row_id):
     jira_index_sheet, _ = jira_index_sheet
     with pytest.raises(TypeError):
         build_row("row", columns_to_link, dest_col_map, jira_index_sheet,
-                  jira_index_col_map, idx_row_id, smartsheet_client)
+                  jira_index_col_map, idx_row_id)
     with pytest.raises(TypeError):
         build_row(row, "columns_to_link", dest_col_map, jira_index_sheet,
-                  jira_index_col_map, idx_row_id, smartsheet_client)
+                  jira_index_col_map, idx_row_id)
     with pytest.raises(TypeError):
         build_row(row, columns_to_link, "dest_col_map", jira_index_sheet,
-                  jira_index_col_map, idx_row_id, smartsheet_client)
+                  jira_index_col_map, idx_row_id)
     with pytest.raises(TypeError):
         build_row(row, columns_to_link, dest_col_map, "jira_index_sheet",
-                  jira_index_col_map, idx_row_id, smartsheet_client)
+                  jira_index_col_map, idx_row_id)
     with pytest.raises(TypeError):
         build_row(row, columns_to_link, dest_col_map, jira_index_sheet,
-                  "jira_index_col_map", idx_row_id, smartsheet_client)
+                  "jira_index_col_map", idx_row_id)
     with pytest.raises(TypeError):
         build_row(row, columns_to_link, dest_col_map, jira_index_sheet,
-                  jira_index_col_map, 7, smartsheet_client)
-    with pytest.raises(TypeError):
-        build_row(row, columns_to_link, dest_col_map, jira_index_sheet,
-                  jira_index_col_map, idx_row_id, "smartsheet_client")
+                  jira_index_col_map, 7)
 
     new_row = build_row(row, columns_to_link, dest_col_map, jira_index_sheet,
-                        jira_index_col_map, idx_row_id, smartsheet_client)
+                        jira_index_col_map, idx_row_id)
     assert type(new_row) == smartsheet.models.row.Row

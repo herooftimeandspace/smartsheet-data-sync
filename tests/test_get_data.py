@@ -146,7 +146,7 @@ def test_refresh_source_sheets(smartsheet_client, sheet_ids, minutes=0):
 
 @freeze_time("2021-11-18 21:23:54")
 def test_get_all_row_data(sheet_fixture, columns, minutes):
-    sheet, sheet_list, sheet_no_uuid_col, sheet_no_summary_col = sheet_fixture
+    _, sheet_list, _, _ = sheet_fixture
     with pytest.raises(TypeError):
         get_all_row_data("source_sheets", columns, minutes)
     with pytest.raises(TypeError):

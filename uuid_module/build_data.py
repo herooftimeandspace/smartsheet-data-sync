@@ -7,7 +7,7 @@ logger = logging.getLogger(__name__)
 
 
 def build_linked_cell(jira_index_sheet, jira_index_col_map, dest_col_map,
-                      idx_row_id, column, smartsheet_client):
+                      idx_row_id, column):
     """Helper function to build the Cell object and cell link properties
 
     Args:
@@ -19,8 +19,6 @@ def build_linked_cell(jira_index_sheet, jira_index_col_map, dest_col_map,
         idx_row_id (str): The row ID in the Jira Index sheet where the cell
                           link will pull data
         column (str): The name of the column to write to in both sheets
-        smartsheet_client (Object): The Smartsheet client to interact
-                                    with the API
 
     Returns:
         Cell: The cell object to be written back to the destination, with
@@ -46,19 +44,15 @@ def build_linked_cell(jira_index_sheet, jira_index_col_map, dest_col_map,
         msg = str("Column must be type: str, not"
                   " {}").format(type(column))
         raise TypeError(msg)
-    if not isinstance(smartsheet_client, smartsheet.Smartsheet):
-        msg = str("Smartsheet Client must be type: smartsheet.Smartsheet, not"
-                  " {}").format(type(smartsheet_client))
-        raise TypeError(msg)
 
-    new_cell_link = smartsheet_client.models.CellLink()
+    new_cell_link = smartsheet.models.CellLink()
     new_cell_link.sheet_id = jira_index_sheet.id
     new_cell_link.row_id = int(idx_row_id)
     new_cell_link.column_id = int(jira_index_col_map[column])
 
-    new_cell = smartsheet_client.models.Cell()
+    new_cell = smartsheet.models.Cell()
     new_cell.column_id = int(dest_col_map[column])
-    new_cell.value = smartsheet_client.models.ExplicitNull()
+    new_cell.value = smartsheet.models.ExplicitNull()
     new_cell.link_in_from_cell = new_cell_link
 
     return new_cell
@@ -95,7 +89,7 @@ def dest_indexes(project_data):
 
 
 def build_row(row, columns_to_link, dest_col_map, jira_index_sheet,
-              jira_index_col_map, idx_row_id, smartsheet_client):
+              jira_index_col_map, idx_row_id):
     """Function to build new cell links, unlink broken links, or
        do nothing if the cell link status is OK. Used to remove
        unchanged rows from the update list.
@@ -143,12 +137,8 @@ def build_row(row, columns_to_link, dest_col_map, jira_index_sheet,
         msg = str("Jira Index Row ID must be type: str, not"
                   " {}").format(type(idx_row_id))
         raise TypeError(msg)
-    if not isinstance(smartsheet_client, smartsheet.Smartsheet):
-        msg = str("Smartsheet Client must be type: smartsheet.Smartsheet, not"
-                  " {}").format(type(smartsheet_client))
-        raise TypeError(msg)
 
-    new_row = smartsheet_client.models.Row()
+    new_row = smartsheet.models.Row()
     new_row.id = row.id
     for col in columns_to_link:
         old_cell = get_cell_data(row, col, dest_col_map)
@@ -172,15 +162,14 @@ def build_row(row, columns_to_link, dest_col_map, jira_index_sheet,
                                           jira_index_col_map,
                                           dest_col_map,
                                           idx_row_id,
-                                          col,
-                                          smartsheet_client)
+                                          col)
             new_row.cells.append(link_cell)
             msg = str("No Cell Link: Row ID {} | Row Number {} | "
                       "ColName {} | Cell link {}").format(
                 row.id, row.row_number, col, link_cell.link_in_from_cell)
             logging.debug(msg)
         elif cell_check == "Broken":
-            unlink_cell = smartsheet_client.models.Cell()
+            unlink_cell = smartsheet.models.Cell()
             unlink_cell.id = int(dest_col_map[col])
             unlink_cell.value = old_cell.value
             new_row.cells.append(unlink_cell)
