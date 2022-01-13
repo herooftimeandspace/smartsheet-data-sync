@@ -4,10 +4,23 @@ log_location = "logs/"
 module_log_name = "main.log"
 """The main log written to disk
     """
-
-workspace_id = [8158274374657924, 1479840747546500, 6569226535233412]
+# PROD
+prod_workspace_id = [8158274374657924, 1479840747546500, 6569226535233412]
 """List of workspace IDs. Workspace IDs are Type: int.
     """
+prod_jira_idx_sheet = 5366809688860548
+"""Jira Index Sheet ID. Type: int
+    """
+
+# INTEGRATION TESTS
+dev_workspace_id = [2618107878500228]
+"""Single Workspace ID for Integration Testing, so that tests can run without
+   affecting active Prod data. Workspace Type: list, Workspace IDs Type: int
+   """
+dev_jira_idx_sheet = 5786250381682564
+"""Jira Index Sheet in Dev. Type: int
+   """
+
 uuid_col = "UUID"
 """UUID column name. Type: str
     """
@@ -41,10 +54,6 @@ duration_col = "Duration"
 predecessor_col = "Predecessors"
 """Predecessors column name. Type: str
     """
-jira_idx_sheet = "5366809688860548"
-"""Jira Index Sheet ID. Type: str
-    """
-
 
 index_columns = [task_col, description_col,
                  status_col, assignee_col, jira_col,

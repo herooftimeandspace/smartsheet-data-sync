@@ -1,9 +1,9 @@
 import base64
 import json
 import logging
-import os
 from collections import defaultdict
 from datetime import datetime
+import smartsheet
 
 import boto3
 import pytz
@@ -11,8 +11,8 @@ from botocore.exceptions import ClientError
 
 from uuid_module.helper import (get_cell_data, get_cell_value, get_column_map,
                                 get_timestamp, json_extract)
-from uuid_module.variables import (jira_col, jira_idx_sheet, summary_col,
-                                   uuid_col, workspace_id)
+from uuid_module.variables import (jira_col, dev_jira_idx_sheet, summary_col,
+                                   uuid_col, dev_workspace_id)
 
 logger = logging.getLogger(__name__)
 
@@ -36,6 +36,19 @@ def refresh_source_sheets(smartsheet_client, sheet_ids, minutes=0):
                               modified since the minutes value, if greater
                               than 0
     """
+    if not isinstance(sheet_ids, list):
+        raise TypeError("Sheet IDs must be a list of IDs")
+    if not all(isinstance(x, int) for x in sheet_ids):
+        raise ValueError("One or more values in the list are not type: int")
+    if minutes is not None and not isinstance(minutes, int):
+        raise TypeError("Minutes must be type: int")
+    if minutes is not None and minutes < 0:
+        raise ValueError("Minutes must be >= zero")
+    if not isinstance(smartsheet_client, smartsheet.Smartsheet):
+        msg = str("Smartsheet Client must be type: smartsheet.Smartsheet, not"
+                  " {}").format(type(smartsheet_client))
+        raise TypeError(msg)
+
     source_sheets = []
     if minutes > 0:
         _, modified_since = get_timestamp(minutes)
@@ -45,7 +58,7 @@ def refresh_source_sheets(smartsheet_client, sheet_ids, minutes=0):
                 Sheets.get_sheet(
                     sheet_id, rows_modified_since=modified_since)
             source_sheets.append(sheet)
-            logging.debug("Loading Sheet ID: {} | "
+            logging.debug("Loaded Sheet ID: {} | "
                           "Sheet Name: {}".format(sheet.id, sheet.name))
     elif minutes == 0:
         for sheet_id in sheet_ids:
@@ -53,11 +66,8 @@ def refresh_source_sheets(smartsheet_client, sheet_ids, minutes=0):
             sheet = smartsheet_client.\
                 Sheets.get_sheet(sheet_id)
             source_sheets.append(sheet)
-            logging.debug("Loading Sheet ID: {} | "
+            logging.debug("Loaded Sheet ID: {} | "
                           "Sheet Name: {}".format(sheet.id, sheet.name))
-    else:
-        msg = str("Invalid value for minutes. Value was {}").format(minutes)
-        logging.warning(msg)
 
     return source_sheets
 
@@ -92,10 +102,19 @@ def get_all_row_data(source_sheets, columns, minutes):
     #   "Predecessors": "38FS +1w", # type: str
     #   "Summary": "False" # type: str
     #       }
-    if source_sheets is None:
-        raise ValueError
-    elif columns is None:
-        raise ValueError
+    if not isinstance(source_sheets, list):
+        msg = str("Source sheets should be type: list, not {}").format(
+            type(source_sheets))
+        raise TypeError(msg)
+    if not isinstance(columns, list):
+        msg = str("Columns should be type: list, not {}").format(type(columns))
+        raise TypeError(msg)
+    if not isinstance(minutes, int):
+        msg = str("Minutes should be type: int, not {}").format(type(minutes))
+        raise TypeError(msg)
+    if minutes < 0:
+        msg = str("Minutes should be >= 0, not {}").format(minutes)
+        raise ValueError(msg)
 
     # Create the empty dict we'll pass back
     all_row_data = {}
@@ -192,20 +211,10 @@ def get_blank_uuids(source_sheets):
         dict: A nested set of dictionaries
         none: There are no sheets to update.
     """
-    # TODO: Write a test to validate the dict.
-    # 7637702645442436,  (Sheet ID, int)
-    # {
-    #     "sheet_name": "Cloudwatch: Distribution Project Plan", # type: str
-    #     "row_data": {  # type: dict
-    #         4733217466279812: { (Row ID, int)
-    #             "column_id": 2745267022784388, (int)
-    #             "uuid": "7637702645442436-4733217466279812-
-    #                      2745267022784388-202105112340380000" (str)
-    #         }
-    #     }
-    # }
-    if source_sheets is None:
-        raise ValueError
+    if not isinstance(source_sheets, list):
+        msg = str("Source Sheets should be type: list not type {}"
+                  "").format(type(source_sheets))
+        raise TypeError(msg)
 
     # Create an empty dict of sheets to update
     sheets_to_update = {}
@@ -278,12 +287,24 @@ def get_blank_uuids(source_sheets):
         return None
 
 
-def load_jira_index(smartsheet_client):
+def get_jira_index_sheet(smartsheet_client, index_sheet=dev_jira_idx_sheet):
+    if not isinstance(smartsheet_client, smartsheet.Smartsheet):
+        msg = str("Smartsheet Client must be type: smartsheet.Smartsheet, "
+                  "not type: {}").format(type(smartsheet_client))
+        raise TypeError(msg)
+    index_sheet = smartsheet_client.Sheets.get_sheet(index_sheet)
+    return index_sheet
+
+
+def load_jira_index(smartsheet_client, index_sheet=dev_jira_idx_sheet):
     """Create indexes on the Jira index rows. Pulls from the Smartsheet API
        every time to get the most up-to-date version of the sheet data.
 
     Args:
         smartsheet_client (Object): The Smartsheet client to query the API
+
+    Raises:
+        TypeError: Validates smartsheet_client is a Smartsheet Client object.
 
     Returns:
         sheet: A Smartsheet Sheet object that includes all data for the Jira
@@ -293,7 +314,13 @@ def load_jira_index(smartsheet_client):
               row ID as the value.
 
     """
-    jira_index_sheet = smartsheet_client.Sheets.get_sheet(jira_idx_sheet)
+    if not isinstance(smartsheet_client, smartsheet.Smartsheet):
+        msg = str("Smartsheet Client must be type: smartsheet.Smartsheet, "
+                  "not type: {}").format(type(smartsheet_client))
+        raise TypeError(msg)
+
+    jira_index_sheet = get_jira_index_sheet(
+        smartsheet_client, index_sheet)
     msg = str("{} rows loaded from sheet ID: {} | Sheet name: {}"
               "").format(len(jira_index_sheet.rows), jira_index_sheet.id,
                          jira_index_sheet.name)
@@ -332,6 +359,10 @@ def get_sub_indexes(project_data):
         dict: jira_sub_index in the form of Jira Ticket: [UUID(s)] (list)
         dict: project_sub_index in the form of UUID: Jira Ticket (str)
     """
+    if not isinstance(project_data, dict):
+        msg = str("Project data must be type: dict not type: {}."
+                  "").format(type(project_data))
+        raise TypeError(msg)
 
     jira_sub_index = defaultdict(list)
     project_sub_index = defaultdict(list)
@@ -353,7 +384,9 @@ def get_sub_indexes(project_data):
     return jira_sub_index, project_sub_index
 
 
-def get_all_sheet_ids(smartsheet_client, minutes):
+def get_all_sheet_ids(smartsheet_client, minutes,
+                      workspace_id=dev_workspace_id,
+                      index_sheet=dev_jira_idx_sheet):
     """Get all the sheet IDs from every sheet in every folder, subfolder and
        workspace as defined in the workspace_id.
 
@@ -364,6 +397,16 @@ def get_all_sheet_ids(smartsheet_client, minutes):
     Returns:
         list: A list of all sheet IDs across every workspace
     """
+    if not isinstance(smartsheet_client, smartsheet.Smartsheet):
+        msg = str("Smartsheet Client must be type: smartsheet.Smartsheet, "
+                  "not type: {}").format(type(smartsheet_client))
+        raise TypeError(msg)
+    if not isinstance(minutes, int):
+        msg = str("Minutes should be type: int, not {}").format(type(minutes))
+        raise TypeError(msg)
+    if minutes < 0:
+        msg = str("Minutes should be >= 0, not {}").format(minutes)
+        raise ValueError(msg)
 
     # Get the workspace Smartsheet object from the workspace_id
     # configured in our variables.
@@ -414,10 +457,12 @@ def get_all_sheet_ids(smartsheet_client, minutes):
     # Don't include the JIRA index sheet as
     # part of the sheet collection, if present.
     try:
-        sheet_ids.remove(jira_idx_sheet)
+        sheet_ids.remove(index_sheet)
+        msg = str("{} removed from Sheet ID list").format(index_sheet)
+        logging.debug(msg)
     except ValueError:
         logging.debug(
-            "{} not found in Sheet IDs list".format(jira_idx_sheet))
+            "{} not found in Sheet IDs list".format(index_sheet))
 
     return sheet_ids
 
@@ -437,16 +482,12 @@ def get_secret(secret_name):
     """
 
     region_name = "us-west-2"
-    ACCESS_KEY = os.environ.get('ACCESS_KEY')
-    SECRET_KEY = os.environ.get('SECRET_KEY')
 
     # Create a Secrets Manager client
     session = boto3.session.Session()
     client = session.client(
         service_name='secretsmanager',
         region_name=region_name,
-        aws_access_key_id=ACCESS_KEY,
-        aws_secret_access_key=SECRET_KEY,
     )
 
     # In this sample we only handle the specific exceptions for the
@@ -500,18 +541,26 @@ def get_secret(secret_name):
 
 
 def get_secret_name(env):
-    for e in env:
-        if e in ("-s", "--staging", "-staging"):
-            secret_name = "staging/smartsheet-data-sync/svc-api-token"
-            return(secret_name)
-        elif e in ("-p", "--prod", "-prod"):
-            secret_name = "prod/smartsheet-data-sync/svc-api-token"
-            return(secret_name)
-        elif e in ("-d", "--debug", "-debug"):
-            secret_name = "staging/smartsheet-data-sync/svc-api-token"
-            return(secret_name)
-        else:
-            logging.error("Failed to set API Key from AWS Secrets")
-            secret_name = ""
+    if not env:
+        msg = str("Env must be type: str. Env was {}").format(env)
+        raise ValueError(msg)
+    elif not isinstance(env, str):
+        raise TypeError("Env is not type: str")
+    elif env not in ("-d", "--debug", "-debug", "-p", "--prod", "-prod", "-s",
+                     "--staging", "-staging"):
+        raise ValueError(
+            "Invalid argument passed. Value passed was {}").format(env)
 
-    return secret_name
+    if env in ("-s", "--staging", "-staging"):
+        secret_name = "staging/smartsheet-data-sync/svc-api-token"
+        return secret_name
+    elif env in ("-p", "--prod", "-prod"):
+        secret_name = "prod/smartsheet-data-sync/svc-api-token"
+        return secret_name
+    elif env in ("-d", "--debug", "-debug"):
+        secret_name = "staging/smartsheet-data-sync/svc-api-token"
+        return secret_name
+    else:
+        logging.error("Failed to set API Key from AWS Secrets")
+        secret_name = ""
+        return secret_name

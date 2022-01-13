@@ -1,6 +1,7 @@
 import json
 import logging
 import re
+import smartsheet
 
 from uuid_module.helper import (chunks, get_cell_data, get_cell_value,
                                 get_column_map, has_cell_link, json_extract)
@@ -28,18 +29,28 @@ def write_uuid_cell_links(project_data_index, source_sheets,
         ValueError: If the project index data passed in is None,
                     raises and logs an error.
     """
+    if not isinstance(project_data_index, dict):
+        msg = str("Project data index must be type: dict, not"
+                  " {}").format(type(project_data_index))
+        log_msg = str("Project index data is None. Aborting the process for "
+                      "linking cells by UUID.")
+        logging.info(log_msg)
+        raise TypeError(msg)
+    if not isinstance(source_sheets, list):
+        msg = str("Source sheets should be type: list, not {}").format(
+            type(source_sheets))
+        raise TypeError(msg)
+    if not isinstance(smartsheet_client, smartsheet.Smartsheet):
+        msg = str("Smartsheet Client must be type: smartsheet.Smartsheet, not"
+                  " {}").format(type(smartsheet_client))
+        raise TypeError(msg)
+
     # dest_uuid = sheet_id, row_id where we create the cell links. Data is
     # pulled INTO this row with the cell link.
 
     # source_uuid = sheet_id, row_id where the data is coming FROM via
     # the cell link. source_uuid is located in the description column
     # of the uuid:row_data.
-    if project_data_index is None:
-        msg = str("Project index data is None. Aborting the process for "
-                  "linking cells by UUID.")
-        logging.info(msg)
-        raise ValueError(msg)
-
     for dest_uuid, row_data in project_data_index.items():
         rows_to_update = []
         sync_columns = None

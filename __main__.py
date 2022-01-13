@@ -10,28 +10,60 @@ import smartsheet
 from apscheduler.executors.pool import ProcessPoolExecutor, ThreadPoolExecutor
 from apscheduler.schedulers.background import BlockingScheduler
 
+from uuid_module.cell_link_sheet_data import write_uuid_cell_links
 # from uuid_module.cell_link_sheet_data import write_uuid_cell_links
 from uuid_module.get_data import (get_all_row_data, get_all_sheet_ids,
                                   get_blank_uuids, get_secret, get_secret_name,
                                   get_sub_indexes, refresh_source_sheets)
 from uuid_module.helper import truncate
 from uuid_module.variables import (log_location, minutes, module_log_name,
+                                   prod_jira_idx_sheet, prod_workspace_id,
                                    sheet_columns)
 from uuid_module.write_data import write_jira_index_cell_links, write_uuids
 
 start = time.time()
 
-# Use this code snippet in your app.
-# If you need more information about configurations or implementing the sample
-# code, visit the AWS docs:
-# https://aws.amazon.com/developers/getting-started/python/
-
-
 cwd = os.path.dirname(os.path.abspath(__file__))
 log_location = os.path.join(cwd, log_location)
 
 
+def set_env_vars():
+    env = sys.argv[1:]
+    try:
+        env = env[0]
+    except IndexError:
+        env = None
+    if env in ("--", None):
+        msg = "no_flag"
+        env = "--debug"
+        return env, msg, None, None
+    else:
+        msg = str("The {} flag was passed from the command line").format(env)
+        logging.info(msg)
+        if env in ("-s", "--staging", "-staging", "-d", "--debug", "-debug"):
+            msg = str("Using default debug/staging variables for workspace_id "
+                      "and Jira index sheet").format()
+            return env, msg, None, None
+        elif env in ("-p", "--prod", "-prod"):
+            workspace_id = prod_workspace_id
+            index_sheet = prod_jira_idx_sheet
+            msg = str("Set workspace_id to: {} and index_sheet to: {} "
+                      "for Prod environment").format(workspace_id, index_sheet)
+            return env, msg, workspace_id, index_sheet
+
+
 def set_logging_config(env):
+    if not isinstance(env, str):
+        msg = str("Environment should be type: str, not {}").format(
+            type(env))
+        raise TypeError(msg)
+    if env not in ("-s", "--staging", "-staging", "-p", "--prod", "-prod",
+                   "-d", "--debug", "-debug"):
+        msg = str("Invalid environment flag. '{}' was passed but it should "
+                  "be '--debug', '--staging' or '--prod'").format(
+            type(env))
+        raise ValueError(msg)
+
     logging_config = dict(
         version=1,
         formatters={
@@ -52,83 +84,80 @@ def set_logging_config(env):
             'disable_existing_loggers': False
         },
     )
-    for e in env:
-        if e in ("-s", "--staging", "-staging"):
-            logging_config = dict(
-                version=1,
-                formatters={
-                    'f': {'format':
-                          "%(asctime)s - %(levelname)s - %(message)s"}
-                },
-                handlers={
-                    'docker': {
-                        'class': 'logging.StreamHandler',
-                        'formatter': 'f',
-                        'level': logging.INFO,
-                        'stream': 'ext://sys.stdout'
-                    }
-                },
-                root={
-                    'handlers': ['docker'],  # 'console', 'file'
+    if env in ("-s", "--staging", "-staging"):
+        logging_config = dict(
+            version=1,
+            formatters={
+                'f': {'format':
+                      "%(asctime)s - %(levelname)s - %(message)s"}
+            },
+            handlers={
+                'docker': {
+                    'class': 'logging.StreamHandler',
+                    'formatter': 'f',
+                    'level': logging.INFO,
+                    'stream': 'ext://sys.stdout'
+                }
+            },
+            root={
+                'handlers': ['docker'],  # 'console', 'file'
+                'level': logging.DEBUG,
+                'disable_existing_loggers': False
+            },
+        )
+    elif env in ("-p", "--prod", "-prod"):
+        logging_config = dict(
+            version=1,
+            formatters={
+                'f': {'format':
+                      "%(asctime)s - %(levelname)s - %(message)s"}
+            },
+            handlers={
+                'docker': {
+                    'class': 'logging.StreamHandler',
+                    'formatter': 'f',
+                    'level': logging.INFO,
+                    'stream': 'ext://sys.stdout'
+                }
+            },
+            root={
+                'handlers': ['docker'],  # 'console', 'file'
+                'level': logging.DEBUG,
+                'disable_existing_loggers': False
+            },
+        )
+    elif env in ("-d", "--debug", "-debug"):
+        logging_config = dict(
+            version=1,
+            formatters={
+                'f': {'format':
+                      "%(asctime)s - %(levelname)s - %(message)s"}
+            },
+            handlers={
+                'file': {
+                    'class': 'logging.FileHandler',
+                    'formatter': 'f',
                     'level': logging.DEBUG,
-                    'disable_existing_loggers': False
+                    'filename': log_location + module_log_name
                 },
-            )
-        elif e in ("-p", "--prod", "-prod"):
-            logging_config = dict(
-                version=1,
-                formatters={
-                    'f': {'format':
-                          "%(asctime)s - %(levelname)s - %(message)s"}
-                },
-                handlers={
-                    'docker': {
-                        'class': 'logging.StreamHandler',
-                        'formatter': 'f',
-                        'level': logging.INFO,
-                        'stream': 'ext://sys.stdout'
-                    }
-                },
-                root={
-                    'handlers': ['docker'],  # 'console', 'file'
+                'docker': {
+                    'class': 'logging.StreamHandler',
+                    'formatter': 'f',
                     'level': logging.DEBUG,
-                    'disable_existing_loggers': False
-                },
-            )
-        elif e in ("-d", "--debug", "-debug"):
-            logging_config = dict(
-                version=1,
-                formatters={
-                    'f': {'format':
-                          "%(asctime)s - %(levelname)s - %(message)s"}
-                },
-                handlers={
-                    'file': {
-                        'class': 'logging.FileHandler',
-                        'formatter': 'f',
-                        'level': logging.DEBUG,
-                        'filename': log_location + module_log_name
-                    },
-                    'docker': {
-                        'class': 'logging.StreamHandler',
-                        'formatter': 'f',
-                        'level': logging.DEBUG,
-                        'stream': 'ext://sys.stdout'
-                    }
-                },
-                root={
-                    'handlers': ['docker', 'file'],  # 'console', 'file'
-                    'level': logging.DEBUG,
-                    'disable_existing_loggers': False
-                },
-            )
+                    'stream': 'ext://sys.stdout'
+                }
+            },
+            root={
+                'handlers': ['docker', 'file'],  # 'console', 'file'
+                'level': logging.DEBUG,
+                'disable_existing_loggers': False
+            },
+        )
 
     return logging_config
 
 
-# Initialize client. Uses the API token in the environment variable
-# "SMARTSHEET_ACCESS_TOKEN", which is pulled from the AWS Secrets API.
-env = sys.argv[1:]
+env, logging_msg, workspace_id, index_sheet = set_env_vars()
 logging_config = set_logging_config(env)
 try:
     os.mkdir(log_location)
@@ -140,6 +169,12 @@ except FileExistsError:
 
 logger = logging.getLogger()
 
+if logging_msg == "no_flag":
+    logging.error("No environment flag set. Please use --debug, --staging "
+                  "or --prod. Terminating app.")
+    quit()
+logging.info(logging_msg)
+
 executors = {
     'default': ThreadPoolExecutor(1),
     'processpool': ProcessPoolExecutor(1)
@@ -150,20 +185,18 @@ job_defaults = {
 }
 scheduler = BlockingScheduler(executors=executors, job_defaults=job_defaults)
 
-for e in env:
-    if e in ("--", None):
-        logging.error("No environment flag set. Please use --debug, --staging "
-                      "or --prod. Terminating app.")
-        quit()
-    else:
-        msg = str("The {} flag was passed from the command line").format(env)
-        logging.info(msg)
-
+# Initialize client. Uses the API token in the environment variable
+# "SMARTSHEET_ACCESS_TOKEN", which is pulled from the AWS Secrets API.
 logging.debug("------------------------")
 logging.debug("Initializing Smartsheet Client API")
 logging.debug("------------------------")
 secret_name = get_secret_name(env)
-os.environ["SMARTSHEET_ACCESS_TOKEN"] = get_secret(secret_name)
+try:
+    os.environ["SMARTSHEET_ACCESS_TOKEN"] = get_secret(secret_name)
+except TypeError:
+    msg = str("Refresh Isengard credentials")
+    logging.error(msg)
+    exit()
 smartsheet_client = smartsheet.Smartsheet()
 # Make sure we don't miss any error
 smartsheet_client.errors_as_exceptions(True)
@@ -176,8 +209,20 @@ elapsed = end - start
 elapsed = truncate(elapsed, 2)
 logging.debug("Initialization took: {}".format(elapsed))
 
+# TODO: Refactor so that dev_index_sheet and dev_workspace_id
+# are used by default. Only if --prod is passed does the prod_index_sheet
+# and prod_workspace_ids get used. Do this by making those variables
+# optional inside the functions and defaul to the dev environment.
+
 
 def full_jira_sync(minutes):
+    if not isinstance(minutes, int):
+        msg = str("Minutes should be type: int, not {}").format(type(minutes))
+        raise TypeError(msg)
+    if minutes < 0:
+        msg = str("Minutes should be >= 0, not {}").format(minutes)
+        raise ValueError(msg)
+
     start = time.time()
     msg = str("Starting refresh of Smartsheet project data. "
               "Looking back {} minutes from {}"
@@ -185,11 +230,18 @@ def full_jira_sync(minutes):
                          time.strftime('%Y-%m-%d %H:%M:%S',
                                        time.localtime(start)))
     logging.debug(msg)
-
     global sheet_id_lock
-    with sheet_id_lock:
-        sheet_ids = get_all_sheet_ids(smartsheet_client, minutes)
-        sheet_ids = list(set(sheet_ids))
+
+    if workspace_id and index_sheet:
+        with sheet_id_lock:
+            sheet_ids = get_all_sheet_ids(
+                smartsheet_client, minutes, workspace_id, index_sheet)
+            sheet_ids = list(set(sheet_ids))
+    else:
+        with sheet_id_lock:
+            sheet_ids = get_all_sheet_ids(
+                smartsheet_client, minutes)
+            sheet_ids = list(set(sheet_ids))
 
     global sheet_index_lock
     # Calculate a number minutes ago to get only the rows that were modified
@@ -272,6 +324,9 @@ def full_jira_sync(minutes):
         logging.info(msg)
         return
 
+    # TODO: Load Jira Index Sheet HERE by calling the API. Pass the object into
+    # creating the Jira Index objects, then write the cell links
+    # Centralize smartsheet_client calls, quit passing the object around
     logging.debug("Writing Jira cell links.")
     write_jira_index_cell_links(project_sub_index, smartsheet_client)
     # logging.debug("Writing UUID cell links.")
@@ -286,17 +341,67 @@ def full_jira_sync(minutes):
     gc.collect()
 
 
-def track_time(function, **args):
+def full_smartsheet_sync():
+    start = time.time()
+    msg = str("Starting refresh of Smartsheet project data.").format()
+    logging.debug(msg)
+
+    global sheet_id_lock
+    if workspace_id and index_sheet:
+        with sheet_id_lock:
+            sheet_ids = get_all_sheet_ids(
+                smartsheet_client, minutes, workspace_id, index_sheet)
+            sheet_ids = list(set(sheet_ids))
+    else:
+        with sheet_id_lock:
+            sheet_ids = get_all_sheet_ids(
+                smartsheet_client, minutes)
+            sheet_ids = list(set(sheet_ids))
+
+    global sheet_index_lock
+    # Calculate a number minutes ago to get only the rows that were modified
+    # since the last run.
+
+    with sheet_index_lock:
+        source_sheets = refresh_source_sheets(
+            smartsheet_client, sheet_ids, minutes)
+
+    with project_index_lock:
+        try:
+            project_uuid_index = get_all_row_data(
+                source_sheets, sheet_columns, minutes)
+        except ValueError as e:
+            msg = str("Getting all row data returned an error. {}").format(e)
+            logging.error(msg)
+
+    write_uuid_cell_links(project_uuid_index, source_sheets, smartsheet_client)
+
+    end = time.time()
+    elapsed = end - start
+    elapsed = truncate(elapsed, 3)
+    logging.info(
+        "Full Smartsheet cross-sheet sync took: {} seconds.".format(elapsed))
+    gc.collect()
+
+
+def track_time(func, **args):
+    if not callable(func):
+        msg = str("Func should be type: function, not {}").format(type(func))
+        raise TypeError(msg)
+
     """Helper function to track how long each task takes
 
     Args:
-        function (function): The function to time
+        func (function): The function to time
+
+    Raises:
+        TypeError: If func isn't a function
 
     Returns:
         float: The amount of time in seconds, truncated to 3 decimal places.
     """
     start = time.time()
-    function(**args)
+    func(**args)
     end = time.time()
     elapsed = end - start
     elapsed = truncate(elapsed, 3)
@@ -304,9 +409,10 @@ def track_time(function, **args):
 
 
 def main():
-    """Configures the scheduler to run two jobs. One job runs every 30 seconds
-       and looks back based on the minutes defined in variables. The second
-       job runs every day at 1:00am UTC and looks back 1 week.
+    """Configures the scheduler to run two jobs. One job runs full_jira_sync
+       every 30 seconds and looks back based on the minutes defined in
+       variables. The second job runs full_jira_sync every day at 1:00am UTC
+       and looks back 1 week.
 
     Returns:
         bool: Returns True if main successfully initialized and scheduled jobs,
@@ -334,7 +440,8 @@ def main():
 
 
 if __name__ == '__main__':
-    """Runs main() and then starts the scheduler.
+    """Runs main(). If main returns True, starts the scheduler. If main
+       returns False, logs an error and terminates the application.
     """
     main = main()
     if main:
@@ -344,10 +451,11 @@ if __name__ == '__main__':
             logging.debug("------------------------")
             scheduler.start()
         except KeyboardInterrupt:
-            logging.info("------------------------")
-            logging.info("Scheduled Jobs shut down due "
-                         "to Keyboard Interrupt.")
-            logging.info("------------------------")
+            logging.warning("------------------------")
+            logging.warning("Scheduled Jobs shut down due "
+                            "to Keyboard Interrupt.")
+            logging.warning("------------------------")
             scheduler.shutdown()
     else:
         logging.error("Issue with running MAIN. Process terminated.")
+        exit()

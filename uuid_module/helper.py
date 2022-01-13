@@ -16,6 +16,12 @@ def get_cell_data(row, column_name, column_map):
         column_name (str): The name of the referenced column
         column_map (dict): The map of Column Name: Column ID
 
+    Raises:
+        TypeError: Validates row is a Smartsheet Row object
+        TypeError: Validates column_name is a string
+        TypeError: Validates column_map is a dict
+        KeyError: Raises KeyError if the column name isn't in the dictionary
+
     Returns:
         cell (Cell): A Cell object or None if the column is not found in the
                      map.
@@ -32,8 +38,8 @@ def get_cell_data(row, column_name, column_map):
     except KeyError:
         msg = str("Column not found: {}").format(column_name)
         logging.debug(msg)
-        # raise KeyError(msg)
-        return None
+        raise KeyError(msg)
+        # return None
     else:
         return row.get_column(column_id)
 
@@ -43,6 +49,9 @@ def get_column_map(sheet):
 
     Args:
         sheet (sheet): The sheet containing column names and IDs
+
+    Raises:
+        TypeError: Validates sheet is a Smartsheet Sheet object
 
     Returns:
         dict: A map of Column Name: Column ID
@@ -68,37 +77,50 @@ def has_cell_link(old_cell, direction):
         old_cell (Cell): The Cell object to check.
         direction (str): Whether to check incoming or outgoing cell links.
 
+    Raises:
+        TypeError: Validates old_cell is a Smartsheet cell object
+        TypeError: Validates direction is a string
+        ValueError: Validates direction is either 'In' or 'Out'
+        KeyError: If the old_cell doesn't have the extended attributes for
+                  cell links raises as 'Unlinked'
+
     Returns:
         str: "Linked" if status is "OK", "Broken" if staus is "BROKEN",
              "Unlinked" if the cell doesn't have a cell link property. If the
              cell link type is 'linksOutToCells', always return "Linked".
     """
+    if not isinstance(old_cell, smartsheet.models.cell.Cell):
+        msg = str("Old Cell should be type: Cell not type: {}"
+                  "").format(type(old_cell))
+        raise TypeError(msg)
+    if not isinstance(direction, str):
+        msg = str("Direction should type: str not type: {}"
+                  "").format(type(direction))
+        raise TypeError(msg)
+    if direction not in ("In", "Out"):
+        msg = str("Direction should be either 'In' or 'Out' not '{}'"
+                  "").format(direction)
+        raise ValueError(msg)
 
     # Load the cell values as a json object
     cell_json = json.loads(str(old_cell))
 
-    if direction == "In":
-        # Check the status of the link.
-        try:
+    try:
+        if direction == "In":
+            # Check the status of the link.
             linked_cell = cell_json['linkInFromCell']
             status = linked_cell['status']
+            # TODO: return status, fix upstream code to accept status values
             if status == 'OK':
                 return "Linked"
             elif status == 'BROKEN':
                 return "Broken"
-        except KeyError:
-            # if old_cell.value is None:
-            #     return None
-            return "Unlinked"
-    elif direction == "Out":
-        # Always set to Linked, unless it's invalid.
-        try:
+        elif direction == "Out":
+            # Always set to Linked, unless it's invalid.
             linked_cell = cell_json['linksOutToCells']
             return "Linked"
-        except KeyError:
-            # if old_cell.value is None:
-            #     return None
-            return "Unlinked"
+    except KeyError:
+        raise KeyError("Unlinked")
 
 
 def get_cell_value(row, col_name, col_map):
@@ -109,6 +131,11 @@ def get_cell_value(row, col_name, col_map):
         row (Row): The row of data that contains the IDs
         col_name (str): The name of the referenced column
         col_map (dict): The map of Column Name: Column ID
+
+    Raises:
+        TypeError: Validates row is a Smartsheet Row object
+        TypeError: Validates col_name is a string
+        TypeError: Validates col_map is a dict
 
     Returns:
         str: The value of the cell.
@@ -192,11 +219,15 @@ def truncate(number, decimals=0):
 
     # Validate data types before attempting to process.
     if not isinstance(decimals, int):
-        raise TypeError("decimal places must be an integer.")
-    elif decimals < 0:
-        raise ValueError("decimal places has to be 0 or more.")
-    elif decimals == 0:
-        return math.trunc(number)
+        msg = str("Decimal must be an int, not {}").format(type(decimals))
+        raise TypeError(msg)
+    if not isinstance(number, float):
+        msg = str("Number must be an float, not {}").format(type(number))
+        raise TypeError(msg)
+    if decimals <= 0:
+        msg = str("Decimal places has to be 1 or more, not {}"
+                  "").format(decimals)
+        raise ValueError(msg)
 
     factor = 10.0 ** decimals
     return math.trunc(number * factor) / factor
@@ -206,11 +237,20 @@ def get_timestamp(number):
     """Subtracts the number intput from the current time to generate a
        timestamp N number of minutes ago.
 
+    Args:
+        number (int): Number of seconds
+
+    Raises:
+        TypeError: Validates number is an int
+        ValueError: Ensures minutes is > 0
+
     Returns:
         string: an ISO8601 compliant timestamp
     """
     if not isinstance(number, int):
         raise TypeError("Number of minutes must be an integer.")
+    elif number <= 0:
+        raise ValueError("Number of minutes must be greater than zero.")
 
     date = datetime.now()
     delta = timedelta(minutes=number)
@@ -220,15 +260,43 @@ def get_timestamp(number):
     return modified_since, modified_since_iso
 
 
-def chunks(lst, n):
-    """Yield successive n-sized chunks from lst.
+def chunks(source, n):
+    """Yield successive n-sized chunks from source.
 
     Args:
-        lst (list): The list of objects to chunk
+        source (list): The list of objects to chunk
         n (int): The number of items in the list to chunk together
 
+    Raises:
+        TypeError: Validates source is a list
+        TypeError: Validates n is an int
+        ValueError: Validates n must be non-zero
+        ValueError: Validates n > 0
+        ValueError: Validates length of list is greater than n
+
     Yields:
-        lst (list): The sub-list of chunked items
+        source (list): The sub-list of chunked items
     """
-    for i in range(0, len(lst), n):
-        yield lst[i:i + n]
+    # Validate data types before attempting to process.
+    if not isinstance(source, list):
+        msg = str("Source must be a list, not {}").format(type(source))
+        raise TypeError(msg)
+    if not isinstance(n, int):
+        msg = str("Second argument must be type: int, not {}"
+                  "").format(type(n))
+        raise TypeError(msg)
+    if n == 0:
+        msg = str("Second argument must be non-zero, not {}"
+                  "").format(type(n))
+        raise ValueError(msg)
+    if n < 0:
+        msg = str("Second argument must be greater than zero, not {}"
+                  "").format(type(n))
+        raise ValueError(msg)
+    if len(source) < n:
+        msg = str("Length of list is less than the chunk integer. "
+                  "List length: {}, chunk size: {}").format(len(source), n)
+        raise ValueError(msg)
+
+    for i in range(0, len(source), n):
+        yield source[i:i + n]

@@ -1,13 +1,13 @@
 import json
 import os
-import sys
-from typing import Type
 
 import pytest
 import smartsheet
+import datetime
+from freezegun import freeze_time
 from uuid_module.helper import (get_cell_data, get_cell_value, get_column_map,
-                                has_cell_link, json_extract, truncate)
-
+                                get_timestamp, has_cell_link, json_extract,
+                                truncate, chunks)
 
 true = True
 false = False
@@ -80,14 +80,9 @@ def key():
     return "formula"
 
 
-def test_get_cell_value(row, col_name, col_map):
-    with pytest.raises(TypeError):
-        get_cell_value("Row", col_name, col_map)
-    with pytest.raises(TypeError):
-        get_cell_value(row, 1, col_map)
-    with pytest.raises(TypeError):
-        get_cell_value(row, col_name, "col_map")
-    assert get_cell_value(row, col_name, col_map) == "Lumine"
+@pytest.fixture
+def simple_list():
+    return [1, 2, 3, 4, 5, 6]
 
 
 def test_get_cell_data(row, col_name, col_map):
@@ -97,6 +92,10 @@ def test_get_cell_data(row, col_name, col_map):
         get_cell_data(row, 1, col_map)
     with pytest.raises(TypeError):
         get_cell_data(row, col_name, "col_map")
+    with pytest.raises(KeyError):
+        keyerror_col_map = {}
+        keyerror_col_map["Jira Issue"] = "JAR-1234"
+        get_cell_data(row, col_name, keyerror_col_map)
 
     with open(cwd + '/cell.json') as f:
         cell_json = json.load(f)
@@ -113,11 +112,65 @@ def test_get_cell_data(row, col_name, col_map):
 
 
 def test_get_column_map(sheet):
+    with pytest.raises(TypeError):
+        get_column_map("Sheet")
     assert get_column_map(sheet) == {"Benny's Adventure Team": 752133921468837}
 
 
 def test_has_cell_link(cell, direction):
+    with pytest.raises(TypeError):
+        has_cell_link("cell", direction)
+    with pytest.raises(TypeError):
+        has_cell_link(cell, 7)
+    with pytest.raises(ValueError):
+        has_cell_link(cell, "Sideways")
+    with pytest.raises(KeyError):
+        bad_cell = {
+            "columnId": 752133921468837,
+            "columnType": "TEXT_NUMBER",
+            "displayValue": "Lumine",
+            "formula": "=UUID@row",
+            "hyperlink": {
+                "reportId": 674477165909395,
+                "sheetId": 117648125440672,
+                "sightId": 859583955564213,
+                "url": "https://genshin.gg"
+            },
+            "image": {
+                "altText": "Benny's favorite food",
+                "height": 25,
+                "id": "937767591144840",
+                "width": 25
+            },
+            "objectValue": {
+                "objectType": "ABSTRACT_DATETIME"
+            },
+            "overrideValidation": true,
+            "strict": true,
+            "value": "Lumine"
+        }
+        bad_cell = smartsheet.models.Cell(bad_cell)
+        has_cell_link(bad_cell, direction) == "Unlinked"
     assert has_cell_link(cell, direction) == "Linked"
+    try:
+        has_cell_link(bad_cell, direction)
+    except KeyError as k:
+        assert str(k) == str("'Unlinked'")
+
+    try:
+        has_cell_link(bad_cell, "Out")
+    except KeyError as k:
+        assert str(k) == str("'Unlinked'")
+
+
+def test_get_cell_value(row, col_name, col_map):
+    with pytest.raises(TypeError):
+        get_cell_value("Row", col_name, col_map)
+    with pytest.raises(TypeError):
+        get_cell_value(row, 1, col_map)
+    with pytest.raises(TypeError):
+        get_cell_value(row, col_name, "col_map")
+    assert get_cell_value(row, col_name, col_map) == "Lumine"
 
 
 def test_json_extract(obj, key):
@@ -131,9 +184,42 @@ def test_json_extract(obj, key):
 def test_truncate(number, decimals):
     with pytest.raises(TypeError):
         truncate("Benny's Adventure Team", 4)
+    with pytest.raises(TypeError):
+        truncate(number, "decimals")
     with pytest.raises(ValueError):
-        truncate(obj, -1)
+        truncate(number, -1)
     assert truncate(number, decimals) == 3.141
 
 
-# def test_raises_exception_on_non_string_arguments():
+@freeze_time("2012-01-14 12:13:00")
+def test_get_timestamp(decimals):
+    with pytest.raises(TypeError):
+        get_timestamp("number")
+    with pytest.raises(ValueError):
+        get_timestamp(-5)
+    modified_since, modified_since_iso = get_timestamp(decimals)
+    assert datetime.datetime.now() == datetime.datetime(2012, 1, 14, 12, 13, 0)
+    assert modified_since == datetime.datetime(
+        2012, 1, 14, 12, 10, 00)  # "2012-01-14T12:10:00"
+    assert modified_since_iso == datetime.datetime(
+        2012, 1, 14, 12, 10, 00).isoformat()  # "2012-01-14T12:10:00"
+
+
+def test_chunks(simple_list, decimals):
+    with pytest.raises(TypeError):
+        for i in chunks("simple_list", 3):
+            pass
+    with pytest.raises(TypeError):
+        for i in chunks(simple_list, "Four"):
+            pass
+    with pytest.raises(ValueError):
+        for i in chunks(simple_list, -1):
+            pass
+    with pytest.raises(ValueError):
+        for i in chunks(simple_list, 0):
+            pass
+    with pytest.raises(ValueError):
+        for i in chunks(simple_list, 10):
+            pass
+    for i in chunks(simple_list, decimals):
+        assert len(i) == 3

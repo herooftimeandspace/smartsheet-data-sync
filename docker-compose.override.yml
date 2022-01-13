@@ -15,21 +15,21 @@ services:
         # The Amazon ECS Local Container Endpoints Docker Image
         image: amazon/amazon-ecs-local-container-endpoints
         volumes:
-          # Mount /var/run so we can access docker.sock and talk to Docker
-          - /var/run:/var/run
-          # Mount the shared configuration directory, used by the AWS CLI and AWS SDKs
-          # On Windows, this directory can be found at "%UserProfile%\.aws"
-          - $HOME/.aws/:/home/.aws/
+            # Mount /var/run so we can access docker.sock and talk to Docker
+            - /var/run:/var/run
+            # Mount the shared configuration directory, used by the AWS CLI and AWS SDKs
+            # On Windows, this directory can be found at "%UserProfile%\.aws"
+            - $HOME/.aws/:/home/.aws/
         environment:
-          # define the home folder; credentials will be read from $HOME/.aws
-          HOME: "/home"
-          # You can change which AWS CLI Profile is used
-          AWS_PROFILE: "default"
+            # define the home folder; credentials will be read from $HOME/.aws
+            HOME: "/home"
+            # You can change which AWS CLI Profile is used
+            AWS_PROFILE: "default"
         networks:
             credentials_network:
                 # This special IP address is recognized by the AWS SDKs and AWS CLI 
                 ipv4_address: "169.254.170.2"
-                
+
     # Here we reference the application container that we are testing
     # You can test multiple containers at a time, simply duplicate this section
     # and customize it for each container, and give it a unique IP in 'credentials_network'.
@@ -40,5 +40,5 @@ services:
             credentials_network:
                 ipv4_address: "169.254.170.3"
         environment:
-          AWS_DEFAULT_REGION: "us-east-1"
-          AWS_CONTAINER_CREDENTIALS_RELATIVE_URI: "/creds"
+            AWS_DEFAULT_REGION: "us-west-2"
+            AWS_CONTAINER_CREDENTIALS_RELATIVE_URI: "/creds"

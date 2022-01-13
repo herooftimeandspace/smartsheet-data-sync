@@ -40,6 +40,9 @@
                     <a class="function" href="#get_blank_uuids">get_blank_uuids</a>
             </li>
             <li>
+                    <a class="function" href="#get_jira_index_sheet">get_jira_index_sheet</a>
+            </li>
+            <li>
                     <a class="function" href="#load_jira_index">load_jira_index</a>
             </li>
             <li>
@@ -75,9 +78,9 @@
             <div class="codehilite"><pre><span></span><span class="kn">import</span> <span class="nn">base64</span>
 <span class="kn">import</span> <span class="nn">json</span>
 <span class="kn">import</span> <span class="nn">logging</span>
-<span class="kn">import</span> <span class="nn">os</span>
 <span class="kn">from</span> <span class="nn">collections</span> <span class="kn">import</span> <span class="n">defaultdict</span>
 <span class="kn">from</span> <span class="nn">datetime</span> <span class="kn">import</span> <span class="n">datetime</span>
+<span class="kn">import</span> <span class="nn">smartsheet</span>
 
 <span class="kn">import</span> <span class="nn">boto3</span>
 <span class="kn">import</span> <span class="nn">pytz</span>
@@ -85,8 +88,8 @@
 
 <span class="kn">from</span> <span class="nn">uuid_module.helper</span> <span class="kn">import</span> <span class="p">(</span><span class="n">get_cell_data</span><span class="p">,</span> <span class="n">get_cell_value</span><span class="p">,</span> <span class="n">get_column_map</span><span class="p">,</span>
                                 <span class="n">get_timestamp</span><span class="p">,</span> <span class="n">json_extract</span><span class="p">)</span>
-<span class="kn">from</span> <span class="nn">uuid_module.variables</span> <span class="kn">import</span> <span class="p">(</span><span class="n">jira_col</span><span class="p">,</span> <span class="n">jira_idx_sheet</span><span class="p">,</span> <span class="n">summary_col</span><span class="p">,</span>
-                                   <span class="n">uuid_col</span><span class="p">,</span> <span class="n">workspace_id</span><span class="p">)</span>
+<span class="kn">from</span> <span class="nn">uuid_module.variables</span> <span class="kn">import</span> <span class="p">(</span><span class="n">jira_col</span><span class="p">,</span> <span class="n">dev_jira_idx_sheet</span><span class="p">,</span> <span class="n">summary_col</span><span class="p">,</span>
+                                   <span class="n">uuid_col</span><span class="p">,</span> <span class="n">dev_workspace_id</span><span class="p">)</span>
 
 <span class="n">logger</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">(</span><span class="vm">__name__</span><span class="p">)</span>
 
@@ -94,7 +97,7 @@
 
 
 <span class="k">def</span> <span class="nf">refresh_source_sheets</span><span class="p">(</span><span class="n">smartsheet_client</span><span class="p">,</span> <span class="n">sheet_ids</span><span class="p">,</span> <span class="n">minutes</span><span class="o">=</span><span class="mi">0</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;Creates a dict of source sheets. If minutes is defined, only gathers </span>
+    <span class="sd">&quot;&quot;&quot;Creates a dict of source sheets. If minutes is defined, only gathers</span>
 <span class="sd">       sheets modified since the minutes value. Otherwise pulls all sheets</span>
 <span class="sd">       from the workspaces.</span>
 
@@ -102,14 +105,27 @@
 <span class="sd">        smartsheet_client (client): Allows interaction with the Smartsheet API</span>
 <span class="sd">        sheet_ids (list): The list of Smartsheet sheet IDs to parse</span>
 <span class="sd">        minutes (int, optional): Number of minutes into the past that the API</span>
-<span class="sd">                                 should pull sheet and row data, if greater </span>
+<span class="sd">                                 should pull sheet and row data, if greater</span>
 <span class="sd">                                 than 0. Defaults to 0.</span>
 
 <span class="sd">    Returns:</span>
-<span class="sd">        source_sheets (list): The list of sheets, including row data for rows </span>
-<span class="sd">                              modified since the minutes value, if greater </span>
+<span class="sd">        source_sheets (list): The list of sheets, including row data for rows</span>
+<span class="sd">                              modified since the minutes value, if greater</span>
 <span class="sd">                              than 0</span>
 <span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">sheet_ids</span><span class="p">,</span> <span class="nb">list</span><span class="p">):</span>
+        <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s2">&quot;Sheet IDs must be a list of IDs&quot;</span><span class="p">)</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="nb">all</span><span class="p">(</span><span class="nb">isinstance</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="nb">int</span><span class="p">)</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">sheet_ids</span><span class="p">):</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;One or more values in the list are not type: int&quot;</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">minutes</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">minutes</span><span class="p">,</span> <span class="nb">int</span><span class="p">):</span>
+        <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s2">&quot;Minutes must be type: int&quot;</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">minutes</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="n">minutes</span> <span class="o">&lt;</span> <span class="mi">0</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Minutes must be &gt;= zero&quot;</span><span class="p">)</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">smartsheet_client</span><span class="p">,</span> <span class="n">smartsheet</span><span class="o">.</span><span class="n">Smartsheet</span><span class="p">):</span>
+        <span class="n">msg</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="s2">&quot;Smartsheet Client must be type: smartsheet.Smartsheet, not&quot;</span>
+                  <span class="s2">&quot; </span><span class="si">{}</span><span class="s2">&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="nb">type</span><span class="p">(</span><span class="n">smartsheet_client</span><span class="p">))</span>
+        <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
+
     <span class="n">source_sheets</span> <span class="o">=</span> <span class="p">[]</span>
     <span class="k">if</span> <span class="n">minutes</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
         <span class="n">_</span><span class="p">,</span> <span class="n">modified_since</span> <span class="o">=</span> <span class="n">get_timestamp</span><span class="p">(</span><span class="n">minutes</span><span class="p">)</span>
@@ -119,7 +135,7 @@
                 <span class="n">Sheets</span><span class="o">.</span><span class="n">get_sheet</span><span class="p">(</span>
                     <span class="n">sheet_id</span><span class="p">,</span> <span class="n">rows_modified_since</span><span class="o">=</span><span class="n">modified_since</span><span class="p">)</span>
             <span class="n">source_sheets</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">sheet</span><span class="p">)</span>
-            <span class="n">logging</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">&quot;Loading Sheet ID: </span><span class="si">{}</span><span class="s2"> | &quot;</span>
+            <span class="n">logging</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">&quot;Loaded Sheet ID: </span><span class="si">{}</span><span class="s2"> | &quot;</span>
                           <span class="s2">&quot;Sheet Name: </span><span class="si">{}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">sheet</span><span class="o">.</span><span class="n">id</span><span class="p">,</span> <span class="n">sheet</span><span class="o">.</span><span class="n">name</span><span class="p">))</span>
     <span class="k">elif</span> <span class="n">minutes</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
         <span class="k">for</span> <span class="n">sheet_id</span> <span class="ow">in</span> <span class="n">sheet_ids</span><span class="p">:</span>
@@ -127,11 +143,8 @@
             <span class="n">sheet</span> <span class="o">=</span> <span class="n">smartsheet_client</span><span class="o">.</span>\
                 <span class="n">Sheets</span><span class="o">.</span><span class="n">get_sheet</span><span class="p">(</span><span class="n">sheet_id</span><span class="p">)</span>
             <span class="n">source_sheets</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">sheet</span><span class="p">)</span>
-            <span class="n">logging</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">&quot;Loading Sheet ID: </span><span class="si">{}</span><span class="s2"> | &quot;</span>
+            <span class="n">logging</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">&quot;Loaded Sheet ID: </span><span class="si">{}</span><span class="s2"> | &quot;</span>
                           <span class="s2">&quot;Sheet Name: </span><span class="si">{}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">sheet</span><span class="o">.</span><span class="n">id</span><span class="p">,</span> <span class="n">sheet</span><span class="o">.</span><span class="n">name</span><span class="p">))</span>
-    <span class="k">else</span><span class="p">:</span>
-        <span class="n">msg</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="s2">&quot;Invalid value for minutes. Value was </span><span class="si">{}</span><span class="s2">&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">minutes</span><span class="p">)</span>
-        <span class="n">logging</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
 
     <span class="k">return</span> <span class="n">source_sheets</span>
 
@@ -166,10 +179,19 @@
     <span class="c1">#   &quot;Predecessors&quot;: &quot;38FS +1w&quot;, # type: str</span>
     <span class="c1">#   &quot;Summary&quot;: &quot;False&quot; # type: str</span>
     <span class="c1">#       }</span>
-    <span class="k">if</span> <span class="n">source_sheets</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
-        <span class="k">raise</span> <span class="ne">ValueError</span>
-    <span class="k">elif</span> <span class="n">columns</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
-        <span class="k">raise</span> <span class="ne">ValueError</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">source_sheets</span><span class="p">,</span> <span class="nb">list</span><span class="p">):</span>
+        <span class="n">msg</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="s2">&quot;Source sheets should be type: list, not </span><span class="si">{}</span><span class="s2">&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>
+            <span class="nb">type</span><span class="p">(</span><span class="n">source_sheets</span><span class="p">))</span>
+        <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">columns</span><span class="p">,</span> <span class="nb">list</span><span class="p">):</span>
+        <span class="n">msg</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="s2">&quot;Columns should be type: list, not </span><span class="si">{}</span><span class="s2">&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="nb">type</span><span class="p">(</span><span class="n">columns</span><span class="p">))</span>
+        <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">minutes</span><span class="p">,</span> <span class="nb">int</span><span class="p">):</span>
+        <span class="n">msg</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="s2">&quot;Minutes should be type: int, not </span><span class="si">{}</span><span class="s2">&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="nb">type</span><span class="p">(</span><span class="n">minutes</span><span class="p">))</span>
+        <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">minutes</span> <span class="o">&lt;</span> <span class="mi">0</span><span class="p">:</span>
+        <span class="n">msg</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="s2">&quot;Minutes should be &gt;= 0, not </span><span class="si">{}</span><span class="s2">&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">minutes</span><span class="p">)</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
 
     <span class="c1"># Create the empty dict we&#39;ll pass back</span>
     <span class="n">all_row_data</span> <span class="o">=</span> <span class="p">{}</span>
@@ -266,20 +288,10 @@
 <span class="sd">        dict: A nested set of dictionaries</span>
 <span class="sd">        none: There are no sheets to update.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
-    <span class="c1"># TODO: Write a test to validate the dict.</span>
-    <span class="c1"># 7637702645442436,  (Sheet ID, int)</span>
-    <span class="c1"># {</span>
-    <span class="c1">#     &quot;sheet_name&quot;: &quot;Cloudwatch: Distribution Project Plan&quot;, # type: str</span>
-    <span class="c1">#     &quot;row_data&quot;: {  # type: dict</span>
-    <span class="c1">#         4733217466279812: { (Row ID, int)</span>
-    <span class="c1">#             &quot;column_id&quot;: 2745267022784388, (int)</span>
-    <span class="c1">#             &quot;uuid&quot;: &quot;7637702645442436-4733217466279812-</span>
-    <span class="c1">#                      2745267022784388-202105112340380000&quot; (str)</span>
-    <span class="c1">#         }</span>
-    <span class="c1">#     }</span>
-    <span class="c1"># }</span>
-    <span class="k">if</span> <span class="n">source_sheets</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
-        <span class="k">raise</span> <span class="ne">ValueError</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">source_sheets</span><span class="p">,</span> <span class="nb">list</span><span class="p">):</span>
+        <span class="n">msg</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="s2">&quot;Source Sheets should be type: list not type </span><span class="si">{}</span><span class="s2">&quot;</span>
+                  <span class="s2">&quot;&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="nb">type</span><span class="p">(</span><span class="n">source_sheets</span><span class="p">))</span>
+        <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
 
     <span class="c1"># Create an empty dict of sheets to update</span>
     <span class="n">sheets_to_update</span> <span class="o">=</span> <span class="p">{}</span>
@@ -352,12 +364,24 @@
         <span class="k">return</span> <span class="kc">None</span>
 
 
-<span class="k">def</span> <span class="nf">load_jira_index</span><span class="p">(</span><span class="n">smartsheet_client</span><span class="p">):</span>
+<span class="k">def</span> <span class="nf">get_jira_index_sheet</span><span class="p">(</span><span class="n">smartsheet_client</span><span class="p">,</span> <span class="n">index_sheet</span><span class="o">=</span><span class="n">dev_jira_idx_sheet</span><span class="p">):</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">smartsheet_client</span><span class="p">,</span> <span class="n">smartsheet</span><span class="o">.</span><span class="n">Smartsheet</span><span class="p">):</span>
+        <span class="n">msg</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="s2">&quot;Smartsheet Client must be type: smartsheet.Smartsheet, &quot;</span>
+                  <span class="s2">&quot;not type: </span><span class="si">{}</span><span class="s2">&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="nb">type</span><span class="p">(</span><span class="n">smartsheet_client</span><span class="p">))</span>
+        <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
+    <span class="n">index_sheet</span> <span class="o">=</span> <span class="n">smartsheet_client</span><span class="o">.</span><span class="n">Sheets</span><span class="o">.</span><span class="n">get_sheet</span><span class="p">(</span><span class="n">index_sheet</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">index_sheet</span>
+
+
+<span class="k">def</span> <span class="nf">load_jira_index</span><span class="p">(</span><span class="n">smartsheet_client</span><span class="p">,</span> <span class="n">index_sheet</span><span class="o">=</span><span class="n">dev_jira_idx_sheet</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;Create indexes on the Jira index rows. Pulls from the Smartsheet API</span>
 <span class="sd">       every time to get the most up-to-date version of the sheet data.</span>
 
 <span class="sd">    Args:</span>
 <span class="sd">        smartsheet_client (Object): The Smartsheet client to query the API</span>
+
+<span class="sd">    Raises:</span>
+<span class="sd">        TypeError: Validates smartsheet_client is a Smartsheet Client object.</span>
 
 <span class="sd">    Returns:</span>
 <span class="sd">        sheet: A Smartsheet Sheet object that includes all data for the Jira</span>
@@ -367,7 +391,13 @@
 <span class="sd">              row ID as the value.</span>
 
 <span class="sd">    &quot;&quot;&quot;</span>
-    <span class="n">jira_index_sheet</span> <span class="o">=</span> <span class="n">smartsheet_client</span><span class="o">.</span><span class="n">Sheets</span><span class="o">.</span><span class="n">get_sheet</span><span class="p">(</span><span class="n">jira_idx_sheet</span><span class="p">)</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">smartsheet_client</span><span class="p">,</span> <span class="n">smartsheet</span><span class="o">.</span><span class="n">Smartsheet</span><span class="p">):</span>
+        <span class="n">msg</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="s2">&quot;Smartsheet Client must be type: smartsheet.Smartsheet, &quot;</span>
+                  <span class="s2">&quot;not type: </span><span class="si">{}</span><span class="s2">&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="nb">type</span><span class="p">(</span><span class="n">smartsheet_client</span><span class="p">))</span>
+        <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
+
+    <span class="n">jira_index_sheet</span> <span class="o">=</span> <span class="n">get_jira_index_sheet</span><span class="p">(</span>
+        <span class="n">smartsheet_client</span><span class="p">,</span> <span class="n">index_sheet</span><span class="p">)</span>
     <span class="n">msg</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="s2">&quot;</span><span class="si">{}</span><span class="s2"> rows loaded from sheet ID: </span><span class="si">{}</span><span class="s2"> | Sheet name: </span><span class="si">{}</span><span class="s2">&quot;</span>
               <span class="s2">&quot;&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">jira_index_sheet</span><span class="o">.</span><span class="n">rows</span><span class="p">),</span> <span class="n">jira_index_sheet</span><span class="o">.</span><span class="n">id</span><span class="p">,</span>
                          <span class="n">jira_index_sheet</span><span class="o">.</span><span class="n">name</span><span class="p">)</span>
@@ -406,6 +436,10 @@
 <span class="sd">        dict: jira_sub_index in the form of Jira Ticket: [UUID(s)] (list)</span>
 <span class="sd">        dict: project_sub_index in the form of UUID: Jira Ticket (str)</span>
 <span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">project_data</span><span class="p">,</span> <span class="nb">dict</span><span class="p">):</span>
+        <span class="n">msg</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="s2">&quot;Project data must be type: dict not type: </span><span class="si">{}</span><span class="s2">.&quot;</span>
+                  <span class="s2">&quot;&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="nb">type</span><span class="p">(</span><span class="n">project_data</span><span class="p">))</span>
+        <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
 
     <span class="n">jira_sub_index</span> <span class="o">=</span> <span class="n">defaultdict</span><span class="p">(</span><span class="nb">list</span><span class="p">)</span>
     <span class="n">project_sub_index</span> <span class="o">=</span> <span class="n">defaultdict</span><span class="p">(</span><span class="nb">list</span><span class="p">)</span>
@@ -427,7 +461,9 @@
     <span class="k">return</span> <span class="n">jira_sub_index</span><span class="p">,</span> <span class="n">project_sub_index</span>
 
 
-<span class="k">def</span> <span class="nf">get_all_sheet_ids</span><span class="p">(</span><span class="n">smartsheet_client</span><span class="p">,</span> <span class="n">minutes</span><span class="p">):</span>
+<span class="k">def</span> <span class="nf">get_all_sheet_ids</span><span class="p">(</span><span class="n">smartsheet_client</span><span class="p">,</span> <span class="n">minutes</span><span class="p">,</span>
+                      <span class="n">workspace_id</span><span class="o">=</span><span class="n">dev_workspace_id</span><span class="p">,</span>
+                      <span class="n">index_sheet</span><span class="o">=</span><span class="n">dev_jira_idx_sheet</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;Get all the sheet IDs from every sheet in every folder, subfolder and</span>
 <span class="sd">       workspace as defined in the workspace_id.</span>
 
@@ -438,6 +474,16 @@
 <span class="sd">    Returns:</span>
 <span class="sd">        list: A list of all sheet IDs across every workspace</span>
 <span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">smartsheet_client</span><span class="p">,</span> <span class="n">smartsheet</span><span class="o">.</span><span class="n">Smartsheet</span><span class="p">):</span>
+        <span class="n">msg</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="s2">&quot;Smartsheet Client must be type: smartsheet.Smartsheet, &quot;</span>
+                  <span class="s2">&quot;not type: </span><span class="si">{}</span><span class="s2">&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="nb">type</span><span class="p">(</span><span class="n">smartsheet_client</span><span class="p">))</span>
+        <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">minutes</span><span class="p">,</span> <span class="nb">int</span><span class="p">):</span>
+        <span class="n">msg</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="s2">&quot;Minutes should be type: int, not </span><span class="si">{}</span><span class="s2">&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="nb">type</span><span class="p">(</span><span class="n">minutes</span><span class="p">))</span>
+        <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">minutes</span> <span class="o">&lt;</span> <span class="mi">0</span><span class="p">:</span>
+        <span class="n">msg</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="s2">&quot;Minutes should be &gt;= 0, not </span><span class="si">{}</span><span class="s2">&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">minutes</span><span class="p">)</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
 
     <span class="c1"># Get the workspace Smartsheet object from the workspace_id</span>
     <span class="c1"># configured in our variables.</span>
@@ -488,10 +534,12 @@
     <span class="c1"># Don&#39;t include the JIRA index sheet as</span>
     <span class="c1"># part of the sheet collection, if present.</span>
     <span class="k">try</span><span class="p">:</span>
-        <span class="n">sheet_ids</span><span class="o">.</span><span class="n">remove</span><span class="p">(</span><span class="n">jira_idx_sheet</span><span class="p">)</span>
+        <span class="n">sheet_ids</span><span class="o">.</span><span class="n">remove</span><span class="p">(</span><span class="n">index_sheet</span><span class="p">)</span>
+        <span class="n">msg</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="s2">&quot;</span><span class="si">{}</span><span class="s2"> removed from Sheet ID list&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">index_sheet</span><span class="p">)</span>
+        <span class="n">logging</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
     <span class="k">except</span> <span class="ne">ValueError</span><span class="p">:</span>
         <span class="n">logging</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span>
-            <span class="s2">&quot;</span><span class="si">{}</span><span class="s2"> not found in Sheet IDs list&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">jira_idx_sheet</span><span class="p">))</span>
+            <span class="s2">&quot;</span><span class="si">{}</span><span class="s2"> not found in Sheet IDs list&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">index_sheet</span><span class="p">))</span>
 
     <span class="k">return</span> <span class="n">sheet_ids</span>
 
@@ -511,16 +559,12 @@
 <span class="sd">    &quot;&quot;&quot;</span>
 
     <span class="n">region_name</span> <span class="o">=</span> <span class="s2">&quot;us-west-2&quot;</span>
-    <span class="n">ACCESS_KEY</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">environ</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;ACCESS_KEY&#39;</span><span class="p">)</span>
-    <span class="n">SECRET_KEY</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">environ</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;SECRET_KEY&#39;</span><span class="p">)</span>
 
     <span class="c1"># Create a Secrets Manager client</span>
     <span class="n">session</span> <span class="o">=</span> <span class="n">boto3</span><span class="o">.</span><span class="n">session</span><span class="o">.</span><span class="n">Session</span><span class="p">()</span>
     <span class="n">client</span> <span class="o">=</span> <span class="n">session</span><span class="o">.</span><span class="n">client</span><span class="p">(</span>
         <span class="n">service_name</span><span class="o">=</span><span class="s1">&#39;secretsmanager&#39;</span><span class="p">,</span>
         <span class="n">region_name</span><span class="o">=</span><span class="n">region_name</span><span class="p">,</span>
-        <span class="n">aws_access_key_id</span><span class="o">=</span><span class="n">ACCESS_KEY</span><span class="p">,</span>
-        <span class="n">aws_secret_access_key</span><span class="o">=</span><span class="n">SECRET_KEY</span><span class="p">,</span>
     <span class="p">)</span>
 
     <span class="c1"># In this sample we only handle the specific exceptions for the</span>
@@ -574,21 +618,29 @@
 
 
 <span class="k">def</span> <span class="nf">get_secret_name</span><span class="p">(</span><span class="n">env</span><span class="p">):</span>
-    <span class="k">for</span> <span class="n">e</span> <span class="ow">in</span> <span class="n">env</span><span class="p">:</span>
-        <span class="k">if</span> <span class="n">e</span> <span class="ow">in</span> <span class="p">(</span><span class="s2">&quot;-s&quot;</span><span class="p">,</span> <span class="s2">&quot;--staging&quot;</span><span class="p">,</span> <span class="s2">&quot;-staging&quot;</span><span class="p">):</span>
-            <span class="n">secret_name</span> <span class="o">=</span> <span class="s2">&quot;staging/smartsheet-data-sync/svc-api-token&quot;</span>
-            <span class="k">return</span><span class="p">(</span><span class="n">secret_name</span><span class="p">)</span>
-        <span class="k">elif</span> <span class="n">e</span> <span class="ow">in</span> <span class="p">(</span><span class="s2">&quot;-p&quot;</span><span class="p">,</span> <span class="s2">&quot;--prod&quot;</span><span class="p">,</span> <span class="s2">&quot;-prod&quot;</span><span class="p">):</span>
-            <span class="n">secret_name</span> <span class="o">=</span> <span class="s2">&quot;prod/smartsheet-data-sync/svc-api-token&quot;</span>
-            <span class="k">return</span><span class="p">(</span><span class="n">secret_name</span><span class="p">)</span>
-        <span class="k">elif</span> <span class="n">e</span> <span class="ow">in</span> <span class="p">(</span><span class="s2">&quot;-d&quot;</span><span class="p">,</span> <span class="s2">&quot;--debug&quot;</span><span class="p">,</span> <span class="s2">&quot;-debug&quot;</span><span class="p">):</span>
-            <span class="n">secret_name</span> <span class="o">=</span> <span class="s2">&quot;staging/smartsheet-data-sync/svc-api-token&quot;</span>
-            <span class="k">return</span><span class="p">(</span><span class="n">secret_name</span><span class="p">)</span>
-        <span class="k">else</span><span class="p">:</span>
-            <span class="n">logging</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="s2">&quot;Failed to set API Key from AWS Secrets&quot;</span><span class="p">)</span>
-            <span class="n">secret_name</span> <span class="o">=</span> <span class="s2">&quot;&quot;</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">env</span><span class="p">:</span>
+        <span class="n">msg</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="s2">&quot;Env must be type: str. Env was </span><span class="si">{}</span><span class="s2">&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">env</span><span class="p">)</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
+    <span class="k">elif</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">env</span><span class="p">,</span> <span class="nb">str</span><span class="p">):</span>
+        <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s2">&quot;Env is not type: str&quot;</span><span class="p">)</span>
+    <span class="k">elif</span> <span class="n">env</span> <span class="ow">not</span> <span class="ow">in</span> <span class="p">(</span><span class="s2">&quot;-d&quot;</span><span class="p">,</span> <span class="s2">&quot;--debug&quot;</span><span class="p">,</span> <span class="s2">&quot;-debug&quot;</span><span class="p">,</span> <span class="s2">&quot;-p&quot;</span><span class="p">,</span> <span class="s2">&quot;--prod&quot;</span><span class="p">,</span> <span class="s2">&quot;-prod&quot;</span><span class="p">,</span> <span class="s2">&quot;-s&quot;</span><span class="p">,</span>
+                     <span class="s2">&quot;--staging&quot;</span><span class="p">,</span> <span class="s2">&quot;-staging&quot;</span><span class="p">):</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+            <span class="s2">&quot;Invalid argument passed. Value passed was </span><span class="si">{}</span><span class="s2">&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">env</span><span class="p">)</span>
 
-    <span class="k">return</span> <span class="n">secret_name</span>
+    <span class="k">if</span> <span class="n">env</span> <span class="ow">in</span> <span class="p">(</span><span class="s2">&quot;-s&quot;</span><span class="p">,</span> <span class="s2">&quot;--staging&quot;</span><span class="p">,</span> <span class="s2">&quot;-staging&quot;</span><span class="p">):</span>
+        <span class="n">secret_name</span> <span class="o">=</span> <span class="s2">&quot;staging/smartsheet-data-sync/svc-api-token&quot;</span>
+        <span class="k">return</span> <span class="n">secret_name</span>
+    <span class="k">elif</span> <span class="n">env</span> <span class="ow">in</span> <span class="p">(</span><span class="s2">&quot;-p&quot;</span><span class="p">,</span> <span class="s2">&quot;--prod&quot;</span><span class="p">,</span> <span class="s2">&quot;-prod&quot;</span><span class="p">):</span>
+        <span class="n">secret_name</span> <span class="o">=</span> <span class="s2">&quot;prod/smartsheet-data-sync/svc-api-token&quot;</span>
+        <span class="k">return</span> <span class="n">secret_name</span>
+    <span class="k">elif</span> <span class="n">env</span> <span class="ow">in</span> <span class="p">(</span><span class="s2">&quot;-d&quot;</span><span class="p">,</span> <span class="s2">&quot;--debug&quot;</span><span class="p">,</span> <span class="s2">&quot;-debug&quot;</span><span class="p">):</span>
+        <span class="n">secret_name</span> <span class="o">=</span> <span class="s2">&quot;staging/smartsheet-data-sync/svc-api-token&quot;</span>
+        <span class="k">return</span> <span class="n">secret_name</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">logging</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="s2">&quot;Failed to set API Key from AWS Secrets&quot;</span><span class="p">)</span>
+        <span class="n">secret_name</span> <span class="o">=</span> <span class="s2">&quot;&quot;</span>
+        <span class="k">return</span> <span class="n">secret_name</span>
 </pre></div>
 
         </details>
@@ -605,7 +657,7 @@
                 <details>
             <summary>View Source</summary>
             <div class="codehilite"><pre><span></span><span class="k">def</span> <span class="nf">refresh_source_sheets</span><span class="p">(</span><span class="n">smartsheet_client</span><span class="p">,</span> <span class="n">sheet_ids</span><span class="p">,</span> <span class="n">minutes</span><span class="o">=</span><span class="mi">0</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;Creates a dict of source sheets. If minutes is defined, only gathers </span>
+    <span class="sd">&quot;&quot;&quot;Creates a dict of source sheets. If minutes is defined, only gathers</span>
 <span class="sd">       sheets modified since the minutes value. Otherwise pulls all sheets</span>
 <span class="sd">       from the workspaces.</span>
 
@@ -613,14 +665,27 @@
 <span class="sd">        smartsheet_client (client): Allows interaction with the Smartsheet API</span>
 <span class="sd">        sheet_ids (list): The list of Smartsheet sheet IDs to parse</span>
 <span class="sd">        minutes (int, optional): Number of minutes into the past that the API</span>
-<span class="sd">                                 should pull sheet and row data, if greater </span>
+<span class="sd">                                 should pull sheet and row data, if greater</span>
 <span class="sd">                                 than 0. Defaults to 0.</span>
 
 <span class="sd">    Returns:</span>
-<span class="sd">        source_sheets (list): The list of sheets, including row data for rows </span>
-<span class="sd">                              modified since the minutes value, if greater </span>
+<span class="sd">        source_sheets (list): The list of sheets, including row data for rows</span>
+<span class="sd">                              modified since the minutes value, if greater</span>
 <span class="sd">                              than 0</span>
 <span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">sheet_ids</span><span class="p">,</span> <span class="nb">list</span><span class="p">):</span>
+        <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s2">&quot;Sheet IDs must be a list of IDs&quot;</span><span class="p">)</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="nb">all</span><span class="p">(</span><span class="nb">isinstance</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="nb">int</span><span class="p">)</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">sheet_ids</span><span class="p">):</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;One or more values in the list are not type: int&quot;</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">minutes</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">minutes</span><span class="p">,</span> <span class="nb">int</span><span class="p">):</span>
+        <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s2">&quot;Minutes must be type: int&quot;</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">minutes</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="n">minutes</span> <span class="o">&lt;</span> <span class="mi">0</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Minutes must be &gt;= zero&quot;</span><span class="p">)</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">smartsheet_client</span><span class="p">,</span> <span class="n">smartsheet</span><span class="o">.</span><span class="n">Smartsheet</span><span class="p">):</span>
+        <span class="n">msg</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="s2">&quot;Smartsheet Client must be type: smartsheet.Smartsheet, not&quot;</span>
+                  <span class="s2">&quot; </span><span class="si">{}</span><span class="s2">&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="nb">type</span><span class="p">(</span><span class="n">smartsheet_client</span><span class="p">))</span>
+        <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
+
     <span class="n">source_sheets</span> <span class="o">=</span> <span class="p">[]</span>
     <span class="k">if</span> <span class="n">minutes</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
         <span class="n">_</span><span class="p">,</span> <span class="n">modified_since</span> <span class="o">=</span> <span class="n">get_timestamp</span><span class="p">(</span><span class="n">minutes</span><span class="p">)</span>
@@ -630,7 +695,7 @@
                 <span class="n">Sheets</span><span class="o">.</span><span class="n">get_sheet</span><span class="p">(</span>
                     <span class="n">sheet_id</span><span class="p">,</span> <span class="n">rows_modified_since</span><span class="o">=</span><span class="n">modified_since</span><span class="p">)</span>
             <span class="n">source_sheets</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">sheet</span><span class="p">)</span>
-            <span class="n">logging</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">&quot;Loading Sheet ID: </span><span class="si">{}</span><span class="s2"> | &quot;</span>
+            <span class="n">logging</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">&quot;Loaded Sheet ID: </span><span class="si">{}</span><span class="s2"> | &quot;</span>
                           <span class="s2">&quot;Sheet Name: </span><span class="si">{}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">sheet</span><span class="o">.</span><span class="n">id</span><span class="p">,</span> <span class="n">sheet</span><span class="o">.</span><span class="n">name</span><span class="p">))</span>
     <span class="k">elif</span> <span class="n">minutes</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
         <span class="k">for</span> <span class="n">sheet_id</span> <span class="ow">in</span> <span class="n">sheet_ids</span><span class="p">:</span>
@@ -638,18 +703,15 @@
             <span class="n">sheet</span> <span class="o">=</span> <span class="n">smartsheet_client</span><span class="o">.</span>\
                 <span class="n">Sheets</span><span class="o">.</span><span class="n">get_sheet</span><span class="p">(</span><span class="n">sheet_id</span><span class="p">)</span>
             <span class="n">source_sheets</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">sheet</span><span class="p">)</span>
-            <span class="n">logging</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">&quot;Loading Sheet ID: </span><span class="si">{}</span><span class="s2"> | &quot;</span>
+            <span class="n">logging</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">&quot;Loaded Sheet ID: </span><span class="si">{}</span><span class="s2"> | &quot;</span>
                           <span class="s2">&quot;Sheet Name: </span><span class="si">{}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">sheet</span><span class="o">.</span><span class="n">id</span><span class="p">,</span> <span class="n">sheet</span><span class="o">.</span><span class="n">name</span><span class="p">))</span>
-    <span class="k">else</span><span class="p">:</span>
-        <span class="n">msg</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="s2">&quot;Invalid value for minutes. Value was </span><span class="si">{}</span><span class="s2">&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">minutes</span><span class="p">)</span>
-        <span class="n">logging</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
 
     <span class="k">return</span> <span class="n">source_sheets</span>
 </pre></div>
 
         </details>
 
-            <div class="docstring"><p>Creates a dict of source sheets. If minutes is defined, only gathers 
+            <div class="docstring"><p>Creates a dict of source sheets. If minutes is defined, only gathers
    sheets modified since the minutes value. Otherwise pulls all sheets
    from the workspaces.</p>
 
@@ -659,15 +721,15 @@
 <li><strong>smartsheet_client (client):</strong>  Allows interaction with the Smartsheet API</li>
 <li><strong>sheet_ids (list):</strong>  The list of Smartsheet sheet IDs to parse</li>
 <li><strong>minutes (int, optional):</strong>  Number of minutes into the past that the API
-should pull sheet and row data, if greater 
+should pull sheet and row data, if greater
 than 0. Defaults to 0.</li>
 </ul>
 
 <h6 id="returns">Returns</h6>
 
 <blockquote>
-  <p>source_sheets (list): The list of sheets, including row data for rows 
-                        modified since the minutes value, if greater 
+  <p>source_sheets (list): The list of sheets, including row data for rows
+                        modified since the minutes value, if greater
                         than 0</p>
 </blockquote>
 </div>
@@ -714,10 +776,19 @@ than 0. Defaults to 0.</li>
     <span class="c1">#   &quot;Predecessors&quot;: &quot;38FS +1w&quot;, # type: str</span>
     <span class="c1">#   &quot;Summary&quot;: &quot;False&quot; # type: str</span>
     <span class="c1">#       }</span>
-    <span class="k">if</span> <span class="n">source_sheets</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
-        <span class="k">raise</span> <span class="ne">ValueError</span>
-    <span class="k">elif</span> <span class="n">columns</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
-        <span class="k">raise</span> <span class="ne">ValueError</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">source_sheets</span><span class="p">,</span> <span class="nb">list</span><span class="p">):</span>
+        <span class="n">msg</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="s2">&quot;Source sheets should be type: list, not </span><span class="si">{}</span><span class="s2">&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>
+            <span class="nb">type</span><span class="p">(</span><span class="n">source_sheets</span><span class="p">))</span>
+        <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">columns</span><span class="p">,</span> <span class="nb">list</span><span class="p">):</span>
+        <span class="n">msg</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="s2">&quot;Columns should be type: list, not </span><span class="si">{}</span><span class="s2">&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="nb">type</span><span class="p">(</span><span class="n">columns</span><span class="p">))</span>
+        <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">minutes</span><span class="p">,</span> <span class="nb">int</span><span class="p">):</span>
+        <span class="n">msg</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="s2">&quot;Minutes should be type: int, not </span><span class="si">{}</span><span class="s2">&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="nb">type</span><span class="p">(</span><span class="n">minutes</span><span class="p">))</span>
+        <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">minutes</span> <span class="o">&lt;</span> <span class="mi">0</span><span class="p">:</span>
+        <span class="n">msg</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="s2">&quot;Minutes should be &gt;= 0, not </span><span class="si">{}</span><span class="s2">&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">minutes</span><span class="p">)</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
 
     <span class="c1"># Create the empty dict we&#39;ll pass back</span>
     <span class="n">all_row_data</span> <span class="o">=</span> <span class="p">{}</span>
@@ -848,20 +919,10 @@ row data.</li>
 <span class="sd">        dict: A nested set of dictionaries</span>
 <span class="sd">        none: There are no sheets to update.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
-    <span class="c1"># TODO: Write a test to validate the dict.</span>
-    <span class="c1"># 7637702645442436,  (Sheet ID, int)</span>
-    <span class="c1"># {</span>
-    <span class="c1">#     &quot;sheet_name&quot;: &quot;Cloudwatch: Distribution Project Plan&quot;, # type: str</span>
-    <span class="c1">#     &quot;row_data&quot;: {  # type: dict</span>
-    <span class="c1">#         4733217466279812: { (Row ID, int)</span>
-    <span class="c1">#             &quot;column_id&quot;: 2745267022784388, (int)</span>
-    <span class="c1">#             &quot;uuid&quot;: &quot;7637702645442436-4733217466279812-</span>
-    <span class="c1">#                      2745267022784388-202105112340380000&quot; (str)</span>
-    <span class="c1">#         }</span>
-    <span class="c1">#     }</span>
-    <span class="c1"># }</span>
-    <span class="k">if</span> <span class="n">source_sheets</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
-        <span class="k">raise</span> <span class="ne">ValueError</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">source_sheets</span><span class="p">,</span> <span class="nb">list</span><span class="p">):</span>
+        <span class="n">msg</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="s2">&quot;Source Sheets should be type: list not type </span><span class="si">{}</span><span class="s2">&quot;</span>
+                  <span class="s2">&quot;&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="nb">type</span><span class="p">(</span><span class="n">source_sheets</span><span class="p">))</span>
+        <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
 
     <span class="c1"># Create an empty dict of sheets to update</span>
     <span class="n">sheets_to_update</span> <span class="o">=</span> <span class="p">{}</span>
@@ -955,22 +1016,49 @@ row data.</li>
 
 
                 </section>
+                <section id="get_jira_index_sheet">
+                            <div class="attr function"><a class="headerlink" href="#get_jira_index_sheet">#&nbsp;&nbsp</a>
+
+        
+            <span class="def">def</span>
+            <span class="name">get_jira_index_sheet</span><span class="signature">(smartsheet_client, index_sheet=5786250381682564)</span>:
+    </div>
+
+                <details>
+            <summary>View Source</summary>
+            <div class="codehilite"><pre><span></span><span class="k">def</span> <span class="nf">get_jira_index_sheet</span><span class="p">(</span><span class="n">smartsheet_client</span><span class="p">,</span> <span class="n">index_sheet</span><span class="o">=</span><span class="n">dev_jira_idx_sheet</span><span class="p">):</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">smartsheet_client</span><span class="p">,</span> <span class="n">smartsheet</span><span class="o">.</span><span class="n">Smartsheet</span><span class="p">):</span>
+        <span class="n">msg</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="s2">&quot;Smartsheet Client must be type: smartsheet.Smartsheet, &quot;</span>
+                  <span class="s2">&quot;not type: </span><span class="si">{}</span><span class="s2">&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="nb">type</span><span class="p">(</span><span class="n">smartsheet_client</span><span class="p">))</span>
+        <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
+    <span class="n">index_sheet</span> <span class="o">=</span> <span class="n">smartsheet_client</span><span class="o">.</span><span class="n">Sheets</span><span class="o">.</span><span class="n">get_sheet</span><span class="p">(</span><span class="n">index_sheet</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">index_sheet</span>
+</pre></div>
+
+        </details>
+
+    
+
+                </section>
                 <section id="load_jira_index">
                             <div class="attr function"><a class="headerlink" href="#load_jira_index">#&nbsp;&nbsp</a>
 
         
             <span class="def">def</span>
-            <span class="name">load_jira_index</span><span class="signature">(smartsheet_client)</span>:
+            <span class="name">load_jira_index</span><span class="signature">(smartsheet_client, index_sheet=5786250381682564)</span>:
     </div>
 
                 <details>
             <summary>View Source</summary>
-            <div class="codehilite"><pre><span></span><span class="k">def</span> <span class="nf">load_jira_index</span><span class="p">(</span><span class="n">smartsheet_client</span><span class="p">):</span>
+            <div class="codehilite"><pre><span></span><span class="k">def</span> <span class="nf">load_jira_index</span><span class="p">(</span><span class="n">smartsheet_client</span><span class="p">,</span> <span class="n">index_sheet</span><span class="o">=</span><span class="n">dev_jira_idx_sheet</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;Create indexes on the Jira index rows. Pulls from the Smartsheet API</span>
 <span class="sd">       every time to get the most up-to-date version of the sheet data.</span>
 
 <span class="sd">    Args:</span>
 <span class="sd">        smartsheet_client (Object): The Smartsheet client to query the API</span>
+
+<span class="sd">    Raises:</span>
+<span class="sd">        TypeError: Validates smartsheet_client is a Smartsheet Client object.</span>
 
 <span class="sd">    Returns:</span>
 <span class="sd">        sheet: A Smartsheet Sheet object that includes all data for the Jira</span>
@@ -980,7 +1068,13 @@ row data.</li>
 <span class="sd">              row ID as the value.</span>
 
 <span class="sd">    &quot;&quot;&quot;</span>
-    <span class="n">jira_index_sheet</span> <span class="o">=</span> <span class="n">smartsheet_client</span><span class="o">.</span><span class="n">Sheets</span><span class="o">.</span><span class="n">get_sheet</span><span class="p">(</span><span class="n">jira_idx_sheet</span><span class="p">)</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">smartsheet_client</span><span class="p">,</span> <span class="n">smartsheet</span><span class="o">.</span><span class="n">Smartsheet</span><span class="p">):</span>
+        <span class="n">msg</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="s2">&quot;Smartsheet Client must be type: smartsheet.Smartsheet, &quot;</span>
+                  <span class="s2">&quot;not type: </span><span class="si">{}</span><span class="s2">&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="nb">type</span><span class="p">(</span><span class="n">smartsheet_client</span><span class="p">))</span>
+        <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
+
+    <span class="n">jira_index_sheet</span> <span class="o">=</span> <span class="n">get_jira_index_sheet</span><span class="p">(</span>
+        <span class="n">smartsheet_client</span><span class="p">,</span> <span class="n">index_sheet</span><span class="p">)</span>
     <span class="n">msg</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="s2">&quot;</span><span class="si">{}</span><span class="s2"> rows loaded from sheet ID: </span><span class="si">{}</span><span class="s2"> | Sheet name: </span><span class="si">{}</span><span class="s2">&quot;</span>
               <span class="s2">&quot;&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">jira_index_sheet</span><span class="o">.</span><span class="n">rows</span><span class="p">),</span> <span class="n">jira_index_sheet</span><span class="o">.</span><span class="n">id</span><span class="p">,</span>
                          <span class="n">jira_index_sheet</span><span class="o">.</span><span class="n">name</span><span class="p">)</span>
@@ -1018,6 +1112,12 @@ row data.</li>
 <li><strong>smartsheet_client (Object):</strong>  The Smartsheet client to query the API</li>
 </ul>
 
+<h6 id="raises">Raises</h6>
+
+<ul>
+<li><strong>TypeError:</strong>  Validates smartsheet_client is a Smartsheet Client object.</li>
+</ul>
+
 <h6 id="returns">Returns</h6>
 
 <blockquote>
@@ -1053,6 +1153,10 @@ row data.</li>
 <span class="sd">        dict: jira_sub_index in the form of Jira Ticket: [UUID(s)] (list)</span>
 <span class="sd">        dict: project_sub_index in the form of UUID: Jira Ticket (str)</span>
 <span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">project_data</span><span class="p">,</span> <span class="nb">dict</span><span class="p">):</span>
+        <span class="n">msg</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="s2">&quot;Project data must be type: dict not type: </span><span class="si">{}</span><span class="s2">.&quot;</span>
+                  <span class="s2">&quot;&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="nb">type</span><span class="p">(</span><span class="n">project_data</span><span class="p">))</span>
+        <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
 
     <span class="n">jira_sub_index</span> <span class="o">=</span> <span class="n">defaultdict</span><span class="p">(</span><span class="nb">list</span><span class="p">)</span>
     <span class="n">project_sub_index</span> <span class="o">=</span> <span class="n">defaultdict</span><span class="p">(</span><span class="nb">list</span><span class="p">)</span>
@@ -1101,12 +1205,19 @@ pulled from the API.</li>
 
         
             <span class="def">def</span>
-            <span class="name">get_all_sheet_ids</span><span class="signature">(smartsheet_client, minutes)</span>:
+            <span class="name">get_all_sheet_ids</span><span class="signature">(
+    smartsheet_client,
+    minutes,
+    workspace_id=[2618107878500228],
+    index_sheet=5786250381682564
+)</span>:
     </div>
 
                 <details>
             <summary>View Source</summary>
-            <div class="codehilite"><pre><span></span><span class="k">def</span> <span class="nf">get_all_sheet_ids</span><span class="p">(</span><span class="n">smartsheet_client</span><span class="p">,</span> <span class="n">minutes</span><span class="p">):</span>
+            <div class="codehilite"><pre><span></span><span class="k">def</span> <span class="nf">get_all_sheet_ids</span><span class="p">(</span><span class="n">smartsheet_client</span><span class="p">,</span> <span class="n">minutes</span><span class="p">,</span>
+                      <span class="n">workspace_id</span><span class="o">=</span><span class="n">dev_workspace_id</span><span class="p">,</span>
+                      <span class="n">index_sheet</span><span class="o">=</span><span class="n">dev_jira_idx_sheet</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;Get all the sheet IDs from every sheet in every folder, subfolder and</span>
 <span class="sd">       workspace as defined in the workspace_id.</span>
 
@@ -1117,6 +1228,16 @@ pulled from the API.</li>
 <span class="sd">    Returns:</span>
 <span class="sd">        list: A list of all sheet IDs across every workspace</span>
 <span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">smartsheet_client</span><span class="p">,</span> <span class="n">smartsheet</span><span class="o">.</span><span class="n">Smartsheet</span><span class="p">):</span>
+        <span class="n">msg</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="s2">&quot;Smartsheet Client must be type: smartsheet.Smartsheet, &quot;</span>
+                  <span class="s2">&quot;not type: </span><span class="si">{}</span><span class="s2">&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="nb">type</span><span class="p">(</span><span class="n">smartsheet_client</span><span class="p">))</span>
+        <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">minutes</span><span class="p">,</span> <span class="nb">int</span><span class="p">):</span>
+        <span class="n">msg</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="s2">&quot;Minutes should be type: int, not </span><span class="si">{}</span><span class="s2">&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="nb">type</span><span class="p">(</span><span class="n">minutes</span><span class="p">))</span>
+        <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">minutes</span> <span class="o">&lt;</span> <span class="mi">0</span><span class="p">:</span>
+        <span class="n">msg</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="s2">&quot;Minutes should be &gt;= 0, not </span><span class="si">{}</span><span class="s2">&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">minutes</span><span class="p">)</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
 
     <span class="c1"># Get the workspace Smartsheet object from the workspace_id</span>
     <span class="c1"># configured in our variables.</span>
@@ -1167,10 +1288,12 @@ pulled from the API.</li>
     <span class="c1"># Don&#39;t include the JIRA index sheet as</span>
     <span class="c1"># part of the sheet collection, if present.</span>
     <span class="k">try</span><span class="p">:</span>
-        <span class="n">sheet_ids</span><span class="o">.</span><span class="n">remove</span><span class="p">(</span><span class="n">jira_idx_sheet</span><span class="p">)</span>
+        <span class="n">sheet_ids</span><span class="o">.</span><span class="n">remove</span><span class="p">(</span><span class="n">index_sheet</span><span class="p">)</span>
+        <span class="n">msg</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="s2">&quot;</span><span class="si">{}</span><span class="s2"> removed from Sheet ID list&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">index_sheet</span><span class="p">)</span>
+        <span class="n">logging</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
     <span class="k">except</span> <span class="ne">ValueError</span><span class="p">:</span>
         <span class="n">logging</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span>
-            <span class="s2">&quot;</span><span class="si">{}</span><span class="s2"> not found in Sheet IDs list&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">jira_idx_sheet</span><span class="p">))</span>
+            <span class="s2">&quot;</span><span class="si">{}</span><span class="s2"> not found in Sheet IDs list&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">index_sheet</span><span class="p">))</span>
 
     <span class="k">return</span> <span class="n">sheet_ids</span>
 </pre></div>
@@ -1221,16 +1344,12 @@ with the API</li>
 <span class="sd">    &quot;&quot;&quot;</span>
 
     <span class="n">region_name</span> <span class="o">=</span> <span class="s2">&quot;us-west-2&quot;</span>
-    <span class="n">ACCESS_KEY</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">environ</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;ACCESS_KEY&#39;</span><span class="p">)</span>
-    <span class="n">SECRET_KEY</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">environ</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;SECRET_KEY&#39;</span><span class="p">)</span>
 
     <span class="c1"># Create a Secrets Manager client</span>
     <span class="n">session</span> <span class="o">=</span> <span class="n">boto3</span><span class="o">.</span><span class="n">session</span><span class="o">.</span><span class="n">Session</span><span class="p">()</span>
     <span class="n">client</span> <span class="o">=</span> <span class="n">session</span><span class="o">.</span><span class="n">client</span><span class="p">(</span>
         <span class="n">service_name</span><span class="o">=</span><span class="s1">&#39;secretsmanager&#39;</span><span class="p">,</span>
         <span class="n">region_name</span><span class="o">=</span><span class="n">region_name</span><span class="p">,</span>
-        <span class="n">aws_access_key_id</span><span class="o">=</span><span class="n">ACCESS_KEY</span><span class="p">,</span>
-        <span class="n">aws_secret_access_key</span><span class="o">=</span><span class="n">SECRET_KEY</span><span class="p">,</span>
     <span class="p">)</span>
 
     <span class="c1"># In this sample we only handle the specific exceptions for the</span>
@@ -1317,21 +1436,29 @@ with the API</li>
                 <details>
             <summary>View Source</summary>
             <div class="codehilite"><pre><span></span><span class="k">def</span> <span class="nf">get_secret_name</span><span class="p">(</span><span class="n">env</span><span class="p">):</span>
-    <span class="k">for</span> <span class="n">e</span> <span class="ow">in</span> <span class="n">env</span><span class="p">:</span>
-        <span class="k">if</span> <span class="n">e</span> <span class="ow">in</span> <span class="p">(</span><span class="s2">&quot;-s&quot;</span><span class="p">,</span> <span class="s2">&quot;--staging&quot;</span><span class="p">,</span> <span class="s2">&quot;-staging&quot;</span><span class="p">):</span>
-            <span class="n">secret_name</span> <span class="o">=</span> <span class="s2">&quot;staging/smartsheet-data-sync/svc-api-token&quot;</span>
-            <span class="k">return</span><span class="p">(</span><span class="n">secret_name</span><span class="p">)</span>
-        <span class="k">elif</span> <span class="n">e</span> <span class="ow">in</span> <span class="p">(</span><span class="s2">&quot;-p&quot;</span><span class="p">,</span> <span class="s2">&quot;--prod&quot;</span><span class="p">,</span> <span class="s2">&quot;-prod&quot;</span><span class="p">):</span>
-            <span class="n">secret_name</span> <span class="o">=</span> <span class="s2">&quot;prod/smartsheet-data-sync/svc-api-token&quot;</span>
-            <span class="k">return</span><span class="p">(</span><span class="n">secret_name</span><span class="p">)</span>
-        <span class="k">elif</span> <span class="n">e</span> <span class="ow">in</span> <span class="p">(</span><span class="s2">&quot;-d&quot;</span><span class="p">,</span> <span class="s2">&quot;--debug&quot;</span><span class="p">,</span> <span class="s2">&quot;-debug&quot;</span><span class="p">):</span>
-            <span class="n">secret_name</span> <span class="o">=</span> <span class="s2">&quot;staging/smartsheet-data-sync/svc-api-token&quot;</span>
-            <span class="k">return</span><span class="p">(</span><span class="n">secret_name</span><span class="p">)</span>
-        <span class="k">else</span><span class="p">:</span>
-            <span class="n">logging</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="s2">&quot;Failed to set API Key from AWS Secrets&quot;</span><span class="p">)</span>
-            <span class="n">secret_name</span> <span class="o">=</span> <span class="s2">&quot;&quot;</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">env</span><span class="p">:</span>
+        <span class="n">msg</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="s2">&quot;Env must be type: str. Env was </span><span class="si">{}</span><span class="s2">&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">env</span><span class="p">)</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
+    <span class="k">elif</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">env</span><span class="p">,</span> <span class="nb">str</span><span class="p">):</span>
+        <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s2">&quot;Env is not type: str&quot;</span><span class="p">)</span>
+    <span class="k">elif</span> <span class="n">env</span> <span class="ow">not</span> <span class="ow">in</span> <span class="p">(</span><span class="s2">&quot;-d&quot;</span><span class="p">,</span> <span class="s2">&quot;--debug&quot;</span><span class="p">,</span> <span class="s2">&quot;-debug&quot;</span><span class="p">,</span> <span class="s2">&quot;-p&quot;</span><span class="p">,</span> <span class="s2">&quot;--prod&quot;</span><span class="p">,</span> <span class="s2">&quot;-prod&quot;</span><span class="p">,</span> <span class="s2">&quot;-s&quot;</span><span class="p">,</span>
+                     <span class="s2">&quot;--staging&quot;</span><span class="p">,</span> <span class="s2">&quot;-staging&quot;</span><span class="p">):</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+            <span class="s2">&quot;Invalid argument passed. Value passed was </span><span class="si">{}</span><span class="s2">&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">env</span><span class="p">)</span>
 
-    <span class="k">return</span> <span class="n">secret_name</span>
+    <span class="k">if</span> <span class="n">env</span> <span class="ow">in</span> <span class="p">(</span><span class="s2">&quot;-s&quot;</span><span class="p">,</span> <span class="s2">&quot;--staging&quot;</span><span class="p">,</span> <span class="s2">&quot;-staging&quot;</span><span class="p">):</span>
+        <span class="n">secret_name</span> <span class="o">=</span> <span class="s2">&quot;staging/smartsheet-data-sync/svc-api-token&quot;</span>
+        <span class="k">return</span> <span class="n">secret_name</span>
+    <span class="k">elif</span> <span class="n">env</span> <span class="ow">in</span> <span class="p">(</span><span class="s2">&quot;-p&quot;</span><span class="p">,</span> <span class="s2">&quot;--prod&quot;</span><span class="p">,</span> <span class="s2">&quot;-prod&quot;</span><span class="p">):</span>
+        <span class="n">secret_name</span> <span class="o">=</span> <span class="s2">&quot;prod/smartsheet-data-sync/svc-api-token&quot;</span>
+        <span class="k">return</span> <span class="n">secret_name</span>
+    <span class="k">elif</span> <span class="n">env</span> <span class="ow">in</span> <span class="p">(</span><span class="s2">&quot;-d&quot;</span><span class="p">,</span> <span class="s2">&quot;--debug&quot;</span><span class="p">,</span> <span class="s2">&quot;-debug&quot;</span><span class="p">):</span>
+        <span class="n">secret_name</span> <span class="o">=</span> <span class="s2">&quot;staging/smartsheet-data-sync/svc-api-token&quot;</span>
+        <span class="k">return</span> <span class="n">secret_name</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">logging</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="s2">&quot;Failed to set API Key from AWS Secrets&quot;</span><span class="p">)</span>
+        <span class="n">secret_name</span> <span class="o">=</span> <span class="s2">&quot;&quot;</span>
+        <span class="k">return</span> <span class="n">secret_name</span>
 </pre></div>
 
         </details>

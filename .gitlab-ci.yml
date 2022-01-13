@@ -11,84 +11,68 @@ cache:
   paths:
   - ".cache/pip"
   - venv/
+  - "~/.local/bin"
+
+before_script:
+    - python3 -V  # Print out python version for debugging
+    - python3 -m pip install virtualenv
+    - virtualenv venv
+    - source venv/bin/activate
+    - python3 -m pip install -r requirements.txt
+
 
 stages:
-- prep
 - lint
 - pages
 - test
 - deploy
-# - pages
 
-prep:
-  stage: prep
-  script:
-    - python -V  # Print out python version for debugging
-    - pip install virtualenv
-    - virtualenv venv
-    - source venv/bin/activate
-    - pip install -r requirements.txt
 
 flake8:
   stage: lint
-  needs: ["prep"]
   script:
-    - pip install flake8
+    - export PATH=$PATH:~/.local/bin
+    # - python3 -m pip install flake8
+    - python3 -m pip install -r test_requirements.txt
     - flake8 --max-line-length=80 --per-file-ignores="__init__.py:F401" ./*.py
     - flake8 --max-line-length=80 --per-file-ignores="__init__.py:F401" ./uuid_module/*.py
 
-coverage:
-  stage: lint
-  needs: ["prep"]
-  script:
-    - pip install -r requirements.txt
-    - pytest --cov-config=.coveragerc --cov=./ -vvv
-    - coverage xml --include="./**" -o coverage.xml
-  artifacts:
-    paths:
-      - coverage.xml
-    reports:
-      junit:
-        - coverage.xml
-  coverage: '/^TOTAL.+?(\d+\%)$/'
+# coverage:
+#   stage: lint
+#   # image: python:3.7
+#   tags:
+#     - copilot
+#   script:
+#     - export PATH=$PATH:~/.local/bin
+#     - python3 -m pip install -r test_requirements.txt
+#     - pytest --cov-config=.coveragerc --cov=./ -vvv
+#     - coverage xml --include="./**" -o coverage.xml
+#   artifacts:
+#     paths:
+#       - coverage.xml
+#     reports:
+#       junit:
+#         - coverage.xml
+#   coverage: '/^TOTAL.+?(\d+\%)$/'
 
 sast:
   stage: test
 include:
   - template: Security/SAST.gitlab-ci.yml
 
-pages:
-  stage: pages
-  needs: ["coverage"]
-  script:
-  - pip install pdoc
-  - pdoc -o docs/ -d google uuid_module
-  - mkdir ./public
-  - mv ./docs/* ./public/
-  artifacts:
-    paths:
-    - public
+# pages:
+#   stage: pages
+#   needs: ["coverage"]
+#   script:
+#   - pip install pdoc
+#   - pdoc -o docs/ -d google uuid_module
+#   - mkdir ./public
+#   - mv ./docs/* ./public/
+#   artifacts:
+#     paths:
+#     - public
   # rules:
   # - if: "$CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH"
-
-# deploy_branch:
-#   stage: deploy
-#   image: ubuntu:latest
-#   tags:
-#     - copilot
-#   script:
-#     - export AWS_REGION=$AWS_REGION
-#     - export AWS_ACCESS_KEY_ID=$ACCESS_KEY
-#     - export AWS_SECRET_ACCESS_KEY=$SECRET_KEY
-#     - copilot svc deploy --name smartsheet-data-sync-backend --env dev
-#     - docker rm -v $(docker ps -a -q -f status=exited) || true
-#     - docker rmi $(docker images -f "dangling=true" -q) || true
-#   environment:
-#     name: Dev
-#   except:
-#     - staging
-#     - main
-#     - debug
 
 deploy_staging:
   stage: deploy
@@ -96,9 +80,6 @@ deploy_staging:
   tags:
     - copilot
   script:
-    # - export AWS_REGION=$AWS_REGION
-    # - export AWS_ACCESS_KEY_ID=$ACCESS_KEY
-    # - export AWS_SECRET_ACCESS_KEY=$SECRET_KEY
     - copilot svc deploy --name smartsheet-data-sync-backend --env staging
     - docker rm -v $(docker ps -a -q -f status=exited) || true
     - docker rmi $(docker images -f "dangling=true" -q) || true
@@ -113,9 +94,6 @@ deploy_prod:
   tags:
     - copilot
   script:
-    # - export AWS_REGION=$AWS_REGION
-    # - export AWS_ACCESS_KEY_ID=$ACCESS_KEY
-    # - export AWS_SECRET_ACCESS_KEY=$SECRET_KEY
     - copilot svc deploy --name smartsheet-data-sync-backend --env prod
     - docker rm -v $(docker ps -a -q -f status=exited) || true
     - docker rmi $(docker images -f "dangling=true" -q) || true
@@ -123,8 +101,3 @@ deploy_prod:
     name: Production
   only:
     - main
-
-# # after_script:
-# #   - docker build -t registry.gitlab-dev.video.xarth.tv/cmpbad/smartsheet-data-sync-gitlab .
-# #   - docker push registry.gitlab-dev.video.xarth.tv/cmpbad/smartsheet-data-sync-gitlab
-# #   - main
