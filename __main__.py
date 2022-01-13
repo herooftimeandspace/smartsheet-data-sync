@@ -137,6 +137,7 @@ def set_logging_config(env):
 # Initialize client. Uses the API token in the environment variable
 # "SMARTSHEET_ACCESS_TOKEN", which is pulled from the AWS Secrets API.
 env = sys.argv[1:]
+env = env[0]
 logging_config = set_logging_config(env)
 try:
     os.mkdir(log_location)
