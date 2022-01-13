@@ -28,8 +28,6 @@ start = time.time()
 cwd = os.path.dirname(os.path.abspath(__file__))
 log_location = os.path.join(cwd, log_location)
 
-# TODO: Remove for e in env and replace with if env
-
 
 def set_logging_config(env):
     if not isinstance(env, str):
@@ -63,76 +61,75 @@ def set_logging_config(env):
             'disable_existing_loggers': False
         },
     )
-    for e in env:
-        if e in ("-s", "--staging", "-staging"):
-            logging_config = dict(
-                version=1,
-                formatters={
-                    'f': {'format':
-                          "%(asctime)s - %(levelname)s - %(message)s"}
-                },
-                handlers={
-                    'docker': {
-                        'class': 'logging.StreamHandler',
-                        'formatter': 'f',
-                        'level': logging.INFO,
-                        'stream': 'ext://sys.stdout'
-                    }
-                },
-                root={
-                    'handlers': ['docker'],  # 'console', 'file'
+    if env in ("-s", "--staging", "-staging"):
+        logging_config = dict(
+            version=1,
+            formatters={
+                'f': {'format':
+                      "%(asctime)s - %(levelname)s - %(message)s"}
+            },
+            handlers={
+                'docker': {
+                    'class': 'logging.StreamHandler',
+                    'formatter': 'f',
+                    'level': logging.INFO,
+                    'stream': 'ext://sys.stdout'
+                }
+            },
+            root={
+                'handlers': ['docker'],  # 'console', 'file'
+                'level': logging.DEBUG,
+                'disable_existing_loggers': False
+            },
+        )
+    elif env in ("-p", "--prod", "-prod"):
+        logging_config = dict(
+            version=1,
+            formatters={
+                'f': {'format':
+                      "%(asctime)s - %(levelname)s - %(message)s"}
+            },
+            handlers={
+                'docker': {
+                    'class': 'logging.StreamHandler',
+                    'formatter': 'f',
+                    'level': logging.INFO,
+                    'stream': 'ext://sys.stdout'
+                }
+            },
+            root={
+                'handlers': ['docker'],  # 'console', 'file'
+                'level': logging.DEBUG,
+                'disable_existing_loggers': False
+            },
+        )
+    elif env in ("-d", "--debug", "-debug"):
+        logging_config = dict(
+            version=1,
+            formatters={
+                'f': {'format':
+                      "%(asctime)s - %(levelname)s - %(message)s"}
+            },
+            handlers={
+                'file': {
+                    'class': 'logging.FileHandler',
+                    'formatter': 'f',
                     'level': logging.DEBUG,
-                    'disable_existing_loggers': False
+                    'filename': log_location + module_log_name
                 },
-            )
-        elif e in ("-p", "--prod", "-prod"):
-            logging_config = dict(
-                version=1,
-                formatters={
-                    'f': {'format':
-                          "%(asctime)s - %(levelname)s - %(message)s"}
-                },
-                handlers={
-                    'docker': {
-                        'class': 'logging.StreamHandler',
-                        'formatter': 'f',
-                        'level': logging.INFO,
-                        'stream': 'ext://sys.stdout'
-                    }
-                },
-                root={
-                    'handlers': ['docker'],  # 'console', 'file'
+                'docker': {
+                    'class': 'logging.StreamHandler',
+                    'formatter': 'f',
                     'level': logging.DEBUG,
-                    'disable_existing_loggers': False
-                },
-            )
-        elif e in ("-d", "--debug", "-debug"):
-            logging_config = dict(
-                version=1,
-                formatters={
-                    'f': {'format':
-                          "%(asctime)s - %(levelname)s - %(message)s"}
-                },
-                handlers={
-                    'file': {
-                        'class': 'logging.FileHandler',
-                        'formatter': 'f',
-                        'level': logging.DEBUG,
-                        'filename': log_location + module_log_name
-                    },
-                    'docker': {
-                        'class': 'logging.StreamHandler',
-                        'formatter': 'f',
-                        'level': logging.DEBUG,
-                        'stream': 'ext://sys.stdout'
-                    }
-                },
-                root={
-                    'handlers': ['docker', 'file'],  # 'console', 'file'
-                    'level': logging.DEBUG,
-                    'disable_existing_loggers': False
-                },
-            )
+                    'stream': 'ext://sys.stdout'
+                }
+            },
+            root={
+                'handlers': ['docker', 'file'],  # 'console', 'file'
+                'level': logging.DEBUG,
+                'disable_existing_loggers': False
+            },
+        )
 
     return logging_config
 
