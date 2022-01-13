@@ -9,7 +9,6 @@ from logging.config import dictConfig
 import smartsheet
 from apscheduler.executors.pool import ProcessPoolExecutor, ThreadPoolExecutor
 from apscheduler.schedulers.background import BlockingScheduler
-from tests.test_build_data import jira_index_sheet
 
 from uuid_module.cell_link_sheet_data import write_uuid_cell_links
 # from uuid_module.cell_link_sheet_data import write_uuid_cell_links
@@ -17,8 +16,7 @@ from uuid_module.get_data import (get_all_row_data, get_all_sheet_ids,
                                   get_blank_uuids, get_secret, get_secret_name,
                                   get_sub_indexes, refresh_source_sheets)
 from uuid_module.helper import truncate
-from uuid_module.variables import (dev_jira_idx_sheet, dev_workspace_id,
-                                   log_location, minutes, module_log_name,
+from uuid_module.variables import (log_location, minutes, module_log_name,
                                    prod_jira_idx_sheet, prod_workspace_id,
                                    sheet_columns)
 from uuid_module.write_data import write_jira_index_cell_links, write_uuids
