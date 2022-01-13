@@ -54,6 +54,7 @@
             <div class="codehilite"><pre><span></span><span class="kn">import</span> <span class="nn">json</span>
 <span class="kn">import</span> <span class="nn">logging</span>
 <span class="kn">import</span> <span class="nn">re</span>
+<span class="kn">import</span> <span class="nn">smartsheet</span>
 
 <span class="kn">from</span> <span class="nn">uuid_module.helper</span> <span class="kn">import</span> <span class="p">(</span><span class="n">chunks</span><span class="p">,</span> <span class="n">get_cell_data</span><span class="p">,</span> <span class="n">get_cell_value</span><span class="p">,</span>
                                 <span class="n">get_column_map</span><span class="p">,</span> <span class="n">has_cell_link</span><span class="p">,</span> <span class="n">json_extract</span><span class="p">)</span>
@@ -81,18 +82,28 @@
 <span class="sd">        ValueError: If the project index data passed in is None,</span>
 <span class="sd">                    raises and logs an error.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">project_data_index</span><span class="p">,</span> <span class="nb">dict</span><span class="p">):</span>
+        <span class="n">msg</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="s2">&quot;Project data index must be type: dict, not&quot;</span>
+                  <span class="s2">&quot; </span><span class="si">{}</span><span class="s2">&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="nb">type</span><span class="p">(</span><span class="n">project_data_index</span><span class="p">))</span>
+        <span class="n">log_msg</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="s2">&quot;Project index data is None. Aborting the process for &quot;</span>
+                      <span class="s2">&quot;linking cells by UUID.&quot;</span><span class="p">)</span>
+        <span class="n">logging</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="n">log_msg</span><span class="p">)</span>
+        <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">source_sheets</span><span class="p">,</span> <span class="nb">list</span><span class="p">):</span>
+        <span class="n">msg</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="s2">&quot;Source sheets should be type: list, not </span><span class="si">{}</span><span class="s2">&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>
+            <span class="nb">type</span><span class="p">(</span><span class="n">source_sheets</span><span class="p">))</span>
+        <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">smartsheet_client</span><span class="p">,</span> <span class="n">smartsheet</span><span class="o">.</span><span class="n">Smartsheet</span><span class="p">):</span>
+        <span class="n">msg</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="s2">&quot;Smartsheet Client must be type: smartsheet.Smartsheet, not&quot;</span>
+                  <span class="s2">&quot; </span><span class="si">{}</span><span class="s2">&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="nb">type</span><span class="p">(</span><span class="n">smartsheet_client</span><span class="p">))</span>
+        <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
+
     <span class="c1"># dest_uuid = sheet_id, row_id where we create the cell links. Data is</span>
     <span class="c1"># pulled INTO this row with the cell link.</span>
 
     <span class="c1"># source_uuid = sheet_id, row_id where the data is coming FROM via</span>
     <span class="c1"># the cell link. source_uuid is located in the description column</span>
     <span class="c1"># of the uuid:row_data.</span>
-    <span class="k">if</span> <span class="n">project_data_index</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
-        <span class="n">msg</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="s2">&quot;Project index data is None. Aborting the process for &quot;</span>
-                  <span class="s2">&quot;linking cells by UUID.&quot;</span><span class="p">)</span>
-        <span class="n">logging</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
-        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
-
     <span class="k">for</span> <span class="n">dest_uuid</span><span class="p">,</span> <span class="n">row_data</span> <span class="ow">in</span> <span class="n">project_data_index</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
         <span class="n">rows_to_update</span> <span class="o">=</span> <span class="p">[]</span>
         <span class="n">sync_columns</span> <span class="o">=</span> <span class="kc">None</span>
@@ -429,18 +440,28 @@
 <span class="sd">        ValueError: If the project index data passed in is None,</span>
 <span class="sd">                    raises and logs an error.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">project_data_index</span><span class="p">,</span> <span class="nb">dict</span><span class="p">):</span>
+        <span class="n">msg</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="s2">&quot;Project data index must be type: dict, not&quot;</span>
+                  <span class="s2">&quot; </span><span class="si">{}</span><span class="s2">&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="nb">type</span><span class="p">(</span><span class="n">project_data_index</span><span class="p">))</span>
+        <span class="n">log_msg</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="s2">&quot;Project index data is None. Aborting the process for &quot;</span>
+                      <span class="s2">&quot;linking cells by UUID.&quot;</span><span class="p">)</span>
+        <span class="n">logging</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="n">log_msg</span><span class="p">)</span>
+        <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">source_sheets</span><span class="p">,</span> <span class="nb">list</span><span class="p">):</span>
+        <span class="n">msg</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="s2">&quot;Source sheets should be type: list, not </span><span class="si">{}</span><span class="s2">&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>
+            <span class="nb">type</span><span class="p">(</span><span class="n">source_sheets</span><span class="p">))</span>
+        <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">smartsheet_client</span><span class="p">,</span> <span class="n">smartsheet</span><span class="o">.</span><span class="n">Smartsheet</span><span class="p">):</span>
+        <span class="n">msg</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="s2">&quot;Smartsheet Client must be type: smartsheet.Smartsheet, not&quot;</span>
+                  <span class="s2">&quot; </span><span class="si">{}</span><span class="s2">&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="nb">type</span><span class="p">(</span><span class="n">smartsheet_client</span><span class="p">))</span>
+        <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
+
     <span class="c1"># dest_uuid = sheet_id, row_id where we create the cell links. Data is</span>
     <span class="c1"># pulled INTO this row with the cell link.</span>
 
     <span class="c1"># source_uuid = sheet_id, row_id where the data is coming FROM via</span>
     <span class="c1"># the cell link. source_uuid is located in the description column</span>
     <span class="c1"># of the uuid:row_data.</span>
-    <span class="k">if</span> <span class="n">project_data_index</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
-        <span class="n">msg</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="s2">&quot;Project index data is None. Aborting the process for &quot;</span>
-                  <span class="s2">&quot;linking cells by UUID.&quot;</span><span class="p">)</span>
-        <span class="n">logging</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
-        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
-
     <span class="k">for</span> <span class="n">dest_uuid</span><span class="p">,</span> <span class="n">row_data</span> <span class="ow">in</span> <span class="n">project_data_index</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
         <span class="n">rows_to_update</span> <span class="o">=</span> <span class="p">[]</span>
         <span class="n">sync_columns</span> <span class="o">=</span> <span class="kc">None</span>

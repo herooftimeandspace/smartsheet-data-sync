@@ -58,6 +58,7 @@
                         <details>
             <summary>View Source</summary>
             <div class="codehilite"><pre><span></span><span class="kn">import</span> <span class="nn">logging</span>
+<span class="kn">import</span> <span class="nn">smartsheet</span>
 <span class="kn">from</span> <span class="nn">collections</span> <span class="kn">import</span> <span class="n">defaultdict</span>
 <span class="kn">from</span> <span class="nn">uuid_module.helper</span> <span class="kn">import</span> <span class="n">get_cell_data</span><span class="p">,</span> <span class="n">has_cell_link</span>
 
@@ -65,7 +66,7 @@
 
 
 <span class="k">def</span> <span class="nf">build_linked_cell</span><span class="p">(</span><span class="n">jira_index_sheet</span><span class="p">,</span> <span class="n">jira_index_col_map</span><span class="p">,</span> <span class="n">dest_col_map</span><span class="p">,</span>
-                      <span class="n">idx_row_id</span><span class="p">,</span> <span class="n">colunn</span><span class="p">,</span> <span class="n">smartsheet_client</span><span class="p">):</span>
+                      <span class="n">idx_row_id</span><span class="p">,</span> <span class="n">column</span><span class="p">,</span> <span class="n">smartsheet_client</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;Helper function to build the Cell object and cell link properties</span>
 
 <span class="sd">    Args:</span>
@@ -76,7 +77,7 @@
 <span class="sd">        dest_col_map (dict): The column name:id map for the destination sheet</span>
 <span class="sd">        idx_row_id (str): The row ID in the Jira Index sheet where the cell</span>
 <span class="sd">                          link will pull data</span>
-<span class="sd">        colunn (str): The name of the column to write to in both sheets</span>
+<span class="sd">        column (str): The name of the column to write to in both sheets</span>
 <span class="sd">        smartsheet_client (Object): The Smartsheet client to interact</span>
 <span class="sd">                                    with the API</span>
 
@@ -84,13 +85,38 @@
 <span class="sd">        Cell: The cell object to be written back to the destination, with</span>
 <span class="sd">              link to the Jira Index Sheet.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">jira_index_sheet</span><span class="p">,</span> <span class="n">smartsheet</span><span class="o">.</span><span class="n">models</span><span class="o">.</span><span class="n">sheet</span><span class="o">.</span><span class="n">Sheet</span><span class="p">):</span>
+        <span class="n">msg</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="s2">&quot;Jira Index Sheet must be type: smartsheet.models.sheet, not&quot;</span>
+                  <span class="s2">&quot; </span><span class="si">{}</span><span class="s2">&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="nb">type</span><span class="p">(</span><span class="n">jira_index_sheet</span><span class="p">))</span>
+        <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">jira_index_col_map</span><span class="p">,</span> <span class="nb">dict</span><span class="p">):</span>
+        <span class="n">msg</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="s2">&quot;Jira Index column map must be type: dict, not&quot;</span>
+                  <span class="s2">&quot; </span><span class="si">{}</span><span class="s2">&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="nb">type</span><span class="p">(</span><span class="n">jira_index_col_map</span><span class="p">))</span>
+        <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">dest_col_map</span><span class="p">,</span> <span class="nb">dict</span><span class="p">):</span>
+        <span class="n">msg</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="s2">&quot;Destination column map must be type: dict, not&quot;</span>
+                  <span class="s2">&quot; </span><span class="si">{}</span><span class="s2">&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="nb">type</span><span class="p">(</span><span class="n">jira_index_sheet</span><span class="p">))</span>
+        <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">idx_row_id</span><span class="p">,</span> <span class="nb">str</span><span class="p">):</span>
+        <span class="n">msg</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="s2">&quot;Jira Index Row ID must be type: str, not&quot;</span>
+                  <span class="s2">&quot; </span><span class="si">{}</span><span class="s2">&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="nb">type</span><span class="p">(</span><span class="n">idx_row_id</span><span class="p">))</span>
+        <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">column</span><span class="p">,</span> <span class="nb">str</span><span class="p">):</span>
+        <span class="n">msg</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="s2">&quot;Column must be type: str, not&quot;</span>
+                  <span class="s2">&quot; </span><span class="si">{}</span><span class="s2">&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="nb">type</span><span class="p">(</span><span class="n">column</span><span class="p">))</span>
+        <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">smartsheet_client</span><span class="p">,</span> <span class="n">smartsheet</span><span class="o">.</span><span class="n">Smartsheet</span><span class="p">):</span>
+        <span class="n">msg</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="s2">&quot;Smartsheet Client must be type: smartsheet.Smartsheet, not&quot;</span>
+                  <span class="s2">&quot; </span><span class="si">{}</span><span class="s2">&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="nb">type</span><span class="p">(</span><span class="n">smartsheet_client</span><span class="p">))</span>
+        <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
+
     <span class="n">new_cell_link</span> <span class="o">=</span> <span class="n">smartsheet_client</span><span class="o">.</span><span class="n">models</span><span class="o">.</span><span class="n">CellLink</span><span class="p">()</span>
     <span class="n">new_cell_link</span><span class="o">.</span><span class="n">sheet_id</span> <span class="o">=</span> <span class="n">jira_index_sheet</span><span class="o">.</span><span class="n">id</span>
     <span class="n">new_cell_link</span><span class="o">.</span><span class="n">row_id</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">idx_row_id</span><span class="p">)</span>
-    <span class="n">new_cell_link</span><span class="o">.</span><span class="n">column_id</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">jira_index_col_map</span><span class="p">[</span><span class="n">colunn</span><span class="p">])</span>
+    <span class="n">new_cell_link</span><span class="o">.</span><span class="n">column_id</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">jira_index_col_map</span><span class="p">[</span><span class="n">column</span><span class="p">])</span>
 
     <span class="n">new_cell</span> <span class="o">=</span> <span class="n">smartsheet_client</span><span class="o">.</span><span class="n">models</span><span class="o">.</span><span class="n">Cell</span><span class="p">()</span>
-    <span class="n">new_cell</span><span class="o">.</span><span class="n">column_id</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">dest_col_map</span><span class="p">[</span><span class="n">colunn</span><span class="p">])</span>
+    <span class="n">new_cell</span><span class="o">.</span><span class="n">column_id</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">dest_col_map</span><span class="p">[</span><span class="n">column</span><span class="p">])</span>
     <span class="n">new_cell</span><span class="o">.</span><span class="n">value</span> <span class="o">=</span> <span class="n">smartsheet_client</span><span class="o">.</span><span class="n">models</span><span class="o">.</span><span class="n">ExplicitNull</span><span class="p">()</span>
     <span class="n">new_cell</span><span class="o">.</span><span class="n">link_in_from_cell</span> <span class="o">=</span> <span class="n">new_cell_link</span>
 
@@ -111,6 +137,11 @@
 <span class="sd">        dict: a list of destination sheet IDs and a list of</span>
 <span class="sd">              destination row IDs.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">project_data</span><span class="p">,</span> <span class="nb">dict</span><span class="p">):</span>
+        <span class="n">msg</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="s2">&quot;Project data must be type: dict, not&quot;</span>
+                  <span class="s2">&quot; </span><span class="si">{}</span><span class="s2">&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="nb">type</span><span class="p">(</span><span class="n">project_data</span><span class="p">))</span>
+        <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
+
     <span class="n">dest_sheet_index</span> <span class="o">=</span> <span class="n">defaultdict</span><span class="p">(</span><span class="nb">list</span><span class="p">)</span>
     <span class="c1"># dest_row_index = defaultdict(list)</span>
     <span class="k">for</span> <span class="n">uuid</span><span class="p">,</span> <span class="n">ticket</span> <span class="ow">in</span> <span class="n">project_data</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
@@ -147,6 +178,35 @@
 <span class="sd">        Row: If cells were appended to the row, returns the new row, otherwise</span>
 <span class="sd">             returns None.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">row</span><span class="p">,</span> <span class="n">smartsheet</span><span class="o">.</span><span class="n">models</span><span class="o">.</span><span class="n">row</span><span class="o">.</span><span class="n">Row</span><span class="p">):</span>
+        <span class="n">msg</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="s2">&quot;Row must be type: smartsheet.models.row, not&quot;</span>
+                  <span class="s2">&quot; </span><span class="si">{}</span><span class="s2">&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="nb">type</span><span class="p">(</span><span class="n">row</span><span class="p">))</span>
+        <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">columns_to_link</span><span class="p">,</span> <span class="nb">list</span><span class="p">):</span>
+        <span class="n">msg</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="s2">&quot;Columns to link must be type: list, not&quot;</span>
+                  <span class="s2">&quot; </span><span class="si">{}</span><span class="s2">&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="nb">type</span><span class="p">(</span><span class="n">columns_to_link</span><span class="p">))</span>
+        <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">dest_col_map</span><span class="p">,</span> <span class="nb">dict</span><span class="p">):</span>
+        <span class="n">msg</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="s2">&quot;Destination column map must be type: dict, not&quot;</span>
+                  <span class="s2">&quot; </span><span class="si">{}</span><span class="s2">&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="nb">type</span><span class="p">(</span><span class="n">jira_index_sheet</span><span class="p">))</span>
+        <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">jira_index_sheet</span><span class="p">,</span> <span class="n">smartsheet</span><span class="o">.</span><span class="n">models</span><span class="o">.</span><span class="n">sheet</span><span class="o">.</span><span class="n">Sheet</span><span class="p">):</span>
+        <span class="n">msg</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="s2">&quot;Jira Index Sheet must be type: smartsheet.models.sheet, not&quot;</span>
+                  <span class="s2">&quot; </span><span class="si">{}</span><span class="s2">&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="nb">type</span><span class="p">(</span><span class="n">jira_index_sheet</span><span class="p">))</span>
+        <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">jira_index_col_map</span><span class="p">,</span> <span class="nb">dict</span><span class="p">):</span>
+        <span class="n">msg</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="s2">&quot;Jira Index Column Map must be type: dict, not&quot;</span>
+                  <span class="s2">&quot; </span><span class="si">{}</span><span class="s2">&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="nb">type</span><span class="p">(</span><span class="n">jira_index_col_map</span><span class="p">))</span>
+        <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">idx_row_id</span><span class="p">,</span> <span class="nb">str</span><span class="p">):</span>
+        <span class="n">msg</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="s2">&quot;Jira Index Row ID must be type: str, not&quot;</span>
+                  <span class="s2">&quot; </span><span class="si">{}</span><span class="s2">&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="nb">type</span><span class="p">(</span><span class="n">idx_row_id</span><span class="p">))</span>
+        <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">smartsheet_client</span><span class="p">,</span> <span class="n">smartsheet</span><span class="o">.</span><span class="n">Smartsheet</span><span class="p">):</span>
+        <span class="n">msg</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="s2">&quot;Smartsheet Client must be type: smartsheet.Smartsheet, not&quot;</span>
+                  <span class="s2">&quot; </span><span class="si">{}</span><span class="s2">&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="nb">type</span><span class="p">(</span><span class="n">smartsheet_client</span><span class="p">))</span>
+        <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
+
     <span class="n">new_row</span> <span class="o">=</span> <span class="n">smartsheet_client</span><span class="o">.</span><span class="n">models</span><span class="o">.</span><span class="n">Row</span><span class="p">()</span>
     <span class="n">new_row</span><span class="o">.</span><span class="n">id</span> <span class="o">=</span> <span class="n">row</span><span class="o">.</span><span class="n">id</span>
     <span class="k">for</span> <span class="n">col</span> <span class="ow">in</span> <span class="n">columns_to_link</span><span class="p">:</span>
@@ -214,7 +274,7 @@
     jira_index_col_map,
     dest_col_map,
     idx_row_id,
-    colunn,
+    column,
     smartsheet_client
 )</span>:
     </div>
@@ -222,7 +282,7 @@
                 <details>
             <summary>View Source</summary>
             <div class="codehilite"><pre><span></span><span class="k">def</span> <span class="nf">build_linked_cell</span><span class="p">(</span><span class="n">jira_index_sheet</span><span class="p">,</span> <span class="n">jira_index_col_map</span><span class="p">,</span> <span class="n">dest_col_map</span><span class="p">,</span>
-                      <span class="n">idx_row_id</span><span class="p">,</span> <span class="n">colunn</span><span class="p">,</span> <span class="n">smartsheet_client</span><span class="p">):</span>
+                      <span class="n">idx_row_id</span><span class="p">,</span> <span class="n">column</span><span class="p">,</span> <span class="n">smartsheet_client</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;Helper function to build the Cell object and cell link properties</span>
 
 <span class="sd">    Args:</span>
@@ -233,7 +293,7 @@
 <span class="sd">        dest_col_map (dict): The column name:id map for the destination sheet</span>
 <span class="sd">        idx_row_id (str): The row ID in the Jira Index sheet where the cell</span>
 <span class="sd">                          link will pull data</span>
-<span class="sd">        colunn (str): The name of the column to write to in both sheets</span>
+<span class="sd">        column (str): The name of the column to write to in both sheets</span>
 <span class="sd">        smartsheet_client (Object): The Smartsheet client to interact</span>
 <span class="sd">                                    with the API</span>
 
@@ -241,13 +301,38 @@
 <span class="sd">        Cell: The cell object to be written back to the destination, with</span>
 <span class="sd">              link to the Jira Index Sheet.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">jira_index_sheet</span><span class="p">,</span> <span class="n">smartsheet</span><span class="o">.</span><span class="n">models</span><span class="o">.</span><span class="n">sheet</span><span class="o">.</span><span class="n">Sheet</span><span class="p">):</span>
+        <span class="n">msg</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="s2">&quot;Jira Index Sheet must be type: smartsheet.models.sheet, not&quot;</span>
+                  <span class="s2">&quot; </span><span class="si">{}</span><span class="s2">&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="nb">type</span><span class="p">(</span><span class="n">jira_index_sheet</span><span class="p">))</span>
+        <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">jira_index_col_map</span><span class="p">,</span> <span class="nb">dict</span><span class="p">):</span>
+        <span class="n">msg</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="s2">&quot;Jira Index column map must be type: dict, not&quot;</span>
+                  <span class="s2">&quot; </span><span class="si">{}</span><span class="s2">&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="nb">type</span><span class="p">(</span><span class="n">jira_index_col_map</span><span class="p">))</span>
+        <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">dest_col_map</span><span class="p">,</span> <span class="nb">dict</span><span class="p">):</span>
+        <span class="n">msg</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="s2">&quot;Destination column map must be type: dict, not&quot;</span>
+                  <span class="s2">&quot; </span><span class="si">{}</span><span class="s2">&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="nb">type</span><span class="p">(</span><span class="n">jira_index_sheet</span><span class="p">))</span>
+        <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">idx_row_id</span><span class="p">,</span> <span class="nb">str</span><span class="p">):</span>
+        <span class="n">msg</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="s2">&quot;Jira Index Row ID must be type: str, not&quot;</span>
+                  <span class="s2">&quot; </span><span class="si">{}</span><span class="s2">&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="nb">type</span><span class="p">(</span><span class="n">idx_row_id</span><span class="p">))</span>
+        <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">column</span><span class="p">,</span> <span class="nb">str</span><span class="p">):</span>
+        <span class="n">msg</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="s2">&quot;Column must be type: str, not&quot;</span>
+                  <span class="s2">&quot; </span><span class="si">{}</span><span class="s2">&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="nb">type</span><span class="p">(</span><span class="n">column</span><span class="p">))</span>
+        <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">smartsheet_client</span><span class="p">,</span> <span class="n">smartsheet</span><span class="o">.</span><span class="n">Smartsheet</span><span class="p">):</span>
+        <span class="n">msg</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="s2">&quot;Smartsheet Client must be type: smartsheet.Smartsheet, not&quot;</span>
+                  <span class="s2">&quot; </span><span class="si">{}</span><span class="s2">&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="nb">type</span><span class="p">(</span><span class="n">smartsheet_client</span><span class="p">))</span>
+        <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
+
     <span class="n">new_cell_link</span> <span class="o">=</span> <span class="n">smartsheet_client</span><span class="o">.</span><span class="n">models</span><span class="o">.</span><span class="n">CellLink</span><span class="p">()</span>
     <span class="n">new_cell_link</span><span class="o">.</span><span class="n">sheet_id</span> <span class="o">=</span> <span class="n">jira_index_sheet</span><span class="o">.</span><span class="n">id</span>
     <span class="n">new_cell_link</span><span class="o">.</span><span class="n">row_id</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">idx_row_id</span><span class="p">)</span>
-    <span class="n">new_cell_link</span><span class="o">.</span><span class="n">column_id</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">jira_index_col_map</span><span class="p">[</span><span class="n">colunn</span><span class="p">])</span>
+    <span class="n">new_cell_link</span><span class="o">.</span><span class="n">column_id</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">jira_index_col_map</span><span class="p">[</span><span class="n">column</span><span class="p">])</span>
 
     <span class="n">new_cell</span> <span class="o">=</span> <span class="n">smartsheet_client</span><span class="o">.</span><span class="n">models</span><span class="o">.</span><span class="n">Cell</span><span class="p">()</span>
-    <span class="n">new_cell</span><span class="o">.</span><span class="n">column_id</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">dest_col_map</span><span class="p">[</span><span class="n">colunn</span><span class="p">])</span>
+    <span class="n">new_cell</span><span class="o">.</span><span class="n">column_id</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">dest_col_map</span><span class="p">[</span><span class="n">column</span><span class="p">])</span>
     <span class="n">new_cell</span><span class="o">.</span><span class="n">value</span> <span class="o">=</span> <span class="n">smartsheet_client</span><span class="o">.</span><span class="n">models</span><span class="o">.</span><span class="n">ExplicitNull</span><span class="p">()</span>
     <span class="n">new_cell</span><span class="o">.</span><span class="n">link_in_from_cell</span> <span class="o">=</span> <span class="n">new_cell_link</span>
 
@@ -268,7 +353,7 @@ Jira Index sheet</li>
 <li><strong>dest_col_map (dict): The column name:</strong> id map for the destination sheet</li>
 <li><strong>idx_row_id (str):</strong>  The row ID in the Jira Index sheet where the cell
 link will pull data</li>
-<li><strong>colunn (str):</strong>  The name of the column to write to in both sheets</li>
+<li><strong>column (str):</strong>  The name of the column to write to in both sheets</li>
 <li><strong>smartsheet_client (Object):</strong>  The Smartsheet client to interact
 with the API</li>
 </ul>
@@ -307,6 +392,11 @@ with the API</li>
 <span class="sd">        dict: a list of destination sheet IDs and a list of</span>
 <span class="sd">              destination row IDs.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">project_data</span><span class="p">,</span> <span class="nb">dict</span><span class="p">):</span>
+        <span class="n">msg</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="s2">&quot;Project data must be type: dict, not&quot;</span>
+                  <span class="s2">&quot; </span><span class="si">{}</span><span class="s2">&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="nb">type</span><span class="p">(</span><span class="n">project_data</span><span class="p">))</span>
+        <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
+
     <span class="n">dest_sheet_index</span> <span class="o">=</span> <span class="n">defaultdict</span><span class="p">(</span><span class="nb">list</span><span class="p">)</span>
     <span class="c1"># dest_row_index = defaultdict(list)</span>
     <span class="k">for</span> <span class="n">uuid</span><span class="p">,</span> <span class="n">ticket</span> <span class="ow">in</span> <span class="n">project_data</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
@@ -385,6 +475,35 @@ get_all_row_data function.</li>
 <span class="sd">        Row: If cells were appended to the row, returns the new row, otherwise</span>
 <span class="sd">             returns None.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">row</span><span class="p">,</span> <span class="n">smartsheet</span><span class="o">.</span><span class="n">models</span><span class="o">.</span><span class="n">row</span><span class="o">.</span><span class="n">Row</span><span class="p">):</span>
+        <span class="n">msg</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="s2">&quot;Row must be type: smartsheet.models.row, not&quot;</span>
+                  <span class="s2">&quot; </span><span class="si">{}</span><span class="s2">&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="nb">type</span><span class="p">(</span><span class="n">row</span><span class="p">))</span>
+        <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">columns_to_link</span><span class="p">,</span> <span class="nb">list</span><span class="p">):</span>
+        <span class="n">msg</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="s2">&quot;Columns to link must be type: list, not&quot;</span>
+                  <span class="s2">&quot; </span><span class="si">{}</span><span class="s2">&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="nb">type</span><span class="p">(</span><span class="n">columns_to_link</span><span class="p">))</span>
+        <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">dest_col_map</span><span class="p">,</span> <span class="nb">dict</span><span class="p">):</span>
+        <span class="n">msg</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="s2">&quot;Destination column map must be type: dict, not&quot;</span>
+                  <span class="s2">&quot; </span><span class="si">{}</span><span class="s2">&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="nb">type</span><span class="p">(</span><span class="n">jira_index_sheet</span><span class="p">))</span>
+        <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">jira_index_sheet</span><span class="p">,</span> <span class="n">smartsheet</span><span class="o">.</span><span class="n">models</span><span class="o">.</span><span class="n">sheet</span><span class="o">.</span><span class="n">Sheet</span><span class="p">):</span>
+        <span class="n">msg</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="s2">&quot;Jira Index Sheet must be type: smartsheet.models.sheet, not&quot;</span>
+                  <span class="s2">&quot; </span><span class="si">{}</span><span class="s2">&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="nb">type</span><span class="p">(</span><span class="n">jira_index_sheet</span><span class="p">))</span>
+        <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">jira_index_col_map</span><span class="p">,</span> <span class="nb">dict</span><span class="p">):</span>
+        <span class="n">msg</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="s2">&quot;Jira Index Column Map must be type: dict, not&quot;</span>
+                  <span class="s2">&quot; </span><span class="si">{}</span><span class="s2">&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="nb">type</span><span class="p">(</span><span class="n">jira_index_col_map</span><span class="p">))</span>
+        <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">idx_row_id</span><span class="p">,</span> <span class="nb">str</span><span class="p">):</span>
+        <span class="n">msg</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="s2">&quot;Jira Index Row ID must be type: str, not&quot;</span>
+                  <span class="s2">&quot; </span><span class="si">{}</span><span class="s2">&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="nb">type</span><span class="p">(</span><span class="n">idx_row_id</span><span class="p">))</span>
+        <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">smartsheet_client</span><span class="p">,</span> <span class="n">smartsheet</span><span class="o">.</span><span class="n">Smartsheet</span><span class="p">):</span>
+        <span class="n">msg</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="s2">&quot;Smartsheet Client must be type: smartsheet.Smartsheet, not&quot;</span>
+                  <span class="s2">&quot; </span><span class="si">{}</span><span class="s2">&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="nb">type</span><span class="p">(</span><span class="n">smartsheet_client</span><span class="p">))</span>
+        <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
+
     <span class="n">new_row</span> <span class="o">=</span> <span class="n">smartsheet_client</span><span class="o">.</span><span class="n">models</span><span class="o">.</span><span class="n">Row</span><span class="p">()</span>
     <span class="n">new_row</span><span class="o">.</span><span class="n">id</span> <span class="o">=</span> <span class="n">row</span><span class="o">.</span><span class="n">id</span>
     <span class="k">for</span> <span class="n">col</span> <span class="ow">in</span> <span class="n">columns_to_link</span><span class="p">:</span>

@@ -62,6 +62,7 @@
             <summary>View Source</summary>
             <div class="codehilite"><pre><span></span><span class="kn">import</span> <span class="nn">json</span>
 <span class="kn">import</span> <span class="nn">logging</span>
+<span class="kn">import</span> <span class="nn">smartsheet</span>
 
 <span class="c1"># import smartsheet</span>
 <span class="kn">from</span> <span class="nn">uuid_module.build_data</span> <span class="kn">import</span> <span class="n">build_row</span><span class="p">,</span> <span class="n">dest_indexes</span>
@@ -85,6 +86,14 @@
 <span class="sd">    Returns:</span>
 <span class="sd">        int: The number of sheets that were updated.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">sheets_to_update</span><span class="p">,</span> <span class="nb">dict</span><span class="p">):</span>
+        <span class="n">msg</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="s2">&quot;Sheets to Update must be type: dict, not&quot;</span>
+                  <span class="s2">&quot; </span><span class="si">{}</span><span class="s2">&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="nb">type</span><span class="p">(</span><span class="n">sheets_to_update</span><span class="p">))</span>
+        <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">smartsheet_client</span><span class="p">,</span> <span class="n">smartsheet</span><span class="o">.</span><span class="n">Smartsheet</span><span class="p">):</span>
+        <span class="n">msg</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="s2">&quot;Smartsheet Client must be type: smartsheet.Smartsheet, not&quot;</span>
+                  <span class="s2">&quot; </span><span class="si">{}</span><span class="s2">&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="nb">type</span><span class="p">(</span><span class="n">smartsheet_client</span><span class="p">))</span>
+        <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
     <span class="c1"># Reset the counter on each run</span>
     <span class="n">sheets_updated</span> <span class="o">=</span> <span class="mi">0</span>
 
@@ -148,6 +157,14 @@
 <span class="sd">        bool: True if any links were written, False if no data was</span>
 <span class="sd">              written back to any sheet.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">project_sub_index</span><span class="p">,</span> <span class="nb">dict</span><span class="p">):</span>
+        <span class="n">msg</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="s2">&quot;Project sub-index must be type: dict, not&quot;</span>
+                  <span class="s2">&quot; </span><span class="si">{}</span><span class="s2">&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="nb">type</span><span class="p">(</span><span class="n">project_sub_index</span><span class="p">))</span>
+        <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">smartsheet_client</span><span class="p">,</span> <span class="n">smartsheet</span><span class="o">.</span><span class="n">Smartsheet</span><span class="p">):</span>
+        <span class="n">msg</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="s2">&quot;Smartsheet Client must be type: smartsheet.Smartsheet, not&quot;</span>
+                  <span class="s2">&quot; </span><span class="si">{}</span><span class="s2">&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="nb">type</span><span class="p">(</span><span class="n">smartsheet_client</span><span class="p">))</span>
+        <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
 
     <span class="c1"># Create a copy of the project_sub_index so that we don&#39;t alter any</span>
     <span class="c1"># other function&#39;s data set.</span>
@@ -260,6 +277,24 @@
 <span class="sd">              value is None</span>
 <span class="sd">        none: If the &#39;if&#39; checks fail.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">uuid_value</span><span class="p">,</span> <span class="nb">list</span><span class="p">):</span>
+        <span class="n">msg</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="s2">&quot;UUID Value must be type: list, not&quot;</span>
+                  <span class="s2">&quot; </span><span class="si">{}</span><span class="s2">&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="nb">type</span><span class="p">(</span><span class="n">uuid_value</span><span class="p">))</span>
+        <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">jira_value</span><span class="p">,</span> <span class="nb">str</span><span class="p">):</span>
+        <span class="n">msg</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="s2">&quot;Jira value must be type: str, not&quot;</span>
+                  <span class="s2">&quot; </span><span class="si">{}</span><span class="s2">&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="nb">type</span><span class="p">(</span><span class="n">jira_value</span><span class="p">))</span>
+        <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">uuid_list</span><span class="p">,</span> <span class="nb">list</span><span class="p">):</span>
+        <span class="n">msg</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="s2">&quot;UUID list must be type: list, not&quot;</span>
+                  <span class="s2">&quot; </span><span class="si">{}</span><span class="s2">&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="nb">type</span><span class="p">(</span><span class="n">uuid_list</span><span class="p">))</span>
+        <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">jira_data_values</span><span class="p">,</span> <span class="nb">list</span><span class="p">):</span>
+        <span class="n">msg</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="s2">&quot;Jira data values must be type: list, not&quot;</span>
+                  <span class="s2">&quot; </span><span class="si">{}</span><span class="s2">&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="nb">type</span><span class="p">(</span><span class="n">jira_data_values</span><span class="p">))</span>
+        <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
+
+    <span class="c1"># Raise error if none / empty, try-catch the caller</span>
     <span class="k">if</span> <span class="n">uuid_list</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
         <span class="n">msg</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="s2">&quot;UUID list is </span><span class="si">{}</span><span class="s2">. Cannot process against an empty &quot;</span>
                   <span class="s2">&quot;list.&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">uuid_list</span><span class="p">)</span>
@@ -314,23 +349,18 @@
 <span class="sd">              written back via API. False if the Start Date was not</span>
 <span class="sd">              written due to failure.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
-
-    <span class="c1"># TODO: Write a test to validate the format instead.</span>
-    <span class="c1">#     Format of the src_data should be:</span>
-    <span class="c1"># {</span>
-    <span class="c1">#     &quot;UUID&quot;: &quot;7208979009955716-3683235938232196-</span>
-    <span class="c1">#             7010994181433220-202105112138550000&quot;,  # Type: str</span>
-    <span class="c1">#     &quot;Tasks&quot;: &quot;Retrospective&quot;, # Type: str</span>
-    <span class="c1">#     &quot;Description&quot;: &quot;Thoughts on how the project went.&quot;,  # Type: str</span>
-    <span class="c1">#     &quot;Status&quot;: &quot;In Progress&quot;,  # Type: str</span>
-    <span class="c1">#     &quot;Assigned To&quot;: &quot;link@twitch.tv&quot;,  # Type: str</span>
-    <span class="c1">#     &quot;Jira Ticket&quot;: &quot;ING-12342&quot;,  # Type: str</span>
-    <span class="c1">#     &quot;Duration&quot;: None,  # Type: str</span>
-    <span class="c1">#     &quot;Start&quot;: &quot;2021-03-31T08:00:00&quot;,  # Type: str</span>
-    <span class="c1">#     &quot;Finish&quot;: &quot;2021-03-31T08:00:00&quot;,  # Type: str</span>
-    <span class="c1">#     &quot;Predecessors&quot;: &quot;38FS +1w&quot;,  # Type: str</span>
-    <span class="c1">#     &quot;Summary&quot;: &quot;False&quot;  # Type: str</span>
-    <span class="c1"># }</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">src_data</span><span class="p">,</span> <span class="nb">dict</span><span class="p">):</span>
+        <span class="n">msg</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="s2">&quot;Source data must be type: dict, not&quot;</span>
+                  <span class="s2">&quot; </span><span class="si">{}</span><span class="s2">&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="nb">type</span><span class="p">(</span><span class="n">src_data</span><span class="p">))</span>
+        <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">project_data_index</span><span class="p">,</span> <span class="nb">dict</span><span class="p">):</span>
+        <span class="n">msg</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="s2">&quot;Sheets to Update must be type: dict, not&quot;</span>
+                  <span class="s2">&quot; </span><span class="si">{}</span><span class="s2">&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="nb">type</span><span class="p">(</span><span class="n">project_data_index</span><span class="p">))</span>
+        <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">smartsheet_client</span><span class="p">,</span> <span class="n">smartsheet</span><span class="o">.</span><span class="n">Smartsheet</span><span class="p">):</span>
+        <span class="n">msg</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="s2">&quot;Smartsheet Client must be type: smartsheet.Smartsheet, not&quot;</span>
+                  <span class="s2">&quot; </span><span class="si">{}</span><span class="s2">&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="nb">type</span><span class="p">(</span><span class="n">smartsheet_client</span><span class="p">))</span>
+        <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
 
     <span class="c1"># Create friendly names for sheet ID, row ID and start date.</span>
     <span class="n">dest_sheet_id</span> <span class="o">=</span> <span class="n">src_data</span><span class="p">[</span><span class="n">uuid_col</span><span class="p">]</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s2">&quot;-&quot;</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
@@ -472,6 +502,14 @@
 <span class="sd">    Returns:</span>
 <span class="sd">        int: The number of sheets that were updated.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">sheets_to_update</span><span class="p">,</span> <span class="nb">dict</span><span class="p">):</span>
+        <span class="n">msg</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="s2">&quot;Sheets to Update must be type: dict, not&quot;</span>
+                  <span class="s2">&quot; </span><span class="si">{}</span><span class="s2">&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="nb">type</span><span class="p">(</span><span class="n">sheets_to_update</span><span class="p">))</span>
+        <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">smartsheet_client</span><span class="p">,</span> <span class="n">smartsheet</span><span class="o">.</span><span class="n">Smartsheet</span><span class="p">):</span>
+        <span class="n">msg</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="s2">&quot;Smartsheet Client must be type: smartsheet.Smartsheet, not&quot;</span>
+                  <span class="s2">&quot; </span><span class="si">{}</span><span class="s2">&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="nb">type</span><span class="p">(</span><span class="n">smartsheet_client</span><span class="p">))</span>
+        <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
     <span class="c1"># Reset the counter on each run</span>
     <span class="n">sheets_updated</span> <span class="o">=</span> <span class="mi">0</span>
 
@@ -566,6 +604,14 @@ with the API</li>
 <span class="sd">        bool: True if any links were written, False if no data was</span>
 <span class="sd">              written back to any sheet.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">project_sub_index</span><span class="p">,</span> <span class="nb">dict</span><span class="p">):</span>
+        <span class="n">msg</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="s2">&quot;Project sub-index must be type: dict, not&quot;</span>
+                  <span class="s2">&quot; </span><span class="si">{}</span><span class="s2">&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="nb">type</span><span class="p">(</span><span class="n">project_sub_index</span><span class="p">))</span>
+        <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">smartsheet_client</span><span class="p">,</span> <span class="n">smartsheet</span><span class="o">.</span><span class="n">Smartsheet</span><span class="p">):</span>
+        <span class="n">msg</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="s2">&quot;Smartsheet Client must be type: smartsheet.Smartsheet, not&quot;</span>
+                  <span class="s2">&quot; </span><span class="si">{}</span><span class="s2">&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="nb">type</span><span class="p">(</span><span class="n">smartsheet_client</span><span class="p">))</span>
+        <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
 
     <span class="c1"># Create a copy of the project_sub_index so that we don&#39;t alter any</span>
     <span class="c1"># other function&#39;s data set.</span>
@@ -713,6 +759,24 @@ with the API</li>
 <span class="sd">              value is None</span>
 <span class="sd">        none: If the &#39;if&#39; checks fail.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">uuid_value</span><span class="p">,</span> <span class="nb">list</span><span class="p">):</span>
+        <span class="n">msg</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="s2">&quot;UUID Value must be type: list, not&quot;</span>
+                  <span class="s2">&quot; </span><span class="si">{}</span><span class="s2">&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="nb">type</span><span class="p">(</span><span class="n">uuid_value</span><span class="p">))</span>
+        <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">jira_value</span><span class="p">,</span> <span class="nb">str</span><span class="p">):</span>
+        <span class="n">msg</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="s2">&quot;Jira value must be type: str, not&quot;</span>
+                  <span class="s2">&quot; </span><span class="si">{}</span><span class="s2">&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="nb">type</span><span class="p">(</span><span class="n">jira_value</span><span class="p">))</span>
+        <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">uuid_list</span><span class="p">,</span> <span class="nb">list</span><span class="p">):</span>
+        <span class="n">msg</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="s2">&quot;UUID list must be type: list, not&quot;</span>
+                  <span class="s2">&quot; </span><span class="si">{}</span><span class="s2">&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="nb">type</span><span class="p">(</span><span class="n">uuid_list</span><span class="p">))</span>
+        <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">jira_data_values</span><span class="p">,</span> <span class="nb">list</span><span class="p">):</span>
+        <span class="n">msg</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="s2">&quot;Jira data values must be type: list, not&quot;</span>
+                  <span class="s2">&quot; </span><span class="si">{}</span><span class="s2">&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="nb">type</span><span class="p">(</span><span class="n">jira_data_values</span><span class="p">))</span>
+        <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
+
+    <span class="c1"># Raise error if none / empty, try-catch the caller</span>
     <span class="k">if</span> <span class="n">uuid_list</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
         <span class="n">msg</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="s2">&quot;UUID list is </span><span class="si">{}</span><span class="s2">. Cannot process against an empty &quot;</span>
                   <span class="s2">&quot;list.&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">uuid_list</span><span class="p">)</span>
@@ -806,23 +870,18 @@ from the Jira Index</li>
 <span class="sd">              written back via API. False if the Start Date was not</span>
 <span class="sd">              written due to failure.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
-
-    <span class="c1"># TODO: Write a test to validate the format instead.</span>
-    <span class="c1">#     Format of the src_data should be:</span>
-    <span class="c1"># {</span>
-    <span class="c1">#     &quot;UUID&quot;: &quot;7208979009955716-3683235938232196-</span>
-    <span class="c1">#             7010994181433220-202105112138550000&quot;,  # Type: str</span>
-    <span class="c1">#     &quot;Tasks&quot;: &quot;Retrospective&quot;, # Type: str</span>
-    <span class="c1">#     &quot;Description&quot;: &quot;Thoughts on how the project went.&quot;,  # Type: str</span>
-    <span class="c1">#     &quot;Status&quot;: &quot;In Progress&quot;,  # Type: str</span>
-    <span class="c1">#     &quot;Assigned To&quot;: &quot;link@twitch.tv&quot;,  # Type: str</span>
-    <span class="c1">#     &quot;Jira Ticket&quot;: &quot;ING-12342&quot;,  # Type: str</span>
-    <span class="c1">#     &quot;Duration&quot;: None,  # Type: str</span>
-    <span class="c1">#     &quot;Start&quot;: &quot;2021-03-31T08:00:00&quot;,  # Type: str</span>
-    <span class="c1">#     &quot;Finish&quot;: &quot;2021-03-31T08:00:00&quot;,  # Type: str</span>
-    <span class="c1">#     &quot;Predecessors&quot;: &quot;38FS +1w&quot;,  # Type: str</span>
-    <span class="c1">#     &quot;Summary&quot;: &quot;False&quot;  # Type: str</span>
-    <span class="c1"># }</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">src_data</span><span class="p">,</span> <span class="nb">dict</span><span class="p">):</span>
+        <span class="n">msg</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="s2">&quot;Source data must be type: dict, not&quot;</span>
+                  <span class="s2">&quot; </span><span class="si">{}</span><span class="s2">&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="nb">type</span><span class="p">(</span><span class="n">src_data</span><span class="p">))</span>
+        <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">project_data_index</span><span class="p">,</span> <span class="nb">dict</span><span class="p">):</span>
+        <span class="n">msg</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="s2">&quot;Sheets to Update must be type: dict, not&quot;</span>
+                  <span class="s2">&quot; </span><span class="si">{}</span><span class="s2">&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="nb">type</span><span class="p">(</span><span class="n">project_data_index</span><span class="p">))</span>
+        <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">smartsheet_client</span><span class="p">,</span> <span class="n">smartsheet</span><span class="o">.</span><span class="n">Smartsheet</span><span class="p">):</span>
+        <span class="n">msg</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="s2">&quot;Smartsheet Client must be type: smartsheet.Smartsheet, not&quot;</span>
+                  <span class="s2">&quot; </span><span class="si">{}</span><span class="s2">&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="nb">type</span><span class="p">(</span><span class="n">smartsheet_client</span><span class="p">))</span>
+        <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
 
     <span class="c1"># Create friendly names for sheet ID, row ID and start date.</span>
     <span class="n">dest_sheet_id</span> <span class="o">=</span> <span class="n">src_data</span><span class="p">[</span><span class="n">uuid_col</span><span class="p">]</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s2">&quot;-&quot;</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
