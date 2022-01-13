@@ -27,6 +27,31 @@ cwd = os.path.dirname(os.path.abspath(__file__))
 log_location = os.path.join(cwd, log_location)
 
 
+def set_env_vars():
+    env = sys.argv[1:]
+    try:
+        env = env[0]
+    except IndexError:
+        env = None
+    if env in ("--", None):
+        msg = "no_flag"
+        env = "--debug"
+        return env, msg, None, None
+    else:
+        msg = str("The {} flag was passed from the command line").format(env)
+        logging.info(msg)
+        if env in ("-s", "--staging", "-staging", "-d", "--debug", "-debug"):
+            msg = str("Using default debug/staging variables for workspace_id "
+                      "and Jira index sheet").format()
+            return env, msg, None, None
+        elif env in ("-p", "--prod", "-prod"):
+            workspace_id = prod_workspace_id
+            index_sheet = prod_jira_idx_sheet
+            msg = str("Set workspace_id to: {} and index_sheet to: {} "
+                      "for Prod environment").format(workspace_id, index_sheet)
+            return env, msg, workspace_id, index_sheet
+
+
 def set_logging_config(env):
     if not isinstance(env, str):
         msg = str("Environment should be type: str, not {}").format(
@@ -132,10 +157,7 @@ def set_logging_config(env):
     return logging_config
 
 
-# Initialize client. Uses the API token in the environment variable
-# "SMARTSHEET_ACCESS_TOKEN", which is pulled from the AWS Secrets API.
-env = sys.argv[1:]
-env = env[0]
+env, logging_msg, workspace_id, index_sheet = set_env_vars()
 logging_config = set_logging_config(env)
 try:
     os.mkdir(log_location)
@@ -147,6 +169,12 @@ except FileExistsError:
 
 logger = logging.getLogger()
 
+if logging_msg == "no_flag":
+    logging.error("No environment flag set. Please use --debug, --staging "
+                  "or --prod. Terminating app.")
+    quit()
+logging.info(logging_msg)
+
 executors = {
     'default': ThreadPoolExecutor(1),
     'processpool': ProcessPoolExecutor(1)
@@ -157,30 +185,18 @@ job_defaults = {
 }
 scheduler = BlockingScheduler(executors=executors, job_defaults=job_defaults)
 
-
-if env in ("--", None):
-    logging.error("No environment flag set. Please use --debug, --staging "
-                  "or --prod. Terminating app.")
-    quit()
-else:
-    msg = str("The {} flag was passed from the command line").format(env)
-    logging.info(msg)
-    if env in ("-s", "--staging", "-staging", "-d", "--debug", "-debug"):
-        msg = str("Using default debug/staging variables for workspace_id "
-                  "and Jira index sheet").format()
-        logging.info(msg)
-    elif env in ("-p", "--prod", "-prod"):
-        workspace_id = prod_workspace_id
-        index_sheet = prod_jira_idx_sheet
-        msg = str("Set workspace_id to: {} and index_sheet to: {} "
-                  "for Prod environment").format(workspace_id, index_sheet)
-        logging.info(msg)
-
+# Initialize client. Uses the API token in the environment variable
+# "SMARTSHEET_ACCESS_TOKEN", which is pulled from the AWS Secrets API.
 logging.debug("------------------------")
 logging.debug("Initializing Smartsheet Client API")
 logging.debug("------------------------")
 secret_name = get_secret_name(env)
-os.environ["SMARTSHEET_ACCESS_TOKEN"] = get_secret(secret_name)
+try:
+    os.environ["SMARTSHEET_ACCESS_TOKEN"] = get_secret(secret_name)
+except TypeError:
+    msg = str("Refresh Isengard credentials")
+    logging.error(msg)
+    exit()
 smartsheet_client = smartsheet.Smartsheet()
 # Make sure we don't miss any error
 smartsheet_client.errors_as_exceptions(True)
@@ -214,12 +230,18 @@ def full_jira_sync(minutes):
                          time.strftime('%Y-%m-%d %H:%M:%S',
                                        time.localtime(start)))
     logging.debug(msg)
-
     global sheet_id_lock
-    with sheet_id_lock:
-        sheet_ids = get_all_sheet_ids(
-            smartsheet_client, minutes, workspace_id, index_sheet)
-        sheet_ids = list(set(sheet_ids))
+
+    if workspace_id and index_sheet:
+        with sheet_id_lock:
+            sheet_ids = get_all_sheet_ids(
+                smartsheet_client, minutes, workspace_id, index_sheet)
+            sheet_ids = list(set(sheet_ids))
+    else:
+        with sheet_id_lock:
+            sheet_ids = get_all_sheet_ids(
+                smartsheet_client, minutes)
+            sheet_ids = list(set(sheet_ids))
 
     global sheet_index_lock
     # Calculate a number minutes ago to get only the rows that were modified
@@ -325,9 +347,16 @@ def full_smartsheet_sync():
     logging.debug(msg)
 
     global sheet_id_lock
-    with sheet_id_lock:
-        sheet_ids = get_all_sheet_ids(smartsheet_client, minutes, workspace_id)
-        sheet_ids = list(set(sheet_ids))
+    if workspace_id and index_sheet:
+        with sheet_id_lock:
+            sheet_ids = get_all_sheet_ids(
+                smartsheet_client, minutes, workspace_id, index_sheet)
+            sheet_ids = list(set(sheet_ids))
+    else:
+        with sheet_id_lock:
+            sheet_ids = get_all_sheet_ids(
+                smartsheet_client, minutes)
+            sheet_ids = list(set(sheet_ids))
 
     global sheet_index_lock
     # Calculate a number minutes ago to get only the rows that were modified
