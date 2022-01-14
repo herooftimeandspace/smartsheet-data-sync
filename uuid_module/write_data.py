@@ -148,6 +148,7 @@ def write_jira_index_cell_links(project_sub_index,
                         "{} not found in Row Index. Skipping"
                         "".format(jira_value))
                     continue
+                idx_row_id = str(idx_row_id)
                 new_row = build_row(row, columns_to_link, dest_col_map,
                                     jira_index_sheet, jira_index_col_map,
                                     idx_row_id)
