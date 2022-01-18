@@ -18,7 +18,7 @@ from uuid_module.get_data import (get_all_row_data, get_all_sheet_ids,
 from uuid_module.helper import truncate
 from uuid_module.variables import (log_location, module_log_name,
                                    prod_jira_idx_sheet, prod_workspace_id,
-                                   sheet_columns, prod_minutes)
+                                   sheet_columns, prod_minutes, dev_minutes)
 from uuid_module.write_data import write_jira_index_cell_links, write_uuids
 from uuid_module.create_jira_tickets import create_tickets
 
@@ -37,20 +37,22 @@ def set_env_vars():
     if env in ("--", None):
         msg = "no_flag"
         env = "--debug"
-        return env, msg, None, None
+        return env, msg, None, None, None
     else:
         msg = str("The {} flag was passed from the command line").format(env)
         logging.info(msg)
         if env in ("-s", "--staging", "-staging", "-d", "--debug", "-debug"):
             msg = str("Using default debug/staging variables for workspace_id "
                       "and Jira index sheet").format()
-            return env, msg, None, None, None
+            return env, msg, None, None, dev_minutes
         elif env in ("-p", "--prod", "-prod"):
             workspace_id = prod_workspace_id
             index_sheet = prod_jira_idx_sheet
             minutes = prod_minutes
-            msg = str("Set workspace_id to: {} and index_sheet to: {} "
-                      "for Prod environment").format(workspace_id, index_sheet)
+            msg = str("Set workspace_id to: {}, index_sheet to: {}, "
+                      "and minutes to: {} "
+                      "for Prod environment").format(workspace_id,
+                                                     index_sheet, minutes)
             return env, msg, workspace_id, index_sheet, minutes
 
 
