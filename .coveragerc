@@ -6,7 +6,6 @@ omit =
     *variables*
     __main__.py
     ./uuid_module/cell_link_sheet_data.py
-    create_jira_tickets.py
 
 [report]
 show_missing = true
