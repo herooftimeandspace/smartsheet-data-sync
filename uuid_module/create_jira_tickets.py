@@ -430,7 +430,8 @@ def build_row_data(row, col_map):
     return row_data
 
 
-def create_ticket_index(source_sheets, index_sheet, index_col_map):
+def create_ticket_index(source_sheets, index_sheet, index_col_map,
+                        smartsheet_client):
 
     tickets_to_create = {}
 
@@ -529,7 +530,7 @@ def create_ticket_index(source_sheets, index_sheet, index_col_map):
                     continue
             logging.debug("Made it past all IFs without triggering")
             logging.debug(row_data)
-        write_to_sheet(sheet_rows_to_update, sheet=sheet,
+        write_to_sheet(sheet_rows_to_update, sheet, smartsheet_client,
                        write_method="update")
 
     logging.debug("Top-level Rows to create first")
@@ -552,7 +553,8 @@ def create_tickets(smartsheet_client, minutes=dev_minutes):
 
     source_sheets, index_sheet, index_col_map = refresh_sheets(
         smartsheet_client, minutes)
-    parent = create_ticket_index(source_sheets, index_sheet, index_col_map)
+    parent = create_ticket_index(
+        source_sheets, index_sheet, index_col_map, smartsheet_client)
     logging.debug("Parent Dict")
     logging.debug("------------------------")
     logging.debug(parent)
