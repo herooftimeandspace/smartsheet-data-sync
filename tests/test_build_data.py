@@ -9,7 +9,8 @@ from freezegun import freeze_time
 from uuid_module.build_data import build_linked_cell, build_row, dest_indexes
 from uuid_module.get_data import get_all_row_data, get_secret, get_secret_name
 from uuid_module.helper import get_column_map
-from uuid_module.variables import (assignee_col, jira_col, minutes,
+from uuid_module.create_jira_tickets import create_tickets
+from uuid_module.variables import (assignee_col, jira_col, dev_minutes,
                                    sheet_columns, status_col, task_col)
 
 logger = logging.getLogger(__name__)
@@ -89,18 +90,23 @@ def columns_to_link():
 
 
 @pytest.fixture
-def column():
+def jira_column():
     return jira_col
 
 
 @pytest.fixture
 def minutes_fixture():
-    min = minutes
+    min = dev_minutes
     return min
 
 
+@pytest.fixture(scope="module")
+def env():
+    return "-debug"
+
+
 # Need Mock
-@pytest.fixture
+@pytest.fixture(scope="module")
 def smartsheet_client(env):
     secret_name = get_secret_name(env)
     try:
@@ -113,37 +119,28 @@ def smartsheet_client(env):
     return smartsheet_client
 
 
-@pytest.fixture
-def env():
-    return "-debug"
-
-
 # TODO: Validate returned data is not malformed
 def test_build_linked_cell(jira_index_sheet, jira_index_col_map,
-                           dest_col_map, idx_row_id, column):
+                           dest_col_map, idx_row_id, jira_column):
     jira_index_sheet, _ = jira_index_sheet
     with pytest.raises(TypeError):
         build_linked_cell("jira_index_sheet", jira_index_col_map, dest_col_map,
-                          idx_row_id, column)
+                          idx_row_id, jira_column)
     with pytest.raises(TypeError):
         build_linked_cell(jira_index_sheet, "jira_index_col_map",
-                          dest_col_map,
-                          idx_row_id, column)
+                          dest_col_map, idx_row_id, jira_column)
     with pytest.raises(TypeError):
         build_linked_cell(jira_index_sheet, jira_index_col_map,
-                          "dest_col_map",
-                          idx_row_id, column)
+                          "dest_col_map", idx_row_id, jira_column)
     with pytest.raises(TypeError):
         build_linked_cell(jira_index_sheet, jira_index_col_map,
-                          dest_col_map,
-                          7, column)
+                          dest_col_map, 7, jira_column)
     with pytest.raises(TypeError):
         build_linked_cell(jira_index_sheet, jira_index_col_map,
-                          dest_col_map,
-                          idx_row_id, 7)
+                          dest_col_map, idx_row_id, 7)
 
     link_cell = build_linked_cell(jira_index_sheet, jira_index_col_map,
-                                  dest_col_map, idx_row_id, column)
+                                  dest_col_map, idx_row_id, jira_column)
     assert type(link_cell) == smartsheet.models.cell.Cell
 
 

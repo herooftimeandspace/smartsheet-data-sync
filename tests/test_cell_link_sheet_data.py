@@ -6,7 +6,7 @@ import pytest
 import smartsheet
 from uuid_module.cell_link_sheet_data import write_uuid_cell_links
 from uuid_module.get_data import get_all_row_data, get_secret, get_secret_name
-from uuid_module.variables import minutes, sheet_columns
+from uuid_module.variables import dev_minutes, sheet_columns
 from uuid_module.write_data import write_predecessor_dates
 
 cwd = os.path.dirname(os.path.abspath(__file__))
@@ -56,7 +56,7 @@ def env():
 
 @pytest.fixture
 def minutes_fixture():
-    min = minutes
+    min = dev_minutes
     return min
 
 

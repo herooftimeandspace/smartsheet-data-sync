@@ -37,23 +37,23 @@ flake8:
     - flake8 --max-line-length=80 --per-file-ignores="__init__.py:F401" ./*.py
     - flake8 --max-line-length=80 --per-file-ignores="__init__.py:F401" ./uuid_module/*.py
 
-# coverage:
-#   stage: lint
-#   # image: python:3.7
-#   tags:
-#     - copilot
-#   script:
-#     - export PATH=$PATH:~/.local/bin
-#     - python3 -m pip install -r test_requirements.txt
-#     - pytest --cov-config=.coveragerc --cov=./ -vvv
-#     - coverage xml --include="./**" -o coverage.xml
-#   artifacts:
-#     paths:
-#       - coverage.xml
-#     reports:
-#       junit:
-#         - coverage.xml
-#   coverage: '/^TOTAL.+?(\d+\%)$/'
+coverage:
+  stage: lint
+  # image: python:3.7
+  tags:
+    - copilot
+  script:
+    - export PATH=$PATH:~/.local/bin
+    - python3 -m pip install -r test_requirements.txt
+    - pytest --cov-config=.coveragerc --cov=./ -vvv
+    - coverage xml --include="./**" -o coverage.xml
+  artifacts:
+    paths:
+      - coverage.xml
+    reports:
+      junit:
+        - coverage.xml
+  coverage: '/^TOTAL.+?(\d+\%)$/'
 
 sast:
   stage: test

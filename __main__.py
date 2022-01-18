@@ -16,10 +16,11 @@ from uuid_module.get_data import (get_all_row_data, get_all_sheet_ids,
                                   get_blank_uuids, get_secret, get_secret_name,
                                   get_sub_indexes, refresh_source_sheets)
 from uuid_module.helper import truncate
-from uuid_module.variables import (log_location, minutes, module_log_name,
+from uuid_module.variables import (log_location, module_log_name,
                                    prod_jira_idx_sheet, prod_workspace_id,
-                                   sheet_columns)
+                                   sheet_columns, prod_minutes, dev_minutes)
 from uuid_module.write_data import write_jira_index_cell_links, write_uuids
+from uuid_module.create_jira_tickets import create_tickets
 
 start = time.time()
 
@@ -36,20 +37,23 @@ def set_env_vars():
     if env in ("--", None):
         msg = "no_flag"
         env = "--debug"
-        return env, msg, None, None
+        return env, msg, None, None, None
     else:
         msg = str("The {} flag was passed from the command line").format(env)
         logging.info(msg)
         if env in ("-s", "--staging", "-staging", "-d", "--debug", "-debug"):
             msg = str("Using default debug/staging variables for workspace_id "
                       "and Jira index sheet").format()
-            return env, msg, None, None
+            return env, msg, None, None, dev_minutes
         elif env in ("-p", "--prod", "-prod"):
             workspace_id = prod_workspace_id
             index_sheet = prod_jira_idx_sheet
-            msg = str("Set workspace_id to: {} and index_sheet to: {} "
-                      "for Prod environment").format(workspace_id, index_sheet)
-            return env, msg, workspace_id, index_sheet
+            minutes = prod_minutes
+            msg = str("Set workspace_id to: {}, index_sheet to: {}, "
+                      "and minutes to: {} "
+                      "for Prod environment").format(workspace_id,
+                                                     index_sheet, minutes)
+            return env, msg, workspace_id, index_sheet, minutes
 
 
 def set_logging_config(env):
@@ -157,7 +161,7 @@ def set_logging_config(env):
     return logging_config
 
 
-env, logging_msg, workspace_id, index_sheet = set_env_vars()
+env, logging_msg, workspace_id, index_sheet, minutes = set_env_vars()
 logging_config = set_logging_config(env)
 try:
     os.mkdir(log_location)
@@ -176,8 +180,8 @@ if logging_msg == "no_flag":
 logging.info(logging_msg)
 
 executors = {
-    'default': ThreadPoolExecutor(1),
-    'processpool': ProcessPoolExecutor(1)
+    'default': ThreadPoolExecutor(10),
+    'processpool': ProcessPoolExecutor(2)
 }
 job_defaults = {
     'coalesce': True,
@@ -408,6 +412,7 @@ def track_time(func, **args):
     return elapsed
 
 
+# TODO: Parallelize scheduled jobs
 def main():
     """Configures the scheduler to run two jobs. One job runs full_jira_sync
        every 30 seconds and looks back based on the minutes defined in
@@ -436,6 +441,15 @@ def main():
                       args=[10080],
                       day='*/1',
                       hour='1')
+
+    logging.debug("------------------------")
+    logging.debug("Adding job to write new Jira tickets in real time. "
+                  "Interval = every 60 seconds.")
+    logging.debug("------------------------")
+    scheduler.add_job(create_tickets,
+                      'interval',
+                      args=[smartsheet_client, minutes],
+                      seconds=60)
     return True
 
 

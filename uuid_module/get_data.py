@@ -54,17 +54,17 @@ def refresh_source_sheets(smartsheet_client, sheet_ids, minutes=0):
         _, modified_since = get_timestamp(minutes)
         for sheet_id in sheet_ids:
             # Query the Smartsheet API for the sheet details
-            sheet = smartsheet_client.\
-                Sheets.get_sheet(
-                    sheet_id, rows_modified_since=modified_since)
+            sheet = smartsheet_client.Sheets.get_sheet(
+                sheet_id, include='object_value', level=2,
+                rows_modified_since=modified_since)
             source_sheets.append(sheet)
             logging.debug("Loaded Sheet ID: {} | "
                           "Sheet Name: {}".format(sheet.id, sheet.name))
     elif minutes == 0:
         for sheet_id in sheet_ids:
             # Query the Smartsheet API for the sheet details
-            sheet = smartsheet_client.\
-                Sheets.get_sheet(sheet_id)
+            sheet = smartsheet_client.Sheets.get_sheet(
+                sheet_id, include='object_value', level=2)
             source_sheets.append(sheet)
             logging.debug("Loaded Sheet ID: {} | "
                           "Sheet Name: {}".format(sheet.id, sheet.name))
@@ -130,9 +130,9 @@ def get_all_row_data(source_sheets, columns, minutes):
         for row in sheet.rows:
             summary_cell = get_cell_value(
                 row, summary_col, col_map)
-            uuid_cell = get_cell_data(row, uuid_col, col_map)
-
-            if uuid_cell is None:
+            try:
+                uuid_cell = get_cell_data(row, uuid_col, col_map)
+            except KeyError:
                 logging.debug("Sheet ID {} | Sheet Name {} "
                               "doesn't have UUID column. "
                               "Skipping sheet.".format(sheet.id, sheet.name))
@@ -292,7 +292,8 @@ def get_jira_index_sheet(smartsheet_client, index_sheet=dev_jira_idx_sheet):
         msg = str("Smartsheet Client must be type: smartsheet.Smartsheet, "
                   "not type: {}").format(type(smartsheet_client))
         raise TypeError(msg)
-    index_sheet = smartsheet_client.Sheets.get_sheet(index_sheet)
+    index_sheet = smartsheet_client.Sheets.get_sheet(
+        index_sheet, include='object_value', level=2)
     return index_sheet
 
 
