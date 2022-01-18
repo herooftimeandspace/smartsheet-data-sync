@@ -119,7 +119,8 @@ def write_jira_index_cell_links(project_sub_index,
     # Iterate through each sheet ID in the smaller sheet index.
     for sheet_id in dest_sheet_index.keys():
         # Get the sheet data for the ID.
-        dest_sheet = smartsheet_client.Sheets.get_sheet(sheet_id)
+        dest_sheet = smartsheet_client.Sheets.get_sheet(
+            sheet_id, include='object_value', level=2)
 
         # Build a column map for easier column name to ID reference
         dest_col_map = get_column_map(dest_sheet)
@@ -308,7 +309,8 @@ def write_predecessor_dates(src_data, project_data_index, smartsheet_client):
 
     # Query the API for the sheet data, get the column map, and get the row
     # data. Include the objectValue so we can see the row predecessor(s).
-    dest_sheet = smartsheet_client.Sheets.get_sheet(dest_sheet_id)
+    dest_sheet = smartsheet_client.Sheets.get_sheet(
+        dest_sheet_id, include='object_value', level=2)
     dest_col_map = get_column_map(dest_sheet)
     dest_row = smartsheet_client.Sheets.get_row(dest_sheet_id,
                                                 dest_row_id,
@@ -380,7 +382,8 @@ def write_predecessor_dates(src_data, project_data_index, smartsheet_client):
             logging.warning(msg)
             dest_sheet_id = json_extract(dest_start_cell, "sheetId")
             dest_row_id = json_extract(dest_start_cell, "rowId")
-            dest_sheet = smartsheet_client.Sheets.get_sheet(dest_sheet_id)
+            dest_sheet = smartsheet_client.Sheets.get_sheet(
+                dest_sheet_id, include='object_value', level=2)
             dest_col_map = get_column_map(dest_sheet)
             dest_row = smartsheet_client.Sheets.get_row(dest_sheet_id,
                                                         dest_row_id)
