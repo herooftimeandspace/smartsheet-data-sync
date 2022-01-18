@@ -10,6 +10,11 @@ logger = logging.getLogger(__name__)
 cwd = os.path.dirname(os.path.abspath(__file__))
 
 
+@pytest.fixture(scope="module")
+def env():
+    return "-debug"
+
+
 # Need Mock
 @pytest.fixture(scope="module")
 def smartsheet_client(env):
@@ -29,4 +34,4 @@ def test_create_tickets(smartsheet_client):
     with pytest.raises(TypeError):
         create_tickets("smartsheet_client")
 
-    assert type(smartsheet_client) == smartsheet.Smartsheet()
+    assert isinstance(smartsheet_client, smartsheet.Smartsheet)
