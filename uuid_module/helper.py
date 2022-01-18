@@ -150,7 +150,10 @@ def get_cell_value(row, col_name, col_map):
     elif not isinstance(col_map, dict):
         raise TypeError("Column Map must be a dict of ColNames:ColIDs")
 
-    cell = get_cell_data(row, col_name, col_map)
+    try:
+        cell = get_cell_data(row, col_name, col_map)
+    except KeyError:
+        cell = None
     if cell is None or cell.value is None:
         msg = str("Cell is 'None' or cell value is 'None'. "
                   "Returning 'None'").format()
