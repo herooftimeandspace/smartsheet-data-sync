@@ -130,9 +130,9 @@ def get_all_row_data(source_sheets, columns, minutes):
         for row in sheet.rows:
             summary_cell = get_cell_value(
                 row, summary_col, col_map)
-            uuid_cell = get_cell_data(row, uuid_col, col_map)
-
-            if uuid_cell is None:
+            try:
+                uuid_cell = get_cell_data(row, uuid_col, col_map)
+            except KeyError:
                 logging.debug("Sheet ID {} | Sheet Name {} "
                               "doesn't have UUID column. "
                               "Skipping sheet.".format(sheet.id, sheet.name))
