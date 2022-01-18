@@ -545,6 +545,11 @@ def create_ticket_index(source_sheets, index_sheet, index_col_map):
 # from the Jira Ticket field and/or filtering out UUID matches + nonNull
 # Jira Ticket field on the Index sheet
 def create_tickets(smartsheet_client, minutes=dev_minutes):
+    if not isinstance(smartsheet_client, smartsheet.Smartsheet):
+        msg = str("Smartsheet Client must be type: smartsheet.Smartsheet, not"
+                  " {}").format(type(smartsheet_client))
+        raise TypeError(msg)
+
     source_sheets, index_sheet, index_col_map = refresh_sheets(
         smartsheet_client, minutes)
     parent = create_ticket_index(source_sheets, index_sheet, index_col_map)

@@ -9,6 +9,7 @@ from freezegun import freeze_time
 from uuid_module.build_data import build_linked_cell, build_row, dest_indexes
 from uuid_module.get_data import get_all_row_data, get_secret, get_secret_name
 from uuid_module.helper import get_column_map
+from uuid_module.create_jira_tickets import create_tickets
 from uuid_module.variables import (assignee_col, jira_col, dev_minutes,
                                    sheet_columns, status_col, task_col)
 
