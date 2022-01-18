@@ -430,7 +430,7 @@ def build_row_data(row, col_map):
     return row_data
 
 
-def create_new_tickets(source_sheets, index_sheet, index_col_map):
+def create_ticket_index(source_sheets, index_sheet, index_col_map):
 
     tickets_to_create = {}
 
@@ -547,7 +547,7 @@ def create_new_tickets(source_sheets, index_sheet, index_col_map):
 def create_tickets(smartsheet_client, minutes=dev_minutes):
     source_sheets, index_sheet, index_col_map = refresh_sheets(
         smartsheet_client, minutes)
-    parent = create_new_tickets(source_sheets, index_sheet, index_col_map)
+    parent = create_ticket_index(source_sheets, index_sheet, index_col_map)
     logging.debug("Parent Dict")
     logging.debug("------------------------")
     logging.debug(parent)
