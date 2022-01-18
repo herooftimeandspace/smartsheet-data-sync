@@ -16,4 +16,4 @@ from .helper import (chunks, get_cell_data, get_cell_value, get_column_map,
                      get_timestamp, has_cell_link, json_extract, truncate)
 from .write_data import (check_uuid, write_jira_index_cell_links,
                          write_predecessor_dates, write_uuids)
-from create_jira_tickets import create_tickets
+from .create_jira_tickets import create_tickets
