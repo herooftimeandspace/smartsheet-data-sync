@@ -180,8 +180,8 @@ if logging_msg == "no_flag":
 logging.info(logging_msg)
 
 executors = {
-    'default': ThreadPoolExecutor(1),
-    'processpool': ProcessPoolExecutor(1)
+    'default': ThreadPoolExecutor(10),
+    'processpool': ProcessPoolExecutor(2)
 }
 job_defaults = {
     'coalesce': True,
@@ -412,6 +412,7 @@ def track_time(func, **args):
     return elapsed
 
 
+# TODO: Parallelize scheduled jobs
 def main():
     """Configures the scheduler to run two jobs. One job runs full_jira_sync
        every 30 seconds and looks back based on the minutes defined in
