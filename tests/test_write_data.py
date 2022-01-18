@@ -7,7 +7,7 @@ import smartsheet
 from freezegun import freeze_time
 from uuid_module.get_data import (get_all_row_data, get_secret,
                                   get_secret_name, get_sub_indexes)
-from uuid_module.variables import (minutes, sheet_columns)
+from uuid_module.variables import (dev_minutes, sheet_columns)
 from uuid_module.write_data import (check_uuid, write_jira_index_cell_links,
                                     write_predecessor_dates, write_uuids)
 
@@ -58,7 +58,7 @@ def env():
 
 @pytest.fixture
 def minutes_fixture():
-    min = minutes
+    min = dev_minutes
     return min
 
 

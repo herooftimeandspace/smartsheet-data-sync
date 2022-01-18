@@ -9,7 +9,7 @@ from freezegun import freeze_time
 from uuid_module.build_data import build_linked_cell, build_row, dest_indexes
 from uuid_module.get_data import get_all_row_data, get_secret, get_secret_name
 from uuid_module.helper import get_column_map
-from uuid_module.variables import (assignee_col, jira_col, minutes,
+from uuid_module.variables import (assignee_col, jira_col, dev_minutes,
                                    sheet_columns, status_col, task_col)
 
 logger = logging.getLogger(__name__)
@@ -95,7 +95,7 @@ def jira_column():
 
 @pytest.fixture
 def minutes_fixture():
-    min = minutes
+    min = dev_minutes
     return min
 
 
@@ -105,7 +105,7 @@ def env():
 
 
 # Need Mock
-@pytest.fixture
+@pytest.fixture(scope="module")
 def smartsheet_client(env):
     secret_name = get_secret_name(env)
     try:
