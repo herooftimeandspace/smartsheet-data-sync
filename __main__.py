@@ -180,12 +180,12 @@ if logging_msg == "no_flag":
 logging.info(logging_msg)
 
 executors = {
-    'default': ThreadPoolExecutor(10),
-    'processpool': ProcessPoolExecutor(2)
+    'default': ThreadPoolExecutor(20),
+    'processpool': ProcessPoolExecutor(1)
 }
 job_defaults = {
     'coalesce': True,
-    'max_instances': 5
+    'max_instances': 10
 }
 scheduler = BlockingScheduler(executors=executors, job_defaults=job_defaults)
 
