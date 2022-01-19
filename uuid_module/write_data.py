@@ -13,6 +13,7 @@ from uuid_module.variables import (assignee_col, jira_col, predecessor_col,
 logger = logging.getLogger(__name__)
 
 
+# TODO: Refactor for smartsheet_api.py. Pass the whole sheet object
 def write_uuids(sheets_to_update, smartsheet_client):
     """Writes UUIDs back to a collection of Smartsheets
 
@@ -50,10 +51,10 @@ def write_uuids(sheets_to_update, smartsheet_client):
         # create new row and cell objects to overwrite the existing data,
         # and update the UUID value for the row.
         for row_id, cell_data in row_data.items():
-            new_row = smartsheet_client.models.Row()
+            new_row = smartsheet.models.Row()
             new_row.id = int(row_id)
 
-            new_cell = smartsheet_client.models.Cell()
+            new_cell = smartsheet.models.Cell()
             new_cell.column_id = int(cell_data['column_id'])
             new_cell.value = cell_data['uuid']
 
@@ -66,6 +67,7 @@ def write_uuids(sheets_to_update, smartsheet_client):
                       "| Sheet Name: {}").format(len(rows_to_write),
                                                  sheet_id, sheet_name)
             logging.debug(msg)
+            # TODO: Replace with smartsheet_api.py
             result = smartsheet_client.Sheets.update_rows(int(sheet_id),
                                                           rows_to_write)
             msg = str("Smartsheet API responded with the "
@@ -119,6 +121,7 @@ def write_jira_index_cell_links(project_sub_index,
     # Iterate through each sheet ID in the smaller sheet index.
     for sheet_id in dest_sheet_index.keys():
         # Get the sheet data for the ID.
+        # TODO: Replace with smartsheet_api.py
         dest_sheet = smartsheet_client.Sheets.get_sheet(
             sheet_id, include='object_value', level=2)
 
@@ -179,6 +182,7 @@ def write_jira_index_cell_links(project_sub_index,
                 chunked_cells = chunks(cell_links_to_update, 125)
                 for i in chunked_cells:
                     try:
+                        # TODO: Replace with smartsheet_api.py
                         result = smartsheet_client.Sheets.\
                             update_rows(dest_sheet.id, i)
                         logging.debug(result)
@@ -186,6 +190,7 @@ def write_jira_index_cell_links(project_sub_index,
                         logging.warning(e.message)
             else:
                 try:
+                    # TODO: Replace with smartsheet_api.py
                     result = smartsheet_client.Sheets.\
                         update_rows(dest_sheet.id, cell_links_to_update)
                     logging.debug(result)
@@ -309,9 +314,11 @@ def write_predecessor_dates(src_data, project_data_index, smartsheet_client):
 
     # Query the API for the sheet data, get the column map, and get the row
     # data. Include the objectValue so we can see the row predecessor(s).
+    # TODO: Replace with smartsheet_api.py
     dest_sheet = smartsheet_client.Sheets.get_sheet(
         dest_sheet_id, include='object_value', level=2)
     dest_col_map = get_column_map(dest_sheet)
+    # TODO: Replace with smartsheet_api.py
     dest_row = smartsheet_client.Sheets.get_row(dest_sheet_id,
                                                 dest_row_id,
                                                 include='objectValue')
@@ -343,6 +350,7 @@ def write_predecessor_dates(src_data, project_data_index, smartsheet_client):
     # TODO: Handle multiple predecessors. Find earliest predecessor and update
     # that date, or update every predecessor.
     while pred_cell.value is not None:
+        # TODO: Replace with smartsheet_api.py
         predecessor_row = smartsheet_client.Sheets.get_row(
             dest_sheet_id, dest_row_id, include='objectValue')
         pred_cell = get_cell_data(predecessor_row, predecessor_col,
@@ -382,9 +390,11 @@ def write_predecessor_dates(src_data, project_data_index, smartsheet_client):
             logging.warning(msg)
             dest_sheet_id = json_extract(dest_start_cell, "sheetId")
             dest_row_id = json_extract(dest_start_cell, "rowId")
+            # TODO: Replace with smartsheet_api.py
             dest_sheet = smartsheet_client.Sheets.get_sheet(
                 dest_sheet_id, include='object_value', level=2)
             dest_col_map = get_column_map(dest_sheet)
+            # TODO: Replace with smartsheet_api.py
             dest_row = smartsheet_client.Sheets.get_row(dest_sheet_id,
                                                         dest_row_id)
             dest_uuid = get_cell_data(dest_row, uuid_col, dest_col_map)
@@ -401,16 +411,17 @@ def write_predecessor_dates(src_data, project_data_index, smartsheet_client):
         logging.warning(msg)
     else:
         # Create empty cell
-        new_start_date_cell = smartsheet_client.models.Cell()
+        new_start_date_cell = smartsheet.models.Cell()
         new_start_date_cell.value = start_date
         new_start_date_cell.column_id = dest_col_map[start_col]
 
         # Create a new row and append the updated cell
-        new_row = smartsheet_client.models.Row()
+        new_row = smartsheet.models.Row()
         new_row.id = predecessor_row.id
         new_row.cells.append(new_start_date_cell)
 
         # Send the updated row to the destination sheet.
+        # TODO: Replace with smartsheet_api.py
         result = smartsheet_client.Sheets.update_rows(dest_sheet_id,
                                                       new_row)
         logging.debug(result)

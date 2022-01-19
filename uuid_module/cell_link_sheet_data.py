@@ -207,7 +207,7 @@ def write_uuid_cell_links(project_data_index, source_sheets,
                 logging.warning(msg)
                 continue
 
-            new_row = smartsheet_client.models.Row()
+            new_row = smartsheet.models.Row()
             new_row.id = int(dest_uuid.split("-")[1])
             dest_col_map = get_column_map(dest_sheet)
             dest_row = None
@@ -303,15 +303,15 @@ def write_uuid_cell_links(project_data_index, source_sheets,
                     continue
                 else:
                     # Cell Link object the data coming from source_uuid.
-                    cell_link = smartsheet_client.models.CellLink()
+                    cell_link = smartsheet.models.CellLink()
                     cell_link.sheet_id = int(source_uuid.split("-")[0])
                     cell_link.row_id = int(source_uuid.split("-")[1])
                     cell_link.column_id = int(source_col_id)
 
                     # New Cell object is written to the dest_uuid sheet.
-                    new_cell = smartsheet_client.models.Cell()
+                    new_cell = smartsheet.models.Cell()
                     new_cell.column_id = int(dest_col_id)
-                    new_cell.value = smartsheet_client.models.ExplicitNull()
+                    new_cell.value = smartsheet.models.ExplicitNull()
                     new_cell.link_in_from_cell = cell_link
 
                     # Append the new cell to the row after all the parameters
@@ -345,10 +345,12 @@ def write_uuid_cell_links(project_data_index, source_sheets,
             # If over 125 rows need to be written to a single sheet, chunk
             # the rows into segments of 125. Anything over 125 will cause
             # the API to fail.
+            # TODO: Add catch for < 125 rows
             if len(rows_to_update) > 125:
                 chunked_cells = chunks(rows_to_update, 125)
                 for i in chunked_cells:
                     try:
+                        # TODO: Replace with smartsheet_api.py
                         result = smartsheet_client.Sheets.\
                             update_rows(dest_sheet.id, i)
                         logging.debug(result)

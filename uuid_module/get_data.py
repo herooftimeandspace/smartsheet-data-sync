@@ -54,6 +54,7 @@ def refresh_source_sheets(smartsheet_client, sheet_ids, minutes=0):
         _, modified_since = get_timestamp(minutes)
         for sheet_id in sheet_ids:
             # Query the Smartsheet API for the sheet details
+            # TODO: Replace with smartsheet_api.py
             sheet = smartsheet_client.Sheets.get_sheet(
                 sheet_id, include='object_value', level=2,
                 rows_modified_since=modified_since)
@@ -63,6 +64,8 @@ def refresh_source_sheets(smartsheet_client, sheet_ids, minutes=0):
     elif minutes == 0:
         for sheet_id in sheet_ids:
             # Query the Smartsheet API for the sheet details
+            # TODO: Replace with smartsheet_api.py, maybe scrap because
+            # default dev_minutes == 1 year
             sheet = smartsheet_client.Sheets.get_sheet(
                 sheet_id, include='object_value', level=2)
             source_sheets.append(sheet)
@@ -287,6 +290,7 @@ def get_blank_uuids(source_sheets):
         return None
 
 
+# Delete
 def get_jira_index_sheet(smartsheet_client, index_sheet=dev_jira_idx_sheet):
     if not isinstance(smartsheet_client, smartsheet.Smartsheet):
         msg = str("Smartsheet Client must be type: smartsheet.Smartsheet, "
@@ -320,6 +324,7 @@ def load_jira_index(smartsheet_client, index_sheet=dev_jira_idx_sheet):
                   "not type: {}").format(type(smartsheet_client))
         raise TypeError(msg)
 
+    # Replace with smartsheet_api.py get_sheet
     jira_index_sheet = get_jira_index_sheet(
         smartsheet_client, index_sheet)
     msg = str("{} rows loaded from sheet ID: {} | Sheet name: {}"
@@ -417,6 +422,7 @@ def get_all_sheet_ids(smartsheet_client, minutes,
     sheet_ids = []
 
     for ws_id in workspace_id:
+        # Replace with smartsheet_api.py
         workspace = smartsheet_client.Workspaces.get_workspace(
             ws_id, load_all=True)
 

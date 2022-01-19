@@ -1,191 +1,15 @@
 import logging
 # import os
 import re
-# import sys
-# from logging.config import dictConfig
-# from time import sleep
 
-# import pytz
 import smartsheet
-# from apscheduler.executors.pool import ProcessPoolExecutor,
-#                                        ThreadPoolExecutor
-# from apscheduler.schedulers.background import BlockingScheduler
-# from uuid_module.get_data import(get_secret, get_secret_name)
+
 from uuid_module.get_data import (get_all_sheet_ids, get_jira_index_sheet,
                                   refresh_source_sheets)
 from uuid_module.helper import (get_cell_data, get_cell_value, get_column_map,
                                 has_cell_link)
-from uuid_module.variables import (dev_jira_idx_sheet, dev_workspace_id,
-                                   uuid_col, dev_minutes)
-
-# cwd = os.path.dirname(os.path.abspath(__file__))
-# log_location = os.path.join(cwd, log_location)
-# utc = pytz.UTC
-# minutes = 525600
-
-
-# def set_logging_config(env):
-#     if not isinstance(env, str):
-#         msg = str("Environment should be type: str, not {}").format(
-#             type(env))
-#         raise TypeError(msg)
-#     if env not in ("-s", "--staging", "-staging", "-p", "--prod", "-prod",
-#                    "-d", "--debug", "-debug"):
-#         msg = str("Invalid environment flag. '{}' was passed but it should "
-#                   "be '--debug', '--staging' or '--prod'").format(
-#             type(env))
-#         raise ValueError(msg)
-
-#     logging_config = dict(
-#         version=1,
-#         formatters={
-#             'f': {'format':
-#                   "%(asctime)s - %(levelname)s - %(message)s"}
-#         },
-#         handlers={
-#             'docker': {
-#                 'class': 'logging.StreamHandler',
-#                 'formatter': 'f',
-#                 'level': logging.INFO,
-#                 'stream': 'ext://sys.stdout'
-#             }
-#         },
-#         root={
-#             'handlers': ['docker'],  # 'console', 'file'
-#             'level': logging.DEBUG,
-#             'disable_existing_loggers': False
-#         },
-#     )
-#     if env in ("-s", "--staging", "-staging"):
-#         logging_config = dict(
-#             version=1,
-#             formatters={
-#                 'f': {'format':
-#                       "%(asctime)s - %(levelname)s - %(message)s"}
-#             },
-#             handlers={
-#                 'docker': {
-#                     'class': 'logging.StreamHandler',
-#                     'formatter': 'f',
-#                     'level': logging.INFO,
-#                     'stream': 'ext://sys.stdout'
-#                 }
-#             },
-#             root={
-#                 'handlers': ['docker'],  # 'console', 'file'
-#                 'level': logging.DEBUG,
-#                 'disable_existing_loggers': False
-#             },
-#         )
-#     elif env in ("-p", "--prod", "-prod"):
-#         logging_config = dict(
-#             version=1,
-#             formatters={
-#                 'f': {'format':
-#                       "%(asctime)s - %(levelname)s - %(message)s"}
-#             },
-#             handlers={
-#                 'docker': {
-#                     'class': 'logging.StreamHandler',
-#                     'formatter': 'f',
-#                     'level': logging.INFO,
-#                     'stream': 'ext://sys.stdout'
-#                 }
-#             },
-#             root={
-#                 'handlers': ['docker'],  # 'console', 'file'
-#                 'level': logging.DEBUG,
-#                 'disable_existing_loggers': False
-#             },
-#         )
-#     elif env in ("-d", "--debug", "-debug"):
-#         logging_config = dict(
-#             version=1,
-#             formatters={
-#                 'f': {'format':
-#                       "%(asctime)s - %(levelname)s - %(message)s"}
-#             },
-#             handlers={
-#                 'file': {
-#                     'class': 'logging.FileHandler',
-#                     'formatter': 'f',
-#                     'level': logging.DEBUG,
-#                     'filename': log_location + module_log_name
-#                 },
-#                 'docker': {
-#                     'class': 'logging.StreamHandler',
-#                     'formatter': 'f',
-#                     'level': logging.DEBUG,
-#                     'stream': 'ext://sys.stdout'
-#                 }
-#             },
-#             root={
-#                 'handlers': ['docker', 'file'],  # 'console', 'file'
-#                 'level': logging.DEBUG,
-#                 'disable_existing_loggers': False
-#             },
-#         )
-
-#     return logging_config
-
-
-# # Initialize client. Uses the API token in the environment variable
-# # "SMARTSHEET_ACCESS_TOKEN", which is pulled from the AWS Secrets API.
-# env = sys.argv[1:]
-# env = env[0]
-# logging_config = set_logging_config(env)
-# try:
-#     os.mkdir(log_location)
-#     f = open(log_location + module_log_name, "w")
-#     f.close
-#     dictConfig(logging_config)
-# except FileExistsError:
-#     dictConfig(logging_config)
-
-# logger = logging.getLogger()
-
-# executors = {
-#     'default': ThreadPoolExecutor(1),
-#     'processpool': ProcessPoolExecutor(1)
-# }
-# job_defaults = {
-#     'coalesce': True,
-#     'max_instances': 5
-# }
-# scheduler = BlockingScheduler(executors=executors, job_defaults=job_defaults)
-
-# if env in ("--", None):
-#     logging.error("No environment flag set. Please use --debug, --staging "
-#                   "or --prod. Terminating app.")
-#     quit()
-# else:
-#     msg = str("The {} flag was passed from the command line").format(env)
-#     logging.info(msg)
-#     if env in ("-s", "--staging", "-staging", "-d", "--debug", "-debug"):
-#         msg = str("Using default debug/staging variables for workspace_id "
-#                   "and Jira index sheet").format()
-#         logging.info(msg)
-#     elif env in ("-p", "--prod", "-prod"):
-#         workspace_id = prod_workspace_id
-#         index_sheet = prod_jira_idx_sheet
-#         msg = str("Set workspace_id to: {} and index_sheet to: {} "
-#                   "for Prod environment").format(workspace_id, index_sheet)
-#         logging.info(msg)
-
-# logging.debug("------------------------")
-# logging.debug("Initializing Smartsheet Client API")
-# logging.debug("------------------------")
-# secret_name = get_secret_name(env)
-# try:
-#     os.environ["SMARTSHEET_ACCESS_TOKEN"] = get_secret(secret_name)
-# except TypeError:
-#     msg = str("Refresh Isengard credentials")
-#     logging.error(msg)
-#     exit()
-# smartsheet_client = smartsheet.Smartsheet()
-# # Make sure we don't miss any error
-# smartsheet_client.errors_as_exceptions(True)
-
+from uuid_module.variables import (dev_jira_idx_sheet, dev_minutes,
+                                   dev_workspace_id, uuid_col)
 
 project_columns = ["Summary", "Tasks", "Issue Type", "Jira Ticket",
                    "Parent Ticket", "Program", "Initiative", "Team", "UUID",
@@ -208,6 +32,7 @@ def refresh_sheets(smartsheet_client, minutes=dev_minutes):
 
     # TODO: Load index sheet and kick off 2 functions. 1: Create new tickets
     # 2: Copy created tickets to program sheets via UUID
+    # TODO: Replace with smartsheet-api.py get_sheet
     index_sheet = get_jira_index_sheet(smartsheet_client, dev_jira_idx_sheet)
     index_col_map = get_column_map(index_sheet)
     return source_sheets, index_sheet, index_col_map
@@ -388,6 +213,7 @@ def link_predecessor_tickets(parent):
     return parent
 
 
+# TODO: Replace with smartsheet_api.py
 def write_to_sheet(rows_to_write, sheet, smartsheet_client,
                    write_method="add"):
     if rows_to_write and write_method == "add":
