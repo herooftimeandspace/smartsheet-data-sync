@@ -444,12 +444,12 @@ def main():
 
     logging.debug("------------------------")
     logging.debug("Adding job to write new Jira tickets in real time. "
-                  "Interval = every 60 seconds.")
+                  "Interval = every 5 minutes.")
     logging.debug("------------------------")
     scheduler.add_job(create_tickets,
                       'interval',
                       args=[smartsheet_client, minutes],
-                      seconds=60)
+                      minutes=5)
     return True
 
 
