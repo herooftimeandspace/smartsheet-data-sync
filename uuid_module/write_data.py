@@ -7,6 +7,7 @@ from uuid_module.build_data import build_row, dest_indexes
 from uuid_module.get_data import load_jira_index
 from uuid_module.helper import (chunks, get_cell_data, get_cell_value,
                                 get_column_map, json_extract)
+from uuid_module.smartsheet_api import get_row, get_sheet, write_rows_to_sheet
 from uuid_module.variables import (assignee_col, jira_col, predecessor_col,
                                    start_col, status_col, task_col, uuid_col)
 
@@ -14,7 +15,7 @@ logger = logging.getLogger(__name__)
 
 
 # TODO: Refactor for smartsheet_api.py. Pass the whole sheet object
-def write_uuids(sheets_to_update, smartsheet_client):
+def write_uuids(sheets_to_update):
     """Writes UUIDs back to a collection of Smartsheets
 
     Args:
@@ -28,10 +29,6 @@ def write_uuids(sheets_to_update, smartsheet_client):
     if not isinstance(sheets_to_update, dict):
         msg = str("Sheets to Update must be type: dict, not"
                   " {}").format(type(sheets_to_update))
-        raise TypeError(msg)
-    if not isinstance(smartsheet_client, smartsheet.Smartsheet):
-        msg = str("Smartsheet Client must be type: smartsheet.Smartsheet, not"
-                  " {}").format(type(smartsheet_client))
         raise TypeError(msg)
     # Reset the counter on each run
     sheets_updated = 0
@@ -68,11 +65,13 @@ def write_uuids(sheets_to_update, smartsheet_client):
                                                  sheet_id, sheet_name)
             logging.debug(msg)
             # TODO: Replace with smartsheet_api.py
-            result = smartsheet_client.Sheets.update_rows(int(sheet_id),
-                                                          rows_to_write)
-            msg = str("Smartsheet API responded with the "
-                      "following message: {}").format(result.result)
-            logging.debug(msg)
+            write_rows_to_sheet(rows_to_write, int(sheet_id),
+                                write_method="update")
+            # result = smartsheet_client.Sheets.update_rows(int(sheet_id),
+            #                                               rows_to_write)
+            # msg = str("Smartsheet API responded with the "
+            #           "following message: {}").format(result.result)
+            # logging.debug(msg)
             sheets_updated += 1
         else:
             msg = str("No UUID updates required for Sheet ID: "
@@ -182,18 +181,23 @@ def write_jira_index_cell_links(project_sub_index,
                 chunked_cells = chunks(cell_links_to_update, 125)
                 for i in chunked_cells:
                     try:
-                        # TODO: Replace with smartsheet_api.py
-                        result = smartsheet_client.Sheets.\
-                            update_rows(dest_sheet.id, i)
-                        logging.debug(result)
+                        # TODO: TEST with smartsheet_api.py
+                        write_rows_to_sheet(
+                            i, dest_sheet, write_method="update")
+                        # result = smartsheet_client.Sheets.\
+                        #     update_rows(dest_sheet.id, i)
+                        # logging.debug(result)
                     except Exception as e:
                         logging.warning(e.message)
             else:
                 try:
-                    # TODO: Replace with smartsheet_api.py
-                    result = smartsheet_client.Sheets.\
-                        update_rows(dest_sheet.id, cell_links_to_update)
-                    logging.debug(result)
+                    # TODO: TEST with smartsheet_api.py
+                    write_rows_to_sheet(
+                        cell_links_to_update, dest_sheet,
+                        write_method="update")
+                    # result = smartsheet_client.Sheets.\
+                    #     update_rows(dest_sheet.id, cell_links_to_update)
+                    # logging.debug(result)
                 except Exception as e:
                     logging.warning(e.message)
         else:
@@ -278,7 +282,7 @@ def check_uuid(uuid_value, jira_value, uuid_list, jira_data_values):
         return None
 
 
-def write_predecessor_dates(src_data, project_data_index, smartsheet_client):
+def write_predecessor_dates(src_data, project_data_index):
     """Ensure predecessor start dates are updated across all linked sheets,
        but only if the new start date is != the existing start date.
 
@@ -286,8 +290,6 @@ def write_predecessor_dates(src_data, project_data_index, smartsheet_client):
         src_data (dict): Row data from the write_uuid_cell_links.
         project_data_index (dict): The dict of UUIDs and row data pulled
                                    from every project sheet.
-        smartsheet_client (Object): The Smartsheet client to interact
-                                    with the API
 
     Returns:
         bool: True if the Start Date in the earliest predecessor was
@@ -302,10 +304,6 @@ def write_predecessor_dates(src_data, project_data_index, smartsheet_client):
         msg = str("Sheets to Update must be type: dict, not"
                   " {}").format(type(project_data_index))
         raise TypeError(msg)
-    if not isinstance(smartsheet_client, smartsheet.Smartsheet):
-        msg = str("Smartsheet Client must be type: smartsheet.Smartsheet, not"
-                  " {}").format(type(smartsheet_client))
-        raise TypeError(msg)
 
     # Create friendly names for sheet ID, row ID and start date.
     dest_sheet_id = src_data[uuid_col].split("-")[0]
@@ -314,14 +312,16 @@ def write_predecessor_dates(src_data, project_data_index, smartsheet_client):
 
     # Query the API for the sheet data, get the column map, and get the row
     # data. Include the objectValue so we can see the row predecessor(s).
-    # TODO: Replace with smartsheet_api.py
-    dest_sheet = smartsheet_client.Sheets.get_sheet(
-        dest_sheet_id, include='object_value', level=2)
+    # TODO: TEST with smartsheet_api.py
+    dest_sheet = get_sheet(dest_sheet_id)
+    # dest_sheet = smartsheet_client.Sheets.get_sheet(
+    #     dest_sheet_id, include='object_value', level=2)
     dest_col_map = get_column_map(dest_sheet)
     # TODO: Replace with smartsheet_api.py
-    dest_row = smartsheet_client.Sheets.get_row(dest_sheet_id,
-                                                dest_row_id,
-                                                include='objectValue')
+    dest_row = get_row(dest_sheet_id, dest_row_id)
+    # dest_row = smartsheet_client.Sheets.get_row(dest_sheet_id,
+    #                                             dest_row_id,
+    #                                             include='objectValue')
 
     # Validate that the start date is useful.
     if not start_date:
@@ -350,9 +350,10 @@ def write_predecessor_dates(src_data, project_data_index, smartsheet_client):
     # TODO: Handle multiple predecessors. Find earliest predecessor and update
     # that date, or update every predecessor.
     while pred_cell.value is not None:
-        # TODO: Replace with smartsheet_api.py
-        predecessor_row = smartsheet_client.Sheets.get_row(
-            dest_sheet_id, dest_row_id, include='objectValue')
+        # TODO: TEST with smartsheet_api.py
+        predecessor_row = get_row(dest_sheet_id, dest_row_id)
+        # predecessor_row = smartsheet_client.Sheets.get_row(
+        #     dest_sheet_id, dest_row_id, include='objectValue')
         pred_cell = get_cell_data(predecessor_row, predecessor_col,
                                   dest_col_map)
         pred_start_value = get_cell_value(dest_row, start_col, dest_col_map)
@@ -390,17 +391,19 @@ def write_predecessor_dates(src_data, project_data_index, smartsheet_client):
             logging.warning(msg)
             dest_sheet_id = json_extract(dest_start_cell, "sheetId")
             dest_row_id = json_extract(dest_start_cell, "rowId")
-            # TODO: Replace with smartsheet_api.py
-            dest_sheet = smartsheet_client.Sheets.get_sheet(
-                dest_sheet_id, include='object_value', level=2)
+            # TODO: TEST with smartsheet_api.py
+            dest_sheet = get_sheet(dest_sheet_id)
+            # dest_sheet = smartsheet_client.Sheets.get_sheet(
+            #     dest_sheet_id, include='object_value', level=2)
             dest_col_map = get_column_map(dest_sheet)
-            # TODO: Replace with smartsheet_api.py
-            dest_row = smartsheet_client.Sheets.get_row(dest_sheet_id,
-                                                        dest_row_id)
+            # TODO: TEST with smartsheet_api.py
+            dest_row = get_row(dest_sheet_id, dest_row_id)
+            # dest_row = smartsheet_client.Sheets.get_row(dest_sheet_id,
+            #                                             dest_row_id)
             dest_uuid = get_cell_data(dest_row, uuid_col, dest_col_map)
             row_data = project_data_index[dest_uuid]
             write_predecessor_dates(
-                row_data, project_data_index, smartsheet_client)
+                row_data, project_data_index)
     except AttributeError:
         logging.debug("Cell is not linked to another cell. Continuing.")
 
@@ -421,11 +424,15 @@ def write_predecessor_dates(src_data, project_data_index, smartsheet_client):
         new_row.cells.append(new_start_date_cell)
 
         # Send the updated row to the destination sheet.
-        # TODO: Replace with smartsheet_api.py
-        result = smartsheet_client.Sheets.update_rows(dest_sheet_id,
-                                                      new_row)
-        logging.debug(result)
-        logging.debug(
-            "Uploaded new start date {} to ancestor predecessor".format(
-                start_date))
+        # TODO: TEST with smartsheet_api.py
+        try:
+            write_rows_to_sheet(new_row, dest_sheet, write_method="update")
+            msg = str("Uploaded new start date {} to ancestor "
+                      "predecessor").format(start_date)
+            logging.debug(msg)
+        except Exception as e:
+            # result = smartsheet_client.Sheets.update_rows(dest_sheet_id,
+            #                                               new_row)
+            logging.debug(e)
+
         return True
