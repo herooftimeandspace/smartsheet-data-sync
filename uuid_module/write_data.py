@@ -1,5 +1,6 @@
 import json
 import logging
+
 import smartsheet
 
 # import smartsheet
@@ -8,8 +9,9 @@ from uuid_module.get_data import load_jira_index
 from uuid_module.helper import (chunks, get_cell_data, get_cell_value,
                                 get_column_map, json_extract)
 from uuid_module.smartsheet_api import get_row, get_sheet, write_rows_to_sheet
-from uuid_module.variables import (assignee_col, jira_col, predecessor_col,
-                                   start_col, status_col, task_col, uuid_col)
+from uuid_module.variables import (assignee_col, dev_jira_idx_sheet, jira_col,
+                                   predecessor_col, start_col, status_col,
+                                   task_col, uuid_col)
 
 logger = logging.getLogger(__name__)
 
@@ -81,7 +83,7 @@ def write_uuids(sheets_to_update):
 
 
 def write_jira_index_cell_links(project_sub_index,
-                                smartsheet_client):
+                                index_sheet=dev_jira_idx_sheet):
     """For each sheet in the destination sheet index, parse through the rows,
        determine if cells need to be linked, create cell links and then write
        the rows back to the sheet.
@@ -89,8 +91,8 @@ def write_jira_index_cell_links(project_sub_index,
     Args:
         project_sub_index (dict): The list of projects that have a
                                   UUID:Jira Ticket map.
-        smartsheet_client (Object): The Smartsheet client to interact
-                                    with the API
+        index_sheet (int): The Jira Index Sheet to write cell links to.
+            Defaults to the Dev Jira Index Sheet
 
     Returns:
         bool: True if any links were written, False if no data was
@@ -99,10 +101,6 @@ def write_jira_index_cell_links(project_sub_index,
     if not isinstance(project_sub_index, dict):
         msg = str("Project sub-index must be type: dict, not"
                   " {}").format(type(project_sub_index))
-        raise TypeError(msg)
-    if not isinstance(smartsheet_client, smartsheet.Smartsheet):
-        msg = str("Smartsheet Client must be type: smartsheet.Smartsheet, not"
-                  " {}").format(type(smartsheet_client))
         raise TypeError(msg)
 
     # Create a copy of the project_sub_index so that we don't alter any
@@ -114,15 +112,15 @@ def write_jira_index_cell_links(project_sub_index,
 
     # Create smaller indexes from the copy to speed up processing
     dest_sheet_index = dest_indexes(project_data_copy)[0]
+    # TODO: Control for environment
     jira_index_sheet, jira_index_col_map, jira_index_rows = load_jira_index(
-        smartsheet_client)
+        index_sheet)
 
     # Iterate through each sheet ID in the smaller sheet index.
     for sheet_id in dest_sheet_index.keys():
         # Get the sheet data for the ID.
-        # TODO: Replace with smartsheet_api.py
-        dest_sheet = smartsheet_client.Sheets.get_sheet(
-            sheet_id, include='object_value', level=2)
+        # TODO: TEST with smartsheet_api.py
+        dest_sheet = get_sheet(sheet_id, minutes=0)
 
         # Build a column map for easier column name to ID reference
         dest_col_map = get_column_map(dest_sheet)
