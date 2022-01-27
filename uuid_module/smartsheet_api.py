@@ -139,11 +139,20 @@ def get_sheet(sheet_id, minutes=dev_minutes):
                   "not type: {}").format(type(minutes))
         raise TypeError(msg)
 
-    modified_since, _ = get_timestamp(minutes)
+    if minutes > 0:
+        modified_since, _ = get_timestamp(minutes)
 
-    sheet = smartsheet_client.Sheets.get_sheet(
-        sheet_id, include='object_value', level=2,
-        rows_modified_since=modified_since)
+        sheet = smartsheet_client.Sheets.get_sheet(
+            sheet_id, include='object_value', level=2,
+            rows_modified_since=modified_since)
+    elif minutes == 0:
+        sheet = smartsheet_client.Sheets.get_sheet(
+            sheet_id, include='object_value', level=2)
+    else:
+        modified_since, _ = get_timestamp(minutes)
+        sheet = smartsheet_client.Sheets.get_sheet(
+            sheet_id, include='object_value', level=2,
+            rows_modified_since=modified_since)
     return sheet
 
 
@@ -171,7 +180,6 @@ def get_row(sheet_id, row_id):
                   "not type: {}").format(type(row_id))
         raise TypeError(msg)
 
-    row = smartsheet_client.Sheets.get_row(sheet_id,
-                                           row_id,
+    row = smartsheet_client.Sheets.get_row(sheet_id, row_id,
                                            include='objectValue')
     return row
