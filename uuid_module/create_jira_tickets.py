@@ -36,7 +36,7 @@ def refresh_sheets(smartsheet_client, minutes=dev_minutes):
     # 2: Copy created tickets to program sheets via UUID
     # TODO: Replace with smartsheet-api.py get_sheet
     index_sheet = get_sheet(prod_jira_idx_sheet)
-    index_sheet = get_jira_index_sheet(smartsheet_client, dev_jira_idx_sheet)
+    # index_sheet = get_jira_index_sheet(smartsheet_client, dev_jira_idx_sheet)
     index_col_map = get_column_map(index_sheet)
     return source_sheets, index_sheet, index_col_map
 
