@@ -259,7 +259,7 @@ def full_jira_sync(minutes):
     if blank_uuid_index:
         logging.info("There are {} project sheets to be updated "
                      "with UUIDs".format(len(blank_uuid_index)))
-        sheets_updated = write_uuids(blank_uuid_index, smartsheet_client)
+        sheets_updated = write_uuids(blank_uuid_index)
         if sheets_updated:
             logging.info("{} project sheet(s) updated with UUIDs"
                          "".format(sheets_updated))
