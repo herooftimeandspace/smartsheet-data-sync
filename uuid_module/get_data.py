@@ -13,13 +13,14 @@ from uuid_module.helper import (get_cell_data, get_cell_value, get_column_map,
                                 get_timestamp, json_extract)
 from uuid_module.variables import (jira_col, dev_jira_idx_sheet, summary_col,
                                    uuid_col, dev_workspace_id)
+from uuid_module.smartsheet_api import get_sheet
 
 logger = logging.getLogger(__name__)
 
 utc = pytz.UTC
 
 
-def refresh_source_sheets(smartsheet_client, sheet_ids, minutes=0):
+def refresh_source_sheets(sheet_ids, minutes=0):
     """Creates a dict of source sheets. If minutes is defined, only gathers
        sheets modified since the minutes value. Otherwise pulls all sheets
        from the workspaces.
@@ -44,34 +45,18 @@ def refresh_source_sheets(smartsheet_client, sheet_ids, minutes=0):
         raise TypeError("Minutes must be type: int")
     if minutes is not None and minutes < 0:
         raise ValueError("Minutes must be >= zero")
-    if not isinstance(smartsheet_client, smartsheet.Smartsheet):
-        msg = str("Smartsheet Client must be type: smartsheet.Smartsheet, not"
-                  " {}").format(type(smartsheet_client))
-        raise TypeError(msg)
 
     source_sheets = []
-    if minutes > 0:
-        _, modified_since = get_timestamp(minutes)
-        for sheet_id in sheet_ids:
-            # Query the Smartsheet API for the sheet details
-            # TODO: Replace with smartsheet_api.py
-            sheet = smartsheet_client.Sheets.get_sheet(
-                sheet_id, include='object_value', level=2,
-                rows_modified_since=modified_since)
-            source_sheets.append(sheet)
-            logging.debug("Loaded Sheet ID: {} | "
-                          "Sheet Name: {}".format(sheet.id, sheet.name))
-    elif minutes == 0:
-        for sheet_id in sheet_ids:
-            # Query the Smartsheet API for the sheet details
-            # TODO: Replace with smartsheet_api.py, maybe scrap because
-            # default dev_minutes == 1 year
-            sheet = smartsheet_client.Sheets.get_sheet(
-                sheet_id, include='object_value', level=2)
-            source_sheets.append(sheet)
-            logging.debug("Loaded Sheet ID: {} | "
-                          "Sheet Name: {}".format(sheet.id, sheet.name))
-
+    for sheet_id in sheet_ids:
+        # Query the Smartsheet API for the sheet details
+        # TODO: Replace with smartsheet_api.py
+        sheet = get_sheet(sheet_id, minutes)
+        # sheet = smartsheet_client.Sheets.get_sheet(
+        #     sheet_id, include='object_value', level=2,
+        #     rows_modified_since=modified_since)
+        source_sheets.append(sheet)
+        logging.debug("Loaded Sheet ID: {} | "
+                      "Sheet Name: {}".format(sheet.id, sheet.name))
     return source_sheets
 
 
