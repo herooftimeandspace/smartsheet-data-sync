@@ -5,6 +5,7 @@ import smartsheet
 
 from uuid_module.helper import (chunks, get_cell_data, get_cell_value,
                                 get_column_map, has_cell_link, json_extract)
+from uuid_module.smartsheet_api import write_rows_to_sheet
 from uuid_module.variables import (assignee_col, description_col, duration_col,
                                    jira_col, predecessor_col, start_col,
                                    status_col, task_col)
@@ -13,8 +14,7 @@ from uuid_module.write_data import write_predecessor_dates
 logger = logging.getLogger(__name__)
 
 
-def write_uuid_cell_links(project_data_index, source_sheets,
-                          smartsheet_client):
+def write_uuid_cell_links(project_data_index, source_sheets):
     """If the description column has a value, look it up against
        the UUIDs in the project dictionary. If a UUID matches, sync
        details.
@@ -39,10 +39,6 @@ def write_uuid_cell_links(project_data_index, source_sheets,
     if not isinstance(source_sheets, list):
         msg = str("Source sheets should be type: list, not {}").format(
             type(source_sheets))
-        raise TypeError(msg)
-    if not isinstance(smartsheet_client, smartsheet.Smartsheet):
-        msg = str("Smartsheet Client must be type: smartsheet.Smartsheet, not"
-                  " {}").format(type(smartsheet_client))
         raise TypeError(msg)
 
     # dest_uuid = sheet_id, row_id where we create the cell links. Data is
@@ -95,8 +91,7 @@ def write_uuid_cell_links(project_data_index, source_sheets,
                       "").format(row_data[start_col],
                                  row_data[predecessor_col])
             logging.debug(msg)
-            result = write_predecessor_dates(row_data, project_data_index,
-                                             smartsheet_client)
+            result = write_predecessor_dates(row_data, project_data_index)
             if result:
                 sync_columns = [status_col, assignee_col, task_col,
                                 duration_col]
@@ -350,10 +345,12 @@ def write_uuid_cell_links(project_data_index, source_sheets,
                 chunked_cells = chunks(rows_to_update, 125)
                 for i in chunked_cells:
                     try:
-                        # TODO: Replace with smartsheet_api.py
-                        result = smartsheet_client.Sheets.\
-                            update_rows(dest_sheet.id, i)
-                        logging.debug(result)
+                        # TODO: TEST with smartsheet_api.py
+                        write_rows_to_sheet(
+                            i, dest_sheet, write_method="update")
+                        # result = smartsheet_client.Sheets.\
+                        #     update_rows(dest_sheet.id, i)
+                        # logging.debug(result)
                     except Exception as e:
                         logging.warning(e.message)
         else:
