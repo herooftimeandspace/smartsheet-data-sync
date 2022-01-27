@@ -191,19 +191,19 @@ scheduler = BlockingScheduler(executors=executors, job_defaults=job_defaults)
 
 # Initialize client. Uses the API token in the environment variable
 # "SMARTSHEET_ACCESS_TOKEN", which is pulled from the AWS Secrets API.
-logging.debug("------------------------")
-logging.debug("Initializing Smartsheet Client API")
-logging.debug("------------------------")
-secret_name = get_secret_name(env)
-try:
-    os.environ["SMARTSHEET_ACCESS_TOKEN"] = get_secret(secret_name)
-except TypeError:
-    msg = str("Refresh Isengard credentials")
-    logging.error(msg)
-    exit()
-smartsheet_client = smartsheet.Smartsheet()
-# Make sure we don't miss any error
-smartsheet_client.errors_as_exceptions(True)
+# logging.debug("------------------------")
+# logging.debug("Initializing Smartsheet Client API")
+# logging.debug("------------------------")
+# secret_name = get_secret_name(env)
+# try:
+#     os.environ["SMARTSHEET_ACCESS_TOKEN"] = get_secret(secret_name)
+# except TypeError:
+#     msg = str("Refresh Isengard credentials")
+#     logging.error(msg)
+#     exit()
+# smartsheet_client = smartsheet.Smartsheet()
+# # Make sure we don't miss any error
+# smartsheet_client.errors_as_exceptions(True)
 
 sheet_id_lock = threading.Lock()
 sheet_index_lock = threading.Lock()
@@ -238,13 +238,11 @@ def full_jira_sync(minutes):
 
     if workspace_id and index_sheet:
         with sheet_id_lock:
-            sheet_ids = get_all_sheet_ids(
-                smartsheet_client, minutes, workspace_id, index_sheet)
+            sheet_ids = get_all_sheet_ids(minutes, workspace_id, index_sheet)
             sheet_ids = list(set(sheet_ids))
     else:
         with sheet_id_lock:
-            sheet_ids = get_all_sheet_ids(
-                smartsheet_client, minutes)
+            sheet_ids = get_all_sheet_ids(minutes)
             sheet_ids = list(set(sheet_ids))
 
     global sheet_index_lock
@@ -252,8 +250,7 @@ def full_jira_sync(minutes):
     # since the last run.
 
     with sheet_index_lock:
-        source_sheets = refresh_source_sheets(
-            smartsheet_client, sheet_ids, minutes)
+        source_sheets = refresh_source_sheets(sheet_ids, minutes)
 
     blank_uuid_index = get_blank_uuids(source_sheets)
     if blank_uuid_index:
@@ -332,7 +329,7 @@ def full_jira_sync(minutes):
     # creating the Jira Index objects, then write the cell links
     # Centralize smartsheet_client calls, quit passing the object around
     logging.debug("Writing Jira cell links.")
-    write_jira_index_cell_links(project_sub_index, smartsheet_client)
+    write_jira_index_cell_links(project_sub_index, index_sheet)
     # logging.debug("Writing UUID cell links.")
     # write_uuid_cell_links(project_uuid_index,
     #                       source_sheets, smartsheet_client)
@@ -353,13 +350,11 @@ def full_smartsheet_sync():
     global sheet_id_lock
     if workspace_id and index_sheet:
         with sheet_id_lock:
-            sheet_ids = get_all_sheet_ids(
-                smartsheet_client, minutes, workspace_id, index_sheet)
+            sheet_ids = get_all_sheet_ids(minutes, workspace_id, index_sheet)
             sheet_ids = list(set(sheet_ids))
     else:
         with sheet_id_lock:
-            sheet_ids = get_all_sheet_ids(
-                smartsheet_client, minutes)
+            sheet_ids = get_all_sheet_ids(minutes)
             sheet_ids = list(set(sheet_ids))
 
     global sheet_index_lock
@@ -367,8 +362,7 @@ def full_smartsheet_sync():
     # since the last run.
 
     with sheet_index_lock:
-        source_sheets = refresh_source_sheets(
-            smartsheet_client, sheet_ids, minutes)
+        source_sheets = refresh_source_sheets(sheet_ids, minutes)
 
     with project_index_lock:
         try:
@@ -378,7 +372,7 @@ def full_smartsheet_sync():
             msg = str("Getting all row data returned an error. {}").format(e)
             logging.error(msg)
 
-    write_uuid_cell_links(project_uuid_index, source_sheets, smartsheet_client)
+    write_uuid_cell_links(project_uuid_index, source_sheets)
 
     end = time.time()
     elapsed = end - start
@@ -448,7 +442,7 @@ def main():
     logging.debug("------------------------")
     scheduler.add_job(create_tickets,
                       'interval',
-                      args=[smartsheet_client, minutes],
+                      args=[minutes],
                       minutes=5)
     return True
 
