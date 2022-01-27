@@ -4,11 +4,11 @@ import re
 
 import smartsheet
 
-from uuid_module.get_data import (get_all_sheet_ids, get_jira_index_sheet,
+from uuid_module.get_data import (get_all_sheet_ids,
                                   refresh_source_sheets)
 from uuid_module.helper import (get_cell_data, get_cell_value, get_column_map,
                                 has_cell_link)
-from uuid_module.smartsheet_api import get_sheet
+from uuid_module.smartsheet_api import get_sheet, write_rows_to_sheet
 from uuid_module.variables import (dev_jira_idx_sheet, dev_minutes,
                                    dev_workspace_id, prod_jira_idx_sheet,
                                    uuid_col)
@@ -22,19 +22,17 @@ jira_index_columns = ["Tasks", "Issue Type", "Jira Ticket", "Issue Links",
                       "Epic Name", "Summary", "Inject", "KTLO", "UUID"]
 
 
-def refresh_sheets(smartsheet_client, minutes=dev_minutes):
-    sheet_ids = get_all_sheet_ids(
-        smartsheet_client, minutes, workspace_id=dev_workspace_id,
-        index_sheet=dev_jira_idx_sheet)
+def refresh_sheets(minutes=dev_minutes):
+    sheet_ids = get_all_sheet_ids(minutes, workspace_id=dev_workspace_id,
+                                  index_sheet=dev_jira_idx_sheet)
     msg = str("Sheet IDs object type {}, object values {}").format(
         type(sheet_ids), sheet_ids)
     logging.debug(msg)
-    source_sheets = refresh_source_sheets(
-        smartsheet_client, sheet_ids, minutes)
+    source_sheets = refresh_source_sheets(sheet_ids, minutes)
 
     # TODO: Load index sheet and kick off 2 functions. 1: Create new tickets
     # 2: Copy created tickets to program sheets via UUID
-    # TODO: Replace with smartsheet-api.py get_sheet
+    # TODO: TEST with smartsheet-api.py get_sheet
     index_sheet = get_sheet(prod_jira_idx_sheet)
     # index_sheet = get_jira_index_sheet(smartsheet_client, dev_jira_idx_sheet)
     index_col_map = get_column_map(index_sheet)
@@ -204,7 +202,7 @@ def push_jira_ticket_to_sheet(sheet, sheet_col_map,
         msg = str("Updating {} rows with newly created Jira Tickets"
                   "").format(len(rows_to_update))
         logging.info(msg)
-        write_to_sheet(rows_to_update, sheet, write_method="update")
+        write_rows_to_sheet(rows_to_update, sheet, write_method="update")
     else:
         msg = str("All Jira Tickets have pre-existing links to Sheet ID: {} "
                   "| Sheet Name: {}").format(sheet.id, sheet.name)
@@ -224,38 +222,6 @@ def link_predecessor_tickets(parent):
     return parent
 
 
-# TODO: Replace with smartsheet_api.py
-def write_to_sheet(rows_to_write, sheet, smartsheet_client,
-                   write_method="add"):
-    if rows_to_write and write_method == "add":
-        msg = str("Writing {} rows back to Sheet ID: {} "
-                  "| Sheet Name: {}").format(len(rows_to_write),
-                                             sheet.id, sheet.name)
-        logging.debug(msg)
-
-        # msg = 'OK'
-        try:
-            result = smartsheet_client.Sheets.add_rows(int(sheet.id),
-                                                       rows_to_write)
-            msg = str("Smartsheet API responded with the "
-                      "following message: {}").format(result.result)
-        except smartsheet.exceptions.ApiError as result:
-            msg = result
-    elif rows_to_write and write_method == "update":
-        try:
-            result = smartsheet_client.Sheets.update_rows(
-                int(sheet.id), rows_to_write)
-            msg = str("Smartsheet API responded with the "
-                      "following message: {}").format(result.result)
-        except smartsheet.exceptions.ApiError as result:
-            msg = result
-    else:
-        msg = str("No rows added to Sheet ID: "
-                  "{} | Sheet Name: {}").format(sheet.id, sheet.name)
-
-    logging.info(msg)
-
-
 def build_row_data(row, col_map):
     row_data = {}
     for col in project_columns:
@@ -267,8 +233,7 @@ def build_row_data(row, col_map):
     return row_data
 
 
-def create_ticket_index(source_sheets, index_sheet, index_col_map,
-                        smartsheet_client):
+def create_ticket_index(source_sheets, index_sheet, index_col_map):
 
     tickets_to_create = {}
 
@@ -367,8 +332,8 @@ def create_ticket_index(source_sheets, index_sheet, index_col_map,
                     continue
             logging.debug("Made it past all IFs without triggering")
             logging.debug(row_data)
-        write_to_sheet(sheet_rows_to_update, sheet, smartsheet_client,
-                       write_method="update")
+        write_rows_to_sheet(sheet_rows_to_update, sheet,
+                            write_method="update")
 
     logging.debug("Top-level Rows to create first")
     logging.debug("------------------------")
@@ -382,16 +347,11 @@ def create_ticket_index(source_sheets, index_sheet, index_col_map,
 # TODO: Drop parent rows once written to index sheet by removing the "Create"
 # from the Jira Ticket field and/or filtering out UUID matches + nonNull
 # Jira Ticket field on the Index sheet
-def create_tickets(smartsheet_client, minutes=dev_minutes):
-    if not isinstance(smartsheet_client, smartsheet.Smartsheet):
-        msg = str("Smartsheet Client must be type: smartsheet.Smartsheet, not"
-                  " {}").format(type(smartsheet_client))
-        raise TypeError(msg)
+def create_tickets(minutes=dev_minutes):
 
-    source_sheets, index_sheet, index_col_map = refresh_sheets(
-        smartsheet_client, minutes)
+    source_sheets, index_sheet, index_col_map = refresh_sheets(minutes)
     parent = create_ticket_index(
-        source_sheets, index_sheet, index_col_map, smartsheet_client)
+        source_sheets, index_sheet, index_col_map)
     logging.debug("Parent Dict")
     logging.debug("------------------------")
     logging.debug(parent)
@@ -402,7 +362,7 @@ def create_tickets(smartsheet_client, minutes=dev_minutes):
         # TODO: toggle hidden flag to prevent pushing again (filter
         # above)
         rows_to_write = form_rows(parent, index_col_map)
-        write_to_sheet(rows_to_write, index_sheet, smartsheet_client)
+        write_rows_to_sheet(rows_to_write, index_sheet)
     elif not parent:
         msg = str("No parent or child rows remain to be written to the "
                   "Jira Index Sheet.")
