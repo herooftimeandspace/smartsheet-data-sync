@@ -11,7 +11,7 @@ smartsheet_client = smartsheet.Smartsheet()
 smartsheet_client.errors_as_exceptions(True)
 
 
-def write_to_sheet(rows_to_write, sheet, smartsheet_client,
+def write_to_sheet(rows_to_write, sheet,
                    write_method="add"):
     """Writes rows back to a given sheet
 
