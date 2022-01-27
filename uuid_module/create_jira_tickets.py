@@ -8,8 +8,10 @@ from uuid_module.get_data import (get_all_sheet_ids, get_jira_index_sheet,
                                   refresh_source_sheets)
 from uuid_module.helper import (get_cell_data, get_cell_value, get_column_map,
                                 has_cell_link)
+from uuid_module.smartsheet_api import get_sheet
 from uuid_module.variables import (dev_jira_idx_sheet, dev_minutes,
-                                   dev_workspace_id, uuid_col)
+                                   dev_workspace_id, prod_jira_idx_sheet,
+                                   uuid_col)
 
 project_columns = ["Summary", "Tasks", "Issue Type", "Jira Ticket",
                    "Parent Ticket", "Program", "Initiative", "Team", "UUID",
@@ -33,11 +35,18 @@ def refresh_sheets(smartsheet_client, minutes=dev_minutes):
     # TODO: Load index sheet and kick off 2 functions. 1: Create new tickets
     # 2: Copy created tickets to program sheets via UUID
     # TODO: Replace with smartsheet-api.py get_sheet
+    index_sheet = get_sheet(prod_jira_idx_sheet)
     index_sheet = get_jira_index_sheet(smartsheet_client, dev_jira_idx_sheet)
     index_col_map = get_column_map(index_sheet)
     return source_sheets, index_sheet, index_col_map
 
 
+# TODO: Refactor for the full chain of issue types across multiple Jira
+# projects
+# TODO: Handle creating and linking the Bug issue type
+# TODO: Handle indentation. See API docs
+# https://smartsheet-platform.github.io/api-docs/#specify-row-location
+# specifically parent_id, sibling_id
 def form_rows(row_dict, index_col_map):
     index_rows_to_add = []
     for uuid, data in row_dict.items():
@@ -45,6 +54,7 @@ def form_rows(row_dict, index_col_map):
         new_row.to_bottom = True
         if data['Parent Issue Type'] == "Sub-Task":
             # Skip Subtasks, we can't create them with the connector
+            # TODO: or data['Issue Type'] == "Sub-Task":
             continue
         for col_name, value in data.items():
             if col_name not in jira_index_columns:
@@ -90,6 +100,7 @@ def form_rows(row_dict, index_col_map):
                 'values': labels
             }
         })
+        # TODO: Add handling for "Project" Issue Type
         if data['Parent Issue Type'] in ("Epic, Story"):
             ticket = data['Parent Ticket']
             issue_link = str("implements {}").format(ticket)
