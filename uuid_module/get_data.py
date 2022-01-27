@@ -12,8 +12,8 @@ from botocore.exceptions import ClientError
 from uuid_module.helper import (get_cell_data, get_cell_value, get_column_map,
                                 get_timestamp, json_extract)
 from uuid_module.variables import (jira_col, dev_jira_idx_sheet, summary_col,
-                                   uuid_col, dev_workspace_id)
-from uuid_module.smartsheet_api import get_sheet
+                                   uuid_col, dev_workspace_id, dev_minutes)
+from uuid_module.smartsheet_api import get_sheet, get_workspace
 
 logger = logging.getLogger(__name__)
 
@@ -276,17 +276,17 @@ def get_blank_uuids(source_sheets):
 
 
 # Delete
-def get_jira_index_sheet(smartsheet_client, index_sheet=dev_jira_idx_sheet):
-    if not isinstance(smartsheet_client, smartsheet.Smartsheet):
-        msg = str("Smartsheet Client must be type: smartsheet.Smartsheet, "
-                  "not type: {}").format(type(smartsheet_client))
-        raise TypeError(msg)
-    index_sheet = smartsheet_client.Sheets.get_sheet(
-        index_sheet, include='object_value', level=2)
-    return index_sheet
+# def get_jira_index_sheet(smartsheet_client, index_sheet=dev_jira_idx_sheet):
+#     if not isinstance(smartsheet_client, smartsheet.Smartsheet):
+#         msg = str("Smartsheet Client must be type: smartsheet.Smartsheet, "
+#                   "not type: {}").format(type(smartsheet_client))
+#         raise TypeError(msg)
+#     index_sheet = smartsheet_client.Sheets.get_sheet(
+#         index_sheet, include='object_value', level=2)
+#     return index_sheet
 
 
-def load_jira_index(smartsheet_client, index_sheet=dev_jira_idx_sheet):
+def load_jira_index(index_sheet=dev_jira_idx_sheet):
     """Create indexes on the Jira index rows. Pulls from the Smartsheet API
        every time to get the most up-to-date version of the sheet data.
 
@@ -304,14 +304,9 @@ def load_jira_index(smartsheet_client, index_sheet=dev_jira_idx_sheet):
               row ID as the value.
 
     """
-    if not isinstance(smartsheet_client, smartsheet.Smartsheet):
-        msg = str("Smartsheet Client must be type: smartsheet.Smartsheet, "
-                  "not type: {}").format(type(smartsheet_client))
-        raise TypeError(msg)
 
-    # Replace with smartsheet_api.py get_sheet
-    jira_index_sheet = get_jira_index_sheet(
-        smartsheet_client, index_sheet)
+    # TODO: TEST with smartsheet_api.py get_sheet
+    jira_index_sheet = get_sheet(index_sheet, minutes=0)
     msg = str("{} rows loaded from sheet ID: {} | Sheet name: {}"
               "").format(len(jira_index_sheet.rows), jira_index_sheet.id,
                          jira_index_sheet.name)
@@ -375,7 +370,7 @@ def get_sub_indexes(project_data):
     return jira_sub_index, project_sub_index
 
 
-def get_all_sheet_ids(smartsheet_client, minutes,
+def get_all_sheet_ids(minutes=dev_minutes,
                       workspace_id=dev_workspace_id,
                       index_sheet=dev_jira_idx_sheet):
     """Get all the sheet IDs from every sheet in every folder, subfolder and
@@ -388,10 +383,6 @@ def get_all_sheet_ids(smartsheet_client, minutes,
     Returns:
         list: A list of all sheet IDs across every workspace
     """
-    if not isinstance(smartsheet_client, smartsheet.Smartsheet):
-        msg = str("Smartsheet Client must be type: smartsheet.Smartsheet, "
-                  "not type: {}").format(type(smartsheet_client))
-        raise TypeError(msg)
     if not isinstance(minutes, int):
         msg = str("Minutes should be type: int, not {}").format(type(minutes))
         raise TypeError(msg)
@@ -408,8 +399,7 @@ def get_all_sheet_ids(smartsheet_client, minutes,
 
     for ws_id in workspace_id:
         # Replace with smartsheet_api.py
-        workspace = smartsheet_client.Workspaces.get_workspace(
-            ws_id, load_all=True)
+        workspace = get_workspace(ws_id)
 
         if workspace.folders:
             ws = str(workspace)
