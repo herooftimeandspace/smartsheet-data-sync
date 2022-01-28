@@ -157,7 +157,8 @@ def push_jira_ticket_to_sheet(sheet, sheet_col_map,
 
         jira_link = get_cell_data(row, 'Jira Ticket', index_col_map)
         try:
-            if has_cell_link(jira_link, "Out") == 'Linked':
+            cell_link_status = has_cell_link(jira_link, "Out")
+            if cell_link_status in ('Linked', 'OK'):
                 # Skip linked rows
                 msg = str("Jira Ticket: {} has already been pushed to "
                           "Row ID: {} | Sheet ID: {} "

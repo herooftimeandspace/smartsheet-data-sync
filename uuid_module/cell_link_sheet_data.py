@@ -241,7 +241,7 @@ def write_uuid_cell_links(project_data_index, source_sheets):
                     logging.debug(msg)
                     break
 
-                if link_status == "Linked":
+                if link_status in ("OK", "Linked"):
                     msg = str("Destination cell value {} has a valid cell "
                               "link: {}. Continuing to next cell.").format(
                         cell.value, cell.link_in_from_cell)
@@ -253,7 +253,7 @@ def write_uuid_cell_links(project_data_index, source_sheets):
                               "").format(cell.value)
                     logging.debug(msg)
                     continue
-                elif link_status == "Unlinked" or link_status == "Broken":
+                elif link_status in ("Unlinked", "BROKEN", "Broken"):
                     if desc_cell:
                         msg = str("Cell link status is {}. "
                                   "Writing new cell link."

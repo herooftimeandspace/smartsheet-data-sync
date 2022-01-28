@@ -105,22 +105,28 @@ def has_cell_link(old_cell, direction):
     # Load the cell values as a json object
     cell_json = json.loads(str(old_cell))
 
-    try:
-        if direction == "In":
-            # Check the status of the link.
+    if direction == "In":
+        # Check the status of the link.
+        try:
             linked_cell = cell_json['linkInFromCell']
-            status = linked_cell['status']
-            # TODO: return status, fix upstream code to accept status values
-            if status == 'OK':
-                return "Linked"
-            elif status == 'BROKEN':
-                return "Broken"
-        elif direction == "Out":
-            # Always set to Linked, unless it's invalid.
+        except KeyError:
+            return "Unlinked"
+
+        status = linked_cell['status']
+        return status
+        # if status == 'OK':
+        #     return "Linked"
+        # elif status == 'BROKEN':
+        #     return "Broken"
+    elif direction == "Out":
+        # Always set to Linked if the value exists, unless it's invalid.
+        try:
             linked_cell = cell_json['linksOutToCells']
             return "Linked"
-    except KeyError:
-        raise KeyError("Unlinked")
+        except KeyError:
+            return "Unlinked"
+    else:
+        return None
 
 
 def get_cell_value(row, col_name, col_map):
