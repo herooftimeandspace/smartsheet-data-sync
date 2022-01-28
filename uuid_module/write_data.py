@@ -16,7 +16,6 @@ from uuid_module.variables import (assignee_col, dev_jira_idx_sheet, jira_col,
 logger = logging.getLogger(__name__)
 
 
-# TODO: Refactor for smartsheet_api.py. Pass the whole sheet object
 def write_uuids(sheets_to_update):
     """Writes UUIDs back to a collection of Smartsheets
 
@@ -66,7 +65,7 @@ def write_uuids(sheets_to_update):
                       "| Sheet Name: {}").format(len(rows_to_write),
                                                  sheet_id, sheet_name)
             logging.debug(msg)
-            # TODO: Replace with smartsheet_api.py
+            # TODO: TEST with smartsheet_api.py
             write_rows_to_sheet(rows_to_write, int(sheet_id),
                                 write_method="update")
             # result = smartsheet_client.Sheets.update_rows(int(sheet_id),
@@ -112,7 +111,6 @@ def write_jira_index_cell_links(project_sub_index,
 
     # Create smaller indexes from the copy to speed up processing
     dest_sheet_index = dest_indexes(project_data_copy)[0]
-    # TODO: Control for environment
     jira_index_sheet, jira_index_col_map, jira_index_rows = load_jira_index(
         index_sheet)
 
@@ -315,7 +313,7 @@ def write_predecessor_dates(src_data, project_data_index):
     # dest_sheet = smartsheet_client.Sheets.get_sheet(
     #     dest_sheet_id, include='object_value', level=2)
     dest_col_map = get_column_map(dest_sheet)
-    # TODO: Replace with smartsheet_api.py
+    # TODO: TEST with smartsheet_api.py
     dest_row = get_row(dest_sheet_id, dest_row_id)
     # dest_row = smartsheet_client.Sheets.get_row(dest_sheet_id,
     #                                             dest_row_id,
