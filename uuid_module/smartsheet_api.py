@@ -15,8 +15,7 @@ smartsheet_client.errors_as_exceptions(True)
 
 
 def write_rows_to_sheet(rows_to_write, sheet, write_method="add"):
-    """Writes rows back to a given sheet
-
+    """
     Args:
         rows_to_write (list): A list of rows and their data to write back to
             the sheet
@@ -24,6 +23,13 @@ def write_rows_to_sheet(rows_to_write, sheet, write_method="add"):
             or updated
         write_method (str, optional): Whether to add new rows or update
             existing rows. Defaults to "add".
+
+    Raises:
+        TypeError: Rows to Write must be a list of row data
+        TypeError: Sheet must be either a sheet object (dict) or a sheet ID
+            (int)
+        TypeError: Write method should be a str, or none if not passed
+        ValueError: Rows to write must not be an empty list
     """
     if not isinstance(rows_to_write, list):
         msg = str("Rows to write must be type: list not type {}"
