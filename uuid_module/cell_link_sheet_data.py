@@ -340,7 +340,6 @@ def write_uuid_cell_links(project_data_index, source_sheets):
             # If over 125 rows need to be written to a single sheet, chunk
             # the rows into segments of 125. Anything over 125 will cause
             # the API to fail.
-            # TODO: Add catch for < 125 rows
             if len(rows_to_update) > 125:
                 chunked_cells = chunks(rows_to_update, 125)
                 for i in chunked_cells:
@@ -353,5 +352,15 @@ def write_uuid_cell_links(project_data_index, source_sheets):
                         # logging.debug(result)
                     except Exception as e:
                         logging.warning(e.message)
+            elif len(rows_to_update) <= 125:
+                try:
+                    write_rows_to_sheet(
+                        rows_to_update, dest_sheet, write_method="Update")
+                except Exception as e:
+                    logging.warning(e.message)
+            else:
+                msg = str("Unknown error. Length of rows to update was {}."
+                          "").format(len(rows_to_update))
+                logging.error(msg)
         else:
             logging.debug("No updates required.")
