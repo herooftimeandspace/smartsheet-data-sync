@@ -13,8 +13,7 @@ smartsheet_client = smartsheet.Smartsheet()
 smartsheet_client.errors_as_exceptions(True)
 
 
-def write_rows_to_sheet(rows_to_write, sheet,
-                        write_method="add"):
+def write_rows_to_sheet(rows_to_write, sheet, write_method="add"):
     """Writes rows back to a given sheet
 
     Args:
@@ -26,14 +25,21 @@ def write_rows_to_sheet(rows_to_write, sheet,
             existing rows. Defaults to "add".
     """
     if not isinstance(rows_to_write, list):
-        msg = ""
+        msg = str("Rows to write must be type: list not type {}"
+                  "").format(type(rows_to_write))
         raise TypeError(msg)
     if not isinstance(sheet, (dict, int)):
-        msg = ""
+        msg = str("Sheet must be type: dict or int not type {}"
+                  "").format(type(sheet))
         raise TypeError(msg)
     if not isinstance(write_method, (str, None)):
-        msg = ""
+        msg = str("Write method must be type: str not type {}"
+                  "").format(type(write_method))
         raise TypeError(msg)
+    if len(rows_to_write) <= 0:
+        msg = str("Rows to write must have 1 or more rows in the list, "
+                  "not {}").format(len(rows_to_write))
+        raise ValueError(msg)
 
     if isinstance(sheet, dict):
         sheet_id = int(sheet.id)
