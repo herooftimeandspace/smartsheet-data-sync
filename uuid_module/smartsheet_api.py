@@ -1,15 +1,16 @@
 import logging
-import os
-from typing import Type
 
 import smartsheet
 
-from uuid_module.variables import (dev_jira_idx_sheet, dev_minutes,
-                                   dev_workspace_id)
 from uuid_module.helper import get_timestamp
+from uuid_module.variables import dev_minutes, dev_workspace_id
 
+
+# Initialize the Smartsheet client and make sure we don't miss any errors.
+logging.debug("------------------------")
+logging.debug("Initializing Smartsheet Client API")
+logging.debug("------------------------")
 smartsheet_client = smartsheet.Smartsheet()
-# Make sure we don't miss any error
 smartsheet_client.errors_as_exceptions(True)
 
 
