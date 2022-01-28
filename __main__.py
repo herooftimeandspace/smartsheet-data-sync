@@ -6,7 +6,6 @@ import threading
 import time
 from logging.config import dictConfig
 
-import smartsheet
 from apscheduler.executors.pool import ProcessPoolExecutor, ThreadPoolExecutor
 from apscheduler.schedulers.background import BlockingScheduler
 
@@ -332,7 +331,7 @@ def full_jira_sync(minutes):
     write_jira_index_cell_links(project_sub_index, index_sheet)
     # logging.debug("Writing UUID cell links.")
     # write_uuid_cell_links(project_uuid_index,
-    #                       source_sheets, smartsheet_client)
+    #                       source_sheets)
 
     end = time.time()
     elapsed = end - start
