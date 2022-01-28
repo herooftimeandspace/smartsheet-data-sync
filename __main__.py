@@ -188,21 +188,16 @@ job_defaults = {
 }
 scheduler = BlockingScheduler(executors=executors, job_defaults=job_defaults)
 
-# Initialize client. Uses the API token in the environment variable
-# "SMARTSHEET_ACCESS_TOKEN", which is pulled from the AWS Secrets API.
-# logging.debug("------------------------")
-# logging.debug("Initializing Smartsheet Client API")
-# logging.debug("------------------------")
-# secret_name = get_secret_name(env)
-# try:
-#     os.environ["SMARTSHEET_ACCESS_TOKEN"] = get_secret(secret_name)
-# except TypeError:
-#     msg = str("Refresh Isengard credentials")
-#     logging.error(msg)
-#     exit()
-# smartsheet_client = smartsheet.Smartsheet()
-# # Make sure we don't miss any error
-# smartsheet_client.errors_as_exceptions(True)
+
+# Set the SMARTSHEET_ACCESS_TOKEN by pulling from the AWS Secrets API, based
+# on the environment variable passed in.
+secret_name = get_secret_name(env)
+try:
+    os.environ["SMARTSHEET_ACCESS_TOKEN"] = get_secret(secret_name)
+except TypeError:
+    msg = str("Refresh Isengard credentials")
+    logging.error(msg)
+    exit()
 
 sheet_id_lock = threading.Lock()
 sheet_index_lock = threading.Lock()
