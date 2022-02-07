@@ -23,6 +23,13 @@ jira_index_columns = ["Tasks", "Issue Type", "Jira Ticket", "Issue Links",
 
 
 def refresh_sheets(minutes=dev_minutes):
+    if not isinstance(minutes, int):
+        msg = str("Minutes should be type: int, not {}").format(type(minutes))
+        raise TypeError(msg)
+    if minutes < 0:
+        msg = str("Minutes should be >= 0, not {}").format(minutes)
+        raise ValueError(msg)
+
     sheet_ids = get_all_sheet_ids(minutes, workspace_id=dev_workspace_id,
                                   index_sheet=dev_jira_idx_sheet)
     msg = str("Sheet IDs object type {}, object values {}").format(
@@ -46,14 +53,25 @@ def refresh_sheets(minutes=dev_minutes):
 # https://smartsheet-platform.github.io/api-docs/#specify-row-location
 # specifically parent_id, sibling_id
 def form_rows(row_dict, index_col_map):
+    if not isinstance(row_dict, dict):
+        msg = str("Row Dictionary should be type dict, not type {}"
+                  "").format(type(row_dict))
+        raise TypeError(msg)
+    if not isinstance(index_col_map, dict):
+        msg = str("Index Col Map should be type dict, not type {}"
+                  "").format(type(index_col_map))
+        raise TypeError(msg)
+    if not row_dict:
+        msg = str("Row Dictionary should not be empty")
+        raise ValueError(msg)
+    if not index_col_map:
+        msg = str("Index Column Map should not be empty")
+        raise ValueError(msg)
+
     index_rows_to_add = []
     for uuid, data in row_dict.items():
         new_row = smartsheet.models.Row()
         new_row.to_bottom = True
-        if data['Parent Issue Type'] == "Sub-Task":
-            # Skip Subtasks, we can't create them with the connector
-            # TODO: or data['Issue Type'] == "Sub-Task":
-            continue
         for col_name, value in data.items():
             if col_name not in jira_index_columns:
                 # Skip writting columns the Index sheet doesn't have
@@ -89,15 +107,20 @@ def form_rows(row_dict, index_col_map):
             labels.append("Inject")
         if data['KTLO']:
             labels.append("KTLO")
-        labels = [sub.replace(' ', '_') for sub in labels]
+        # Spaces are not supported in Labels. Replace with dashes. For labels
+        # that already have dashes, replace with a single dash rather than the
+        # previous pattern.
+        if labels:
+            labels = [sub.replace(' ', '-') for sub in labels]
+            labels = [sub.replace('---', '-') for sub in labels]
         # logging.debug(labels)
-        new_row.cells.append({
-            'column_id': index_col_map['Labels'],
-            'object_value': {
-                'objectType': "MULTI_PICKLIST",
-                'values': labels
-            }
-        })
+            new_row.cells.append({
+                'column_id': index_col_map['Labels'],
+                'object_value': {
+                    'objectType': "MULTI_PICKLIST",
+                    'values': labels
+                }
+            })
         # TODO: Add handling for "Project" Issue Type
         if data['Parent Issue Type'] in ("Epic, Story"):
             ticket = data['Parent Ticket']
@@ -135,6 +158,23 @@ def form_rows(row_dict, index_col_map):
 def push_jira_ticket_to_sheet(sheet, sheet_col_map,
                               index_sheet,
                               index_col_map):
+    if not isinstance(sheet, (dict, smartsheet.models.Sheet)):
+        msg = str("Sheet should be dict or smartsheet.Sheet, not {}"
+                  "").format(type(sheet))
+        raise TypeError(msg)
+    if not isinstance(sheet_col_map, dict):
+        msg = str("Sheet Column Map should be Y, not {}"
+                  "").format(type(sheet_col_map))
+        raise TypeError(msg)
+    if not isinstance(index_sheet, (dict, smartsheet.models.Sheet)):
+        msg = str("Index Sheet should be dict or smartsheet.Sheet, not {}"
+                  "").format(type(index_sheet))
+        raise TypeError(msg)
+    if not isinstance(index_col_map, dict):
+        msg = str("Index Column Map should be dict, not {}"
+                  "").format(type(index_col_map))
+        raise TypeError(msg)
+
     rows_to_update = []
     for row in index_sheet.rows:
         uuid_value = get_cell_value(row, 'UUID', index_col_map)
@@ -210,20 +250,29 @@ def push_jira_ticket_to_sheet(sheet, sheet_col_map,
         logging.info(msg)
 
 
-def link_predecessor_tickets(parent):
-    # Follow predecessor tree, link issues as you go
-    # Roll up the predecessor chain and then
-    # 1. Find top level Jira Ticket -> Create if "Create"
-    # 2. Find top level Jira Ticket -> If no Jira value, roll
-    #    down
-    #    the chain until you find "Create" -> Create
-    # 3. Find parent Jira ticket, use to create Issue Link
-    # 4. Form row, add to list of rows to create and push to Jira
-    #    Index
-    return parent
+# def link_predecessor_tickets(parent):
+#     Follow predecessor tree, link issues as you go
+#     Roll up the predecessor chain and then
+#     1. Find top level Jira Ticket -> Create if "Create"
+#     2. Find top level Jira Ticket -> If no Jira value, roll
+#        down
+#        the chain until you find "Create" -> Create
+#     3. Find parent Jira ticket, use to create Issue Link
+#     4. Form row, add to list of rows to create and push to Jira
+#        Index
+#     return parent
 
 
 def build_row_data(row, col_map):
+    if not isinstance(row, (dict, smartsheet.models.Row)):
+        msg = str("Sheet should be dict or smartsheet.Sheet, not {}"
+                  "").format(type(row))
+        raise TypeError(msg)
+    if not isinstance(col_map, dict):
+        msg = str("Sheet Column Map should be dict, not {}"
+                  "").format(type(col_map))
+        raise TypeError(msg)
+
     row_data = {}
     for col in project_columns:
         try:
@@ -235,6 +284,18 @@ def build_row_data(row, col_map):
 
 
 def create_ticket_index(source_sheets, index_sheet, index_col_map):
+    if not isinstance(source_sheets, list):
+        msg = str("Sheet should be dict or smartsheet.Sheet, not {}"
+                  "").format(type(source_sheets))
+        raise TypeError(msg)
+    if not isinstance(index_sheet, (dict, smartsheet.models.Sheet)):
+        msg = str("Index Sheet should be dict or smartsheet.Sheet, not {}"
+                  "").format(type(index_sheet))
+        raise TypeError(msg)
+    if not isinstance(index_col_map, dict):
+        msg = str("Index Column Map should be dict, not {}"
+                  "").format(type(index_col_map))
+        raise TypeError(msg)
 
     tickets_to_create = {}
 
@@ -285,6 +346,12 @@ def create_ticket_index(source_sheets, index_sheet, index_col_map):
                 msg = str("Skipped because UUID column was empty.")
                 logging.debug(msg)
                 logging.debug(row_data)
+                continue
+            if row_data['Issue Type'] == "Sub-Task":
+                # Skip Subtasks, we can't create them with the connector
+                continue
+            if row_data['Parent Issue Type'] == "Sub-Task":
+                # Skip Subtasks, we can't create them with the connector
                 continue
             if row_data["Parent Ticket"] is None and row_data["Jira Ticket"]\
                     in ("Create", "create"):
@@ -349,6 +416,12 @@ def create_ticket_index(source_sheets, index_sheet, index_col_map):
 # from the Jira Ticket field and/or filtering out UUID matches + nonNull
 # Jira Ticket field on the Index sheet
 def create_tickets(minutes=dev_minutes):
+    if not isinstance(minutes, int):
+        msg = str("Minutes should be type: int, not {}").format(type(minutes))
+        raise TypeError(msg)
+    if minutes < 0:
+        msg = str("Minutes should be >= 0, not {}").format(minutes)
+        raise ValueError(msg)
 
     source_sheets, index_sheet, index_col_map = refresh_sheets(minutes)
     parent = create_ticket_index(

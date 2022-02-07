@@ -1,11 +1,20 @@
 import logging
+import os
 
 import smartsheet
 
-from uuid_module.helper import get_timestamp
+from uuid_module.helper import (get_secret, get_secret_name, get_timestamp)
 from uuid_module.variables import dev_minutes, dev_workspace_id
 
-
+# Set the SMARTSHEET_ACCESS_TOKEN by pulling from the AWS Secrets API, based
+# on the environment variable passed in.
+secret_name = get_secret_name()
+try:
+    os.environ["SMARTSHEET_ACCESS_TOKEN"] = get_secret(secret_name)
+except TypeError:
+    msg = str("Refresh Isengard credentials")
+    logging.error(msg)
+    exit()
 # Initialize the Smartsheet client and make sure we don't miss any errors.
 logging.debug("------------------------")
 logging.debug("Initializing Smartsheet Client API")
@@ -14,6 +23,7 @@ smartsheet_client = smartsheet.Smartsheet()
 smartsheet_client.errors_as_exceptions(True)
 
 
+# TODO: Handle passing in smartsheet.Sheet objects
 def write_rows_to_sheet(rows_to_write, sheet, write_method="add"):
     """
     Args:
@@ -35,7 +45,7 @@ def write_rows_to_sheet(rows_to_write, sheet, write_method="add"):
         msg = str("Rows to write must be type: list not type {}"
                   "").format(type(rows_to_write))
         raise TypeError(msg)
-    if not isinstance(sheet, (dict, int)):
+    if not isinstance(sheet, (dict, int, smartsheet.models.sheet.Sheet)):
         msg = str("Sheet must be type: dict or int not type {}"
                   "").format(type(sheet))
         raise TypeError(msg)
@@ -48,7 +58,7 @@ def write_rows_to_sheet(rows_to_write, sheet, write_method="add"):
                   "not {}").format(len(rows_to_write))
         raise ValueError(msg)
 
-    if isinstance(sheet, dict):
+    if isinstance(sheet, (dict, smartsheet.models.sheet.Sheet)):
         sheet_id = int(sheet.id)
         sheet_name = str(sheet.name)
     elif isinstance(sheet, int):
@@ -153,7 +163,7 @@ def get_sheet(sheet_id, minutes=dev_minutes):
         raise TypeError(msg)
 
     if minutes > 0:
-        modified_since, _ = get_timestamp(minutes)
+        _, modified_since = get_timestamp(minutes)
 
         sheet = smartsheet_client.Sheets.get_sheet(
             sheet_id, include='object_value', level=2,
