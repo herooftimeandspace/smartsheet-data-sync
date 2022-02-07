@@ -1,11 +1,77 @@
+import base64
 import json
 import logging
 import math
+import sys
 from datetime import datetime, timedelta
 
+import boto3
 import smartsheet
+from botocore.exceptions import ClientError
+
+from uuid_module.variables import (dev_jira_idx_sheet, dev_minutes,
+                                   dev_workspace_id, prod_jira_idx_sheet,
+                                   prod_minutes, prod_workspace_id)
 
 logger = logging.getLogger(__name__)
+
+
+def set_env_vars():
+    """Sets certain variables based on the flag passed in at the command line.
+    Defaults to the development / debug environment variables if not specified
+
+    Returns:
+        str: The environment flag.
+        str: The message for logging, either 'no_flag' or a description of
+             the variables used
+        int: The workspace ID,
+        int: The Jira Index sheet ID
+        int: The number of minutes into the past that data should be pulled
+    """
+    if len(sys.argv[1:]) > 1:
+        env = sys.argv[1:]
+        try:
+            env = env[0]
+        except IndexError:
+            env = None
+    else:
+        env = None
+
+    if not env:
+        msg = str("No flag was set from the command line. Setting to "
+                  "--debug")
+        logging.info(msg)
+        env = "--debug"
+    else:
+        msg = str("The {} flag was passed from the command line").format(env)
+        logging.info(msg)
+
+    if env in ("-s", "--staging", "-staging", "-d", "--debug", "-debug"):
+        msg = str("Using default debug/staging variables for workspace_id "
+                  "and Jira index sheet").format()
+        workspace_id = dev_workspace_id
+        index_sheet = dev_jira_idx_sheet
+        minutes = dev_minutes
+        return env, msg, workspace_id, index_sheet, minutes
+    elif env in ("-p", "--prod", "-prod"):
+        workspace_id = prod_workspace_id
+        index_sheet = prod_jira_idx_sheet
+        minutes = prod_minutes
+        msg = str("Set workspace_id to: {}, index_sheet to: {}, "
+                  "and minutes to: {} "
+                  "for Prod environment").format(workspace_id,
+                                                 index_sheet, minutes)
+        return env, msg, workspace_id, index_sheet, minutes
+    else:
+        msg = str("Using default debug/staging variables for workspace_id "
+                  "and Jira index sheet").format()
+        workspace_id = dev_workspace_id
+        index_sheet = dev_jira_idx_sheet
+        minutes = dev_minutes
+        return env, msg, workspace_id, index_sheet, minutes
+
+
+env, msg, workspace_id, index_sheet, minutes = set_env_vars()
 
 
 def get_cell_data(row, column_name, column_map):
@@ -309,3 +375,99 @@ def chunks(source, n):
 
     for i in range(0, len(source), n):
         yield source[i:i + n]
+
+
+def get_secret(secret_name):
+    """Gets the API token from AWS Secrets Manager.
+
+    Raises:
+        e: DecryptionFailureException.
+        e: InternalServiceErrorException
+        e: InvalidParameterException
+        e: InvalidRequestException
+        e: ResourceNotFoundException
+
+    Returns:
+        str: The Smartsheet API key
+    """
+
+    region_name = "us-west-2"
+
+    # Create a Secrets Manager client
+    session = boto3.session.Session()
+    client = session.client(
+        service_name='secretsmanager',
+        region_name=region_name,
+    )
+
+    # In this sample we only handle the specific exceptions for the
+    # 'GetSecretValue' API.
+    # See https://docs.aws.amazon.com/secretsmanager/latest/
+    # apireference/API_GetSecretValue.html
+    # We rethrow the exception by default.
+
+    try:
+        get_secret_value_response = client.get_secret_value(
+            SecretId=secret_name
+        )
+    except ClientError as e:
+        if e.response['Error']['Code'] == 'DecryptionFailureException':
+            # Secrets Manager can't decrypt the protected secret text using
+            # the provided KMS key.
+            # Deal with the exception here, and/or rethrow at your discretion.
+            raise e
+        elif e.response['Error']['Code'] == 'InternalServiceErrorException':
+            # An error occurred on the server side.
+            # Deal with the exception here, and/or rethrow at your discretion.
+            raise e
+        elif e.response['Error']['Code'] == 'InvalidParameterException':
+            # You provided an invalid value for a parameter.
+            # Deal with the exception here, and/or rethrow at your discretion.
+            raise e
+        elif e.response['Error']['Code'] == 'InvalidRequestException':
+            # You provided a parameter value that is not valid for the current
+            # state of the resource.
+            # Deal with the exception here, and/or rethrow at your discretion.
+            raise e
+        elif e.response['Error']['Code'] == 'ResourceNotFoundException':
+            # We can't find the resource that you asked for.
+            # Deal with the exception here, and/or rethrow at your discretion.
+            raise e
+    else:
+        # Decrypts secret using the associated KMS CMK.
+        # Depending on whether the secret is a string or binary, one of these
+        # fields will be populated.
+        if 'SecretString' in get_secret_value_response:
+            secret = get_secret_value_response['SecretString']
+
+            api_key = json.loads(str(secret))
+            api_key = json_extract(api_key, "SMARTSHEET_ACCESS_TOKEN")
+            api_key = ''.join(map(str, api_key))
+            return api_key
+        else:
+            decoded_binary_secret = base64.b64decode(
+                get_secret_value_response['SecretBinary'])
+            return decoded_binary_secret
+
+
+def get_secret_name(env="--debug"):
+    if not isinstance(env, str):
+        raise TypeError("Env is not type: str")
+    elif env not in ("-d", "--debug", "-debug", "-p", "--prod", "-prod", "-s",
+                     "--staging", "-staging"):
+        msg = str("Invalid argument passed. Value passed was {}").format(env)
+        raise ValueError(msg)
+
+    if env in ("-s", "--staging", "-staging"):
+        secret_name = "staging/smartsheet-data-sync/svc-api-token"
+        return secret_name
+    elif env in ("-p", "--prod", "-prod"):
+        secret_name = "prod/smartsheet-data-sync/svc-api-token"
+        return secret_name
+    elif env in ("-d", "--debug", "-debug"):
+        secret_name = "staging/smartsheet-data-sync/svc-api-token"
+        return secret_name
+    else:
+        logging.error("Failed to set API Key from AWS Secrets")
+        secret_name = ""
+        return secret_name

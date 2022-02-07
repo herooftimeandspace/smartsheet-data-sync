@@ -1,23 +1,17 @@
 import json
 import logging
 import os
+from unittest.mock import Mock
 
 import pytest
 import pytz
 import smartsheet
 from freezegun import freeze_time
 from uuid_module.get_data import (get_all_row_data, get_all_sheet_ids,
-                                  get_blank_uuids, get_secret, get_secret_name,
-                                  get_sub_indexes, load_jira_index,
-                                  refresh_source_sheets)
-from uuid_module.variables import sheet_columns
-
-from tests.test_helper import row, sheet
-
-# from collections import defaultdict
-# from datetime import datetime
-# from typing import Type
-
+                                  get_blank_uuids, get_sub_indexes,
+                                  load_jira_index, refresh_source_sheets)
+from uuid_module.variables import (dev_jira_idx_sheet, dev_minutes,
+                                   dev_workspace_id, sheet_columns)
 
 logger = logging.getLogger(__name__)
 
@@ -27,11 +21,11 @@ cwd = os.path.dirname(os.path.abspath(__file__))
 
 @pytest.fixture(scope="module")
 def sheet_fixture():
-    with open(cwd + '/sheet_response.json') as f:
+    with open(cwd + '/dev_program_plan.json') as f:
         sheet_json = json.load(f)
 
     def no_uuid_col_fixture(sheet_json):
-        sheet_json['columns'][22]['name'] = "Not UUID"
+        sheet_json['columns'][20]['name'] = "Not UUID"
         no_uuid_col = smartsheet.models.Sheet(sheet_json)
         return no_uuid_col
 
@@ -49,7 +43,7 @@ def sheet_fixture():
 
 @pytest.fixture(scope="module")
 def jira_index_sheet_fixture():
-    with open(cwd + '/dev_jira_index_sheet_response.json') as f:
+    with open(cwd + '/dev_jira_index_sheet.json') as f:
         dev_idx_sheet = json.load(f)
         dev_idx_sheet = smartsheet.models.Sheet(dev_idx_sheet)
     return dev_idx_sheet
@@ -57,38 +51,21 @@ def jira_index_sheet_fixture():
 
 @pytest.fixture(scope="module")
 def row():
-    with open(cwd + '/row_response.json') as f:
-        row_json = json.load(f)
-    row = smartsheet.models.Row(row_json)
-    return row
-
-
-@pytest.fixture(scope="module")
-def row_list():
-    with open(cwd + '/row_response.json') as f:
+    with open(cwd + '/dev_program_plan_row.json') as f:
         row_json = json.load(f)
     row = smartsheet.models.Row(row_json)
     row_list = [row]
-    return row_list
+    return row, row_list
+
+
+@pytest.fixture()
+def dev_fixture():
+    return dev_minutes, dev_workspace_id, dev_jira_idx_sheet
 
 
 @pytest.fixture
 def env():
-    return "-debug"
-
-
-# Need Mock
-@pytest.fixture
-def smartsheet_client(env):
-    secret_name = get_secret_name(env)
-    try:
-        os.environ["SMARTSHEET_ACCESS_TOKEN"] = get_secret(secret_name)
-    except TypeError:
-        raise ValueError("Refresh Isengard Auth")
-    smartsheet_client = smartsheet.Smartsheet()
-    # Make sure we don't miss any error
-    smartsheet_client.errors_as_exceptions(True)
-    return smartsheet_client
+    return "--debug"
 
 
 @pytest.fixture
@@ -115,61 +92,49 @@ def columns():
 
 # Type testing. Separate tests needed for integraiton.
 @freeze_time("2021-11-18 21:23:54")
-def test_refresh_source_sheets(smartsheet_client, sheet_ids, minutes=0):
-    # Validate Smartsheet client.
+def test_refresh_source_sheets(sheet_ids, dev_fixture):
+    dev_minutes, _, _ = dev_fixture
     with pytest.raises(TypeError):
-        refresh_source_sheets(
-            "smartsheet_client", sheet_ids, 0)
+        refresh_source_sheets(sheet_ids, "dev_minutes")
     with pytest.raises(TypeError):
-        refresh_source_sheets(
-            smartsheet_client, sheet_ids, "minutes")
-    with pytest.raises(TypeError):
-        refresh_source_sheets(
-            smartsheet_client, 7, minutes)
+        refresh_source_sheets(7, dev_minutes)
     with pytest.raises(ValueError):
-        refresh_source_sheets(
-            smartsheet_client, ["One", "Two", "Three"], minutes)
+        refresh_source_sheets(["One", "Two", "Three"], dev_minutes)
     with pytest.raises(ValueError):
-        refresh_source_sheets(
-            smartsheet_client, sheet_ids, -1)
+        refresh_source_sheets(sheet_ids, -1)
 
-    source_sheets = refresh_source_sheets(
-        smartsheet_client, sheet_ids, minutes)
-    # TODO: Fix to == real value
-    assert source_sheets is not None
+    # source_sheets = refresh_source_sheets(sheet_ids, dev_minutes)
+    # # TODO: Fix to == real value
+    # assert source_sheets is not None
 
-    source_sheets = refresh_source_sheets(
-        smartsheet_client, sheet_ids, 5)
-    # TODO: Fix to == real value
-    assert source_sheets is not None
+    # source_sheets = refresh_source_sheets(sheet_ids, 5)
+    # # TODO: Fix to == real value
+    # assert source_sheets is not None
 
 
 @freeze_time("2021-11-18 21:23:54")
-def test_get_all_row_data(sheet_fixture, columns, minutes):
+def test_get_all_row_data(sheet_fixture, columns, dev_fixture):
+    dev_minutes, _, _ = dev_fixture
     _, sheet_list, _, _ = sheet_fixture
     with pytest.raises(TypeError):
-        get_all_row_data("source_sheets", columns, minutes)
+        get_all_row_data("source_sheets", columns, dev_minutes)
     with pytest.raises(TypeError):
-        get_all_row_data(sheet_list, "columns", minutes)
+        get_all_row_data(sheet_list, "columns", dev_minutes)
     with pytest.raises(TypeError):
-        get_all_row_data(sheet_list, columns, "minutes")
+        get_all_row_data(sheet_list, columns, "dev_minutes")
     with pytest.raises(ValueError):
         get_all_row_data(sheet_list, columns, -1)
 
-    with open(cwd + '/row_response.json') as f:
-        row_json = json.load(f)
-        row_json = dict(row_json)
+    # with open(cwd + '/dev_all_row_data.json') as f:
+    #     row_json = json.load(f)
+    #     row_json = dict(row_json)
+    # mock_object = Mock()
 
     # Need to create assertions for data structure and valid return row values
-    row_data = get_all_row_data(sheet_list, columns, minutes)
-    assert row_data == {None: {'UUID': None, 'Tasks': 'Retrospective',
-                               'Description': None, 'Status': None,
-                               'Assigned To': None, 'Jira Ticket': None,
-                               'Duration': None, 'Start': None,
-                               'Finish': None, 'Predecessors': None,
-                               'Summary': 'False'}}
-    no_sheet_data = get_all_row_data([], columns, minutes)
-    assert no_sheet_data is None
+    # row_data = get_all_row_data(sheet_list, columns, dev_fixture)
+    # assert row_data == row_json
+    # no_sheet_data = get_all_row_data([], columns, dev_fixture)
+    # assert no_sheet_data is None
 
 
 @freeze_time("2021-11-18 21:23:54")
@@ -218,11 +183,12 @@ def test_get_blank_uuids(sheet_fixture):
 
 
 # TODO: Static return and check for actual values
-def test_load_jira_index(smartsheet_client):
+def test_load_jira_index(jira_index_sheet_fixture):
+    jira_index_id = jira_index_sheet_fixture.id
     with pytest.raises(TypeError):
-        load_jira_index("smartsheet_client")
+        load_jira_index("index_sheet")
     dev_idx_sheet, dev_idx_col_map, dev_idx_rows = load_jira_index(
-        smartsheet_client)
+        jira_index_id)
 
     assert dev_idx_sheet
     assert dev_idx_col_map
@@ -242,30 +208,19 @@ def test_get_sub_indexes(sheet_fixture, columns):
 
 
 # TODO: Static return and check for actual values
-def test_get_all_sheet_ids(smartsheet_client, minutes):
+def test_get_all_sheet_ids(dev_fixture):
+    dev_minutes, dev_workspace_id, dev_jira_idx_sheet = dev_fixture
     with pytest.raises(TypeError):
-        get_all_sheet_ids("smartsheet_client", minutes)
+        get_all_sheet_ids("dev_minutes",
+                          dev_workspace_id, dev_jira_idx_sheet)
     with pytest.raises(TypeError):
-        get_all_sheet_ids(smartsheet_client, "minutes")
+        get_all_sheet_ids(dev_minutes, "dev_workspace_id",
+                          dev_jira_idx_sheet)
+    with pytest.raises(TypeError):
+        get_all_sheet_ids(dev_minutes, dev_workspace_id,
+                          "dev_jira_idx_sheet")
     with pytest.raises(ValueError):
-        get_all_sheet_ids(smartsheet_client, -1)
-    sheet_ids = get_all_sheet_ids(smartsheet_client, minutes)
+        get_all_sheet_ids(-1337, dev_workspace_id, dev_jira_idx_sheet)
+    sheet_ids = get_all_sheet_ids(
+        dev_minutes, dev_workspace_id, dev_jira_idx_sheet)
     assert sheet_ids is not None
-
-
-def test_get_secret(env):
-    secret_name = get_secret_name(env)
-    assert secret_name == "staging/smartsheet-data-sync/svc-api-token"
-    retrieved_secret = get_secret(secret_name)
-    assert retrieved_secret == os.environ["SMARTSHEET_ACCESS_TOKEN"]
-
-
-def test_get_secret_name(env):
-    with pytest.raises(TypeError):
-        actual = get_secret_name(1)
-    with pytest.raises(ValueError):
-        actual = get_secret_name('')
-
-    expected = "staging/smartsheet-data-sync/svc-api-token"
-    actual = get_secret_name(env)
-    assert expected == actual

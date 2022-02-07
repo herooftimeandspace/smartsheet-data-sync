@@ -1,19 +1,17 @@
-import base64
 import json
 import logging
 from collections import defaultdict
 from datetime import datetime
-import smartsheet
 
-import boto3
 import pytz
-from botocore.exceptions import ClientError
+
 
 from uuid_module.helper import (get_cell_data, get_cell_value, get_column_map,
-                                get_timestamp, json_extract)
-from uuid_module.variables import (jira_col, dev_jira_idx_sheet, summary_col,
-                                   uuid_col, dev_workspace_id, dev_minutes)
+                                get_timestamp)
 from uuid_module.smartsheet_api import get_sheet, get_workspace
+from uuid_module.variables import (dev_jira_idx_sheet, dev_minutes,
+                                   dev_workspace_id, jira_col, summary_col,
+                                   uuid_col)
 
 logger = logging.getLogger(__name__)
 
@@ -49,7 +47,7 @@ def refresh_source_sheets(sheet_ids, minutes=0):
     source_sheets = []
     for sheet_id in sheet_ids:
         # Query the Smartsheet API for the sheet details
-        # TODO: Replace with smartsheet_api.py
+        # TODO: TEST with smartsheet_api.py
         sheet = get_sheet(sheet_id, minutes)
         # sheet = smartsheet_client.Sheets.get_sheet(
         #     sheet_id, include='object_value', level=2,
@@ -304,6 +302,10 @@ def load_jira_index(index_sheet=dev_jira_idx_sheet):
               row ID as the value.
 
     """
+    if not isinstance(index_sheet, int):
+        msg = str("Index Sheet should be type: int not type {}"
+                  "").format(type(index_sheet))
+        raise TypeError(msg)
 
     # TODO: TEST with smartsheet_api.py get_sheet
     jira_index_sheet = get_sheet(index_sheet, minutes=0)
@@ -386,6 +388,14 @@ def get_all_sheet_ids(minutes=dev_minutes,
     if not isinstance(minutes, int):
         msg = str("Minutes should be type: int, not {}").format(type(minutes))
         raise TypeError(msg)
+    if not isinstance(workspace_id, (int, list)):
+        msg = str("Workspace ID should be type: int or list, not {}").format(
+            type(workspace_id))
+        raise TypeError(msg)
+    if not isinstance(index_sheet, int):
+        msg = str("Jira Index Sheet should be type: int, not {}").format(
+            type(index_sheet))
+        raise TypeError(msg)
     if minutes < 0:
         msg = str("Minutes should be >= 0, not {}").format(minutes)
         raise ValueError(msg)
@@ -447,102 +457,3 @@ def get_all_sheet_ids(minutes=dev_minutes,
             "{} not found in Sheet IDs list".format(index_sheet))
 
     return sheet_ids
-
-
-def get_secret(secret_name):
-    """Gets the API token from AWS Secrets Manager.
-
-    Raises:
-        e: DecryptionFailureException.
-        e: InternalServiceErrorException
-        e: InvalidParameterException
-        e: InvalidRequestException
-        e: ResourceNotFoundException
-
-    Returns:
-        str: The Smartsheet API key
-    """
-
-    region_name = "us-west-2"
-
-    # Create a Secrets Manager client
-    session = boto3.session.Session()
-    client = session.client(
-        service_name='secretsmanager',
-        region_name=region_name,
-    )
-
-    # In this sample we only handle the specific exceptions for the
-    # 'GetSecretValue' API.
-    # See https://docs.aws.amazon.com/secretsmanager/latest/
-    # apireference/API_GetSecretValue.html
-    # We rethrow the exception by default.
-
-    try:
-        get_secret_value_response = client.get_secret_value(
-            SecretId=secret_name
-        )
-    except ClientError as e:
-        if e.response['Error']['Code'] == 'DecryptionFailureException':
-            # Secrets Manager can't decrypt the protected secret text using
-            # the provided KMS key.
-            # Deal with the exception here, and/or rethrow at your discretion.
-            raise e
-        elif e.response['Error']['Code'] == 'InternalServiceErrorException':
-            # An error occurred on the server side.
-            # Deal with the exception here, and/or rethrow at your discretion.
-            raise e
-        elif e.response['Error']['Code'] == 'InvalidParameterException':
-            # You provided an invalid value for a parameter.
-            # Deal with the exception here, and/or rethrow at your discretion.
-            raise e
-        elif e.response['Error']['Code'] == 'InvalidRequestException':
-            # You provided a parameter value that is not valid for the current
-            # state of the resource.
-            # Deal with the exception here, and/or rethrow at your discretion.
-            raise e
-        elif e.response['Error']['Code'] == 'ResourceNotFoundException':
-            # We can't find the resource that you asked for.
-            # Deal with the exception here, and/or rethrow at your discretion.
-            raise e
-    else:
-        # Decrypts secret using the associated KMS CMK.
-        # Depending on whether the secret is a string or binary, one of these
-        # fields will be populated.
-        if 'SecretString' in get_secret_value_response:
-            secret = get_secret_value_response['SecretString']
-
-            api_key = json.loads(str(secret))
-            api_key = json_extract(api_key, "SMARTSHEET_ACCESS_TOKEN")
-            api_key = ''.join(map(str, api_key))
-            return api_key
-        else:
-            decoded_binary_secret = base64.b64decode(
-                get_secret_value_response['SecretBinary'])
-            return decoded_binary_secret
-
-
-def get_secret_name(env):
-    if not env:
-        msg = str("Env must be type: str. Env was {}").format(env)
-        raise ValueError(msg)
-    elif not isinstance(env, str):
-        raise TypeError("Env is not type: str")
-    elif env not in ("-d", "--debug", "-debug", "-p", "--prod", "-prod", "-s",
-                     "--staging", "-staging"):
-        raise ValueError(
-            "Invalid argument passed. Value passed was {}").format(env)
-
-    if env in ("-s", "--staging", "-staging"):
-        secret_name = "staging/smartsheet-data-sync/svc-api-token"
-        return secret_name
-    elif env in ("-p", "--prod", "-prod"):
-        secret_name = "prod/smartsheet-data-sync/svc-api-token"
-        return secret_name
-    elif env in ("-d", "--debug", "-debug"):
-        secret_name = "staging/smartsheet-data-sync/svc-api-token"
-        return secret_name
-    else:
-        logging.error("Failed to set API Key from AWS Secrets")
-        secret_name = ""
-        return secret_name
