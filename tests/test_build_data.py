@@ -7,19 +7,17 @@ import pytest
 import smartsheet
 from freezegun import freeze_time
 from uuid_module.build_data import build_linked_cell, build_row, dest_indexes
-from uuid_module.get_data import get_all_row_data, get_secret, get_secret_name
+from uuid_module.get_data import get_all_row_data
 from uuid_module.helper import get_column_map
-from uuid_module.create_jira_tickets import create_tickets
 from uuid_module.variables import (assignee_col, jira_col, dev_minutes,
                                    sheet_columns, status_col, task_col)
-
 logger = logging.getLogger(__name__)
 cwd = os.path.dirname(os.path.abspath(__file__))
 
 
 @pytest.fixture(scope="module")
 def jira_index_sheet():
-    with open(cwd + '/dev_jira_index_sheet_response.json') as f:
+    with open(cwd + '/dev_jira_index_sheet.json') as f:
         dev_idx_sheet = json.load(f)
         dev_idx_sheet_dict = dict(dev_idx_sheet)
         dev_idx_sheet = smartsheet.models.Sheet(dev_idx_sheet)
@@ -28,11 +26,11 @@ def jira_index_sheet():
 
 @pytest.fixture(scope="module")
 def sheet_fixture():
-    with open(cwd + '/sheet_response.json') as f:
+    with open(cwd + '/dev_program_plan.json') as f:
         sheet_json = json.load(f)
 
     def no_uuid_col_fixture(sheet_json):
-        sheet_json['columns'][22]['name'] = "Not UUID"
+        sheet_json['columns'][20]['name'] = "Not UUID"
         no_uuid_col = smartsheet.models.Sheet(sheet_json)
         return no_uuid_col
 
@@ -64,7 +62,7 @@ def dest_col_map(sheet_fixture):
 
 @pytest.fixture
 def row():
-    with open(cwd + '/row_response.json') as f:
+    with open(cwd + '/dev_program_plan_row.json') as f:
         row_json = json.load(f)
     row = smartsheet.models.Row(row_json)
     return row
@@ -72,7 +70,7 @@ def row():
 
 @pytest.fixture(scope="module")
 def idx_row_id():
-    with open(cwd + '/dev_idx_row_response.json') as f:
+    with open(cwd + '/dev_jira_index_row.json') as f:
         row_json = json.load(f)
     return str(row_json['id'])
 
@@ -103,20 +101,6 @@ def minutes_fixture():
 @pytest.fixture(scope="module")
 def env():
     return "-debug"
-
-
-# Need Mock
-@pytest.fixture(scope="module")
-def smartsheet_client(env):
-    secret_name = get_secret_name(env)
-    try:
-        os.environ["SMARTSHEET_ACCESS_TOKEN"] = get_secret(secret_name)
-    except TypeError:
-        raise ValueError("Refresh Isengard Auth")
-    smartsheet_client = smartsheet.Smartsheet()
-    # Make sure we don't miss any error
-    smartsheet_client.errors_as_exceptions(True)
-    return smartsheet_client
 
 
 # TODO: Validate returned data is not malformed
