@@ -1,0 +1,112 @@
+{
+    "id": 1637394996979588,
+    "sheetId": 5786250381682564,
+    "rowNumber": 160,
+    "siblingId": 7266894531192708,
+    "version": 160,
+    "expanded": true,
+    "accessLevel": "OWNER",
+    "createdAt": "2021-11-18T21:20:12Z",
+    "modifiedAt": "2022-01-13T20:12:03Z",
+    "cells": [
+        {
+            "columnId": 2164383706048388
+        },
+        {
+            "columnId": 6667983333418884
+        },
+        {
+            "columnId": 1523395773917060
+        },
+        {
+            "columnId": 6026995401287556,
+            "value": "NETQOS-12466",
+            "displayValue": "NETQOS-12466",
+            "hyperlink": {
+                "url": "https://jira.xarth.tv/browse/NETQOS-12466"
+            }
+        },
+        {
+            "columnId": 3775195587602308,
+            "value": "netqos-user@justin.tv",
+            "displayValue": "netqos-user@justin.tv"
+        },
+        {
+            "columnId": 8278795214972804,
+            "value": "Not Started",
+            "displayValue": "Not Started",
+            "formula": "=VLOOKUP([Jira Status]@row, {Data Maps: Jira Status}, 2, false)"
+        },
+        {
+            "columnId": 960445820495748
+        },
+        {
+            "columnId": 5464045447866244
+        },
+        {
+            "columnId": 3212245634180996
+        },
+        {
+            "columnId": 7715845261551492,
+            "value": "arn03 AS207027 US Master Ticket",
+            "displayValue": "arn03 AS207027 US Master Ticket"
+        },
+        {
+            "columnId": 2086345727338372,
+            "value": "NETQOS",
+            "displayValue": "NETQOS"
+        },
+        {
+            "columnId": 6589945354708868
+        },
+        {
+            "columnId": 2719670900942724
+        },
+        {
+            "columnId": 466685676283780
+        },
+        {
+            "columnId": 414411629324164
+        },
+        {
+            "columnId": 8184810626672516
+        },
+        {
+            "columnId": 4338145541023620,
+            "value": "To do",
+            "displayValue": "To do"
+        },
+        {
+            "columnId": 8841745168394116
+        },
+        {
+            "columnId": 256758378719108,
+            "value": "2022-01-13T00:59:06Z"
+        },
+        {
+            "columnId": 4760358006089604,
+            "value": "Task",
+            "displayValue": "Task"
+        },
+        {
+            "columnId": 2508558192404356,
+            "value": 0.0,
+            "displayValue": "0",
+            "formula": "=COUNT(ANCESTORS([Jira Ticket]@row))"
+        },
+        {
+            "columnId": 7012157819774852,
+            "formula": "=PARENT([Jira Ticket]@row)"
+        },
+        {
+            "columnId": 3290283612891012,
+            "value": false,
+            "formula": "=IF(OR(CONTAINS(\"KTLO\", Components@row), CONTAINS(\"KTLO\", Labels@row)), 1, 0)"
+        },
+        {
+            "columnId": 7793883240261508,
+            "value": false,
+            "formula": "=IF(OR(CONTAINS(\"Inject\", Components@row), CONTAINS(\"Inject\", Labels@row)), 1, 0)"
+        }
+    ]
+}
