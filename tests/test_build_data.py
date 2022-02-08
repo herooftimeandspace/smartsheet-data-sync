@@ -61,11 +61,14 @@ def dest_col_map(sheet_fixture):
 
 
 @pytest.fixture
-def row():
+def row_fixture():
     with open(cwd + '/dev_program_plan_row.json') as f:
         row_json = json.load(f)
-    row = smartsheet.models.Row(row_json)
-    return row
+    linked_row = smartsheet.models.Row(row_json)
+    with open(cwd + '/dev_program_plan_unlinked_row.json') as f:
+        unlinked_row_json = json.load(f)
+    unlinked_row = smartsheet.models.Row(unlinked_row_json)
+    return linked_row, unlinked_row
 
 
 @pytest.fixture(scope="module")
@@ -142,9 +145,10 @@ def test_dest_indexes(sheet_fixture, columns, minutes_fixture):
 
 
 # TODO: Valdate returned data is not malformed
-def test_build_row(row, columns_to_link, dest_col_map, jira_index_sheet,
-                   jira_index_col_map, idx_row_id):
+def test_build_row(row_fixture, columns_to_link, dest_col_map,
+                   jira_index_sheet, jira_index_col_map, idx_row_id):
     jira_index_sheet, _ = jira_index_sheet
+    _, row = row_fixture
     with pytest.raises(TypeError):
         build_row("row", columns_to_link, dest_col_map, jira_index_sheet,
                   jira_index_col_map, idx_row_id)

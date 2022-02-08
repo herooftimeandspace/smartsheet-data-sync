@@ -1,6 +1,6 @@
 import logging
 import os
-
+from botocore.exceptions import NoCredentialsError
 import smartsheet
 
 from uuid_module.helper import (get_secret, get_secret_name, get_timestamp)
@@ -11,7 +11,7 @@ from uuid_module.variables import dev_minutes, dev_workspace_id
 secret_name = get_secret_name()
 try:
     os.environ["SMARTSHEET_ACCESS_TOKEN"] = get_secret(secret_name)
-except TypeError:
+except NoCredentialsError:
     msg = str("Refresh Isengard credentials")
     logging.error(msg)
     exit()
@@ -84,21 +84,29 @@ def write_rows_to_sheet(rows_to_write, sheet, write_method="add"):
                                                        rows_to_write)
             msg = str("Smartsheet API responded with the "
                       "following message: {}").format(result.result)
+            logging.info(msg)
+            return result
         except smartsheet.exceptions.ApiError as result:
             msg = result
+            logging.info(msg)
+            return result
     elif rows_to_write and write_method == "update":
         try:
             result = smartsheet_client.Sheets.update_rows(
                 sheet_id, rows_to_write)
             msg = str("Smartsheet API responded with the "
                       "following message: {}").format(result.result)
+            logging.info(msg)
+            return result
         except smartsheet.exceptions.ApiError as result:
             msg = result
+            logging.info(msg)
+            return result
     else:
         msg = str("No rows added to Sheet ID: "
                   "{} | Sheet Name: {}").format(sheet_id, sheet_name)
-
-    logging.info(msg)
+        logging.info(msg)
+        return None
 
 
 # def get_jira_index_sheet(smartsheet_client, index_sheet=dev_jira_idx_sheet):
@@ -126,13 +134,21 @@ def get_workspace(workspace_id=dev_workspace_id):
         smartsheet.models.Workspace: An application/json object of all objects
         in the workspace
     """
-    if not isinstance(workspace_id, int):
-        msg = str("Sheet ID must be type: int "
+    if not isinstance(workspace_id, (int, list)):
+        msg = str("Sheet ID must be type: int or list"
                   "not type: {}").format(type(workspace_id))
         raise TypeError(msg)
-    workspace = smartsheet_client.Workspaces.get_workspace(
-        workspace_id, load_all=True)
-    return workspace
+    if isinstance(workspace_id, int):
+        workspace = smartsheet_client.Workspaces.get_workspace(
+            workspace_id, load_all=True)
+        return workspace
+    elif isinstance(workspace_id, list):
+        workspaces = []
+        for ws_id in workspace_id:
+            workspace = smartsheet_client.Workspaces.get_workspace(
+                ws_id, load_all=True)
+            workspaces.append(workspace)
+        return workspace
 
 
 def get_sheet(sheet_id, minutes=dev_minutes):

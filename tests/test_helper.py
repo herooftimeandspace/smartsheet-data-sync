@@ -221,7 +221,7 @@ def test_get_cell_value(row, col_name, col_map):
     with pytest.raises(TypeError):
         get_cell_value(row, col_name, "col_map")
     assert get_cell_value(
-        row, col_name, col_map) == "Finalize resource / Scope impact"
+        row, col_name, col_map) == "Performance Tests"
 
 
 def test_json_extract(json_extract_fixture):
