@@ -1,7 +1,7 @@
 import json
 import logging
 import os
-from unittest.mock import Mock
+from unittest.mock import Mock, patch
 
 import pytest
 import pytz
@@ -10,6 +10,7 @@ from freezegun import freeze_time
 from uuid_module.get_data import (get_all_row_data, get_all_sheet_ids,
                                   get_blank_uuids, get_sub_indexes,
                                   load_jira_index, refresh_source_sheets)
+from uuid_module.helper import get_column_map
 from uuid_module.variables import (dev_jira_idx_sheet, dev_minutes,
                                    dev_workspace_id, sheet_columns)
 
@@ -46,7 +47,22 @@ def jira_index_sheet_fixture():
     with open(cwd + '/dev_jira_index_sheet.json') as f:
         dev_idx_sheet = json.load(f)
         dev_idx_sheet = smartsheet.models.Sheet(dev_idx_sheet)
-    return dev_idx_sheet
+    with open(cwd + '/dev_jira_idx_rows.json') as f:
+        dev_idx_rows = json.load(f)
+    dev_idx_col_map = get_column_map(dev_idx_sheet)
+    return dev_idx_sheet, dev_idx_col_map, dev_idx_rows
+
+
+@pytest.fixture(scope="module")
+def workspace_fixture():
+    with open(cwd + '/dev_workspaces.json') as f:
+        dev_workspace = json.load(f)
+        dev_workspace = smartsheet.models.Workspace(dev_workspace)
+    ws_ids = [2125936310151044, 7754886088550276, 775947692599172,
+              5279547319969668, 3027747506284420, 7531347133654916,
+              1901847599441796, 6405447226812292, 4153647413127044,
+              8657247040497540]
+    return dev_workspace, ws_ids
 
 
 @pytest.fixture(scope="module")
@@ -92,7 +108,9 @@ def columns():
 
 # Type testing. Separate tests needed for integraiton.
 @freeze_time("2021-11-18 21:23:54")
-def test_refresh_source_sheets(sheet_ids, dev_fixture):
+def test_refresh_source_sheets(sheet_ids, dev_fixture, sheet_fixture):
+    sheet, sheet_list, _, _ = sheet_fixture
+    sheet_ids = [sheet.id]
     dev_minutes, _, _ = dev_fixture
     with pytest.raises(TypeError):
         refresh_source_sheets(sheet_ids, "dev_minutes")
@@ -103,13 +121,13 @@ def test_refresh_source_sheets(sheet_ids, dev_fixture):
     with pytest.raises(ValueError):
         refresh_source_sheets(sheet_ids, -1)
 
-    # source_sheets = refresh_source_sheets(sheet_ids, dev_minutes)
-    # # TODO: Fix to == real value
-    # assert source_sheets is not None
+    with patch("uuid_module.smartsheet_api.get_sheet") as func_mock:
+        func_mock.return_value = sheet
+        source_sheets = refresh_source_sheets(sheet_ids, dev_minutes)
+        assert isinstance(source_sheets, list)
 
-    # source_sheets = refresh_source_sheets(sheet_ids, 5)
-    # # TODO: Fix to == real value
-    # assert source_sheets is not None
+        source_sheets = refresh_source_sheets(sheet_ids, 5)
+        assert isinstance(source_sheets, list)
 
 
 @freeze_time("2021-11-18 21:23:54")
@@ -162,37 +180,24 @@ def test_get_blank_uuids(sheet_fixture):
     assert no_uuids is None
 
 
-# import os
-# import pytest
-# from unittest.mock import patch
-
-# class Worker:
-#     def work_on(self):
-#         path = os.getcwd()
-#         print(f'Working on {path}')
-#         return path
-
-# @pytest.fixture()
-# def mocked_worker(mocker):  # mocker is pytest-mock fixture
-#     mocker.patch('test_file.os.getcwd', return_value="Testing")
-
-# def test_work_on(mocked_worker):
-#     worker = Worker()  # here we create instance of Worker, not mock itself!!
-#     ans = worker.work_on()
-#     assert ans == "Testing"
-
-
 # TODO: Static return and check for actual values
 def test_load_jira_index(jira_index_sheet_fixture):
-    jira_index_id = jira_index_sheet_fixture.id
+    jira_idx_sheet, jira_idx_col_map, jira_idx_rows = jira_index_sheet_fixture
+    jira_index_id = jira_idx_sheet.id
     with pytest.raises(TypeError):
         load_jira_index("index_sheet")
-    dev_idx_sheet, dev_idx_col_map, dev_idx_rows = load_jira_index(
-        jira_index_id)
+    with patch("uuid_module.smartsheet_api.get_sheet") as func_mock:
+        func_mock.return_value = jira_idx_sheet
+        dev_idx_sheet, dev_idx_col_map, dev_idx_rows = load_jira_index(
+            jira_index_id)
 
-    assert dev_idx_sheet
-    assert dev_idx_col_map
-    assert dev_idx_rows
+        assert isinstance(dev_idx_sheet, smartsheet.models.sheet.Sheet)
+        assert isinstance(dev_idx_rows, dict)
+        assert isinstance(dev_idx_col_map, dict)
+        assert dev_idx_sheet.id == jira_idx_sheet.id
+        # assert dev_idx_sheet == jira_idx_sheet
+        assert dev_idx_col_map == jira_idx_col_map
+        assert dev_idx_rows == jira_idx_rows
 
 
 # TODO: Static return and check for actual values
@@ -208,8 +213,9 @@ def test_get_sub_indexes(sheet_fixture, columns):
 
 
 # TODO: Static return and check for actual values
-def test_get_all_sheet_ids(dev_fixture):
+def test_get_all_sheet_ids(dev_fixture, workspace_fixture):
     dev_minutes, dev_workspace_id, dev_jira_idx_sheet = dev_fixture
+    workspace, ws_ids = workspace_fixture
     with pytest.raises(TypeError):
         get_all_sheet_ids("dev_minutes",
                           dev_workspace_id, dev_jira_idx_sheet)
@@ -221,6 +227,10 @@ def test_get_all_sheet_ids(dev_fixture):
                           "dev_jira_idx_sheet")
     with pytest.raises(ValueError):
         get_all_sheet_ids(-1337, dev_workspace_id, dev_jira_idx_sheet)
-    sheet_ids = get_all_sheet_ids(
-        dev_minutes, dev_workspace_id, dev_jira_idx_sheet)
-    assert sheet_ids is not None
+    with patch('uuid_module.smartsheet_api.get_workspace') as func_mock:
+        func_mock.return_value = workspace
+        sheet_ids = get_all_sheet_ids(
+            dev_minutes, dev_workspace_id, dev_jira_idx_sheet)
+        for id in sheet_ids:
+            assert id in ws_ids
+        assert 5786250381682564 not in ws_ids

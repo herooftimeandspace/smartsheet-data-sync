@@ -253,7 +253,7 @@ def json_extract(obj, key):
     # Validate data types before attempting to process.
     if not isinstance(obj, dict):
         raise TypeError("Obj must be a dict (json).")
-    elif not isinstance(key, str):
+    if not isinstance(key, str):
         raise TypeError("Key must be a string.")
 
     # Create an empty list as an 'array'
