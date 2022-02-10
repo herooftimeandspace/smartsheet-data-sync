@@ -245,6 +245,7 @@ def get_blank_uuids(source_sheets):
                           "Cell skipped.").format(uuid_col, row.id,
                                                   row.row_number, uuid)
                 logging.debug(msg)
+                continue
             elif uuid_value != uuid:
                 msg = str("Cell at Column Name: {} | Row ID: {} | "
                           "Row Number: {} has an existing value of {}. "
@@ -261,6 +262,7 @@ def get_blank_uuids(source_sheets):
                 logging.warning(msg)
                 msg = str("Dumping Row Data: {}").format(row)
                 logging.debug(msg)
+                continue
 
         # Collect all rows to update and parse them into a dict of sheets
         # to update.
