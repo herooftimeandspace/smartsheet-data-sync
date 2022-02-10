@@ -35,13 +35,13 @@ def workspace_fixture():
     return workspace, workspaces
 
 
-def test_set_access_token():
-    with pytest.raises(NoCredentialsError):
-        secret_name = get_secret_name()
-        os.environ["AWS_ACCESS_KEY_ID"] = ""
-        os.environ["AWS_SECRET_ACCESS_KEY"] = ""
-        os.environ["AWS_SESSION_TOKEN"] = ""
-        os.environ["SMARTSHEET_ACCESS_TOKEN"] = get_secret(secret_name)
+# def test_set_access_token():
+#     with pytest.raises(NoCredentialsError):
+#         secret_name = get_secret_name()
+#         os.environ["AWS_ACCESS_KEY_ID"] = ""
+#         os.environ["AWS_SECRET_ACCESS_KEY"] = ""
+#         os.environ["AWS_SESSION_TOKEN"] = ""
+#         os.environ["SMARTSHEET_ACCESS_TOKEN"] = get_secret(secret_name)
 
 
 def test_write_rows_to_sheet(monkeypatch, row, sheet):
