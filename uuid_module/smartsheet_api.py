@@ -83,7 +83,7 @@ def write_rows_to_sheet(rows_to_write, sheet, write_method="add"):
         result = smartsheet_client.Sheets.add_rows(sheet_id,
                                                    rows_to_write)
         msg = str("Smartsheet API responded with the "
-                  "following message: {}").format(result.result)
+                  "following message: {}").format(result)
         logging.info(msg)
         return result
         # except smartsheet.exceptions.ApiError as result:
