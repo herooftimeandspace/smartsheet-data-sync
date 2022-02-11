@@ -249,7 +249,7 @@ def get_blank_uuids(source_sheets):
             elif uuid_value != uuid:
                 msg = str("Cell at Column Name: {} | Row ID: {} | "
                           "Row Number: {} has an existing value of {}. "
-                          "Tagging for update."
+                          "Tagging for update. "
                           "{}.").format(uuid_col, row.id, row.row_number,
                                         uuid_value, uuid)
                 logging.debug(msg)
