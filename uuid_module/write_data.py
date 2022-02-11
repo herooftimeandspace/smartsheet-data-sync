@@ -118,7 +118,8 @@ def write_jira_index_cell_links(project_sub_index,
     for sheet_id in dest_sheet_index.keys():
         # Get the sheet data for the ID.
         # TODO: TEST with smartsheet_api.py
-        dest_sheet = get_sheet(sheet_id, minutes=0)
+        # TODO: Write test to mock sheet_id not being an INT
+        dest_sheet = get_sheet(int(sheet_id), minutes=0)
 
         # Build a column map for easier column name to ID reference
         dest_col_map = get_column_map(dest_sheet)
