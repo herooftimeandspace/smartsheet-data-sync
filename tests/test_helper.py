@@ -318,17 +318,17 @@ def test_case_1():
     assert module_0.dev_jira_idx_sheet == 5786250381682564
     assert module_0.dev_minutes == 525600
     assert module_0.dev_workspace_id == [2618107878500228]
-    # TODO: Change to actual prod values
-    assert module_0.prod_jira_idx_sheet == 5786250381682564
+    assert module_0.prod_jira_idx_sheet == 5366809688860548
     assert module_0.prod_minutes == 65
-    assert module_0.prod_workspace_id == [2618107878500228]
+    assert module_0.prod_workspace_id == [
+        8158274374657924, 1479840747546500, 6569226535233412]
     assert module_0.logger.filters == []
     assert module_0.logger.name == 'uuid_module.helper'
     assert module_0.logger.level == 0
     assert module_0.logger.propagate is True
     assert module_0.logger.handlers == []
     assert module_0.logger.disabled is False
-    # assert module_0.env == '--debug'
+    assert module_0.env == '--debug'
     assert module_0.msg == 'Using default debug/staging variables for '\
         'workspace_id and Jira index sheet'
     assert module_0.workspace_id == [2618107878500228]
@@ -342,17 +342,17 @@ def test_case_2():
     assert module_0.dev_jira_idx_sheet == 5786250381682564
     assert module_0.dev_minutes == 525600
     assert module_0.dev_workspace_id == [2618107878500228]
-    # TODO: Change to actual prod values
-    assert module_0.prod_jira_idx_sheet == 5786250381682564
+    assert module_0.prod_jira_idx_sheet == 5366809688860548
     assert module_0.prod_minutes == 65
-    assert module_0.prod_workspace_id == [2618107878500228]
+    assert module_0.prod_workspace_id == [
+        8158274374657924, 1479840747546500, 6569226535233412]
     assert module_0.logger.filters == []
     assert module_0.logger.name == 'uuid_module.helper'
     assert module_0.logger.level == 0
     assert module_0.logger.propagate is True
     assert module_0.logger.handlers == []
     assert module_0.logger.disabled is False
-    # assert module_0.env == '--debug'
+    assert module_0.env == '--debug'
     assert module_0.msg == 'Using default debug/staging variables for '\
         'workspace_id and Jira index sheet'
     assert module_0.workspace_id == [2618107878500228]
@@ -367,17 +367,17 @@ def test_case_3():
     assert module_0.dev_jira_idx_sheet == 5786250381682564
     assert module_0.dev_minutes == 525600
     assert module_0.dev_workspace_id == [2618107878500228]
-    # TODO: Change to actual prod values
-    assert module_0.prod_jira_idx_sheet == 5786250381682564
+    assert module_0.prod_jira_idx_sheet == 5366809688860548
     assert module_0.prod_minutes == 65
-    assert module_0.prod_workspace_id == [2618107878500228]
+    assert module_0.prod_workspace_id == [
+        8158274374657924, 1479840747546500, 6569226535233412]
     assert module_0.logger.filters == []
     assert module_0.logger.name == 'uuid_module.helper'
     assert module_0.logger.level == 0
     assert module_0.logger.propagate is True
     assert module_0.logger.handlers == []
     assert module_0.logger.disabled is False
-    # assert module_0.env == '--debug'
+    assert module_0.env == '--debug'
     assert module_0.msg == 'Using default debug/staging variables for '\
         'workspace_id and Jira index sheet'
     assert module_0.workspace_id == [2618107878500228]
@@ -391,17 +391,17 @@ def test_case_4():
     assert module_0.dev_jira_idx_sheet == 5786250381682564
     assert module_0.dev_minutes == 525600
     assert module_0.dev_workspace_id == [2618107878500228]
-    # TODO: Change to actual prod values
-    assert module_0.prod_jira_idx_sheet == 5786250381682564
+    assert module_0.prod_jira_idx_sheet == 5366809688860548
     assert module_0.prod_minutes == 65
-    assert module_0.prod_workspace_id == [2618107878500228]
+    assert module_0.prod_workspace_id == [
+        8158274374657924, 1479840747546500, 6569226535233412]
     assert module_0.logger.filters == []
     assert module_0.logger.name == 'uuid_module.helper'
     assert module_0.logger.level == 0
     assert module_0.logger.propagate is True
     assert module_0.logger.handlers == []
     assert module_0.logger.disabled is False
-    # assert module_0.env == '--debug'
+    assert module_0.env == '--debug'
     assert module_0.msg == 'Using default debug/staging variables for '\
         'workspace_id and Jira index sheet'
     assert module_0.workspace_id == [2618107878500228]

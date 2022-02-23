@@ -4,11 +4,11 @@ log_location = "logs/"
 module_log_name = "main.log"
 """The main log written to disk
     """
-# PROD [8158274374657924, 1479840747546500, 6569226535233412]
-prod_workspace_id = [2618107878500228]
+# PROD
+prod_workspace_id = [8158274374657924, 1479840747546500, 6569226535233412]
 """List of workspace IDs. Workspace IDs are Type: int.
     """
-prod_jira_idx_sheet = 5786250381682564  # 5366809688860548
+prod_jira_idx_sheet = 5366809688860548
 """Jira Index Sheet ID. Type: int
     """
 prod_minutes = 65
