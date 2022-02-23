@@ -11,10 +11,11 @@ from uuid_module.variables import dev_minutes, dev_workspace_id
 secret_name = get_secret_name()
 try:
     os.environ["SMARTSHEET_ACCESS_TOKEN"] = get_secret(secret_name)
-except NoCredentialsError:
+except NoCredentialsError or TypeError:
     msg = str("Refresh Isengard credentials")
     logging.error(msg)
     exit()
+
 # Initialize the Smartsheet client and make sure we don't miss any errors.
 logging.debug("------------------------")
 logging.debug("Initializing Smartsheet Client API")
@@ -83,7 +84,7 @@ def write_rows_to_sheet(rows_to_write, sheet, write_method="add"):
         result = smartsheet_client.Sheets.add_rows(sheet_id,
                                                    rows_to_write)
         msg = str("Smartsheet API responded with the "
-                  "following message: {}").format(result.result)
+                  "following message: {}").format(result)
         logging.info(msg)
         return result
         # except smartsheet.exceptions.ApiError as result:

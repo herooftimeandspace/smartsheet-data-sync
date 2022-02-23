@@ -10,17 +10,18 @@ from apscheduler.executors.pool import ProcessPoolExecutor, ThreadPoolExecutor
 from apscheduler.schedulers.background import BlockingScheduler
 
 from uuid_module.cell_link_sheet_data import write_uuid_cell_links
+from uuid_module.create_jira_tickets import create_tickets
 # from uuid_module.cell_link_sheet_data import write_uuid_cell_links
 from uuid_module.get_data import (get_all_row_data, get_all_sheet_ids,
-                                  get_blank_uuids, get_secret, get_secret_name,
-                                  get_sub_indexes, refresh_source_sheets)
-from uuid_module.helper import truncate
-from uuid_module.variables import (log_location, module_log_name,
-                                   prod_jira_idx_sheet, prod_workspace_id,
-                                   sheet_columns, prod_minutes, dev_minutes,
-                                   dev_workspace_id, dev_jira_idx_sheet)
+                                  get_blank_uuids, get_sub_indexes,
+                                  refresh_source_sheets)
+from uuid_module.helper import get_secret, get_secret_name, truncate
+from uuid_module.variables import (dev_jira_idx_sheet, dev_minutes,
+                                   dev_workspace_id, log_location,
+                                   module_log_name, prod_jira_idx_sheet,
+                                   prod_minutes, prod_workspace_id,
+                                   sheet_columns)
 from uuid_module.write_data import write_jira_index_cell_links, write_uuids
-from uuid_module.create_jira_tickets import create_tickets
 
 start = time.time()
 
@@ -350,11 +351,8 @@ def full_jira_sync(minutes):
         logging.info(msg)
         return
 
-    # TODO: Load Jira Index Sheet HERE by calling the API. Pass the object into
-    # creating the Jira Index objects, then write the cell links.
-    logging.debug("Writing Jira cell links.")
     write_jira_index_cell_links(project_sub_index, index_sheet)
-    # logging.debug("Writing UUID cell links.")
+
     # write_uuid_cell_links(project_uuid_index,
     #                       source_sheets)
 
