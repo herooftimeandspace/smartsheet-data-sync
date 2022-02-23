@@ -60,20 +60,20 @@ sast:
 include:
   - template: Security/SAST.gitlab-ci.yml
 
-# pages:
-#   stage: pages
-#   needs: ["coverage"]
-#   script:
-#   - pip install -r requirements.txt
-#   - pip install pdoc
-#   - pdoc -o docs/ -d google uuid_module
-#   - mkdir ./public
-#   - mv ./docs/* ./public/
-#   artifacts:
-#     paths:
-#     - public
-#   # rules:
-#   # - if: "$CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH"
+pages:
+  stage: pages
+  needs: ["coverage"]
+  script:
+  # - pip install -r requirements.txt
+  # - pip install pdoc
+  # - pdoc -o docs/ -d google uuid_module
+  - mkdir ./public
+  - mv ./docs/* ./public/
+  artifacts:
+    paths:
+    - public
+  # rules:
+  # - if: "$CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH"
 
 deploy_staging:
   stage: deploy
