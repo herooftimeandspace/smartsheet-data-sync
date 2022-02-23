@@ -71,7 +71,7 @@ pages:
   # - mv ./docs/* ./public/
   artifacts:
     paths:
-    - public
+    - docs
   # rules:
   # - if: "$CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH"
 
