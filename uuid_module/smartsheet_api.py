@@ -1,9 +1,11 @@
 import logging
 import os
-from botocore.exceptions import NoCredentialsError
-import smartsheet
 
-from uuid_module.helper import (get_secret, get_secret_name, get_timestamp)
+import smartsheet
+from botocore.exceptions import NoCredentialsError
+
+from uuid_module.helper import (chunks, get_secret, get_secret_name,
+                                get_timestamp)
 from uuid_module.variables import dev_minutes, dev_workspace_id
 
 # Set the SMARTSHEET_ACCESS_TOKEN by pulling from the AWS Secrets API, based
@@ -74,33 +76,53 @@ def write_rows_to_sheet(rows_to_write, sheet, write_method="add"):
                   "").format(rows_to_write, sheet, write_method)
         logging.debug(msg)
 
-    if rows_to_write and write_method == "add":
+    if rows_to_write:
         msg = str("Writing {} rows back to Sheet ID: {} "
                   "| Sheet Name: {}").format(len(rows_to_write),
                                              sheet_id, sheet_name)
-        logging.debug(msg)
-
-        # try:
-        result = smartsheet_client.Sheets.add_rows(sheet_id,
-                                                   rows_to_write)
-        msg = str("Smartsheet API responded with the "
-                  "following message: {}").format(result)
         logging.info(msg)
-        return result
-        # except smartsheet.exceptions.ApiError as result:
-        #     msg = result
-        #     logging.info(msg)
-        #     return result
-    elif rows_to_write and write_method == "update":
-        try:
-            result = smartsheet_client.Sheets.update_rows(
-                sheet_id, rows_to_write)
+
+        if rows_to_write and write_method == "add":
+            # If over 125 rows need to be written to a single sheet, chunk
+            # the rows into segments of 125. Anything over 125 will cause
+            # the API to fail.
+            if len(rows_to_write) > 125:
+                chunked_cells = chunks(rows_to_write, 125)
+                for i in chunked_cells:
+                    try:
+                        result = smartsheet_client.Sheets.add_rows(sheet_id,
+                                                                   i)
+                    except Exception as e:
+                        logging.warning(e.message)
+            else:
+                try:
+                    result = smartsheet_client.Sheets.add_rows(sheet_id,
+                                                               rows_to_write)
+                except Exception as e:
+                    logging.warning(e.message)
             msg = str("Smartsheet API responded with the "
-                      "following message: {}").format(result.result)
+                      "following message: {}").format(result)
             logging.info(msg)
             return result
-        except smartsheet.exceptions.ApiError as result:
-            msg = result
+
+        elif rows_to_write and write_method == "update":
+            if len(rows_to_write) > 125:
+                chunked_cells = chunks(rows_to_write, 125)
+                for i in chunked_cells:
+                    try:
+                        result = smartsheet_client.Sheets.\
+                            update_rows(sheet_id, i)
+                    except Exception as e:
+                        logging.warning(e.message)
+            else:
+                try:
+                    result = smartsheet_client.Sheets.\
+                        update_rows(sheet_id, rows_to_write)
+                except Exception as e:
+                    logging.warning(e.message)
+
+            msg = str("Smartsheet API responded with the "
+                      "following message: {}").format(result.result)
             logging.info(msg)
             return result
     else:
@@ -108,16 +130,6 @@ def write_rows_to_sheet(rows_to_write, sheet, write_method="add"):
                   "{} | Sheet Name: {}").format(sheet_id, sheet_name)
         logging.info(msg)
         return None
-
-
-# def get_jira_index_sheet(smartsheet_client, index_sheet=dev_jira_idx_sheet):
-#     if not isinstance(smartsheet_client, smartsheet.Smartsheet):
-#         msg = str("Smartsheet Client must be type: smartsheet.Smartsheet, "
-#                   "not type: {}").format(type(smartsheet_client))
-#         raise TypeError(msg)
-#     index_sheet = smartsheet_client.Sheets.get_sheet(
-#         index_sheet, include='object_value', level=2)
-#     return index_sheet
 
 
 def get_workspace(workspace_id=dev_workspace_id):
