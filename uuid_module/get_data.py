@@ -8,6 +8,7 @@ import pytz
 
 from uuid_module.helper import (get_cell_data, get_cell_value, get_column_map,
                                 get_timestamp)
+import uuid_module.helper as conf
 from uuid_module.smartsheet_api import get_sheet, get_workspace
 from uuid_module.variables import (dev_jira_idx_sheet, dev_minutes,
                                    dev_workspace_id, jira_col, summary_col,
@@ -47,11 +48,7 @@ def refresh_source_sheets(sheet_ids, minutes=0):
     source_sheets = []
     for sheet_id in sheet_ids:
         # Query the Smartsheet API for the sheet details
-        # TODO: TEST with smartsheet_api.py
         sheet = get_sheet(sheet_id, minutes)
-        # sheet = smartsheet_client.Sheets.get_sheet(
-        #     sheet_id, include='object_value', level=2,
-        #     rows_modified_since=modified_since)
         source_sheets.append(sheet)
         logging.debug("Loaded Sheet ID: {} | "
                       "Sheet Name: {}".format(sheet.id, sheet.name))
@@ -275,23 +272,12 @@ def get_blank_uuids(source_sheets):
         return None
 
 
-# Delete
-# def get_jira_index_sheet(smartsheet_client, index_sheet=dev_jira_idx_sheet):
-#     if not isinstance(smartsheet_client, smartsheet.Smartsheet):
-#         msg = str("Smartsheet Client must be type: smartsheet.Smartsheet, "
-#                   "not type: {}").format(type(smartsheet_client))
-#         raise TypeError(msg)
-#     index_sheet = smartsheet_client.Sheets.get_sheet(
-#         index_sheet, include='object_value', level=2)
-#     return index_sheet
-
-
 def load_jira_index(index_sheet=dev_jira_idx_sheet):
     """Create indexes on the Jira index rows. Pulls from the Smartsheet API
        every time to get the most up-to-date version of the sheet data.
 
     Args:
-        smartsheet_client (Object): The Smartsheet client to query the API
+        index_sheet (Sheet): The Jira index sheet to load. Defaults to Dev.
 
     Raises:
         TypeError: Validates smartsheet_client is a Smartsheet Client object.
@@ -309,7 +295,6 @@ def load_jira_index(index_sheet=dev_jira_idx_sheet):
                   "").format(type(index_sheet))
         raise TypeError(msg)
 
-    # TODO: TEST with smartsheet_api.py get_sheet
     jira_index_sheet = get_sheet(index_sheet, minutes=0)
     msg = str("{} rows loaded from sheet ID: {} | Sheet name: {}"
               "").format(len(jira_index_sheet.rows), jira_index_sheet.id,
@@ -448,14 +433,16 @@ def get_all_sheet_ids(minutes=dev_minutes,
                                                                        ws_id)
                     logging.debug(msg)
 
-    # Don't include the JIRA index sheet as
-    # part of the sheet collection, if present.
-    try:
-        sheet_ids.remove(index_sheet)
-        msg = str("{} removed from Sheet ID list").format(index_sheet)
-        logging.debug(msg)
-    except ValueError:
-        logging.debug(
-            "{} not found in Sheet IDs list".format(index_sheet))
+    # Don't include the JIRA index sheet or the Push Tickets sheet as part of
+    # the sheet collection, if present.
+    sheets_to_remove = [conf.index_sheet, conf.push_tickets_sheet]
+    for sheet_id in sheets_to_remove:
+        try:
+            sheet_ids.remove(sheet_id)
+            msg = str("{} removed from Sheet ID list").format(sheet_id)
+            logging.debug(msg)
+        except ValueError:
+            logging.debug(
+                "{} not found in Sheet IDs list".format(sheet_id))
 
     return sheet_ids
