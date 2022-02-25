@@ -337,30 +337,7 @@ def write_uuid_cell_links(project_data_index, source_sheets):
                                                  dest_sheet.id,
                                                  dest_sheet.name)
             logging.info(msg)
-            # If over 125 rows need to be written to a single sheet, chunk
-            # the rows into segments of 125. Anything over 125 will cause
-            # the API to fail.
-            if len(rows_to_update) > 125:
-                chunked_cells = chunks(rows_to_update, 125)
-                for i in chunked_cells:
-                    try:
-                        # TODO: TEST with smartsheet_api.py
-                        write_rows_to_sheet(
-                            i, dest_sheet, write_method="update")
-                        # result = smartsheet_client.Sheets.\
-                        #     update_rows(dest_sheet.id, i)
-                        # logging.debug(result)
-                    except Exception as e:
-                        logging.warning(e.message)
-            elif len(rows_to_update) <= 125:
-                try:
-                    write_rows_to_sheet(
-                        rows_to_update, dest_sheet, write_method="Update")
-                except Exception as e:
-                    logging.warning(e.message)
-            else:
-                msg = str("Unknown error. Length of rows to update was {}."
-                          "").format(len(rows_to_update))
-                logging.error(msg)
+            write_rows_to_sheet(rows_to_update, dest_sheet,
+                                write_method="update")
         else:
             logging.debug("No updates required.")
