@@ -65,14 +65,8 @@ def write_uuids(sheets_to_update):
                       "| Sheet Name: {}").format(len(rows_to_write),
                                                  sheet_id, sheet_name)
             logging.debug(msg)
-            # TODO: TEST with smartsheet_api.py
             write_rows_to_sheet(rows_to_write, int(sheet_id),
                                 write_method="update")
-            # result = smartsheet_client.Sheets.update_rows(int(sheet_id),
-            #                                               rows_to_write)
-            # msg = str("Smartsheet API responded with the "
-            #           "following message: {}").format(result.result)
-            # logging.debug(msg)
             sheets_updated += 1
         else:
             msg = str("No UUID updates required for Sheet ID: "
@@ -117,7 +111,6 @@ def write_jira_index_cell_links(project_sub_index,
     # Iterate through each sheet ID in the smaller sheet index.
     for sheet_id in dest_sheet_index.keys():
         # Get the sheet data for the ID.
-        # TODO: TEST with smartsheet_api.py
         # TODO: Write test to mock sheet_id not being an INT
         dest_sheet = get_sheet(int(sheet_id), minutes=0)
 
@@ -171,32 +164,8 @@ def write_jira_index_cell_links(project_sub_index,
                                  dest_sheet.name)
             logging.info(msg)
 
-            # If over 125 rows need to be written to a single sheet, chunk
-            # the rows into segments of 125. Anything over 125 will cause
-            # the API to fail.
-            if len(cell_links_to_update) > 125:
-                chunked_cells = chunks(cell_links_to_update, 125)
-                for i in chunked_cells:
-                    try:
-                        # TODO: TEST with smartsheet_api.py
-                        write_rows_to_sheet(
-                            i, dest_sheet, write_method="update")
-                        # result = smartsheet_client.Sheets.\
-                        #     update_rows(dest_sheet.id, i)
-                        # logging.debug(result)
-                    except Exception as e:
-                        logging.warning(e.message)
-            else:
-                try:
-                    # TODO: TEST with smartsheet_api.py
-                    write_rows_to_sheet(
-                        cell_links_to_update, dest_sheet,
-                        write_method="update")
-                    # result = smartsheet_client.Sheets.\
-                    #     update_rows(dest_sheet.id, cell_links_to_update)
-                    # logging.debug(result)
-                except Exception as e:
-                    logging.warning(e.message)
+            write_rows_to_sheet(cell_links_to_update, dest_sheet,
+                                write_method="update")
         else:
             msg = str("No Jira Ticket updates needed for Sheet ID: {} | "
                       "Sheet Name {}.").format(dest_sheet.id,
@@ -309,16 +278,9 @@ def write_predecessor_dates(src_data, project_data_index):
 
     # Query the API for the sheet data, get the column map, and get the row
     # data. Include the objectValue so we can see the row predecessor(s).
-    # TODO: TEST with smartsheet_api.py
     dest_sheet = get_sheet(dest_sheet_id)
-    # dest_sheet = smartsheet_client.Sheets.get_sheet(
-    #     dest_sheet_id, include='object_value', level=2)
     dest_col_map = get_column_map(dest_sheet)
-    # TODO: TEST with smartsheet_api.py
     dest_row = get_row(dest_sheet_id, dest_row_id)
-    # dest_row = smartsheet_client.Sheets.get_row(dest_sheet_id,
-    #                                             dest_row_id,
-    #                                             include='objectValue')
 
     # Validate that the start date is useful.
     if not start_date:
@@ -347,10 +309,7 @@ def write_predecessor_dates(src_data, project_data_index):
     # TODO: Handle multiple predecessors. Find earliest predecessor and update
     # that date, or update every predecessor.
     while pred_cell.value is not None:
-        # TODO: TEST with smartsheet_api.py
         predecessor_row = get_row(dest_sheet_id, dest_row_id)
-        # predecessor_row = smartsheet_client.Sheets.get_row(
-        #     dest_sheet_id, dest_row_id, include='objectValue')
         pred_cell = get_cell_data(predecessor_row, predecessor_col,
                                   dest_col_map)
         pred_start_value = get_cell_value(dest_row, start_col, dest_col_map)
@@ -388,15 +347,9 @@ def write_predecessor_dates(src_data, project_data_index):
             logging.warning(msg)
             dest_sheet_id = json_extract(dest_start_cell, "sheetId")
             dest_row_id = json_extract(dest_start_cell, "rowId")
-            # TODO: TEST with smartsheet_api.py
             dest_sheet = get_sheet(dest_sheet_id)
-            # dest_sheet = smartsheet_client.Sheets.get_sheet(
-            #     dest_sheet_id, include='object_value', level=2)
             dest_col_map = get_column_map(dest_sheet)
-            # TODO: TEST with smartsheet_api.py
             dest_row = get_row(dest_sheet_id, dest_row_id)
-            # dest_row = smartsheet_client.Sheets.get_row(dest_sheet_id,
-            #                                             dest_row_id)
             dest_uuid = get_cell_data(dest_row, uuid_col, dest_col_map)
             row_data = project_data_index[dest_uuid]
             write_predecessor_dates(
