@@ -6,7 +6,7 @@ import pytest
 import smartsheet
 from uuid_module.create_jira_tickets import (build_row_data,
                                              create_tickets, form_rows,
-                                             push_jira_ticket_to_sheet,
+                                             link_jira_index_to_sheet,
                                              refresh_sheets)
 from uuid_module.helper import get_column_map
 
@@ -97,16 +97,16 @@ def test_push_jira_tickets_to_sheet(sheet_fixture, index_sheet_fixture):
     index_col_map = get_column_map(index_sheet_fixture)
 
     with pytest.raises(TypeError):
-        push_jira_ticket_to_sheet(
+        link_jira_index_to_sheet(
             "sheet", sheet_col_map, index_sheet_fixture, index_col_map)
     with pytest.raises(TypeError):
-        push_jira_ticket_to_sheet(
+        link_jira_index_to_sheet(
             sheet, "sheet_col_map", index_sheet_fixture, index_col_map)
     with pytest.raises(TypeError):
-        push_jira_ticket_to_sheet(
+        link_jira_index_to_sheet(
             sheet, sheet_col_map, "index_sheet_fixture", index_col_map)
     with pytest.raises(TypeError):
-        push_jira_ticket_to_sheet(
+        link_jira_index_to_sheet(
             sheet, sheet_col_map, index_sheet_fixture, "index_col_map")
 
 
@@ -129,13 +129,13 @@ def test_create_ticket_index(sheet_fixture, index_sheet_fixture):
     source_sheets = [sheet1, sheet2, sheet3, sheet4]
     index_col_map = get_column_map(index_sheet_fixture)
     with pytest.raises(TypeError):
-        push_jira_ticket_to_sheet(
+        link_jira_index_to_sheet(
             "sheet_fixture", index_sheet_fixture, index_col_map)
     with pytest.raises(TypeError):
-        push_jira_ticket_to_sheet(
+        link_jira_index_to_sheet(
             sheet_fixture, "index_sheet_fixture", index_col_map)
     with pytest.raises(TypeError):
-        push_jira_ticket_to_sheet(
+        link_jira_index_to_sheet(
             sheet_fixture, index_sheet_fixture, "index_col_map")
 
     # ticket_index = create_ticket_index(
