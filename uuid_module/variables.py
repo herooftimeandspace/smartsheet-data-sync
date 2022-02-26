@@ -11,7 +11,7 @@ prod_workspace_id = [8158274374657924, 1479840747546500, 6569226535233412]
 prod_jira_idx_sheet = 5366809688860548
 """Jira Index Sheet ID. Type: int
     """
-prod_push_jira_tickets_sheet = ""
+prod_push_jira_tickets_sheet = None
 """Sheet used to push rows into Jira to create new tickets. Separate from the
    index sheet to prevent accidental data corruption.
    """
