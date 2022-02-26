@@ -10,8 +10,10 @@ import smartsheet
 from botocore.exceptions import ClientError
 
 from uuid_module.variables import (dev_jira_idx_sheet, dev_minutes,
+                                   dev_push_jira_tickets_sheet,
                                    dev_workspace_id, prod_jira_idx_sheet,
-                                   prod_minutes, prod_workspace_id)
+                                   prod_minutes, prod_push_jira_tickets_sheet,
+                                   prod_workspace_id)
 
 logger = logging.getLogger(__name__)
 
@@ -47,31 +49,40 @@ def set_env_vars():
         logging.info(msg)
 
     if env in ("-s", "--staging", "-staging", "-d", "--debug", "-debug"):
-        msg = str("Using default debug/staging variables for workspace_id "
-                  "and Jira index sheet").format()
         workspace_id = dev_workspace_id
         index_sheet = dev_jira_idx_sheet
         minutes = dev_minutes
-        return env, msg, workspace_id, index_sheet, minutes
+        push_tickets_sheet = dev_push_jira_tickets_sheet
+        msg = str("Using Staging variables for workspace_id "
+                  "and Jira index sheet. Set workspace_id to: {}, index_sheet"
+                  "to: {}, and minutes to: {}. Pushing tickets to {}"
+                  "").format(workspace_id, index_sheet, minutes,
+                             push_tickets_sheet)
     elif env in ("-p", "--prod", "-prod"):
         workspace_id = prod_workspace_id
         index_sheet = prod_jira_idx_sheet
         minutes = prod_minutes
-        msg = str("Set workspace_id to: {}, index_sheet to: {}, "
-                  "and minutes to: {} "
-                  "for Prod environment").format(workspace_id,
-                                                 index_sheet, minutes)
-        return env, msg, workspace_id, index_sheet, minutes
+        push_tickets_sheet = prod_push_jira_tickets_sheet
+        msg = str("Using Prod environment variables for workspace_id "
+                  "and Jira index sheet. Set workspace_id to: {}, index_sheet"
+                  "to: {}, and minutes to: {}. Pushing tickets to {}"
+                  "").format(workspace_id, index_sheet, minutes,
+                             push_tickets_sheet)
     else:
-        msg = str("Using default debug/staging variables for workspace_id "
-                  "and Jira index sheet").format()
         workspace_id = dev_workspace_id
         index_sheet = dev_jira_idx_sheet
         minutes = dev_minutes
-        return env, msg, workspace_id, index_sheet, minutes
+        push_tickets_sheet = dev_push_jira_tickets_sheet
+        msg = str("Invalid flag: {}. Using Staging variables. Set "
+                  "workspace_id to: {}, index_sheet to: {}, and minutes "
+                  "to: {}. Pushing tickets to {}"
+                  "").format(workspace_id, index_sheet, minutes,
+                             push_tickets_sheet)
+    return env, msg, workspace_id, index_sheet, minutes, push_tickets_sheet
 
 
-env, msg, workspace_id, index_sheet, minutes = set_env_vars()
+env, msg, workspace_id, index_sheet,\
+    minutes, push_tickets_sheet = set_env_vars()
 
 
 def get_cell_data(row, column_name, column_map):
