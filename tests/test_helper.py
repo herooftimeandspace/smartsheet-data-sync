@@ -302,12 +302,17 @@ def test_get_secret_name(env_fixture):
 def test_case_0():
     var_0 = module_0.set_env_vars()
     assert var_0 == ('--debug',
-                     'Using default debug/staging variables for workspace_id '
-                     'and Jira index sheet', [2618107878500228],
-                     5786250381682564, 525600)
+                     'Using Staging variables for workspace_id and Jira '
+                     'index sheet. Set workspace_id to: [2618107878500228], '
+                     'index_sheetto: 5786250381682564, and minutes to: '
+                     '525600. Pushing tickets to 3312520078354308',
+                     [2618107878500228], 5786250381682564, 525600,
+                     3312520078354308)
     assert module_0.env == '--debug'
-    assert module_0.msg == 'Using default debug/staging variables for '\
-        'workspace_id and Jira index sheet'
+    assert module_0.msg == 'Using Staging variables for workspace_id and '\
+        'Jira index sheet. Set workspace_id to: [2618107878500228], '\
+        'index_sheetto: 5786250381682564, and minutes to: 525600. '\
+        'Pushing tickets to 3312520078354308'
     assert module_0.minutes == 525600
 
 
@@ -318,10 +323,14 @@ def test_case_1():
     assert module_0.dev_jira_idx_sheet == 5786250381682564
     assert module_0.dev_minutes == 525600
     assert module_0.dev_workspace_id == [2618107878500228]
+    assert module_0.dev_push_jira_tickets_sheet == 3312520078354308
     assert module_0.prod_jira_idx_sheet == 5366809688860548
     assert module_0.prod_minutes == 65
-    assert module_0.prod_workspace_id == [
-        8158274374657924, 1479840747546500, 6569226535233412]
+    assert module_0.prod_workspace_id == [8158274374657924,
+                                          1479840747546500,
+                                          6569226535233412]
+    var_1 = module_0.prod_push_jira_tickets_sheet
+    assert var_1 is None
     assert module_0.logger.filters == []
     assert module_0.logger.name == 'uuid_module.helper'
     assert module_0.logger.level == 0
@@ -329,8 +338,10 @@ def test_case_1():
     assert module_0.logger.handlers == []
     assert module_0.logger.disabled is False
     assert module_0.env == '--debug'
-    assert module_0.msg == 'Using default debug/staging variables for '\
-        'workspace_id and Jira index sheet'
+    assert module_0.msg == 'Using Staging variables for workspace_id and '\
+        'Jira index sheet. Set workspace_id to: [2618107878500228], '\
+        'index_sheetto: 5786250381682564, and minutes to: 525600. '\
+        'Pushing tickets to 3312520078354308'
     assert module_0.workspace_id == [2618107878500228]
     assert module_0.index_sheet == 5786250381682564
     assert module_0.minutes == 525600
@@ -342,10 +353,14 @@ def test_case_2():
     assert module_0.dev_jira_idx_sheet == 5786250381682564
     assert module_0.dev_minutes == 525600
     assert module_0.dev_workspace_id == [2618107878500228]
+    assert module_0.dev_push_jira_tickets_sheet == 3312520078354308
     assert module_0.prod_jira_idx_sheet == 5366809688860548
     assert module_0.prod_minutes == 65
-    assert module_0.prod_workspace_id == [
-        8158274374657924, 1479840747546500, 6569226535233412]
+    assert module_0.prod_workspace_id == [8158274374657924,
+                                          1479840747546500,
+                                          6569226535233412]
+    var_1 = module_0.prod_push_jira_tickets_sheet
+    assert var_1 is None
     assert module_0.logger.filters == []
     assert module_0.logger.name == 'uuid_module.helper'
     assert module_0.logger.level == 0
@@ -353,8 +368,10 @@ def test_case_2():
     assert module_0.logger.handlers == []
     assert module_0.logger.disabled is False
     assert module_0.env == '--debug'
-    assert module_0.msg == 'Using default debug/staging variables for '\
-        'workspace_id and Jira index sheet'
+    assert module_0.msg == 'Using Staging variables for workspace_id and '\
+        'Jira index sheet. Set workspace_id to: [2618107878500228], '\
+        'index_sheetto: 5786250381682564, and minutes to: 525600. '\
+        'Pushing tickets to 3312520078354308'
     assert module_0.workspace_id == [2618107878500228]
     assert module_0.index_sheet == 5786250381682564
     assert module_0.minutes == 525600
@@ -367,10 +384,14 @@ def test_case_3():
     assert module_0.dev_jira_idx_sheet == 5786250381682564
     assert module_0.dev_minutes == 525600
     assert module_0.dev_workspace_id == [2618107878500228]
+    assert module_0.dev_push_jira_tickets_sheet == 3312520078354308
     assert module_0.prod_jira_idx_sheet == 5366809688860548
     assert module_0.prod_minutes == 65
-    assert module_0.prod_workspace_id == [
-        8158274374657924, 1479840747546500, 6569226535233412]
+    assert module_0.prod_workspace_id == [8158274374657924,
+                                          1479840747546500,
+                                          6569226535233412]
+    var_1 = module_0.prod_push_jira_tickets_sheet
+    assert var_1 is None
     assert module_0.logger.filters == []
     assert module_0.logger.name == 'uuid_module.helper'
     assert module_0.logger.level == 0
@@ -378,8 +399,10 @@ def test_case_3():
     assert module_0.logger.handlers == []
     assert module_0.logger.disabled is False
     assert module_0.env == '--debug'
-    assert module_0.msg == 'Using default debug/staging variables for '\
-        'workspace_id and Jira index sheet'
+    assert module_0.msg == 'Using Staging variables for workspace_id and '\
+        'Jira index sheet. Set workspace_id to: [2618107878500228], '\
+        'index_sheetto: 5786250381682564, and minutes to: 525600. '\
+        'Pushing tickets to 3312520078354308'
     assert module_0.workspace_id == [2618107878500228]
     assert module_0.index_sheet == 5786250381682564
     assert module_0.minutes == 525600
@@ -391,10 +414,14 @@ def test_case_4():
     assert module_0.dev_jira_idx_sheet == 5786250381682564
     assert module_0.dev_minutes == 525600
     assert module_0.dev_workspace_id == [2618107878500228]
+    assert module_0.dev_push_jira_tickets_sheet == 3312520078354308
     assert module_0.prod_jira_idx_sheet == 5366809688860548
     assert module_0.prod_minutes == 65
-    assert module_0.prod_workspace_id == [
-        8158274374657924, 1479840747546500, 6569226535233412]
+    assert module_0.prod_workspace_id == [8158274374657924,
+                                          1479840747546500,
+                                          6569226535233412]
+    var_1 = module_0.prod_push_jira_tickets_sheet
+    assert var_1 is None
     assert module_0.logger.filters == []
     assert module_0.logger.name == 'uuid_module.helper'
     assert module_0.logger.level == 0
@@ -402,13 +429,15 @@ def test_case_4():
     assert module_0.logger.handlers == []
     assert module_0.logger.disabled is False
     assert module_0.env == '--debug'
-    assert module_0.msg == 'Using default debug/staging variables for '\
-        'workspace_id and Jira index sheet'
+    assert module_0.msg == 'Using Staging variables for workspace_id and '\
+        'Jira index sheet. Set workspace_id to: [2618107878500228], '\
+        'index_sheetto: 5786250381682564, and minutes to: 525600. '\
+        'Pushing tickets to 3312520078354308'
     assert module_0.workspace_id == [2618107878500228]
     assert module_0.index_sheet == 5786250381682564
     assert module_0.minutes == 525600
-    var_1 = module_0.get_secret(var_0)
-    assert len(var_1) == 37
+    var_2 = module_0.get_secret(var_0)
+    assert len(var_2) == 37
 
 
 # TODO: Failing pynguin tests
