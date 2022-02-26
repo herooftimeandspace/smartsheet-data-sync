@@ -13,7 +13,7 @@ from uuid_module.variables import dev_minutes, dev_workspace_id
 secret_name = get_secret_name()
 try:
     os.environ["SMARTSHEET_ACCESS_TOKEN"] = get_secret(secret_name)
-except NoCredentialsError or TypeError:
+except (NoCredentialsError, TypeError):
     msg = str("Refresh Isengard credentials")
     logging.error(msg)
     exit()
