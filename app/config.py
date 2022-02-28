@@ -3,6 +3,7 @@ import json
 import logging
 import os
 import time
+import sys
 from logging.config import dictConfig
 
 import boto3
@@ -123,25 +124,17 @@ def set_env_vars(env):
     Defaults to the development / debug environment variables if not specified
 
     Returns:
-        str: The environment flag.
-        str: The message for logging, either 'no_flag' or a description of
-             the variables used
-        int: The workspace ID,
-        int: The Jira Index sheet ID
-        int: The number of minutes into the past that data should be pulled
+        dict: All the environment variables as a config.
     """
-    # if not env:
-    #     msg = str("No flag was set from the command line. Setting to "
-    #               "--debug")
-    #     logging.info(msg)
-    #     env = "--debug"
-    # else:
-    #     msg = str("The {} flag was passed from the command line").format(env)
-    #     logging.info(msg)
+    if not isinstance(env, str):
+        msg = str("Env should be a string, not {}.").format(env)
+        raise TypeError
+
     global workspace_id
     global index_sheet
     global minutes
     global env_msg
+    global push_tickets_sheet
 
     if env in ("-s", "--staging", "-staging", "-d", "--debug", "-debug"):
         workspace_id = dev_workspace_id
@@ -299,21 +292,6 @@ def set_logging_config(env):
     return logging_config
 
 
-# Get the environment variables
-# env, logging_msg, workspace_id, index_sheet, minutes = set_env_vars()
-
-# This is the first thing we can log, so we check to see if any valid env
-# variables were passed. Quit the app if not.
-# if logging_msg == "no_flag":
-#     logging.error("No environment flag set. Please use --debug, --staging "
-#                   "or --prod. Terminating app.")
-#     quit()
-# logging.info(logging_msg)
-
-    # Set the SMARTSHEET_ACCESS_TOKEN by pulling from the AWS Secrets API,
-    # based on the environment variable passed in.
-
-
 def init(args):
     start = time.time()
     global config
@@ -321,6 +299,7 @@ def init(args):
     global logging_config
     global scheduler
     global logger
+    global smartsheet_client
 
     try:
         env = args[0]
@@ -363,6 +342,10 @@ def init(args):
         exit()
     smartsheet_client = smartsheet.Smartsheet()
     smartsheet_client.errors_as_exceptions(True)
+
+    # Defer setting the token until all modules are loaded
+    import uuid_module.smartsheet_api as ss
+    ss.set_smartsheet_client()
 
     config['scheduler'] = scheduler
     config['logging'] = logging_config
