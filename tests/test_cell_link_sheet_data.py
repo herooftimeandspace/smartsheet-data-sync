@@ -6,7 +6,7 @@ import pytest
 import smartsheet
 from uuid_module.cell_link_sheet_data import write_uuid_cell_links
 from uuid_module.get_data import get_all_row_data
-from uuid_module.helper import get_secret, get_secret_name
+from app.config import get_secret, get_secret_name
 from uuid_module.variables import dev_minutes, sheet_columns
 # from uuid_module.write_data import write_predecessor_dates
 
@@ -36,6 +36,11 @@ def sheet_fixture():
     return sheet, sheet_list, sheet_no_uuid_col, sheet_no_summary_col
 
 
+@pytest.fixture
+def env():
+    return "-debug"
+
+
 # Need Mock
 @pytest.fixture
 def smartsheet_client(env):
@@ -48,11 +53,6 @@ def smartsheet_client(env):
     # Make sure we don't miss any error
     smartsheet_client.errors_as_exceptions(True)
     return smartsheet_client
-
-
-@pytest.fixture
-def env():
-    return "-debug"
 
 
 @pytest.fixture

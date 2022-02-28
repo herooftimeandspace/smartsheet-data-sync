@@ -5,10 +5,7 @@ import os
 import pytest
 import smartsheet
 from freezegun import freeze_time
-from uuid_module.get_data import (get_all_row_data, get_sub_indexes)
 from uuid_module.variables import (dev_minutes, sheet_columns)
-from uuid_module.write_data import (check_uuid, write_jira_index_cell_links,
-                                    write_predecessor_dates, write_uuids)
 cwd = os.path.dirname(os.path.abspath(__file__))
 logger = logging.getLogger(__name__)
 
@@ -74,6 +71,7 @@ def src_data():
 @freeze_time("2021-11-18 21:23:54")
 # TODO: Static return and check for actual values
 def project_indexes(sheet_fixture, columns, minutes_fixture):
+    from uuid_module.get_data import (get_all_row_data, get_sub_indexes)
     _, sheet_list, _, _ = sheet_fixture
     project_uuid_index = get_all_row_data(sheet_list, columns, minutes_fixture)
     _, sub_index = get_sub_indexes(project_uuid_index)
@@ -81,38 +79,46 @@ def project_indexes(sheet_fixture, columns, minutes_fixture):
 
 
 def test_write_uuids(sheet_fixture):
+    import uuid_module.write_data as write_data
     sheets_to_update, _, _, _ = sheet_fixture
     with pytest.raises(TypeError):
-        write_uuids("sheets_to_update")
+        write_data.write_uuids("sheets_to_update")
     return
 
 
 def test_write_jira_index_cell_links(project_indexes):
+    import uuid_module.write_data as write_data
     _, project_sub_index = project_indexes
     with pytest.raises(TypeError):
-        write_jira_index_cell_links("project_sub_index")
+        write_data.write_jira_index_cell_links("project_sub_index")
     return
 
 
 def test_check_uuid(uuids):
+    import uuid_module.write_data as write_data
     uuid_value, jira_value, uuid_list, jira_data_values = uuids
     with pytest.raises(TypeError):
-        check_uuid("uuid_value", jira_value, uuid_list, jira_data_values)
+        write_data.check_uuid("uuid_value", jira_value,
+                              uuid_list, jira_data_values)
     with pytest.raises(TypeError):
-        check_uuid(uuid_value, [jira_value], uuid_list, jira_data_values)
+        write_data.check_uuid(
+            uuid_value, [jira_value], uuid_list, jira_data_values)
     with pytest.raises(TypeError):
-        check_uuid(uuid_value, jira_value, "uuid_list", jira_data_values)
+        write_data.check_uuid(uuid_value, jira_value,
+                              "uuid_list", jira_data_values)
     with pytest.raises(TypeError):
-        check_uuid(uuid_value, jira_value, uuid_list, "jira_data_values")
+        write_data.check_uuid(uuid_value, jira_value,
+                              uuid_list, "jira_data_values")
     return
 
 
 def test_write_predecessor_dates(src_data, project_indexes):
+    import uuid_module.write_data as write_data
     project_data_index, _ = project_indexes
     with pytest.raises(TypeError):
-        write_predecessor_dates("src_data", project_data_index)
+        write_data.write_predecessor_dates("src_data", project_data_index)
     with pytest.raises(TypeError):
-        write_predecessor_dates(src_data, "project_data_index")
+        write_data.write_predecessor_dates(src_data, "project_data_index")
     # TODO: Write a test to validate the format instead.
     #     Format of the src_data should be:
     # {

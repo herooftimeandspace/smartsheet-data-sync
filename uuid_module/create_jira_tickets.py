@@ -3,8 +3,6 @@ import re
 import app.config as config
 import smartsheet
 
-from uuid_module.get_data import (get_all_sheet_ids,
-                                  refresh_source_sheets)
 from uuid_module.helper import (get_cell_data, get_cell_value, get_column_map,
                                 has_cell_link)
 from uuid_module.smartsheet_api import get_sheet, write_rows_to_sheet
@@ -22,6 +20,8 @@ jira_index_columns = ["Tasks", "Issue Type", "Jira Ticket", "Issue Links",
 
 
 def refresh_sheets(minutes=dev_minutes):
+    from uuid_module.get_data import (get_all_sheet_ids,
+                                      refresh_source_sheets)
     if not isinstance(minutes, int):
         msg = str("Minutes should be type: int, not {}").format(type(minutes))
         raise TypeError(msg)

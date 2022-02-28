@@ -1,17 +1,10 @@
-import sys
-import uuid_module.helper as module_0
 import json
 import os
-from unittest.mock import patch
 
 import pytest
 import smartsheet
 import datetime
 from freezegun import freeze_time
-from uuid_module.helper import (get_cell_data, get_cell_value, get_column_map,
-                                get_timestamp, has_cell_link, json_extract,
-                                truncate, chunks, get_secret, get_secret_name)
-import logging
 
 true = True
 false = False
@@ -169,22 +162,30 @@ def env_fixture():
     return "--debug"
 
 
+def set_init_fixture():
+    import app.config as config
+    config.init(["--debug"])
+    global smartsheet_client
+    smartsheet_client = config.smartsheet_client
+
+
 def test_get_cell_data(row, col_name, col_map):
+    import uuid_module.helper as helper
     with pytest.raises(TypeError):
-        get_cell_data("Row", col_name, col_map)
+        helper.get_cell_data("Row", col_name, col_map)
     with pytest.raises(TypeError):
-        get_cell_data(row, 1, col_map)
+        helper.get_cell_data(row, 1, col_map)
     with pytest.raises(TypeError):
-        get_cell_data(row, col_name, "col_map")
+        helper.get_cell_data(row, col_name, "col_map")
     with pytest.raises(KeyError):
         keyerror_col_map = {}
         keyerror_col_map["Jira Issue"] = "JAR-1234"
-        get_cell_data(row, col_name, keyerror_col_map)
+        helper.get_cell_data(row, col_name, keyerror_col_map)
 
     with open(cwd + '/dev_cell_basic.json') as f:
         cell_json = json.load(f)
     test_fixture_cell_data = smartsheet.models.Cell(cell_json)
-    test_cell_data = get_cell_data(row, col_name, col_map)
+    test_cell_data = helper.get_cell_data(row, col_name, col_map)
     assert (test_cell_data.value,
             test_cell_data.column_id,
             test_cell_data.column_type,
@@ -196,63 +197,70 @@ def test_get_cell_data(row, col_name, col_map):
 
 
 def test_get_column_map(sheet, col_map):
+    import uuid_module.helper as helper
     with pytest.raises(TypeError):
-        get_column_map("Sheet")
-    assert get_column_map(sheet) == col_map
+        helper.get_column_map("Sheet")
+    assert helper.get_column_map(sheet) == col_map
 
 
 def test_has_cell_link(cell, bad_cell, direction):
+    import uuid_module.helper as helper
     with pytest.raises(TypeError):
-        has_cell_link("cell", direction)
+        helper.has_cell_link("cell", direction)
     with pytest.raises(TypeError):
-        has_cell_link(cell, 7)
+        helper.has_cell_link(cell, 7)
     with pytest.raises(ValueError):
-        has_cell_link(cell, "Sideways")
-    assert has_cell_link(cell, direction) == "OK"
-    assert has_cell_link(bad_cell, direction) is "Unlinked"
+        helper.has_cell_link(cell, "Sideways")
+    assert helper.has_cell_link(cell, direction) == "OK"
+    assert helper.has_cell_link(bad_cell, direction) is "Unlinked"
     try:
-        has_cell_link(bad_cell, "Out")
+        helper.has_cell_link(bad_cell, "Out")
     except KeyError as k:
         assert str(k) == str("'Unlinked'")
 
 
 def test_get_cell_value(row, col_name, col_map):
+    import uuid_module.helper as helper
     with pytest.raises(TypeError):
-        get_cell_value("Row", col_name, col_map)
+        helper.get_cell_value("Row", col_name, col_map)
     with pytest.raises(TypeError):
-        get_cell_value(row, 1, col_map)
+        helper.get_cell_value(row, 1, col_map)
     with pytest.raises(TypeError):
-        get_cell_value(row, col_name, "col_map")
-    assert get_cell_value(
+        helper.get_cell_value(row, col_name, "col_map")
+    assert helper.get_cell_value(
         row, col_name, col_map) == "Performance Tests"
 
 
 def test_json_extract(json_extract_fixture):
+    import uuid_module.helper as helper
     obj, key = json_extract_fixture
     with pytest.raises(TypeError):
-        json_extract("String", -1)
+        helper.json_extract("String", -1)
     with pytest.raises(TypeError):
-        json_extract(obj, -1)
-    assert json_extract(obj, key) == ["=IFERROR(PARENT(UUID@row), \"\")"]
+        helper.json_extract(obj, -1)
+    assert helper.json_extract(obj, key) == [
+        "=IFERROR(PARENT(UUID@row), \"\")"]
 
 
 def test_truncate(number, decimals):
+    import uuid_module.helper as helper
     with pytest.raises(TypeError):
-        truncate("Benny's Adventure Team", 4)
+        helper.truncate("Benny's Adventure Team", 4)
     with pytest.raises(TypeError):
-        truncate(number, "decimals")
+        helper.truncate(number, "decimals")
     with pytest.raises(ValueError):
-        truncate(number, -1)
-    assert truncate(number, decimals) == 3.141
+        helper.truncate(number, -1)
+    assert helper.truncate(number, decimals) == 3.141
 
 
 @freeze_time("2012-01-14 12:13:00")
 def test_get_timestamp(decimals):
+    import uuid_module.helper as helper
     with pytest.raises(TypeError):
-        get_timestamp("number")
+        helper.get_timestamp("number")
     with pytest.raises(ValueError):
-        get_timestamp(-5)
-    modified_since, modified_since_iso = get_timestamp(decimals)
+        helper.get_timestamp(-5)
+    modified_since, modified_since_iso = helper.get_timestamp(decimals)
     assert datetime.datetime.now() == datetime.datetime(2012, 1, 14, 12, 13, 0)
     assert modified_since == datetime.datetime(
         2012, 1, 14, 12, 10, 00)  # "2012-01-14T12:10:00"
@@ -261,183 +269,38 @@ def test_get_timestamp(decimals):
 
 
 def test_chunks(simple_list, decimals):
+    import uuid_module.helper as helper
     with pytest.raises(TypeError):
-        for i in chunks("simple_list", 3):
+        for i in helper.chunks("simple_list", 3):
             pass
     with pytest.raises(TypeError):
-        for i in chunks(simple_list, "Four"):
+        for i in helper.chunks(simple_list, "Four"):
             pass
     with pytest.raises(ValueError):
-        for i in chunks(simple_list, -1):
+        for i in helper.chunks(simple_list, -1):
             pass
     with pytest.raises(ValueError):
-        for i in chunks(simple_list, 0):
+        for i in helper.chunks(simple_list, 0):
             pass
     with pytest.raises(ValueError):
-        for i in chunks(simple_list, 10):
+        for i in helper.chunks(simple_list, 10):
             pass
-    for i in chunks(simple_list, decimals):
+    for i in helper.chunks(simple_list, decimals):
         assert len(i) == 3
-
-
-def test_get_secret(env_fixture):
-    secret_name = get_secret_name(env_fixture)
-    assert secret_name == "staging/smartsheet-data-sync/svc-api-token"
-    retrieved_secret = get_secret(secret_name)
-    assert retrieved_secret == os.environ["SMARTSHEET_ACCESS_TOKEN"]
-
-
-def test_get_secret_name(env_fixture):
-    with pytest.raises(TypeError):
-        actual = get_secret_name(1)
-    with pytest.raises(ValueError):
-        actual = get_secret_name("--super_secret")
-
-    expected = "staging/smartsheet-data-sync/svc-api-token"
-    actual = get_secret_name(env_fixture)
-    assert expected == actual
 
 
 # Automatically generated by Pynguin.
 def test_case_0():
-    var_0 = module_0.set_env_vars()
-    assert var_0 == ('--debug',
-                     'Using Staging variables for workspace_id and Jira '
-                     'index sheet. Set workspace_id to: [2618107878500228], '
-                     'index_sheetto: 5786250381682564, and minutes to: '
-                     '525600. Pushing tickets to 3312520078354308',
-                     [2618107878500228], 5786250381682564, 525600,
-                     3312520078354308)
-    assert module_0.env == '--debug'
-    assert module_0.msg == 'Using Staging variables for workspace_id and '\
-        'Jira index sheet. Set workspace_id to: [2618107878500228], '\
-        'index_sheetto: 5786250381682564, and minutes to: 525600. '\
-        'Pushing tickets to 3312520078354308'
-    assert module_0.minutes == 525600
-
-
-def test_case_1():
-    str_0 = '|Y%X/\r\x0b(\n!'
-    var_0 = module_0.get_secret(str_0)
-    assert var_0 is None
-    assert module_0.dev_jira_idx_sheet == 5786250381682564
-    assert module_0.dev_minutes == 525600
-    assert module_0.dev_workspace_id == [2618107878500228]
-    assert module_0.dev_push_jira_tickets_sheet == 3312520078354308
-    assert module_0.prod_jira_idx_sheet == 5366809688860548
-    assert module_0.prod_minutes == 65
-    assert module_0.prod_workspace_id == [8158274374657924,
-                                          1479840747546500,
-                                          6569226535233412]
-    var_1 = module_0.prod_push_jira_tickets_sheet
-    assert var_1 is None
-    assert module_0.logger.filters == []
-    assert module_0.logger.name == 'uuid_module.helper'
-    assert module_0.logger.level == 0
-    assert module_0.logger.propagate is True
-    assert module_0.logger.handlers == []
-    assert module_0.logger.disabled is False
-    assert module_0.env == '--debug'
-    assert module_0.msg == 'Using Staging variables for workspace_id and '\
-        'Jira index sheet. Set workspace_id to: [2618107878500228], '\
-        'index_sheetto: 5786250381682564, and minutes to: 525600. '\
-        'Pushing tickets to 3312520078354308'
-    assert module_0.workspace_id == [2618107878500228]
-    assert module_0.index_sheet == 5786250381682564
-    assert module_0.minutes == 525600
-
-
-def test_case_2():
-    var_0 = module_0.get_secret_name()
-    assert var_0 == 'staging/smartsheet-data-sync/svc-api-token'
-    assert module_0.dev_jira_idx_sheet == 5786250381682564
-    assert module_0.dev_minutes == 525600
-    assert module_0.dev_workspace_id == [2618107878500228]
-    assert module_0.dev_push_jira_tickets_sheet == 3312520078354308
-    assert module_0.prod_jira_idx_sheet == 5366809688860548
-    assert module_0.prod_minutes == 65
-    assert module_0.prod_workspace_id == [8158274374657924,
-                                          1479840747546500,
-                                          6569226535233412]
-    var_1 = module_0.prod_push_jira_tickets_sheet
-    assert var_1 is None
-    assert module_0.logger.filters == []
-    assert module_0.logger.name == 'uuid_module.helper'
-    assert module_0.logger.level == 0
-    assert module_0.logger.propagate is True
-    assert module_0.logger.handlers == []
-    assert module_0.logger.disabled is False
-    assert module_0.env == '--debug'
-    assert module_0.msg == 'Using Staging variables for workspace_id and '\
-        'Jira index sheet. Set workspace_id to: [2618107878500228], '\
-        'index_sheetto: 5786250381682564, and minutes to: 525600. '\
-        'Pushing tickets to 3312520078354308'
-    assert module_0.workspace_id == [2618107878500228]
-    assert module_0.index_sheet == 5786250381682564
-    assert module_0.minutes == 525600
-
-
-def test_case_3():
+    import uuid_module.helper as module_0
     int_0 = 1
     var_0 = module_0.get_timestamp(int_0)
     assert len(var_0) == 2
-    assert module_0.dev_jira_idx_sheet == 5786250381682564
-    assert module_0.dev_minutes == 525600
-    assert module_0.dev_workspace_id == [2618107878500228]
-    assert module_0.dev_push_jira_tickets_sheet == 3312520078354308
-    assert module_0.prod_jira_idx_sheet == 5366809688860548
-    assert module_0.prod_minutes == 65
-    assert module_0.prod_workspace_id == [8158274374657924,
-                                          1479840747546500,
-                                          6569226535233412]
-    var_1 = module_0.prod_push_jira_tickets_sheet
-    assert var_1 is None
     assert module_0.logger.filters == []
     assert module_0.logger.name == 'uuid_module.helper'
     assert module_0.logger.level == 0
     assert module_0.logger.propagate is True
     assert module_0.logger.handlers == []
-    assert module_0.logger.disabled is False
-    assert module_0.env == '--debug'
-    assert module_0.msg == 'Using Staging variables for workspace_id and '\
-        'Jira index sheet. Set workspace_id to: [2618107878500228], '\
-        'index_sheetto: 5786250381682564, and minutes to: 525600. '\
-        'Pushing tickets to 3312520078354308'
-    assert module_0.workspace_id == [2618107878500228]
-    assert module_0.index_sheet == 5786250381682564
-    assert module_0.minutes == 525600
-
-
-def test_case_4():
-    var_0 = module_0.get_secret_name()
-    assert var_0 == 'staging/smartsheet-data-sync/svc-api-token'
-    assert module_0.dev_jira_idx_sheet == 5786250381682564
-    assert module_0.dev_minutes == 525600
-    assert module_0.dev_workspace_id == [2618107878500228]
-    assert module_0.dev_push_jira_tickets_sheet == 3312520078354308
-    assert module_0.prod_jira_idx_sheet == 5366809688860548
-    assert module_0.prod_minutes == 65
-    assert module_0.prod_workspace_id == [8158274374657924,
-                                          1479840747546500,
-                                          6569226535233412]
-    var_1 = module_0.prod_push_jira_tickets_sheet
-    assert var_1 is None
-    assert module_0.logger.filters == []
-    assert module_0.logger.name == 'uuid_module.helper'
-    assert module_0.logger.level == 0
-    assert module_0.logger.propagate is True
-    assert module_0.logger.handlers == []
-    assert module_0.logger.disabled is False
-    assert module_0.env == '--debug'
-    assert module_0.msg == 'Using Staging variables for workspace_id and '\
-        'Jira index sheet. Set workspace_id to: [2618107878500228], '\
-        'index_sheetto: 5786250381682564, and minutes to: 525600. '\
-        'Pushing tickets to 3312520078354308'
-    assert module_0.workspace_id == [2618107878500228]
-    assert module_0.index_sheet == 5786250381682564
-    assert module_0.minutes == 525600
-    var_2 = module_0.get_secret(var_0)
-    assert len(var_2) == 37
+    # assert module_0.logger.disabled is False
 
 
 # TODO: Failing pynguin tests
