@@ -2,6 +2,7 @@ import logging
 import smartsheet
 from collections import defaultdict
 from uuid_module.helper import get_cell_data, has_cell_link
+import app.config as config
 
 logger = logging.getLogger(__name__)
 
