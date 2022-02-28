@@ -5,21 +5,23 @@ import os
 import pytest
 import smartsheet
 from freezegun import freeze_time
-from uuid_module.get_data import (get_all_row_data, get_sub_indexes)
+from uuid_module.get_data import (get_all_row_data, get_secret,
+                                  get_secret_name, get_sub_indexes)
 from uuid_module.variables import (dev_minutes, sheet_columns)
 from uuid_module.write_data import (check_uuid, write_jira_index_cell_links,
                                     write_predecessor_dates, write_uuids)
+
 cwd = os.path.dirname(os.path.abspath(__file__))
 logger = logging.getLogger(__name__)
 
 
 @pytest.fixture(scope="module")
 def sheet_fixture():
-    with open(cwd + '/dev_program_plan.json') as f:
+    with open(cwd + '/sheet_response.json') as f:
         sheet_json = json.load(f)
 
     def no_uuid_col_fixture(sheet_json):
-        sheet_json['columns'][20]['name'] = "Not UUID"
+        sheet_json['columns'][22]['name'] = "Not UUID"
         no_uuid_col = smartsheet.models.Sheet(sheet_json)
         return no_uuid_col
 
@@ -33,6 +35,20 @@ def sheet_fixture():
     sheet_no_uuid_col = no_uuid_col_fixture(sheet_json)
     sheet_no_summary_col = no_summary_col_fixture(sheet_json)
     return sheet, sheet_list, sheet_no_uuid_col, sheet_no_summary_col
+
+
+# Need Mock
+@pytest.fixture
+def smartsheet_client(env):
+    secret_name = get_secret_name(env)
+    try:
+        os.environ["SMARTSHEET_ACCESS_TOKEN"] = get_secret(secret_name)
+    except TypeError:
+        raise ValueError("Refresh Isengard Auth")
+    smartsheet_client = smartsheet.Smartsheet()
+    # Make sure we don't miss any error
+    smartsheet_client.errors_as_exceptions(True)
+    return smartsheet_client
 
 
 @pytest.fixture
@@ -80,17 +96,22 @@ def project_indexes(sheet_fixture, columns, minutes_fixture):
     return project_uuid_index, sub_index
 
 
-def test_write_uuids(sheet_fixture):
+def test_write_uuids(sheet_fixture, smartsheet_client):
     sheets_to_update, _, _, _ = sheet_fixture
     with pytest.raises(TypeError):
-        write_uuids("sheets_to_update")
+        write_uuids("sheets_to_update", smartsheet_client)
+    with pytest.raises(TypeError):
+        write_uuids(sheets_to_update, "smartsheet_client")
     return
 
 
-def test_write_jira_index_cell_links(project_indexes):
+def test_write_jira_index_cell_links(project_indexes,
+                                     smartsheet_client):
     _, project_sub_index = project_indexes
     with pytest.raises(TypeError):
-        write_jira_index_cell_links("project_sub_index")
+        write_jira_index_cell_links("project_sub_index", smartsheet_client)
+    with pytest.raises(TypeError):
+        write_jira_index_cell_links(project_sub_index, "smartsheet_client")
     return
 
 
@@ -107,12 +128,18 @@ def test_check_uuid(uuids):
     return
 
 
-def test_write_predecessor_dates(src_data, project_indexes):
+def test_write_predecessor_dates(src_data, project_indexes,
+                                 smartsheet_client):
     project_data_index, _ = project_indexes
     with pytest.raises(TypeError):
-        write_predecessor_dates("src_data", project_data_index)
+        write_predecessor_dates("src_data", project_data_index,
+                                smartsheet_client)
     with pytest.raises(TypeError):
-        write_predecessor_dates(src_data, "project_data_index")
+        write_predecessor_dates(src_data, "project_data_index",
+                                smartsheet_client)
+    with pytest.raises(TypeError):
+        write_predecessor_dates(src_data, project_data_index,
+                                "smartsheet_client")
     # TODO: Write a test to validate the format instead.
     #     Format of the src_data should be:
     # {

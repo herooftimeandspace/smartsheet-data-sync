@@ -6,22 +6,21 @@ import threading
 import time
 from logging.config import dictConfig
 
+import smartsheet
 from apscheduler.executors.pool import ProcessPoolExecutor, ThreadPoolExecutor
 from apscheduler.schedulers.background import BlockingScheduler
 
 from uuid_module.cell_link_sheet_data import write_uuid_cell_links
-from uuid_module.create_jira_tickets import create_tickets
 # from uuid_module.cell_link_sheet_data import write_uuid_cell_links
 from uuid_module.get_data import (get_all_row_data, get_all_sheet_ids,
-                                  get_blank_uuids, get_sub_indexes,
-                                  refresh_source_sheets)
-from uuid_module.helper import get_secret, get_secret_name, truncate
-from uuid_module.variables import (dev_jira_idx_sheet, dev_minutes,
-                                   dev_workspace_id, log_location,
-                                   module_log_name, prod_jira_idx_sheet,
-                                   prod_minutes, prod_workspace_id,
-                                   sheet_columns)
+                                  get_blank_uuids, get_secret, get_secret_name,
+                                  get_sub_indexes, refresh_source_sheets)
+from uuid_module.helper import truncate
+from uuid_module.variables import (log_location, module_log_name,
+                                   prod_jira_idx_sheet, prod_workspace_id,
+                                   sheet_columns, prod_minutes, dev_minutes)
 from uuid_module.write_data import write_jira_index_cell_links, write_uuids
+from uuid_module.create_jira_tickets import create_tickets
 
 start = time.time()
 
@@ -30,23 +29,11 @@ log_location = os.path.join(cwd, log_location)
 
 
 def set_env_vars():
-    """Sets certain variables based on the flag passed in at the command line.
-    Defaults to the development / debug environment variables if not specified
-
-    Returns:
-        str: The environment flag.
-        str: The message for logging, either 'no_flag' or a description of
-             the variables used
-        int: The workspace ID, or None for Dev
-        int: The Jira Index sheet ID, or None for Dev
-        int: The number of minutes into the past that data should be pulled
-    """
     env = sys.argv[1:]
     try:
         env = env[0]
     except IndexError:
         env = None
-
     if env in ("--", None):
         msg = "no_flag"
         env = "--debug"
@@ -57,7 +44,7 @@ def set_env_vars():
         if env in ("-s", "--staging", "-staging", "-d", "--debug", "-debug"):
             msg = str("Using default debug/staging variables for workspace_id "
                       "and Jira index sheet").format()
-            return env, msg, dev_workspace_id, dev_jira_idx_sheet, dev_minutes
+            return env, msg, None, None, dev_minutes
         elif env in ("-p", "--prod", "-prod"):
             workspace_id = prod_workspace_id
             index_sheet = prod_jira_idx_sheet
@@ -70,19 +57,6 @@ def set_env_vars():
 
 
 def set_logging_config(env):
-    """Sets the logging config based on the environment variable passed in
-       from the command line.
-
-    Args:
-        env (str): The environment variable passed in
-
-    Raises:
-        TypeError: Env should be a string
-        ValueError: Env should be some iteration of prod, staging or debug
-
-    Returns:
-        dict: The logging configuration to use
-    """
     if not isinstance(env, str):
         msg = str("Environment should be type: str, not {}").format(
             type(env))
@@ -187,11 +161,7 @@ def set_logging_config(env):
     return logging_config
 
 
-# Get the environment variables
 env, logging_msg, workspace_id, index_sheet, minutes = set_env_vars()
-
-# Get the logging config and try to create a new file for logs if the
-# config requires it.
 logging_config = set_logging_config(env)
 try:
     os.mkdir(log_location)
@@ -203,15 +173,12 @@ except FileExistsError:
 
 logger = logging.getLogger()
 
-# This is the first thing we can log, so we check to see if any valid env
-# variables were passed. Quit the app if not.
 if logging_msg == "no_flag":
     logging.error("No environment flag set. Please use --debug, --staging "
                   "or --prod. Terminating app.")
     quit()
 logging.info(logging_msg)
 
-# Set parameters for the task scheduler
 executors = {
     'default': ThreadPoolExecutor(20),
     'processpool': ProcessPoolExecutor(1)
@@ -222,9 +189,11 @@ job_defaults = {
 }
 scheduler = BlockingScheduler(executors=executors, job_defaults=job_defaults)
 
-
-# Set the SMARTSHEET_ACCESS_TOKEN by pulling from the AWS Secrets API, based
-# on the environment variable passed in.
+# Initialize client. Uses the API token in the environment variable
+# "SMARTSHEET_ACCESS_TOKEN", which is pulled from the AWS Secrets API.
+logging.debug("------------------------")
+logging.debug("Initializing Smartsheet Client API")
+logging.debug("------------------------")
 secret_name = get_secret_name(env)
 try:
     os.environ["SMARTSHEET_ACCESS_TOKEN"] = get_secret(secret_name)
@@ -232,6 +201,9 @@ except TypeError:
     msg = str("Refresh Isengard credentials")
     logging.error(msg)
     exit()
+smartsheet_client = smartsheet.Smartsheet()
+# Make sure we don't miss any error
+smartsheet_client.errors_as_exceptions(True)
 
 sheet_id_lock = threading.Lock()
 sheet_index_lock = threading.Lock()
@@ -241,17 +213,13 @@ elapsed = end - start
 elapsed = truncate(elapsed, 2)
 logging.debug("Initialization took: {}".format(elapsed))
 
+# TODO: Refactor so that dev_index_sheet and dev_workspace_id
+# are used by default. Only if --prod is passed does the prod_index_sheet
+# and prod_workspace_ids get used. Do this by making those variables
+# optional inside the functions and defaul to the dev environment.
+
 
 def full_jira_sync(minutes):
-    """Executes a full Jira sync across all sheets in the workspace.
-
-    Args:
-        minutes (int): Number of minutes into the past to check for changes
-
-    Raises:
-        TypeError: Minutes should be an INT
-        ValueError: Minutes should be a positive number, or zero
-    """
     if not isinstance(minutes, int):
         msg = str("Minutes should be type: int, not {}").format(type(minutes))
         raise TypeError(msg)
@@ -268,21 +236,30 @@ def full_jira_sync(minutes):
     logging.debug(msg)
     global sheet_id_lock
 
-    with sheet_id_lock:
-        sheet_ids = get_all_sheet_ids(minutes, workspace_id, index_sheet)
-        sheet_ids = list(set(sheet_ids))
+    if workspace_id and index_sheet:
+        with sheet_id_lock:
+            sheet_ids = get_all_sheet_ids(
+                smartsheet_client, minutes, workspace_id, index_sheet)
+            sheet_ids = list(set(sheet_ids))
+    else:
+        with sheet_id_lock:
+            sheet_ids = get_all_sheet_ids(
+                smartsheet_client, minutes)
+            sheet_ids = list(set(sheet_ids))
 
+    global sheet_index_lock
     # Calculate a number minutes ago to get only the rows that were modified
     # since the last run.
-    global sheet_index_lock
+
     with sheet_index_lock:
-        source_sheets = refresh_source_sheets(sheet_ids, minutes)
+        source_sheets = refresh_source_sheets(
+            smartsheet_client, sheet_ids, minutes)
 
     blank_uuid_index = get_blank_uuids(source_sheets)
     if blank_uuid_index:
         logging.info("There are {} project sheets to be updated "
                      "with UUIDs".format(len(blank_uuid_index)))
-        sheets_updated = write_uuids(blank_uuid_index)
+        sheets_updated = write_uuids(blank_uuid_index, smartsheet_client)
         if sheets_updated:
             logging.info("{} project sheet(s) updated with UUIDs"
                          "".format(sheets_updated))
@@ -351,10 +328,14 @@ def full_jira_sync(minutes):
         logging.info(msg)
         return
 
-    write_jira_index_cell_links(project_sub_index, index_sheet)
-
+    # TODO: Load Jira Index Sheet HERE by calling the API. Pass the object into
+    # creating the Jira Index objects, then write the cell links
+    # Centralize smartsheet_client calls, quit passing the object around
+    logging.debug("Writing Jira cell links.")
+    write_jira_index_cell_links(project_sub_index, smartsheet_client)
+    # logging.debug("Writing UUID cell links.")
     # write_uuid_cell_links(project_uuid_index,
-    #                       source_sheets)
+    #                       source_sheets, smartsheet_client)
 
     end = time.time()
     elapsed = end - start
@@ -365,22 +346,29 @@ def full_jira_sync(minutes):
 
 
 def full_smartsheet_sync():
-    """Sync Smartsheet data between rows using UUID
-    """
     start = time.time()
     msg = str("Starting refresh of Smartsheet project data.").format()
     logging.debug(msg)
 
     global sheet_id_lock
-    with sheet_id_lock:
-        sheet_ids = get_all_sheet_ids(minutes, workspace_id, index_sheet)
-        sheet_ids = list(set(sheet_ids))
+    if workspace_id and index_sheet:
+        with sheet_id_lock:
+            sheet_ids = get_all_sheet_ids(
+                smartsheet_client, minutes, workspace_id, index_sheet)
+            sheet_ids = list(set(sheet_ids))
+    else:
+        with sheet_id_lock:
+            sheet_ids = get_all_sheet_ids(
+                smartsheet_client, minutes)
+            sheet_ids = list(set(sheet_ids))
 
+    global sheet_index_lock
     # Calculate a number minutes ago to get only the rows that were modified
     # since the last run.
-    global sheet_index_lock
+
     with sheet_index_lock:
-        source_sheets = refresh_source_sheets(sheet_ids, minutes)
+        source_sheets = refresh_source_sheets(
+            smartsheet_client, sheet_ids, minutes)
 
     with project_index_lock:
         try:
@@ -390,7 +378,7 @@ def full_smartsheet_sync():
             msg = str("Getting all row data returned an error. {}").format(e)
             logging.error(msg)
 
-    write_uuid_cell_links(project_uuid_index, source_sheets)
+    write_uuid_cell_links(project_uuid_index, source_sheets, smartsheet_client)
 
     end = time.time()
     elapsed = end - start
@@ -400,14 +388,36 @@ def full_smartsheet_sync():
     gc.collect()
 
 
+def track_time(func, **args):
+    if not callable(func):
+        msg = str("Func should be type: function, not {}").format(type(func))
+        raise TypeError(msg)
+
+    """Helper function to track how long each task takes
+
+    Args:
+        func (function): The function to time
+
+    Raises:
+        TypeError: If func isn't a function
+
+    Returns:
+        float: The amount of time in seconds, truncated to 3 decimal places.
+    """
+    start = time.time()
+    func(**args)
+    end = time.time()
+    elapsed = end - start
+    elapsed = truncate(elapsed, 3)
+    return elapsed
+
+
+# TODO: Parallelize scheduled jobs
 def main():
-    """Configures the scheduler to run jobs.
-       1: Runs full_jira_sync every 30 seconds and looks back based on the
-          minutes defined in variables for which rows to write to.
-       2: Runs full_jira_sync every day at 1:00am UTC and looks back 1 week
-          for which rows to write to.
-       3: Runs create_tickets every 5 minutes, and looks back based on the
-          minutes defined in variables for which rows to write to.
+    """Configures the scheduler to run two jobs. One job runs full_jira_sync
+       every 30 seconds and looks back based on the minutes defined in
+       variables. The second job runs full_jira_sync every day at 1:00am UTC
+       and looks back 1 week.
 
     Returns:
         bool: Returns True if main successfully initialized and scheduled jobs,
@@ -438,7 +448,7 @@ def main():
     logging.debug("------------------------")
     scheduler.add_job(create_tickets,
                       'interval',
-                      args=[minutes],
+                      args=[smartsheet_client, minutes],
                       minutes=5)
     return True
 

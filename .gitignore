@@ -7,5 +7,3 @@
 /tmp
 *.code-workspace
 docker_terminal_commands.txt
-pytestdebug.log
-/pynguin-report

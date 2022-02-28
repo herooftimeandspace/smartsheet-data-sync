@@ -142,9 +142,15 @@ def build_row(row, columns_to_link, dest_col_map, jira_index_sheet,
     new_row.id = row.id
     for col in columns_to_link:
         old_cell = get_cell_data(row, col, dest_col_map)
-        cell_check = has_cell_link(old_cell, 'In')
+        try:
+            cell_check = has_cell_link(old_cell, 'In')
+        except KeyError as e:
+            if str(e) == str("'Unlinked'"):
+                cell_check = "Unlinked"
+            else:
+                raise KeyError
 
-        if cell_check in ("Linked", "OK"):
+        if cell_check == "Linked":
             msg = str("Valid cell link: RowID {} | Row Number {} | "
                       "ColName {} | Cell Value {}").format(row.id,
                                                            row.row_number, col,
@@ -162,7 +168,7 @@ def build_row(row, columns_to_link, dest_col_map, jira_index_sheet,
                       "ColName {} | Cell link {}").format(
                 row.id, row.row_number, col, link_cell.link_in_from_cell)
             logging.debug(msg)
-        elif cell_check in ("Broken", "BROKEN"):
+        elif cell_check == "Broken":
             unlink_cell = smartsheet.models.Cell()
             unlink_cell.id = int(dest_col_map[col])
             unlink_cell.value = old_cell.value

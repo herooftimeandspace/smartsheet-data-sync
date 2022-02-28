@@ -9,13 +9,11 @@
 """
 
 from .cell_link_sheet_data import write_uuid_cell_links
-from .create_jira_tickets import create_tickets
 from .get_data import (get_all_row_data, get_all_sheet_ids, get_blank_uuids,
+                       get_jira_index_sheet, get_secret, get_secret_name,
                        get_sub_indexes, load_jira_index, refresh_source_sheets)
 from .helper import (chunks, get_cell_data, get_cell_value, get_column_map,
-                     get_secret, get_secret_name, get_timestamp, has_cell_link,
-                     json_extract, truncate)
-from .smartsheet_api import (get_row, get_sheet, get_workspace,
-                             write_rows_to_sheet)
+                     get_timestamp, has_cell_link, json_extract, truncate)
 from .write_data import (check_uuid, write_jira_index_cell_links,
                          write_predecessor_dates, write_uuids)
+from .create_jira_tickets import create_tickets

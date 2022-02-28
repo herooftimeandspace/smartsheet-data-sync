@@ -11,10 +11,6 @@ prod_workspace_id = [8158274374657924, 1479840747546500, 6569226535233412]
 prod_jira_idx_sheet = 5366809688860548
 """Jira Index Sheet ID. Type: int
     """
-prod_push_jira_tickets_sheet = None
-"""Sheet used to push rows into Jira to create new tickets. Separate from the
-   index sheet to prevent accidental data corruption.
-   """
 prod_minutes = 65
 """The maximum number of minutes into the past the get_timestamp function
     should look before filtering out results. Type: int
@@ -27,10 +23,6 @@ dev_workspace_id = [2618107878500228]
    """
 dev_jira_idx_sheet = 5786250381682564
 """Jira Index Sheet in Dev. Type: int
-   """
-dev_push_jira_tickets_sheet = 3312520078354308
-"""Sheet used to push rows into Jira to create new tickets. Separate from the
-   index sheet to prevent accidental data corruption.
    """
 dev_minutes = 525600
 """The maximum number of minutes into the past the get_timestamp function
