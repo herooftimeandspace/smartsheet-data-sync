@@ -1,17 +1,191 @@
 import logging
 # import os
 import re
+# import sys
+# from logging.config import dictConfig
+# from time import sleep
 
+# import pytz
 import smartsheet
-
-from uuid_module.get_data import (get_all_sheet_ids,
+# from apscheduler.executors.pool import ProcessPoolExecutor,
+#                                        ThreadPoolExecutor
+# from apscheduler.schedulers.background import BlockingScheduler
+# from uuid_module.get_data import(get_secret, get_secret_name)
+from uuid_module.get_data import (get_all_sheet_ids, get_jira_index_sheet,
                                   refresh_source_sheets)
 from uuid_module.helper import (get_cell_data, get_cell_value, get_column_map,
                                 has_cell_link)
-from uuid_module.smartsheet_api import get_sheet, write_rows_to_sheet
-from uuid_module.variables import (dev_jira_idx_sheet, dev_minutes,
-                                   dev_workspace_id, prod_jira_idx_sheet,
-                                   uuid_col, dev_push_jira_tickets_sheet)
+from uuid_module.variables import (dev_jira_idx_sheet, dev_workspace_id,
+                                   uuid_col, dev_minutes)
+
+# cwd = os.path.dirname(os.path.abspath(__file__))
+# log_location = os.path.join(cwd, log_location)
+# utc = pytz.UTC
+# minutes = 525600
+
+
+# def set_logging_config(env):
+#     if not isinstance(env, str):
+#         msg = str("Environment should be type: str, not {}").format(
+#             type(env))
+#         raise TypeError(msg)
+#     if env not in ("-s", "--staging", "-staging", "-p", "--prod", "-prod",
+#                    "-d", "--debug", "-debug"):
+#         msg = str("Invalid environment flag. '{}' was passed but it should "
+#                   "be '--debug', '--staging' or '--prod'").format(
+#             type(env))
+#         raise ValueError(msg)
+
+#     logging_config = dict(
+#         version=1,
+#         formatters={
+#             'f': {'format':
+#                   "%(asctime)s - %(levelname)s - %(message)s"}
+#         },
+#         handlers={
+#             'docker': {
+#                 'class': 'logging.StreamHandler',
+#                 'formatter': 'f',
+#                 'level': logging.INFO,
+#                 'stream': 'ext://sys.stdout'
+#             }
+#         },
+#         root={
+#             'handlers': ['docker'],  # 'console', 'file'
+#             'level': logging.DEBUG,
+#             'disable_existing_loggers': False
+#         },
+#     )
+#     if env in ("-s", "--staging", "-staging"):
+#         logging_config = dict(
+#             version=1,
+#             formatters={
+#                 'f': {'format':
+#                       "%(asctime)s - %(levelname)s - %(message)s"}
+#             },
+#             handlers={
+#                 'docker': {
+#                     'class': 'logging.StreamHandler',
+#                     'formatter': 'f',
+#                     'level': logging.INFO,
+#                     'stream': 'ext://sys.stdout'
+#                 }
+#             },
+#             root={
+#                 'handlers': ['docker'],  # 'console', 'file'
+#                 'level': logging.DEBUG,
+#                 'disable_existing_loggers': False
+#             },
+#         )
+#     elif env in ("-p", "--prod", "-prod"):
+#         logging_config = dict(
+#             version=1,
+#             formatters={
+#                 'f': {'format':
+#                       "%(asctime)s - %(levelname)s - %(message)s"}
+#             },
+#             handlers={
+#                 'docker': {
+#                     'class': 'logging.StreamHandler',
+#                     'formatter': 'f',
+#                     'level': logging.INFO,
+#                     'stream': 'ext://sys.stdout'
+#                 }
+#             },
+#             root={
+#                 'handlers': ['docker'],  # 'console', 'file'
+#                 'level': logging.DEBUG,
+#                 'disable_existing_loggers': False
+#             },
+#         )
+#     elif env in ("-d", "--debug", "-debug"):
+#         logging_config = dict(
+#             version=1,
+#             formatters={
+#                 'f': {'format':
+#                       "%(asctime)s - %(levelname)s - %(message)s"}
+#             },
+#             handlers={
+#                 'file': {
+#                     'class': 'logging.FileHandler',
+#                     'formatter': 'f',
+#                     'level': logging.DEBUG,
+#                     'filename': log_location + module_log_name
+#                 },
+#                 'docker': {
+#                     'class': 'logging.StreamHandler',
+#                     'formatter': 'f',
+#                     'level': logging.DEBUG,
+#                     'stream': 'ext://sys.stdout'
+#                 }
+#             },
+#             root={
+#                 'handlers': ['docker', 'file'],  # 'console', 'file'
+#                 'level': logging.DEBUG,
+#                 'disable_existing_loggers': False
+#             },
+#         )
+
+#     return logging_config
+
+
+# # Initialize client. Uses the API token in the environment variable
+# # "SMARTSHEET_ACCESS_TOKEN", which is pulled from the AWS Secrets API.
+# env = sys.argv[1:]
+# env = env[0]
+# logging_config = set_logging_config(env)
+# try:
+#     os.mkdir(log_location)
+#     f = open(log_location + module_log_name, "w")
+#     f.close
+#     dictConfig(logging_config)
+# except FileExistsError:
+#     dictConfig(logging_config)
+
+# logger = logging.getLogger()
+
+# executors = {
+#     'default': ThreadPoolExecutor(1),
+#     'processpool': ProcessPoolExecutor(1)
+# }
+# job_defaults = {
+#     'coalesce': True,
+#     'max_instances': 5
+# }
+# scheduler = BlockingScheduler(executors=executors, job_defaults=job_defaults)
+
+# if env in ("--", None):
+#     logging.error("No environment flag set. Please use --debug, --staging "
+#                   "or --prod. Terminating app.")
+#     quit()
+# else:
+#     msg = str("The {} flag was passed from the command line").format(env)
+#     logging.info(msg)
+#     if env in ("-s", "--staging", "-staging", "-d", "--debug", "-debug"):
+#         msg = str("Using default debug/staging variables for workspace_id "
+#                   "and Jira index sheet").format()
+#         logging.info(msg)
+#     elif env in ("-p", "--prod", "-prod"):
+#         workspace_id = prod_workspace_id
+#         index_sheet = prod_jira_idx_sheet
+#         msg = str("Set workspace_id to: {} and index_sheet to: {} "
+#                   "for Prod environment").format(workspace_id, index_sheet)
+#         logging.info(msg)
+
+# logging.debug("------------------------")
+# logging.debug("Initializing Smartsheet Client API")
+# logging.debug("------------------------")
+# secret_name = get_secret_name(env)
+# try:
+#     os.environ["SMARTSHEET_ACCESS_TOKEN"] = get_secret(secret_name)
+# except TypeError:
+#     msg = str("Refresh Isengard credentials")
+#     logging.error(msg)
+#     exit()
+# smartsheet_client = smartsheet.Smartsheet()
+# # Make sure we don't miss any error
+# smartsheet_client.errors_as_exceptions(True)
+
 
 project_columns = ["Summary", "Tasks", "Issue Type", "Jira Ticket",
                    "Parent Ticket", "Program", "Initiative", "Team", "UUID",
@@ -22,54 +196,31 @@ jira_index_columns = ["Tasks", "Issue Type", "Jira Ticket", "Issue Links",
                       "Epic Name", "Summary", "Inject", "KTLO", "UUID"]
 
 
-def refresh_sheets(minutes=dev_minutes):
-    if not isinstance(minutes, int):
-        msg = str("Minutes should be type: int, not {}").format(type(minutes))
-        raise TypeError(msg)
-    if minutes < 0:
-        msg = str("Minutes should be >= 0, not {}").format(minutes)
-        raise ValueError(msg)
-
-    sheet_ids = get_all_sheet_ids(minutes, workspace_id=dev_workspace_id,
-                                  index_sheet=dev_jira_idx_sheet)
+def refresh_sheets(smartsheet_client, minutes=dev_minutes):
+    sheet_ids = get_all_sheet_ids(
+        smartsheet_client, minutes, workspace_id=dev_workspace_id,
+        index_sheet=dev_jira_idx_sheet)
     msg = str("Sheet IDs object type {}, object values {}").format(
         type(sheet_ids), sheet_ids)
     logging.debug(msg)
-    source_sheets = refresh_source_sheets(sheet_ids, minutes)
+    source_sheets = refresh_source_sheets(
+        smartsheet_client, sheet_ids, minutes)
 
     # TODO: Load index sheet and kick off 2 functions. 1: Create new tickets
     # 2: Copy created tickets to program sheets via UUID
-    index_sheet = get_sheet(prod_jira_idx_sheet)
+    index_sheet = get_jira_index_sheet(smartsheet_client, dev_jira_idx_sheet)
     index_col_map = get_column_map(index_sheet)
     return source_sheets, index_sheet, index_col_map
 
 
-# TODO: Refactor for the full chain of issue types across multiple Jira
-# projects
-# TODO: Handle creating and linking the Bug issue type
-# TODO: Handle indentation. See API docs
-# https://smartsheet-platform.github.io/api-docs/#specify-row-location
-# specifically parent_id, sibling_id
 def form_rows(row_dict, index_col_map):
-    if not isinstance(row_dict, dict):
-        msg = str("Row Dictionary should be type dict, not type {}"
-                  "").format(type(row_dict))
-        raise TypeError(msg)
-    if not isinstance(index_col_map, dict):
-        msg = str("Index Col Map should be type dict, not type {}"
-                  "").format(type(index_col_map))
-        raise TypeError(msg)
-    if not row_dict:
-        msg = str("Row Dictionary should not be empty")
-        raise ValueError(msg)
-    if not index_col_map:
-        msg = str("Index Column Map should not be empty")
-        raise ValueError(msg)
-
     index_rows_to_add = []
-    for _, data in row_dict.items():
+    for uuid, data in row_dict.items():
         new_row = smartsheet.models.Row()
         new_row.to_bottom = True
+        if data['Parent Issue Type'] == "Sub-Task":
+            # Skip Subtasks, we can't create them with the connector
+            continue
         for col_name, value in data.items():
             if col_name not in jira_index_columns:
                 # Skip writting columns the Index sheet doesn't have
@@ -105,22 +256,16 @@ def form_rows(row_dict, index_col_map):
             labels.append("Inject")
         if data['KTLO']:
             labels.append("KTLO")
-        # Spaces are not supported in Labels. Replace with dashes. For labels
-        # that already have dashes, replace with a single dash rather than the
-        # previous pattern.
-        if labels:
-            labels = [sub.replace(' ', '-') for sub in labels]
-            labels = [sub.replace('---', '-') for sub in labels]
+        labels = [sub.replace(' ', '_') for sub in labels]
         # logging.debug(labels)
-            new_row.cells.append({
-                'column_id': index_col_map['Labels'],
-                'object_value': {
-                    'objectType': "MULTI_PICKLIST",
-                    'values': labels
-                }
-            })
-        # TODO: Add handling for "Project" Issue Type
-        if data['Parent Issue Type'] in ("Epic", "Story", "Project"):
+        new_row.cells.append({
+            'column_id': index_col_map['Labels'],
+            'object_value': {
+                'objectType': "MULTI_PICKLIST",
+                'values': labels
+            }
+        })
+        if data['Parent Issue Type'] in ("Epic, Story"):
             ticket = data['Parent Ticket']
             issue_link = str("implements {}").format(ticket)
             new_row.cells.append({
@@ -153,26 +298,9 @@ def form_rows(row_dict, index_col_map):
     return index_rows_to_add
 
 
-def link_jira_index_to_sheet(sheet, sheet_col_map,
-                             index_sheet,
-                             index_col_map):
-    if not isinstance(sheet, (dict, smartsheet.models.Sheet)):
-        msg = str("Sheet should be dict or smartsheet.Sheet, not {}"
-                  "").format(type(sheet))
-        raise TypeError(msg)
-    if not isinstance(sheet_col_map, dict):
-        msg = str("Sheet Column Map should be dict, not {}"
-                  "").format(type(sheet_col_map))
-        raise TypeError(msg)
-    if not isinstance(index_sheet, (dict, smartsheet.models.Sheet)):
-        msg = str("Index Sheet should be dict or smartsheet.Sheet, not {}"
-                  "").format(type(index_sheet))
-        raise TypeError(msg)
-    if not isinstance(index_col_map, dict):
-        msg = str("Index Column Map should be dict, not {}"
-                  "").format(type(index_col_map))
-        raise TypeError(msg)
-
+def push_jira_ticket_to_sheet(sheet, sheet_col_map,
+                              index_sheet,
+                              index_col_map):
     rows_to_update = []
     for row in index_sheet.rows:
         uuid_value = get_cell_value(row, 'UUID', index_col_map)
@@ -195,8 +323,7 @@ def link_jira_index_to_sheet(sheet, sheet_col_map,
 
         jira_link = get_cell_data(row, 'Jira Ticket', index_col_map)
         try:
-            cell_link_status = has_cell_link(jira_link, "Out")
-            if cell_link_status in ('Linked', 'OK'):
+            if has_cell_link(jira_link, "Out") == 'Linked':
                 # Skip linked rows
                 msg = str("Jira Ticket: {} has already been pushed to "
                           "Row ID: {} | Sheet ID: {} "
@@ -240,37 +367,59 @@ def link_jira_index_to_sheet(sheet, sheet_col_map,
     if rows_to_update:
         msg = str("Updating {} rows with newly created Jira Tickets"
                   "").format(len(rows_to_update))
-        logging.debug(msg)
-        write_rows_to_sheet(rows_to_update, sheet, write_method="update")
+        logging.info(msg)
+        write_to_sheet(rows_to_update, sheet, write_method="update")
     else:
         msg = str("All Jira Tickets have pre-existing links to Sheet ID: {} "
                   "| Sheet Name: {}").format(sheet.id, sheet.name)
         logging.info(msg)
 
 
-# def link_predecessor_tickets(parent):
-#     Follow predecessor tree, link issues as you go
-#     Roll up the predecessor chain and then
-#     1. Find top level Jira Ticket -> Create if "Create"
-#     2. Find top level Jira Ticket -> If no Jira value, roll
-#        down
-#        the chain until you find "Create" -> Create
-#     3. Find parent Jira ticket, use to create Issue Link
-#     4. Form row, add to list of rows to create and push to Jira
-#        Index
-#     return parent
+def link_predecessor_tickets(parent):
+    # Follow predecessor tree, link issues as you go
+    # Roll up the predecessor chain and then
+    # 1. Find top level Jira Ticket -> Create if "Create"
+    # 2. Find top level Jira Ticket -> If no Jira value, roll
+    #    down
+    #    the chain until you find "Create" -> Create
+    # 3. Find parent Jira ticket, use to create Issue Link
+    # 4. Form row, add to list of rows to create and push to Jira
+    #    Index
+    return parent
+
+
+def write_to_sheet(rows_to_write, sheet, smartsheet_client,
+                   write_method="add"):
+    if rows_to_write and write_method == "add":
+        msg = str("Writing {} rows back to Sheet ID: {} "
+                  "| Sheet Name: {}").format(len(rows_to_write),
+                                             sheet.id, sheet.name)
+        logging.debug(msg)
+
+        # msg = 'OK'
+        try:
+            result = smartsheet_client.Sheets.add_rows(int(sheet.id),
+                                                       rows_to_write)
+            msg = str("Smartsheet API responded with the "
+                      "following message: {}").format(result.result)
+        except smartsheet.exceptions.ApiError as result:
+            msg = result
+    elif rows_to_write and write_method == "update":
+        try:
+            result = smartsheet_client.Sheets.update_rows(
+                int(sheet.id), rows_to_write)
+            msg = str("Smartsheet API responded with the "
+                      "following message: {}").format(result.result)
+        except smartsheet.exceptions.ApiError as result:
+            msg = result
+    else:
+        msg = str("No rows added to Sheet ID: "
+                  "{} | Sheet Name: {}").format(sheet.id, sheet.name)
+
+    logging.info(msg)
 
 
 def build_row_data(row, col_map):
-    if not isinstance(row, (dict, smartsheet.models.Row)):
-        msg = str("Sheet should be dict or smartsheet.Sheet, not {}"
-                  "").format(type(row))
-        raise TypeError(msg)
-    if not isinstance(col_map, dict):
-        msg = str("Sheet Column Map should be dict, not {}"
-                  "").format(type(col_map))
-        raise TypeError(msg)
-
     row_data = {}
     for col in project_columns:
         try:
@@ -278,23 +427,11 @@ def build_row_data(row, col_map):
             row_data[col] = cell_value
         except KeyError:
             continue
-    row_data["row_num"] = row.row_number
     return row_data
 
 
-def create_ticket_index(source_sheets, index_sheet, index_col_map):
-    if not isinstance(source_sheets, list):
-        msg = str("Sheet should be dict or smartsheet.Sheet, not {}"
-                  "").format(type(source_sheets))
-        raise TypeError(msg)
-    if not isinstance(index_sheet, (dict, smartsheet.models.Sheet)):
-        msg = str("Index Sheet should be dict or smartsheet.Sheet, not {}"
-                  "").format(type(index_sheet))
-        raise TypeError(msg)
-    if not isinstance(index_col_map, dict):
-        msg = str("Index Column Map should be dict, not {}"
-                  "").format(type(index_col_map))
-        raise TypeError(msg)
+def create_ticket_index(source_sheets, index_sheet, index_col_map,
+                        smartsheet_client):
 
     tickets_to_create = {}
 
@@ -312,49 +449,39 @@ def create_ticket_index(source_sheets, index_sheet, index_col_map):
                                                            sheet.name)
             logging.debug(msg)
             continue
-        link_jira_index_to_sheet(sheet, col_map, index_sheet, index_col_map)
+        push_jira_ticket_to_sheet(sheet, col_map, index_sheet, index_col_map)
 
         sheet_rows_to_update = []
         for row in sheet.rows:
             logging.debug("------------------------")
             logging.debug("New Row")
             logging.debug("------------------------")
+            # row_data = {}
+            # for col in project_columns:
+            #     try:
+            #         cell_value = get_cell_value(row, col, col_map)
+            #         row_data[col] = cell_value
+            #     except KeyError:
+            #         continue
             row_data = build_row_data(row, col_map)
             if row_data["Summary"] == "True":
                 # Skip summary rows
-                msg = str("Row {} skipped because Summary column was true"
-                          "").format(row_data["row_num"])
+                msg = str("Skipped because Summary column was true")
                 logging.debug(msg)
                 logging.debug(row_data)
                 continue
             if row_data["Team"] is None:
                 # Need team defined (so we can get project key). Skip
-                msg = str("Row {} skipped because Team column was empty."
-                          "").format(row_data["row_num"])
+                msg = str("Skipped because Team column was empty.")
                 logging.debug(msg)
                 logging.debug(row_data)
                 continue
             if row_data["UUID"] is None:
                 # No UUID means we can't push the created ticket IDs back
                 # into the program sheets. Skip.
-                msg = str("Row {} skipped because UUID column was empty."
-                          "").format(row_data["row_num"])
+                msg = str("Skipped because UUID column was empty.")
                 logging.debug(msg)
                 logging.debug(row_data)
-                continue
-            if row_data['Issue Type'] == "Sub-Task":
-                # Skip Subtasks, we can't create them with the connector
-                msg = str("Row {} skipped because Parent Issue Type is {}."
-                          "").format(row_data["row_num"],
-                                     row_data["Parent Issue Type"])
-                logging.debug(msg)
-                continue
-            if row_data['Parent Issue Type'] == "Sub-Task":
-                # Skip Subtasks, we can't create them with the connector
-                msg = str("Row {} skipped because Parent Issue Type is {}."
-                          "").format(row_data["row_num"],
-                                     row_data["Parent Issue Type"])
-                logging.debug(msg)
                 continue
             if row_data["Parent Ticket"] is None and row_data["Jira Ticket"]\
                     in ("Create", "create"):
@@ -367,17 +494,15 @@ def create_ticket_index(source_sheets, index_sheet, index_col_map):
                     'object_value': "Pending..."
                 })
                 sheet_rows_to_update.append(new_row)
-                msg = str("Appended row UUID: {} and associated data to the "
-                          "list of rows to update and set the Jira Ticket "
-                          "column in Sheet Name: {} to Pending..."
-                          "").format(row_data['UUID'], sheet.name)
+                msg = str("Added row_data to tickets_to_create and set"
+                          "Jira Ticket column in Plan sheet to Pending...")
                 logging.debug(msg)
                 logging.debug(row_data)
                 continue
             if row_data["Jira Ticket"] == "Pending..."\
                     or row_data['Parent Ticket'] == "Pending...":
                 # Skip any row that's already in process
-                msg = str("Skipped because Jira Ticket or Parent Ticket "
+                msg = str("4Skipped because Jira Ticket or Parent Ticket "
                           "column was set to Pending...")
                 logging.debug(msg)
                 logging.debug(row_data)
@@ -405,15 +530,8 @@ def create_ticket_index(source_sheets, index_sheet, index_col_map):
                     continue
             logging.debug("Made it past all IFs without triggering")
             logging.debug(row_data)
-
-        # Validate that there are rows to write.
-        if sheet_rows_to_update:
-            write_rows_to_sheet(sheet_rows_to_update, sheet,
-                                write_method="update")
-        else:
-            msg = str("No rows to update for Sheet ID: {}, Sheet Name: {}"
-                      "").format(sheet.id, sheet.name)
-            logging.info(msg)
+        write_to_sheet(sheet_rows_to_update, sheet, smartsheet_client,
+                       write_method="update")
 
     logging.debug("Top-level Rows to create first")
     logging.debug("------------------------")
@@ -427,17 +545,16 @@ def create_ticket_index(source_sheets, index_sheet, index_col_map):
 # TODO: Drop parent rows once written to index sheet by removing the "Create"
 # from the Jira Ticket field and/or filtering out UUID matches + nonNull
 # Jira Ticket field on the Index sheet
-def create_tickets(minutes=dev_minutes):
-    if not isinstance(minutes, int):
-        msg = str("Minutes should be type: int, not {}").format(type(minutes))
+def create_tickets(smartsheet_client, minutes=dev_minutes):
+    if not isinstance(smartsheet_client, smartsheet.Smartsheet):
+        msg = str("Smartsheet Client must be type: smartsheet.Smartsheet, not"
+                  " {}").format(type(smartsheet_client))
         raise TypeError(msg)
-    if minutes < 0:
-        msg = str("Minutes should be >= 0, not {}").format(minutes)
-        raise ValueError(msg)
 
-    source_sheets, index_sheet, index_col_map = refresh_sheets(minutes)
+    source_sheets, index_sheet, index_col_map = refresh_sheets(
+        smartsheet_client, minutes)
     parent = create_ticket_index(
-        source_sheets, index_sheet, index_col_map)
+        source_sheets, index_sheet, index_col_map, smartsheet_client)
     logging.debug("Parent Dict")
     logging.debug("------------------------")
     logging.debug(parent)
@@ -448,11 +565,10 @@ def create_tickets(minutes=dev_minutes):
         # TODO: toggle hidden flag to prevent pushing again (filter
         # above)
         rows_to_write = form_rows(parent, index_col_map)
-        # TODO: Make environment-aware
-        write_rows_to_sheet(rows_to_write, dev_push_jira_tickets_sheet)
+        write_to_sheet(rows_to_write, index_sheet, smartsheet_client)
     elif not parent:
         msg = str("No parent or child rows remain to be written to the "
-                  "Push Tickets Sheet.")
+                  "Jira Index Sheet.")
         logging.info(msg)
     else:
         msg = str("Looping through rows rows to create Jira Tickts "

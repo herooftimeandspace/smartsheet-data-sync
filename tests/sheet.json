@@ -1,0 +1,2013 @@
+{
+    "id": 117648125440672,
+    "fromId": 0,
+    "ownerId": 767326346099101,
+    "accessLevel": "ADMIN",
+    "attachments": [
+        {
+            "id": 0,
+            "parentId": 0,
+            "attachmentType": "BOX_COM",
+            "attachmentSubType": "DOCUMENT",
+            "mimeType": "PNG",
+            "parentType": "COMMENT",
+            "createdAt": "2019-08-24T14:15:22Z",
+            "createdBy": {
+                "email": "benny@adventure-team.com",
+                "name": "Benny"
+            },
+            "name": "Benny's Adventure Team",
+            "sizeInKb": 0,
+            "url": "https://genshin.gg",
+            "urlExpiresInMillis": 0
+        }
+    ],
+    "columns": [
+        {
+            "autoNumberFormat": {
+                "fill": "0000",
+                "prefix": "TEST",
+                "startingNumber": 0,
+                "suffix": "IVS"
+            },
+            "contactOptions": [
+                {
+                    "email": "benny@adventure-team.com",
+                    "name": "Benny"
+                }
+            ],
+            "description": "Members of Benny's Adventure Team",
+            "hidden": false,
+            "id": 752133921468837,
+            "index": 0,
+            "locked": true,
+            "lockedForUser": true,
+            "primary": true,
+            "symbol": "green",
+            "systemColumnType": "AUTO_NUMBER",
+            "tags": [
+                "CALENDAR_END_DATE"
+            ],
+            "title": "Benny's Adventure Team",
+            "type": "ABSTRACT_DATETIME",
+            "validation": true,
+            "version": 0,
+            "width": 0
+        }
+    ],
+    "createdAt": "2019-08-24T14:15:22Z",
+    "dependenciesEnabled": true,
+    "favorite": true,
+    "ganttEnabled": true,
+    "hasSummaryFields": true,
+    "modifiedAt": "2019-08-24T14:15:22Z",
+    "name": "Benny",
+    "owner": "benny@adventure-team.com",
+    "permalink": "https://app.smartsheet.com/sheets/euFCmxhZLi0xdFGRF80cDXbhttaPgpUyH5le2Ayc",
+    "projectSettings": {
+        "lengthOfDay": 1,
+        "nonWorkingDays": [
+            "2019-08-24"
+        ],
+        "workingDays": [
+            "MONDAY"
+        ]
+    },
+    "readOnly": true,
+    "resourceManagementEnabled": true,
+    "rows": [
+        {
+            "id": 246610665073979,
+            "sheetId": 117648125440672,
+            "accessLevel": "ADMIN",
+            "cells": [
+                {
+                    "columnId": 752133921468837,
+                    "columnType": "TEXT_NUMBER",
+                    "displayValue": "Lumine",
+                    "formula": "=UUID@row",
+                    "hyperlink": {
+                        "reportId": 674477165909395,
+                        "sheetId": 117648125440672,
+                        "sightId": 859583955564213,
+                        "url": "https://genshin.gg"
+                    },
+                    "image": {
+                        "altText": "Benny's favorite food",
+                        "height": 25,
+                        "id": "937767591144840",
+                        "width": 25
+                    },
+                    "linkInFromCell": {
+                        "columnId": 752133921468837,
+                        "rowId": 117648125440672,
+                        "sheetId": 246610665073979,
+                        "sheetName": "Benny's Adventure Team",
+                        "status": "OK"
+                    },
+                    "linksOutToCells": [
+                        {
+                            "columnId": 752133921468837,
+                            "rowId": 246610665073979,
+                            "sheetId": 117648125440672,
+                            "sheetName": "Benny's Adventure Team",
+                            "status": "BROKEN"
+                        }
+                    ],
+                    "objectValue": {
+                        "objectType": "ABSTRACT_DATETIME"
+                    },
+                    "overrideValidation": true,
+                    "strict": true,
+                    "value": "Lumine"
+                }
+            ],
+            "columns": [
+                {
+                    "autoNumberFormat": {
+                        "fill": "0000",
+                        "prefix": "TEST",
+                        "startingNumber": 0,
+                        "suffix": "IVS"
+                    },
+                    "contactOptions": [
+                        {
+                            "email": "benny@adventure-team.com",
+                            "name": "Benny"
+                        }
+                    ],
+                    "description": "Members of Benny's Adventure Team",
+                    "hidden": false,
+                    "id": 752133921468837,
+                    "index": 0,
+                    "locked": true,
+                    "lockedForUser": true,
+                    "primary": true,
+                    "symbol": "green",
+                    "systemColumnType": "AUTO_NUMBER",
+                    "tags": [
+                        "CALENDAR_END_DATE"
+                    ],
+                    "title": "Benny's Adventure Team",
+                    "type": "ABSTRACT_DATETIME",
+                    "validation": true,
+                    "version": 0,
+                    "width": 0
+                }
+            ],
+            "conditionalFormat": ",,1,1,,,,,,,,,,,,,",
+            "createdAt": "2019-08-24T14:15:22Z",
+            "createdBy": {
+                "email": "benny@adventure-team.com",
+                "name": "Benny"
+            },
+            "proofs": {
+                "id": 942351480880642,
+                "originalId": 712854370701638,
+                "name": "Klee's Treasure Map",
+                "proofType": "DOCUMENT",
+                "proofRequestUrl": "https://genshin.gg",
+                "version": 0,
+                "lastUpdatedAt": "2019-08-24T14:15:22Z",
+                "lastUpdatedBy": {
+                    "email": "benny@adventure-team.com",
+                    "name": "Benny"
+                },
+                "isCompleted": true
+            },
+            "expanded": true,
+            "filteredOut": true,
+            "format": ",,1,1,,,,,,,,,,,,,",
+            "inCriticalPath": true,
+            "locked": true,
+            "lockedForUser": true,
+            "modifiedAt": "2019-08-24T14:15:22Z",
+            "modifiedBy": {
+                "email": "benny@adventure-team.com",
+                "name": "Benny"
+            },
+            "permaLink": "https://app.smartsheet.com/sheets/euFCmxhZLi0xdFGRF80cDXbhttaPgpUyH5le2Ayc?rowId=246610665073979",
+            "rowNumber": 1,
+            "version": 0
+        }
+    ],
+    "showParentRowsForFilters": true,
+    "source": {
+        "id": 832309446437719,
+        "type": "sheet"
+    },
+    "summary": {
+        "fields": [
+            {
+                "id": 959106860955500,
+                "contactOptions": [
+                    {
+                        "email": "benny@adventure-team.com",
+                        "name": "Benny"
+                    }
+                ],
+                "createdAt": "2019-08-24T14:15:22Z",
+                "createdBy": {
+                    "email": "benny@adventure-team.com",
+                    "name": "Benny"
+                },
+                "displayValue": "Lumine",
+                "formula": "=uuid@row",
+                "hyperlink": {
+                    "reportId": 674477165909395,
+                    "sheetId": 117648125440672,
+                    "sightId": 859583955564213,
+                    "url": "https://genshin.gg"
+                },
+                "image": {
+                    "altText": "Benny's favorite food",
+                    "height": 25,
+                    "id": "937767591144840",
+                    "width": 25
+                },
+                "index": 0,
+                "locked": true,
+                "lockedForUser": true,
+                "modifiedAt": "2019-08-24T14:15:22Z",
+                "modifiedBy": {
+                    "email": "benny@adventure-team.com",
+                    "name": "Benny"
+                },
+                "objectValue": {
+                    "objectType": "ABSTRACT_DATETIME"
+                },
+                "options": [
+                    "Klee",
+                    "Diluc",
+                    "Mona",
+                    "Noelle"
+                ],
+                "symbol": "green",
+                "title": "Benny's Adventure Team",
+                "type": "ABSTRACT_DATETIME",
+                "validation": true
+            }
+        ]
+    },
+    "totalRowCount": 1,
+    "userPermissions": {
+        "summaryPermissions": "ADMIN"
+    },
+    "userSettings": {
+        "criticalPathEnabled": true,
+        "displaySummaryTasks": true
+    },
+    "version": 0,
+    "workspace": {
+        "accessLevel": "ADMIN",
+        "id": 423587832704451,
+        "favorite": true,
+        "folders": [
+            {
+                "id": 625656597216558,
+                "favorite": true,
+                "folders": [
+                    {}
+                ],
+                "name": "Benny's Adventure Team",
+                "permaLink": "https://app.smartsheet.com/sheets/euFCmxhZLi0xdFGRF80cDXbhttaPgpUyH5le2Ayc",
+                "reports": [
+                    {
+                        "scope": {
+                            "sheets": [
+                                {
+                                    "id": 117648125440672,
+                                    "fromId": 0,
+                                    "ownerId": 767326346099101,
+                                    "accessLevel": "ADMIN",
+                                    "attachments": [
+                                        {
+                                            "id": 0,
+                                            "parentId": 0,
+                                            "attachmentType": "BOX_COM",
+                                            "attachmentSubType": "DOCUMENT",
+                                            "mimeType": "PNG",
+                                            "parentType": "COMMENT",
+                                            "createdAt": "2019-08-24T14:15:22Z",
+                                            "createdBy": {
+                                                "email": "benny@adventure-team.com",
+                                                "name": "Benny"
+                                            },
+                                            "name": "Benny's Adventure Team",
+                                            "sizeInKb": 0,
+                                            "url": "https://genshin.gg",
+                                            "urlExpiresInMillis": 0
+                                        }
+                                    ],
+                                    "columns": [
+                                        {
+                                            "autoNumberFormat": {
+                                                "fill": "0000",
+                                                "prefix": "TEST",
+                                                "startingNumber": 0,
+                                                "suffix": "IVS"
+                                            },
+                                            "contactOptions": [
+                                                {
+                                                    "email": "benny@adventure-team.com",
+                                                    "name": "Benny"
+                                                }
+                                            ],
+                                            "description": "Members of Benny's Adventure Team",
+                                            "hidden": false,
+                                            "id": 752133921468837,
+                                            "index": 0,
+                                            "locked": true,
+                                            "lockedForUser": true,
+                                            "primary": true,
+                                            "symbol": "green",
+                                            "systemColumnType": "AUTO_NUMBER",
+                                            "tags": [
+                                                "CALENDAR_END_DATE"
+                                            ],
+                                            "title": "Benny's Adventure Team",
+                                            "type": "ABSTRACT_DATETIME",
+                                            "validation": true,
+                                            "version": 0,
+                                            "width": 0
+                                        }
+                                    ],
+                                    "createdAt": "2019-08-24T14:15:22Z",
+                                    "dependenciesEnabled": true,
+                                    "favorite": true,
+                                    "ganttEnabled": true,
+                                    "hasSummaryFields": true,
+                                    "modifiedAt": "2019-08-24T14:15:22Z",
+                                    "name": "Benny",
+                                    "owner": "benny@adventure-team.com",
+                                    "permalink": "https://app.smartsheet.com/sheets/euFCmxhZLi0xdFGRF80cDXbhttaPgpUyH5le2Ayc",
+                                    "projectSettings": {
+                                        "lengthOfDay": 1,
+                                        "nonWorkingDays": [
+                                            "2019-08-24"
+                                        ],
+                                        "workingDays": [
+                                            "MONDAY"
+                                        ]
+                                    },
+                                    "readOnly": true,
+                                    "resourceManagementEnabled": true,
+                                    "rows": [
+                                        {
+                                            "id": 246610665073979,
+                                            "sheetId": 117648125440672,
+                                            "accessLevel": "ADMIN",
+                                            "cells": [
+                                                {
+                                                    "columnId": 752133921468837,
+                                                    "columnType": "TEXT_NUMBER",
+                                                    "displayValue": "Lumine",
+                                                    "formula": "=UUID@row",
+                                                    "hyperlink": {
+                                                        "reportId": 674477165909395,
+                                                        "sheetId": 117648125440672,
+                                                        "sightId": 859583955564213,
+                                                        "url": "https://genshin.gg"
+                                                    },
+                                                    "image": {
+                                                        "altText": "Benny's favorite food",
+                                                        "height": 25,
+                                                        "id": "937767591144840",
+                                                        "width": 25
+                                                    },
+                                                    "linkInFromCell": {
+                                                        "columnId": 752133921468837,
+                                                        "rowId": 117648125440672,
+                                                        "sheetId": 246610665073979,
+                                                        "sheetName": "Benny's Adventure Team",
+                                                        "status": "OK"
+                                                    },
+                                                    "linksOutToCells": [
+                                                        {
+                                                            "columnId": 752133921468837,
+                                                            "rowId": 246610665073979,
+                                                            "sheetId": 117648125440672,
+                                                            "sheetName": "Benny's Adventure Team",
+                                                            "status": "BROKEN"
+                                                        }
+                                                    ],
+                                                    "objectValue": {
+                                                        "objectType": "ABSTRACT_DATETIME"
+                                                    },
+                                                    "overrideValidation": true,
+                                                    "strict": true,
+                                                    "value": "Lumine"
+                                                }
+                                            ],
+                                            "columns": [
+                                                {
+                                                    "autoNumberFormat": {
+                                                        "fill": "0000",
+                                                        "prefix": "TEST",
+                                                        "startingNumber": 0,
+                                                        "suffix": "IVS"
+                                                    },
+                                                    "contactOptions": [
+                                                        {
+                                                            "email": "benny@adventure-team.com",
+                                                            "name": "Benny"
+                                                        }
+                                                    ],
+                                                    "description": "Members of Benny's Adventure Team",
+                                                    "hidden": false,
+                                                    "id": 752133921468837,
+                                                    "index": 0,
+                                                    "locked": true,
+                                                    "lockedForUser": true,
+                                                    "primary": true,
+                                                    "symbol": "green",
+                                                    "systemColumnType": "AUTO_NUMBER",
+                                                    "tags": [
+                                                        "CALENDAR_END_DATE"
+                                                    ],
+                                                    "title": "Benny's Adventure Team",
+                                                    "type": "ABSTRACT_DATETIME",
+                                                    "validation": true,
+                                                    "version": 0,
+                                                    "width": 0
+                                                }
+                                            ],
+                                            "conditionalFormat": ",,1,1,,,,,,,,,,,,,",
+                                            "createdAt": "2019-08-24T14:15:22Z",
+                                            "createdBy": {
+                                                "email": "benny@adventure-team.com",
+                                                "name": "Benny"
+                                            },
+                                            "proofs": {
+                                                "id": 942351480880642,
+                                                "originalId": 712854370701638,
+                                                "name": "Klee's Treasure Map",
+                                                "proofType": "DOCUMENT",
+                                                "proofRequestUrl": "https://genshin.gg",
+                                                "version": 0,
+                                                "lastUpdatedAt": "2019-08-24T14:15:22Z",
+                                                "lastUpdatedBy": {
+                                                    "email": "benny@adventure-team.com",
+                                                    "name": "Benny"
+                                                },
+                                                "isCompleted": true
+                                            },
+                                            "expanded": true,
+                                            "filteredOut": true,
+                                            "format": ",,1,1,,,,,,,,,,,,,",
+                                            "inCriticalPath": true,
+                                            "locked": true,
+                                            "lockedForUser": true,
+                                            "modifiedAt": "2019-08-24T14:15:22Z",
+                                            "modifiedBy": {
+                                                "email": "benny@adventure-team.com",
+                                                "name": "Benny"
+                                            },
+                                            "permaLink": "https://app.smartsheet.com/sheets/euFCmxhZLi0xdFGRF80cDXbhttaPgpUyH5le2Ayc?rowId=246610665073979",
+                                            "rowNumber": 1,
+                                            "version": 0
+                                        }
+                                    ],
+                                    "showParentRowsForFilters": true,
+                                    "source": {
+                                        "id": 832309446437719,
+                                        "type": "sheet"
+                                    },
+                                    "summary": {
+                                        "fields": [
+                                            {
+                                                "id": 959106860955500,
+                                                "contactOptions": [
+                                                    {
+                                                        "email": "benny@adventure-team.com",
+                                                        "name": "Benny"
+                                                    }
+                                                ],
+                                                "createdAt": "2019-08-24T14:15:22Z",
+                                                "createdBy": {
+                                                    "email": "benny@adventure-team.com",
+                                                    "name": "Benny"
+                                                },
+                                                "displayValue": "Lumine",
+                                                "formula": "=uuid@row",
+                                                "hyperlink": {
+                                                    "reportId": 674477165909395,
+                                                    "sheetId": 117648125440672,
+                                                    "sightId": 859583955564213,
+                                                    "url": "https://genshin.gg"
+                                                },
+                                                "image": {
+                                                    "altText": "Benny's favorite food",
+                                                    "height": 25,
+                                                    "id": "937767591144840",
+                                                    "width": 25
+                                                },
+                                                "index": 0,
+                                                "locked": true,
+                                                "lockedForUser": true,
+                                                "modifiedAt": "2019-08-24T14:15:22Z",
+                                                "modifiedBy": {
+                                                    "email": "benny@adventure-team.com",
+                                                    "name": "Benny"
+                                                },
+                                                "objectValue": {
+                                                    "objectType": "ABSTRACT_DATETIME"
+                                                },
+                                                "options": [
+                                                    "Klee",
+                                                    "Diluc",
+                                                    "Mona",
+                                                    "Noelle"
+                                                ],
+                                                "symbol": "green",
+                                                "title": "Benny's Adventure Team",
+                                                "type": "ABSTRACT_DATETIME",
+                                                "validation": true
+                                            }
+                                        ]
+                                    },
+                                    "totalRowCount": 1,
+                                    "userPermissions": {
+                                        "summaryPermissions": "ADMIN"
+                                    },
+                                    "userSettings": {
+                                        "criticalPathEnabled": true,
+                                        "displaySummaryTasks": true
+                                    },
+                                    "version": 0
+                                }
+                            ],
+                            "workspaces": [
+                                {}
+                            ]
+                        },
+                        "sourceSheets": [
+                            {
+                                "id": 117648125440672,
+                                "fromId": 0,
+                                "ownerId": 767326346099101,
+                                "accessLevel": "ADMIN",
+                                "attachments": [
+                                    {
+                                        "id": 0,
+                                        "parentId": 0,
+                                        "attachmentType": "BOX_COM",
+                                        "attachmentSubType": "DOCUMENT",
+                                        "mimeType": "PNG",
+                                        "parentType": "COMMENT",
+                                        "createdAt": "2019-08-24T14:15:22Z",
+                                        "createdBy": {
+                                            "email": "benny@adventure-team.com",
+                                            "name": "Benny"
+                                        },
+                                        "name": "Benny's Adventure Team",
+                                        "sizeInKb": 0,
+                                        "url": "https://genshin.gg",
+                                        "urlExpiresInMillis": 0
+                                    }
+                                ],
+                                "columns": [
+                                    {
+                                        "autoNumberFormat": {
+                                            "fill": "0000",
+                                            "prefix": "TEST",
+                                            "startingNumber": 0,
+                                            "suffix": "IVS"
+                                        },
+                                        "contactOptions": [
+                                            {
+                                                "email": "benny@adventure-team.com",
+                                                "name": "Benny"
+                                            }
+                                        ],
+                                        "description": "Members of Benny's Adventure Team",
+                                        "hidden": false,
+                                        "id": 752133921468837,
+                                        "index": 0,
+                                        "locked": true,
+                                        "lockedForUser": true,
+                                        "primary": true,
+                                        "symbol": "green",
+                                        "systemColumnType": "AUTO_NUMBER",
+                                        "tags": [
+                                            "CALENDAR_END_DATE"
+                                        ],
+                                        "title": "Benny's Adventure Team",
+                                        "type": "ABSTRACT_DATETIME",
+                                        "validation": true,
+                                        "version": 0,
+                                        "width": 0
+                                    }
+                                ],
+                                "createdAt": "2019-08-24T14:15:22Z",
+                                "dependenciesEnabled": true,
+                                "favorite": true,
+                                "ganttEnabled": true,
+                                "hasSummaryFields": true,
+                                "modifiedAt": "2019-08-24T14:15:22Z",
+                                "name": "Benny",
+                                "owner": "benny@adventure-team.com",
+                                "permalink": "https://app.smartsheet.com/sheets/euFCmxhZLi0xdFGRF80cDXbhttaPgpUyH5le2Ayc",
+                                "projectSettings": {
+                                    "lengthOfDay": 1,
+                                    "nonWorkingDays": [
+                                        "2019-08-24"
+                                    ],
+                                    "workingDays": [
+                                        "MONDAY"
+                                    ]
+                                },
+                                "readOnly": true,
+                                "resourceManagementEnabled": true,
+                                "rows": [
+                                    {
+                                        "id": 246610665073979,
+                                        "sheetId": 117648125440672,
+                                        "accessLevel": "ADMIN",
+                                        "cells": [
+                                            {
+                                                "columnId": 752133921468837,
+                                                "columnType": "TEXT_NUMBER",
+                                                "displayValue": "Lumine",
+                                                "formula": "=UUID@row",
+                                                "hyperlink": {
+                                                    "reportId": 674477165909395,
+                                                    "sheetId": 117648125440672,
+                                                    "sightId": 859583955564213,
+                                                    "url": "https://genshin.gg"
+                                                },
+                                                "image": {
+                                                    "altText": "Benny's favorite food",
+                                                    "height": 25,
+                                                    "id": "937767591144840",
+                                                    "width": 25
+                                                },
+                                                "linkInFromCell": {
+                                                    "columnId": 752133921468837,
+                                                    "rowId": 117648125440672,
+                                                    "sheetId": 246610665073979,
+                                                    "sheetName": "Benny's Adventure Team",
+                                                    "status": "OK"
+                                                },
+                                                "linksOutToCells": [
+                                                    {
+                                                        "columnId": 752133921468837,
+                                                        "rowId": 246610665073979,
+                                                        "sheetId": 117648125440672,
+                                                        "sheetName": "Benny's Adventure Team",
+                                                        "status": "BROKEN"
+                                                    }
+                                                ],
+                                                "objectValue": {
+                                                    "objectType": "ABSTRACT_DATETIME"
+                                                },
+                                                "overrideValidation": true,
+                                                "strict": true,
+                                                "value": "Lumine"
+                                            }
+                                        ],
+                                        "columns": [
+                                            {
+                                                "autoNumberFormat": {
+                                                    "fill": "0000",
+                                                    "prefix": "TEST",
+                                                    "startingNumber": 0,
+                                                    "suffix": "IVS"
+                                                },
+                                                "contactOptions": [
+                                                    {
+                                                        "email": "benny@adventure-team.com",
+                                                        "name": "Benny"
+                                                    }
+                                                ],
+                                                "description": "Members of Benny's Adventure Team",
+                                                "hidden": false,
+                                                "id": 752133921468837,
+                                                "index": 0,
+                                                "locked": true,
+                                                "lockedForUser": true,
+                                                "primary": true,
+                                                "symbol": "green",
+                                                "systemColumnType": "AUTO_NUMBER",
+                                                "tags": [
+                                                    "CALENDAR_END_DATE"
+                                                ],
+                                                "title": "Benny's Adventure Team",
+                                                "type": "ABSTRACT_DATETIME",
+                                                "validation": true,
+                                                "version": 0,
+                                                "width": 0
+                                            }
+                                        ],
+                                        "conditionalFormat": ",,1,1,,,,,,,,,,,,,",
+                                        "createdAt": "2019-08-24T14:15:22Z",
+                                        "createdBy": {
+                                            "email": "benny@adventure-team.com",
+                                            "name": "Benny"
+                                        },
+                                        "proofs": {
+                                            "id": 942351480880642,
+                                            "originalId": 712854370701638,
+                                            "name": "Klee's Treasure Map",
+                                            "proofType": "DOCUMENT",
+                                            "proofRequestUrl": "https://genshin.gg",
+                                            "version": 0,
+                                            "lastUpdatedAt": "2019-08-24T14:15:22Z",
+                                            "lastUpdatedBy": {
+                                                "email": "benny@adventure-team.com",
+                                                "name": "Benny"
+                                            },
+                                            "isCompleted": true
+                                        },
+                                        "expanded": true,
+                                        "filteredOut": true,
+                                        "format": ",,1,1,,,,,,,,,,,,,",
+                                        "inCriticalPath": true,
+                                        "locked": true,
+                                        "lockedForUser": true,
+                                        "modifiedAt": "2019-08-24T14:15:22Z",
+                                        "modifiedBy": {
+                                            "email": "benny@adventure-team.com",
+                                            "name": "Benny"
+                                        },
+                                        "permaLink": "https://app.smartsheet.com/sheets/euFCmxhZLi0xdFGRF80cDXbhttaPgpUyH5le2Ayc?rowId=246610665073979",
+                                        "rowNumber": 1,
+                                        "version": 0
+                                    }
+                                ],
+                                "showParentRowsForFilters": true,
+                                "source": {
+                                    "id": 832309446437719,
+                                    "type": "sheet"
+                                },
+                                "summary": {
+                                    "fields": [
+                                        {
+                                            "id": 959106860955500,
+                                            "contactOptions": [
+                                                {
+                                                    "email": "benny@adventure-team.com",
+                                                    "name": "Benny"
+                                                }
+                                            ],
+                                            "createdAt": "2019-08-24T14:15:22Z",
+                                            "createdBy": {
+                                                "email": "benny@adventure-team.com",
+                                                "name": "Benny"
+                                            },
+                                            "displayValue": "Lumine",
+                                            "formula": "=uuid@row",
+                                            "hyperlink": {
+                                                "reportId": 674477165909395,
+                                                "sheetId": 117648125440672,
+                                                "sightId": 859583955564213,
+                                                "url": "https://genshin.gg"
+                                            },
+                                            "image": {
+                                                "altText": "Benny's favorite food",
+                                                "height": 25,
+                                                "id": "937767591144840",
+                                                "width": 25
+                                            },
+                                            "index": 0,
+                                            "locked": true,
+                                            "lockedForUser": true,
+                                            "modifiedAt": "2019-08-24T14:15:22Z",
+                                            "modifiedBy": {
+                                                "email": "benny@adventure-team.com",
+                                                "name": "Benny"
+                                            },
+                                            "objectValue": {
+                                                "objectType": "ABSTRACT_DATETIME"
+                                            },
+                                            "options": [
+                                                "Klee",
+                                                "Diluc",
+                                                "Mona",
+                                                "Noelle"
+                                            ],
+                                            "symbol": "green",
+                                            "title": "Benny's Adventure Team",
+                                            "type": "ABSTRACT_DATETIME",
+                                            "validation": true
+                                        }
+                                    ]
+                                },
+                                "totalRowCount": 1,
+                                "userPermissions": {
+                                    "summaryPermissions": "ADMIN"
+                                },
+                                "userSettings": {
+                                    "criticalPathEnabled": true,
+                                    "displaySummaryTasks": true
+                                },
+                                "version": 0
+                            }
+                        ],
+                        "isSummaryReport": true,
+                        "id": 408662204700004,
+                        "fromId": 362888889243703,
+                        "ownerId": 767326346099101,
+                        "accessLevel": "ADMIN",
+                        "attachments": [
+                            {}
+                        ],
+                        "columns": [
+                            {
+                                "contactOptions": [],
+                                "options": [],
+                                "tags": []
+                            }
+                        ],
+                        "createdAt": "2019-08-24T14:15:22Z",
+                        "crossSheetReferences": [
+                            {}
+                        ],
+                        "dependenciesEnabled": true,
+                        "favorite": true,
+                        "ganttEnabled": true,
+                        "hasSummaryFields": true,
+                        "modifiedAt": "2019-08-24T14:15:22Z",
+                        "name": "Benny's Adventure Team",
+                        "owner": "benny@adventure-team.com",
+                        "permalink": "https://app.smartsheet.com/sheets/euFCmxhZLi0xdFGRF80cDXbhttaPgpUyH5le2Ayc?rowId=246610665073979",
+                        "projectSettings": {
+                            "lengthOfDay": 1,
+                            "nonWorkingDays": [
+                                null
+                            ],
+                            "workingDays": [
+                                null
+                            ]
+                        },
+                        "readOnly": true,
+                        "resourceManagementEnabled": true,
+                        "rows": [
+                            {
+                                "attachments": [],
+                                "cells": [],
+                                "columns": [],
+                                "createdBy": {},
+                                "discussions": [],
+                                "modifiedBy": {}
+                            }
+                        ],
+                        "showParentRowsForFilters": true,
+                        "source": {
+                            "id": 0,
+                            "type": "sheet"
+                        },
+                        "summary": {
+                            "fields": [
+                                null
+                            ]
+                        },
+                        "totalRowCount": 0,
+                        "userPermissions": {
+                            "summaryPermissions": "ADMIN"
+                        },
+                        "userSettings": {
+                            "criticalPathEnabled": true,
+                            "displaySummaryTasks": true
+                        },
+                        "version": 0,
+                        "workspace": {}
+                    }
+                ],
+                "sheets": [
+                    {
+                        "id": 117648125440672,
+                        "fromId": 0,
+                        "ownerId": 767326346099101,
+                        "accessLevel": "ADMIN",
+                        "attachments": [
+                            {
+                                "id": 0,
+                                "parentId": 0,
+                                "attachmentType": "BOX_COM",
+                                "attachmentSubType": "DOCUMENT",
+                                "mimeType": "PNG",
+                                "parentType": "COMMENT",
+                                "createdAt": "2019-08-24T14:15:22Z",
+                                "createdBy": {
+                                    "email": "benny@adventure-team.com",
+                                    "name": "Benny"
+                                },
+                                "name": "Benny's Adventure Team",
+                                "sizeInKb": 0,
+                                "url": "https://genshin.gg",
+                                "urlExpiresInMillis": 0
+                            }
+                        ],
+                        "columns": [
+                            {
+                                "autoNumberFormat": {
+                                    "fill": "0000",
+                                    "prefix": "TEST",
+                                    "startingNumber": 0,
+                                    "suffix": "IVS"
+                                },
+                                "contactOptions": [
+                                    {
+                                        "email": "benny@adventure-team.com",
+                                        "name": "Benny"
+                                    }
+                                ],
+                                "description": "Members of Benny's Adventure Team",
+                                "hidden": false,
+                                "id": 752133921468837,
+                                "index": 0,
+                                "locked": true,
+                                "lockedForUser": true,
+                                "primary": true,
+                                "symbol": "green",
+                                "systemColumnType": "AUTO_NUMBER",
+                                "tags": [
+                                    "CALENDAR_END_DATE"
+                                ],
+                                "title": "Benny's Adventure Team",
+                                "type": "ABSTRACT_DATETIME",
+                                "validation": true,
+                                "version": 0,
+                                "width": 0
+                            }
+                        ],
+                        "createdAt": "2019-08-24T14:15:22Z",
+                        "dependenciesEnabled": true,
+                        "favorite": true,
+                        "ganttEnabled": true,
+                        "hasSummaryFields": true,
+                        "modifiedAt": "2019-08-24T14:15:22Z",
+                        "name": "Benny",
+                        "owner": "benny@adventure-team.com",
+                        "permalink": "https://app.smartsheet.com/sheets/euFCmxhZLi0xdFGRF80cDXbhttaPgpUyH5le2Ayc",
+                        "projectSettings": {
+                            "lengthOfDay": 1,
+                            "nonWorkingDays": [
+                                "2019-08-24"
+                            ],
+                            "workingDays": [
+                                "MONDAY"
+                            ]
+                        },
+                        "readOnly": true,
+                        "resourceManagementEnabled": true,
+                        "rows": [
+                            {
+                                "id": 246610665073979,
+                                "sheetId": 117648125440672,
+                                "accessLevel": "ADMIN",
+                                "cells": [
+                                    {
+                                        "columnId": 752133921468837,
+                                        "columnType": "TEXT_NUMBER",
+                                        "displayValue": "Lumine",
+                                        "formula": "=UUID@row",
+                                        "hyperlink": {
+                                            "reportId": 674477165909395,
+                                            "sheetId": 117648125440672,
+                                            "sightId": 859583955564213,
+                                            "url": "https://genshin.gg"
+                                        },
+                                        "image": {
+                                            "altText": "Benny's favorite food",
+                                            "height": 25,
+                                            "id": "937767591144840",
+                                            "width": 25
+                                        },
+                                        "linkInFromCell": {
+                                            "columnId": 752133921468837,
+                                            "rowId": 117648125440672,
+                                            "sheetId": 246610665073979,
+                                            "sheetName": "Benny's Adventure Team",
+                                            "status": "OK"
+                                        },
+                                        "linksOutToCells": [
+                                            {
+                                                "columnId": 752133921468837,
+                                                "rowId": 246610665073979,
+                                                "sheetId": 117648125440672,
+                                                "sheetName": "Benny's Adventure Team",
+                                                "status": "BROKEN"
+                                            }
+                                        ],
+                                        "objectValue": {
+                                            "objectType": "ABSTRACT_DATETIME"
+                                        },
+                                        "overrideValidation": true,
+                                        "strict": true,
+                                        "value": "Lumine"
+                                    }
+                                ],
+                                "columns": [
+                                    {
+                                        "autoNumberFormat": {
+                                            "fill": "0000",
+                                            "prefix": "TEST",
+                                            "startingNumber": 0,
+                                            "suffix": "IVS"
+                                        },
+                                        "contactOptions": [
+                                            {
+                                                "email": "benny@adventure-team.com",
+                                                "name": "Benny"
+                                            }
+                                        ],
+                                        "description": "Members of Benny's Adventure Team",
+                                        "hidden": false,
+                                        "id": 752133921468837,
+                                        "index": 0,
+                                        "locked": true,
+                                        "lockedForUser": true,
+                                        "primary": true,
+                                        "symbol": "green",
+                                        "systemColumnType": "AUTO_NUMBER",
+                                        "tags": [
+                                            "CALENDAR_END_DATE"
+                                        ],
+                                        "title": "Benny's Adventure Team",
+                                        "type": "ABSTRACT_DATETIME",
+                                        "validation": true,
+                                        "version": 0,
+                                        "width": 0
+                                    }
+                                ],
+                                "conditionalFormat": ",,1,1,,,,,,,,,,,,,",
+                                "createdAt": "2019-08-24T14:15:22Z",
+                                "createdBy": {
+                                    "email": "benny@adventure-team.com",
+                                    "name": "Benny"
+                                },
+                                "proofs": {
+                                    "id": 942351480880642,
+                                    "originalId": 712854370701638,
+                                    "name": "Klee's Treasure Map",
+                                    "proofType": "DOCUMENT",
+                                    "proofRequestUrl": "https://genshin.gg",
+                                    "version": 0,
+                                    "lastUpdatedAt": "2019-08-24T14:15:22Z",
+                                    "lastUpdatedBy": {
+                                        "email": "benny@adventure-team.com",
+                                        "name": "Benny"
+                                    },
+                                    "isCompleted": true
+                                },
+                                "expanded": true,
+                                "filteredOut": true,
+                                "format": ",,1,1,,,,,,,,,,,,,",
+                                "inCriticalPath": true,
+                                "locked": true,
+                                "lockedForUser": true,
+                                "modifiedAt": "2019-08-24T14:15:22Z",
+                                "modifiedBy": {
+                                    "email": "benny@adventure-team.com",
+                                    "name": "Benny"
+                                },
+                                "permaLink": "https://app.smartsheet.com/sheets/euFCmxhZLi0xdFGRF80cDXbhttaPgpUyH5le2Ayc?rowId=246610665073979",
+                                "rowNumber": 1,
+                                "version": 0
+                            }
+                        ],
+                        "showParentRowsForFilters": true,
+                        "source": {
+                            "id": 832309446437719,
+                            "type": "sheet"
+                        },
+                        "summary": {
+                            "fields": [
+                                {
+                                    "id": 959106860955500,
+                                    "contactOptions": [
+                                        {
+                                            "email": "benny@adventure-team.com",
+                                            "name": "Benny"
+                                        }
+                                    ],
+                                    "createdAt": "2019-08-24T14:15:22Z",
+                                    "createdBy": {
+                                        "email": "benny@adventure-team.com",
+                                        "name": "Benny"
+                                    },
+                                    "displayValue": "Lumine",
+                                    "formula": "=uuid@row",
+                                    "hyperlink": {
+                                        "reportId": 674477165909395,
+                                        "sheetId": 117648125440672,
+                                        "sightId": 859583955564213,
+                                        "url": "https://genshin.gg"
+                                    },
+                                    "image": {
+                                        "altText": "Benny's favorite food",
+                                        "height": 25,
+                                        "id": "937767591144840",
+                                        "width": 25
+                                    },
+                                    "index": 0,
+                                    "locked": true,
+                                    "lockedForUser": true,
+                                    "modifiedAt": "2019-08-24T14:15:22Z",
+                                    "modifiedBy": {
+                                        "email": "benny@adventure-team.com",
+                                        "name": "Benny"
+                                    },
+                                    "objectValue": {
+                                        "objectType": "ABSTRACT_DATETIME"
+                                    },
+                                    "options": [
+                                        "Klee",
+                                        "Diluc",
+                                        "Mona",
+                                        "Noelle"
+                                    ],
+                                    "symbol": "green",
+                                    "title": "Benny's Adventure Team",
+                                    "type": "ABSTRACT_DATETIME",
+                                    "validation": true
+                                }
+                            ]
+                        },
+                        "totalRowCount": 1,
+                        "userPermissions": {
+                            "summaryPermissions": "ADMIN"
+                        },
+                        "userSettings": {
+                            "criticalPathEnabled": true,
+                            "displaySummaryTasks": true
+                        },
+                        "version": 0
+                    }
+                ]
+            }
+        ],
+        "name": "Benny's Adventure Team",
+        "permalink": "https://app.smartsheet.com/sheets/euFCmxhZLi0xdFGRF80cDXbhttaPgpUyH5le2Ayc?rowId=246610665073979",
+        "reports": [
+            [
+                {
+                    "scope": {
+                        "sheets": [
+                            {
+                                "id": 117648125440672,
+                                "fromId": 0,
+                                "ownerId": 767326346099101,
+                                "accessLevel": "ADMIN",
+                                "attachments": [
+                                    {
+                                        "id": 0,
+                                        "parentId": 0,
+                                        "attachmentType": "BOX_COM",
+                                        "attachmentSubType": "DOCUMENT",
+                                        "mimeType": "PNG",
+                                        "parentType": "COMMENT",
+                                        "createdAt": "2019-08-24T14:15:22Z",
+                                        "createdBy": {
+                                            "email": "benny@adventure-team.com",
+                                            "name": "Benny"
+                                        },
+                                        "name": "Benny's Adventure Team",
+                                        "sizeInKb": 0,
+                                        "url": "https://genshin.gg",
+                                        "urlExpiresInMillis": 0
+                                    }
+                                ],
+                                "columns": [
+                                    {
+                                        "autoNumberFormat": {
+                                            "fill": "0000",
+                                            "prefix": "TEST",
+                                            "startingNumber": 0,
+                                            "suffix": "IVS"
+                                        },
+                                        "contactOptions": [
+                                            {
+                                                "email": "benny@adventure-team.com",
+                                                "name": "Benny"
+                                            }
+                                        ],
+                                        "description": "Members of Benny's Adventure Team",
+                                        "hidden": false,
+                                        "id": 752133921468837,
+                                        "index": 0,
+                                        "locked": true,
+                                        "lockedForUser": true,
+                                        "primary": true,
+                                        "symbol": "green",
+                                        "systemColumnType": "AUTO_NUMBER",
+                                        "tags": [
+                                            "CALENDAR_END_DATE"
+                                        ],
+                                        "title": "Benny's Adventure Team",
+                                        "type": "ABSTRACT_DATETIME",
+                                        "validation": true,
+                                        "version": 0,
+                                        "width": 0
+                                    }
+                                ],
+                                "createdAt": "2019-08-24T14:15:22Z",
+                                "dependenciesEnabled": true,
+                                "favorite": true,
+                                "ganttEnabled": true,
+                                "hasSummaryFields": true,
+                                "modifiedAt": "2019-08-24T14:15:22Z",
+                                "name": "Benny",
+                                "owner": "benny@adventure-team.com",
+                                "permalink": "https://app.smartsheet.com/sheets/euFCmxhZLi0xdFGRF80cDXbhttaPgpUyH5le2Ayc",
+                                "projectSettings": {
+                                    "lengthOfDay": 1,
+                                    "nonWorkingDays": [
+                                        "2019-08-24"
+                                    ],
+                                    "workingDays": [
+                                        "MONDAY"
+                                    ]
+                                },
+                                "readOnly": true,
+                                "resourceManagementEnabled": true,
+                                "rows": [
+                                    {
+                                        "id": 246610665073979,
+                                        "sheetId": 117648125440672,
+                                        "accessLevel": "ADMIN",
+                                        "cells": [
+                                            {
+                                                "columnId": 752133921468837,
+                                                "columnType": "TEXT_NUMBER",
+                                                "displayValue": "Lumine",
+                                                "formula": "=UUID@row",
+                                                "hyperlink": {
+                                                    "reportId": 674477165909395,
+                                                    "sheetId": 117648125440672,
+                                                    "sightId": 859583955564213,
+                                                    "url": "https://genshin.gg"
+                                                },
+                                                "image": {
+                                                    "altText": "Benny's favorite food",
+                                                    "height": 25,
+                                                    "id": "937767591144840",
+                                                    "width": 25
+                                                },
+                                                "linkInFromCell": {
+                                                    "columnId": 752133921468837,
+                                                    "rowId": 117648125440672,
+                                                    "sheetId": 246610665073979,
+                                                    "sheetName": "Benny's Adventure Team",
+                                                    "status": "OK"
+                                                },
+                                                "linksOutToCells": [
+                                                    {
+                                                        "columnId": 752133921468837,
+                                                        "rowId": 246610665073979,
+                                                        "sheetId": 117648125440672,
+                                                        "sheetName": "Benny's Adventure Team",
+                                                        "status": "BROKEN"
+                                                    }
+                                                ],
+                                                "objectValue": {
+                                                    "objectType": "ABSTRACT_DATETIME"
+                                                },
+                                                "overrideValidation": true,
+                                                "strict": true,
+                                                "value": "Lumine"
+                                            }
+                                        ],
+                                        "columns": [
+                                            {
+                                                "autoNumberFormat": {
+                                                    "fill": "0000",
+                                                    "prefix": "TEST",
+                                                    "startingNumber": 0,
+                                                    "suffix": "IVS"
+                                                },
+                                                "contactOptions": [
+                                                    {
+                                                        "email": "benny@adventure-team.com",
+                                                        "name": "Benny"
+                                                    }
+                                                ],
+                                                "description": "Members of Benny's Adventure Team",
+                                                "hidden": false,
+                                                "id": 752133921468837,
+                                                "index": 0,
+                                                "locked": true,
+                                                "lockedForUser": true,
+                                                "primary": true,
+                                                "symbol": "green",
+                                                "systemColumnType": "AUTO_NUMBER",
+                                                "tags": [
+                                                    "CALENDAR_END_DATE"
+                                                ],
+                                                "title": "Benny's Adventure Team",
+                                                "type": "ABSTRACT_DATETIME",
+                                                "validation": true,
+                                                "version": 0,
+                                                "width": 0
+                                            }
+                                        ],
+                                        "conditionalFormat": ",,1,1,,,,,,,,,,,,,",
+                                        "createdAt": "2019-08-24T14:15:22Z",
+                                        "createdBy": {
+                                            "email": "benny@adventure-team.com",
+                                            "name": "Benny"
+                                        },
+                                        "proofs": {
+                                            "id": 942351480880642,
+                                            "originalId": 712854370701638,
+                                            "name": "Klee's Treasure Map",
+                                            "proofType": "DOCUMENT",
+                                            "proofRequestUrl": "https://genshin.gg",
+                                            "version": 0,
+                                            "lastUpdatedAt": "2019-08-24T14:15:22Z",
+                                            "lastUpdatedBy": {
+                                                "email": "benny@adventure-team.com",
+                                                "name": "Benny"
+                                            },
+                                            "isCompleted": true
+                                        },
+                                        "expanded": true,
+                                        "filteredOut": true,
+                                        "format": ",,1,1,,,,,,,,,,,,,",
+                                        "inCriticalPath": true,
+                                        "locked": true,
+                                        "lockedForUser": true,
+                                        "modifiedAt": "2019-08-24T14:15:22Z",
+                                        "modifiedBy": {
+                                            "email": "benny@adventure-team.com",
+                                            "name": "Benny"
+                                        },
+                                        "permaLink": "https://app.smartsheet.com/sheets/euFCmxhZLi0xdFGRF80cDXbhttaPgpUyH5le2Ayc?rowId=246610665073979",
+                                        "rowNumber": 1,
+                                        "version": 0
+                                    }
+                                ],
+                                "showParentRowsForFilters": true,
+                                "source": {
+                                    "id": 832309446437719,
+                                    "type": "sheet"
+                                },
+                                "summary": {
+                                    "fields": [
+                                        {
+                                            "id": 959106860955500,
+                                            "contactOptions": [
+                                                {
+                                                    "email": "benny@adventure-team.com",
+                                                    "name": "Benny"
+                                                }
+                                            ],
+                                            "createdAt": "2019-08-24T14:15:22Z",
+                                            "createdBy": {
+                                                "email": "benny@adventure-team.com",
+                                                "name": "Benny"
+                                            },
+                                            "displayValue": "Lumine",
+                                            "formula": "=uuid@row",
+                                            "hyperlink": {
+                                                "reportId": 674477165909395,
+                                                "sheetId": 117648125440672,
+                                                "sightId": 859583955564213,
+                                                "url": "https://genshin.gg"
+                                            },
+                                            "image": {
+                                                "altText": "Benny's favorite food",
+                                                "height": 25,
+                                                "id": "937767591144840",
+                                                "width": 25
+                                            },
+                                            "index": 0,
+                                            "locked": true,
+                                            "lockedForUser": true,
+                                            "modifiedAt": "2019-08-24T14:15:22Z",
+                                            "modifiedBy": {
+                                                "email": "benny@adventure-team.com",
+                                                "name": "Benny"
+                                            },
+                                            "objectValue": {
+                                                "objectType": "ABSTRACT_DATETIME"
+                                            },
+                                            "options": [
+                                                "Klee",
+                                                "Diluc",
+                                                "Mona",
+                                                "Noelle"
+                                            ],
+                                            "symbol": "green",
+                                            "title": "Benny's Adventure Team",
+                                            "type": "ABSTRACT_DATETIME",
+                                            "validation": true
+                                        }
+                                    ]
+                                },
+                                "totalRowCount": 1,
+                                "userPermissions": {
+                                    "summaryPermissions": "ADMIN"
+                                },
+                                "userSettings": {
+                                    "criticalPathEnabled": true,
+                                    "displaySummaryTasks": true
+                                },
+                                "version": 0
+                            }
+                        ],
+                        "workspaces": [
+                            {}
+                        ]
+                    },
+                    "sourceSheets": [
+                        {
+                            "id": 117648125440672,
+                            "fromId": 0,
+                            "ownerId": 767326346099101,
+                            "accessLevel": "ADMIN",
+                            "attachments": [
+                                {
+                                    "id": 0,
+                                    "parentId": 0,
+                                    "attachmentType": "BOX_COM",
+                                    "attachmentSubType": "DOCUMENT",
+                                    "mimeType": "PNG",
+                                    "parentType": "COMMENT",
+                                    "createdAt": "2019-08-24T14:15:22Z",
+                                    "createdBy": {
+                                        "email": "benny@adventure-team.com",
+                                        "name": "Benny"
+                                    },
+                                    "name": "Benny's Adventure Team",
+                                    "sizeInKb": 0,
+                                    "url": "https://genshin.gg",
+                                    "urlExpiresInMillis": 0
+                                }
+                            ],
+                            "columns": [
+                                {
+                                    "autoNumberFormat": {
+                                        "fill": "0000",
+                                        "prefix": "TEST",
+                                        "startingNumber": 0,
+                                        "suffix": "IVS"
+                                    },
+                                    "contactOptions": [
+                                        {
+                                            "email": "benny@adventure-team.com",
+                                            "name": "Benny"
+                                        }
+                                    ],
+                                    "description": "Members of Benny's Adventure Team",
+                                    "hidden": false,
+                                    "id": 752133921468837,
+                                    "index": 0,
+                                    "locked": true,
+                                    "lockedForUser": true,
+                                    "primary": true,
+                                    "symbol": "green",
+                                    "systemColumnType": "AUTO_NUMBER",
+                                    "tags": [
+                                        "CALENDAR_END_DATE"
+                                    ],
+                                    "title": "Benny's Adventure Team",
+                                    "type": "ABSTRACT_DATETIME",
+                                    "validation": true,
+                                    "version": 0,
+                                    "width": 0
+                                }
+                            ],
+                            "createdAt": "2019-08-24T14:15:22Z",
+                            "dependenciesEnabled": true,
+                            "favorite": true,
+                            "ganttEnabled": true,
+                            "hasSummaryFields": true,
+                            "modifiedAt": "2019-08-24T14:15:22Z",
+                            "name": "Benny",
+                            "owner": "benny@adventure-team.com",
+                            "permalink": "https://app.smartsheet.com/sheets/euFCmxhZLi0xdFGRF80cDXbhttaPgpUyH5le2Ayc",
+                            "projectSettings": {
+                                "lengthOfDay": 1,
+                                "nonWorkingDays": [
+                                    "2019-08-24"
+                                ],
+                                "workingDays": [
+                                    "MONDAY"
+                                ]
+                            },
+                            "readOnly": true,
+                            "resourceManagementEnabled": true,
+                            "rows": [
+                                {
+                                    "id": 246610665073979,
+                                    "sheetId": 117648125440672,
+                                    "accessLevel": "ADMIN",
+                                    "cells": [
+                                        {
+                                            "columnId": 752133921468837,
+                                            "columnType": "TEXT_NUMBER",
+                                            "displayValue": "Lumine",
+                                            "formula": "=UUID@row",
+                                            "hyperlink": {
+                                                "reportId": 674477165909395,
+                                                "sheetId": 117648125440672,
+                                                "sightId": 859583955564213,
+                                                "url": "https://genshin.gg"
+                                            },
+                                            "image": {
+                                                "altText": "Benny's favorite food",
+                                                "height": 25,
+                                                "id": "937767591144840",
+                                                "width": 25
+                                            },
+                                            "linkInFromCell": {
+                                                "columnId": 752133921468837,
+                                                "rowId": 117648125440672,
+                                                "sheetId": 246610665073979,
+                                                "sheetName": "Benny's Adventure Team",
+                                                "status": "OK"
+                                            },
+                                            "linksOutToCells": [
+                                                {
+                                                    "columnId": 752133921468837,
+                                                    "rowId": 246610665073979,
+                                                    "sheetId": 117648125440672,
+                                                    "sheetName": "Benny's Adventure Team",
+                                                    "status": "BROKEN"
+                                                }
+                                            ],
+                                            "objectValue": {
+                                                "objectType": "ABSTRACT_DATETIME"
+                                            },
+                                            "overrideValidation": true,
+                                            "strict": true,
+                                            "value": "Lumine"
+                                        }
+                                    ],
+                                    "columns": [
+                                        {
+                                            "autoNumberFormat": {
+                                                "fill": "0000",
+                                                "prefix": "TEST",
+                                                "startingNumber": 0,
+                                                "suffix": "IVS"
+                                            },
+                                            "contactOptions": [
+                                                {
+                                                    "email": "benny@adventure-team.com",
+                                                    "name": "Benny"
+                                                }
+                                            ],
+                                            "description": "Members of Benny's Adventure Team",
+                                            "hidden": false,
+                                            "id": 752133921468837,
+                                            "index": 0,
+                                            "locked": true,
+                                            "lockedForUser": true,
+                                            "primary": true,
+                                            "symbol": "green",
+                                            "systemColumnType": "AUTO_NUMBER",
+                                            "tags": [
+                                                "CALENDAR_END_DATE"
+                                            ],
+                                            "title": "Benny's Adventure Team",
+                                            "type": "ABSTRACT_DATETIME",
+                                            "validation": true,
+                                            "version": 0,
+                                            "width": 0
+                                        }
+                                    ],
+                                    "conditionalFormat": ",,1,1,,,,,,,,,,,,,",
+                                    "createdAt": "2019-08-24T14:15:22Z",
+                                    "createdBy": {
+                                        "email": "benny@adventure-team.com",
+                                        "name": "Benny"
+                                    },
+                                    "proofs": {
+                                        "id": 942351480880642,
+                                        "originalId": 712854370701638,
+                                        "name": "Klee's Treasure Map",
+                                        "proofType": "DOCUMENT",
+                                        "proofRequestUrl": "https://genshin.gg",
+                                        "version": 0,
+                                        "lastUpdatedAt": "2019-08-24T14:15:22Z",
+                                        "lastUpdatedBy": {
+                                            "email": "benny@adventure-team.com",
+                                            "name": "Benny"
+                                        },
+                                        "isCompleted": true
+                                    },
+                                    "expanded": true,
+                                    "filteredOut": true,
+                                    "format": ",,1,1,,,,,,,,,,,,,",
+                                    "inCriticalPath": true,
+                                    "locked": true,
+                                    "lockedForUser": true,
+                                    "modifiedAt": "2019-08-24T14:15:22Z",
+                                    "modifiedBy": {
+                                        "email": "benny@adventure-team.com",
+                                        "name": "Benny"
+                                    },
+                                    "permaLink": "https://app.smartsheet.com/sheets/euFCmxhZLi0xdFGRF80cDXbhttaPgpUyH5le2Ayc?rowId=246610665073979",
+                                    "rowNumber": 1,
+                                    "version": 0
+                                }
+                            ],
+                            "showParentRowsForFilters": true,
+                            "source": {
+                                "id": 832309446437719,
+                                "type": "sheet"
+                            },
+                            "summary": {
+                                "fields": [
+                                    {
+                                        "id": 959106860955500,
+                                        "contactOptions": [
+                                            {
+                                                "email": "benny@adventure-team.com",
+                                                "name": "Benny"
+                                            }
+                                        ],
+                                        "createdAt": "2019-08-24T14:15:22Z",
+                                        "createdBy": {
+                                            "email": "benny@adventure-team.com",
+                                            "name": "Benny"
+                                        },
+                                        "displayValue": "Lumine",
+                                        "formula": "=uuid@row",
+                                        "hyperlink": {
+                                            "reportId": 674477165909395,
+                                            "sheetId": 117648125440672,
+                                            "sightId": 859583955564213,
+                                            "url": "https://genshin.gg"
+                                        },
+                                        "image": {
+                                            "altText": "Benny's favorite food",
+                                            "height": 25,
+                                            "id": "937767591144840",
+                                            "width": 25
+                                        },
+                                        "index": 0,
+                                        "locked": true,
+                                        "lockedForUser": true,
+                                        "modifiedAt": "2019-08-24T14:15:22Z",
+                                        "modifiedBy": {
+                                            "email": "benny@adventure-team.com",
+                                            "name": "Benny"
+                                        },
+                                        "objectValue": {
+                                            "objectType": "ABSTRACT_DATETIME"
+                                        },
+                                        "options": [
+                                            "Klee",
+                                            "Diluc",
+                                            "Mona",
+                                            "Noelle"
+                                        ],
+                                        "symbol": "green",
+                                        "title": "Benny's Adventure Team",
+                                        "type": "ABSTRACT_DATETIME",
+                                        "validation": true
+                                    }
+                                ]
+                            },
+                            "totalRowCount": 1,
+                            "userPermissions": {
+                                "summaryPermissions": "ADMIN"
+                            },
+                            "userSettings": {
+                                "criticalPathEnabled": true,
+                                "displaySummaryTasks": true
+                            },
+                            "version": 0
+                        }
+                    ],
+                    "isSummaryReport": true,
+                    "id": 408662204700004,
+                    "fromId": 362888889243703,
+                    "ownerId": 767326346099101,
+                    "accessLevel": "ADMIN",
+                    "attachments": [
+                        {}
+                    ],
+                    "columns": [
+                        {
+                            "contactOptions": [],
+                            "options": [],
+                            "tags": []
+                        }
+                    ],
+                    "createdAt": "2019-08-24T14:15:22Z",
+                    "crossSheetReferences": [
+                        {}
+                    ],
+                    "dependenciesEnabled": true,
+                    "favorite": true,
+                    "ganttEnabled": true,
+                    "hasSummaryFields": true,
+                    "modifiedAt": "2019-08-24T14:15:22Z",
+                    "name": "Benny's Adventure Team",
+                    "owner": "benny@adventure-team.com",
+                    "permalink": "https://app.smartsheet.com/sheets/euFCmxhZLi0xdFGRF80cDXbhttaPgpUyH5le2Ayc?rowId=246610665073979",
+                    "projectSettings": {
+                        "lengthOfDay": 1,
+                        "nonWorkingDays": [
+                            null
+                        ],
+                        "workingDays": [
+                            null
+                        ]
+                    },
+                    "readOnly": true,
+                    "resourceManagementEnabled": true,
+                    "rows": [
+                        {
+                            "attachments": [],
+                            "cells": [],
+                            "columns": [],
+                            "createdBy": {},
+                            "discussions": [],
+                            "modifiedBy": {}
+                        }
+                    ],
+                    "showParentRowsForFilters": true,
+                    "source": {
+                        "id": 0,
+                        "type": "sheet"
+                    },
+                    "summary": {
+                        "fields": [
+                            null
+                        ]
+                    },
+                    "totalRowCount": 0,
+                    "userPermissions": {
+                        "summaryPermissions": "ADMIN"
+                    },
+                    "userSettings": {
+                        "criticalPathEnabled": true,
+                        "displaySummaryTasks": true
+                    },
+                    "version": 0,
+                    "workspace": {}
+                }
+            ]
+        ],
+        "sheets": [
+            {
+                "id": 117648125440672,
+                "fromId": 0,
+                "ownerId": 767326346099101,
+                "accessLevel": "ADMIN",
+                "attachments": [
+                    {
+                        "id": 0,
+                        "parentId": 0,
+                        "attachmentType": "BOX_COM",
+                        "attachmentSubType": "DOCUMENT",
+                        "mimeType": "PNG",
+                        "parentType": "COMMENT",
+                        "createdAt": "2019-08-24T14:15:22Z",
+                        "createdBy": {
+                            "email": "benny@adventure-team.com",
+                            "name": "Benny"
+                        },
+                        "name": "Benny's Adventure Team",
+                        "sizeInKb": 0,
+                        "url": "https://genshin.gg",
+                        "urlExpiresInMillis": 0
+                    }
+                ],
+                "columns": [
+                    {
+                        "autoNumberFormat": {
+                            "fill": "0000",
+                            "prefix": "TEST",
+                            "startingNumber": 0,
+                            "suffix": "IVS"
+                        },
+                        "contactOptions": [
+                            {
+                                "email": "benny@adventure-team.com",
+                                "name": "Benny"
+                            }
+                        ],
+                        "description": "Members of Benny's Adventure Team",
+                        "hidden": false,
+                        "id": 752133921468837,
+                        "index": 0,
+                        "locked": true,
+                        "lockedForUser": true,
+                        "primary": true,
+                        "symbol": "green",
+                        "systemColumnType": "AUTO_NUMBER",
+                        "tags": [
+                            "CALENDAR_END_DATE"
+                        ],
+                        "title": "Benny's Adventure Team",
+                        "type": "ABSTRACT_DATETIME",
+                        "validation": true,
+                        "version": 0,
+                        "width": 0
+                    }
+                ],
+                "createdAt": "2019-08-24T14:15:22Z",
+                "dependenciesEnabled": true,
+                "favorite": true,
+                "ganttEnabled": true,
+                "hasSummaryFields": true,
+                "modifiedAt": "2019-08-24T14:15:22Z",
+                "name": "Benny",
+                "owner": "benny@adventure-team.com",
+                "permalink": "https://app.smartsheet.com/sheets/euFCmxhZLi0xdFGRF80cDXbhttaPgpUyH5le2Ayc",
+                "projectSettings": {
+                    "lengthOfDay": 1,
+                    "nonWorkingDays": [
+                        "2019-08-24"
+                    ],
+                    "workingDays": [
+                        "MONDAY"
+                    ]
+                },
+                "readOnly": true,
+                "resourceManagementEnabled": true,
+                "rows": [
+                    {
+                        "id": 246610665073979,
+                        "sheetId": 117648125440672,
+                        "accessLevel": "ADMIN",
+                        "cells": [
+                            {
+                                "columnId": 752133921468837,
+                                "columnType": "TEXT_NUMBER",
+                                "displayValue": "Lumine",
+                                "formula": "=UUID@row",
+                                "hyperlink": {
+                                    "reportId": 674477165909395,
+                                    "sheetId": 117648125440672,
+                                    "sightId": 859583955564213,
+                                    "url": "https://genshin.gg"
+                                },
+                                "image": {
+                                    "altText": "Benny's favorite food",
+                                    "height": 25,
+                                    "id": "937767591144840",
+                                    "width": 25
+                                },
+                                "linkInFromCell": {
+                                    "columnId": 752133921468837,
+                                    "rowId": 117648125440672,
+                                    "sheetId": 246610665073979,
+                                    "sheetName": "Benny's Adventure Team",
+                                    "status": "OK"
+                                },
+                                "linksOutToCells": [
+                                    {
+                                        "columnId": 752133921468837,
+                                        "rowId": 246610665073979,
+                                        "sheetId": 117648125440672,
+                                        "sheetName": "Benny's Adventure Team",
+                                        "status": "BROKEN"
+                                    }
+                                ],
+                                "objectValue": {
+                                    "objectType": "ABSTRACT_DATETIME"
+                                },
+                                "overrideValidation": true,
+                                "strict": true,
+                                "value": "Lumine"
+                            }
+                        ],
+                        "columns": [
+                            {
+                                "autoNumberFormat": {
+                                    "fill": "0000",
+                                    "prefix": "TEST",
+                                    "startingNumber": 0,
+                                    "suffix": "IVS"
+                                },
+                                "contactOptions": [
+                                    {
+                                        "email": "benny@adventure-team.com",
+                                        "name": "Benny"
+                                    }
+                                ],
+                                "description": "Members of Benny's Adventure Team",
+                                "hidden": false,
+                                "id": 752133921468837,
+                                "index": 0,
+                                "locked": true,
+                                "lockedForUser": true,
+                                "primary": true,
+                                "symbol": "green",
+                                "systemColumnType": "AUTO_NUMBER",
+                                "tags": [
+                                    "CALENDAR_END_DATE"
+                                ],
+                                "title": "Benny's Adventure Team",
+                                "type": "ABSTRACT_DATETIME",
+                                "validation": true,
+                                "version": 0,
+                                "width": 0
+                            }
+                        ],
+                        "conditionalFormat": ",,1,1,,,,,,,,,,,,,",
+                        "createdAt": "2019-08-24T14:15:22Z",
+                        "createdBy": {
+                            "email": "benny@adventure-team.com",
+                            "name": "Benny"
+                        },
+                        "proofs": {
+                            "id": 942351480880642,
+                            "originalId": 712854370701638,
+                            "name": "Klee's Treasure Map",
+                            "proofType": "DOCUMENT",
+                            "proofRequestUrl": "https://genshin.gg",
+                            "version": 0,
+                            "lastUpdatedAt": "2019-08-24T14:15:22Z",
+                            "lastUpdatedBy": {
+                                "email": "benny@adventure-team.com",
+                                "name": "Benny"
+                            },
+                            "isCompleted": true
+                        },
+                        "expanded": true,
+                        "filteredOut": true,
+                        "format": ",,1,1,,,,,,,,,,,,,",
+                        "inCriticalPath": true,
+                        "locked": true,
+                        "lockedForUser": true,
+                        "modifiedAt": "2019-08-24T14:15:22Z",
+                        "modifiedBy": {
+                            "email": "benny@adventure-team.com",
+                            "name": "Benny"
+                        },
+                        "permaLink": "https://app.smartsheet.com/sheets/euFCmxhZLi0xdFGRF80cDXbhttaPgpUyH5le2Ayc?rowId=246610665073979",
+                        "rowNumber": 1,
+                        "version": 0
+                    }
+                ],
+                "showParentRowsForFilters": true,
+                "source": {
+                    "id": 832309446437719,
+                    "type": "sheet"
+                },
+                "summary": {
+                    "fields": [
+                        {
+                            "id": 959106860955500,
+                            "contactOptions": [
+                                {
+                                    "email": "benny@adventure-team.com",
+                                    "name": "Benny"
+                                }
+                            ],
+                            "createdAt": "2019-08-24T14:15:22Z",
+                            "createdBy": {
+                                "email": "benny@adventure-team.com",
+                                "name": "Benny"
+                            },
+                            "displayValue": "Lumine",
+                            "formula": "=uuid@row",
+                            "hyperlink": {
+                                "reportId": 674477165909395,
+                                "sheetId": 117648125440672,
+                                "sightId": 859583955564213,
+                                "url": "https://genshin.gg"
+                            },
+                            "image": {
+                                "altText": "Benny's favorite food",
+                                "height": 25,
+                                "id": "937767591144840",
+                                "width": 25
+                            },
+                            "index": 0,
+                            "locked": true,
+                            "lockedForUser": true,
+                            "modifiedAt": "2019-08-24T14:15:22Z",
+                            "modifiedBy": {
+                                "email": "benny@adventure-team.com",
+                                "name": "Benny"
+                            },
+                            "objectValue": {
+                                "objectType": "ABSTRACT_DATETIME"
+                            },
+                            "options": [
+                                "Klee",
+                                "Diluc",
+                                "Mona",
+                                "Noelle"
+                            ],
+                            "symbol": "green",
+                            "title": "Benny's Adventure Team",
+                            "type": "ABSTRACT_DATETIME",
+                            "validation": true
+                        }
+                    ]
+                },
+                "totalRowCount": 1,
+                "userPermissions": {
+                    "summaryPermissions": "ADMIN"
+                },
+                "userSettings": {
+                    "criticalPathEnabled": true,
+                    "displaySummaryTasks": true
+                },
+                "version": 0
+            }
+        ]
+    }
+}
