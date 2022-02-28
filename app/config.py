@@ -3,7 +3,6 @@ import json
 import logging
 import os
 import time
-import sys
 from logging.config import dictConfig
 
 import boto3
@@ -21,6 +20,7 @@ from uuid_module.variables import (dev_jira_idx_sheet, dev_minutes,
 
 cwd = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 log_location = os.path.join(cwd, log_location)
+logger = logging.getLogger(__name__)
 
 
 def get_secret(secret_name):
@@ -304,7 +304,7 @@ def init(args):
     try:
         env = args[0]
     except IndexError:
-        env = None
+        env = '--debug'
     config = set_env_vars(env)
 
     # Get the logging config and try to create a new file for logs if the
