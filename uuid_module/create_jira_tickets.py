@@ -448,7 +448,6 @@ def create_tickets(minutes=dev_minutes):
         ticket_sheet = get_sheet(config.push_tickets_sheet, config.minutes)
         push_tickets_col_map = get_column_map(ticket_sheet)
         rows_to_write = form_rows(parent, push_tickets_col_map)
-        # TODO: Make environment-aware
         write_rows_to_sheet(rows_to_write, config.push_tickets_sheet)
     elif not parent:
         msg = str("No parent or child rows remain to be written to the "
