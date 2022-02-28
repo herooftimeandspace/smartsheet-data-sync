@@ -1,14 +1,9 @@
 import json
 import logging
 import os
-
 import pytest
 import smartsheet
-from uuid_module.create_jira_tickets import (build_row_data,
-                                             create_tickets, form_rows,
-                                             link_jira_index_to_sheet,
-                                             refresh_sheets)
-from uuid_module.helper import get_column_map
+
 
 logger = logging.getLogger(__name__)
 cwd = os.path.dirname(os.path.abspath(__file__))
@@ -46,6 +41,7 @@ def index_sheet_fixture():
 
 @pytest.fixture(scope="module")
 def index_col_map_fixture(index_sheet_fixture):
+    from uuid_module.helper import get_column_map
     col_map = get_column_map(index_sheet_fixture)
     return col_map
 
@@ -59,83 +55,94 @@ def row_fixture():
 
 
 def test_create_tickets():
+    import uuid_module.create_jira_tickets as create_jira_tickets
     with pytest.raises(TypeError):
-        create_tickets("smartsheet_client")
+        create_jira_tickets.create_tickets("smartsheet_client")
 
 
 def test_refresh_sheets():
+    import uuid_module.create_jira_tickets as create_jira_tickets
     with pytest.raises(TypeError):
-        refresh_sheets("dev_minutes")
+        create_jira_tickets.refresh_sheets("dev_minutes")
     with pytest.raises(ValueError):
-        refresh_sheets(-1337)
+        create_jira_tickets.refresh_sheets(-1337)
 
 
 def test_form_rows(row_fixture, index_col_map_fixture, sheet_fixture):
+    import uuid_module.create_jira_tickets as create_jira_tickets
+    from uuid_module.helper import get_column_map
     sheet, _, _, _ = sheet_fixture
     col_map = get_column_map(sheet)
     row, _ = row_fixture
     row_dict = {}
-    row_dict[row.id] = build_row_data(row, col_map)
+    row_dict[row.id] = create_jira_tickets.build_row_data(row, col_map)
     with pytest.raises(TypeError):
-        form_rows("row_dict", index_col_map_fixture)
+        create_jira_tickets.form_rows("row_dict", index_col_map_fixture)
     with pytest.raises(TypeError):
-        form_rows(row_dict, "index_col_map_fixture")
+        create_jira_tickets.form_rows(row_dict, "index_col_map_fixture")
     with pytest.raises(ValueError):
         empty_row_dict = {}
-        form_rows(empty_row_dict, index_col_map_fixture)
+        create_jira_tickets.form_rows(empty_row_dict, index_col_map_fixture)
     with pytest.raises(ValueError):
         empty_index_col_map = {}
-        form_rows(row_dict, empty_index_col_map)
+        create_jira_tickets.form_rows(row_dict, empty_index_col_map)
 
-    index_rows_to_add = form_rows(row_dict, index_col_map_fixture)
+    index_rows_to_add = create_jira_tickets.form_rows(
+        row_dict, index_col_map_fixture)
     assert index_rows_to_add
 
 
 def test_push_jira_tickets_to_sheet(sheet_fixture, index_sheet_fixture):
+    import uuid_module.create_jira_tickets as create_jira_tickets
+    from uuid_module.helper import get_column_map
     sheet, _, _, _ = sheet_fixture
     sheet_col_map = get_column_map(sheet)
     index_col_map = get_column_map(index_sheet_fixture)
 
     with pytest.raises(TypeError):
-        link_jira_index_to_sheet(
+        create_jira_tickets.link_jira_index_to_sheet(
             "sheet", sheet_col_map, index_sheet_fixture, index_col_map)
     with pytest.raises(TypeError):
-        link_jira_index_to_sheet(
+        create_jira_tickets.link_jira_index_to_sheet(
             sheet, "sheet_col_map", index_sheet_fixture, index_col_map)
     with pytest.raises(TypeError):
-        link_jira_index_to_sheet(
+        create_jira_tickets.link_jira_index_to_sheet(
             sheet, sheet_col_map, "index_sheet_fixture", index_col_map)
     with pytest.raises(TypeError):
-        link_jira_index_to_sheet(
+        create_jira_tickets.link_jira_index_to_sheet(
             sheet, sheet_col_map, index_sheet_fixture, "index_col_map")
 
 
 def test_build_row_data(row_fixture, sheet_fixture):
+    import uuid_module.create_jira_tickets as create_jira_tickets
+    from uuid_module.helper import get_column_map
     row, _ = row_fixture
     sheet, _, _, _ = sheet_fixture
     col_map = get_column_map(sheet)
 
     with pytest.raises(TypeError):
-        build_row_data("row", col_map)
+        create_jira_tickets.build_row_data("row", col_map)
     with pytest.raises(TypeError):
-        build_row_data(row, "col_map")
+        create_jira_tickets.build_row_data(row, "col_map")
 
-    row_data = build_row_data(row, col_map)
+    row_data = create_jira_tickets.build_row_data(row, col_map)
     assert isinstance(row_data, dict)
 
 
 def test_create_ticket_index(sheet_fixture, index_sheet_fixture):
+    import uuid_module.create_jira_tickets as create_jira_tickets
+    from uuid_module.helper import get_column_map
     sheet1, sheet2, sheet3, sheet4 = sheet_fixture
     source_sheets = [sheet1, sheet2, sheet3, sheet4]
     index_col_map = get_column_map(index_sheet_fixture)
     with pytest.raises(TypeError):
-        link_jira_index_to_sheet(
+        create_jira_tickets.link_jira_index_to_sheet(
             "sheet_fixture", index_sheet_fixture, index_col_map)
     with pytest.raises(TypeError):
-        link_jira_index_to_sheet(
+        create_jira_tickets.link_jira_index_to_sheet(
             sheet_fixture, "index_sheet_fixture", index_col_map)
     with pytest.raises(TypeError):
-        link_jira_index_to_sheet(
+        create_jira_tickets.link_jira_index_to_sheet(
             sheet_fixture, index_sheet_fixture, "index_col_map")
 
     # ticket_index = create_ticket_index(
@@ -144,7 +151,8 @@ def test_create_ticket_index(sheet_fixture, index_sheet_fixture):
 
 
 def test_create_tickets():
+    import uuid_module.create_jira_tickets as create_jira_tickets
     with pytest.raises(TypeError):
-        create_tickets("dev_minutes")
+        create_jira_tickets.create_tickets("dev_minutes")
     with pytest.raises(ValueError):
-        create_tickets(-1337)
+        create_jira_tickets.create_tickets(-1337)

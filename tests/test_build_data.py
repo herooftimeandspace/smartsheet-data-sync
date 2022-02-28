@@ -2,13 +2,9 @@
 import json
 import logging
 import os
-
 import pytest
 import smartsheet
 from freezegun import freeze_time
-from uuid_module.build_data import build_linked_cell, build_row, dest_indexes
-from uuid_module.get_data import get_all_row_data
-from uuid_module.helper import get_column_map
 from uuid_module.variables import (assignee_col, jira_col, dev_minutes,
                                    sheet_columns, status_col, task_col)
 logger = logging.getLogger(__name__)
@@ -48,6 +44,7 @@ def sheet_fixture():
 
 @pytest.fixture(scope="module")
 def jira_index_col_map(jira_index_sheet):
+    from uuid_module.helper import get_column_map
     jira_index_sheet, _ = jira_index_sheet
     jira_index_col_map = get_column_map(jira_index_sheet)
     return jira_index_col_map
@@ -55,6 +52,7 @@ def jira_index_col_map(jira_index_sheet):
 
 @pytest.fixture(scope="module")
 def dest_col_map(sheet_fixture):
+    from uuid_module.helper import get_column_map
     sheet, _, _, _ = sheet_fixture
     dest_col_map = get_column_map(sheet)
     return dest_col_map
@@ -109,6 +107,7 @@ def env():
 # TODO: Validate returned data is not malformed
 def test_build_linked_cell(jira_index_sheet, jira_index_col_map,
                            dest_col_map, idx_row_id, jira_column):
+    from uuid_module.build_data import build_linked_cell
     jira_index_sheet, _ = jira_index_sheet
     with pytest.raises(TypeError):
         build_linked_cell("jira_index_sheet", jira_index_col_map, dest_col_map,
@@ -134,6 +133,8 @@ def test_build_linked_cell(jira_index_sheet, jira_index_col_map,
 # TODO: Validate returned data is not malformed
 @freeze_time("2021-11-18 21:23:54")
 def test_dest_indexes(sheet_fixture, columns, minutes_fixture):
+    from uuid_module.build_data import dest_indexes
+    from uuid_module.get_data import get_all_row_data
     _, sheet_list, _, _ = sheet_fixture
     project_data = get_all_row_data(sheet_list, columns, minutes_fixture)
 
@@ -147,6 +148,7 @@ def test_dest_indexes(sheet_fixture, columns, minutes_fixture):
 # TODO: Valdate returned data is not malformed
 def test_build_row(row_fixture, columns_to_link, dest_col_map,
                    jira_index_sheet, jira_index_col_map, idx_row_id):
+    from uuid_module.build_data import build_row
     jira_index_sheet, _ = jira_index_sheet
     _, row = row_fixture
     with pytest.raises(TypeError):

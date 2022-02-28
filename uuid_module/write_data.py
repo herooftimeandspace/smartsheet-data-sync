@@ -1,12 +1,11 @@
 import json
 import logging
-
 import smartsheet
 
 # import smartsheet
 from uuid_module.build_data import build_row, dest_indexes
 from uuid_module.get_data import load_jira_index
-from uuid_module.helper import (chunks, get_cell_data, get_cell_value,
+from uuid_module.helper import (get_cell_data, get_cell_value,
                                 get_column_map, json_extract)
 from uuid_module.smartsheet_api import get_row, get_sheet, write_rows_to_sheet
 from uuid_module.variables import (assignee_col, dev_jira_idx_sheet, jira_col,

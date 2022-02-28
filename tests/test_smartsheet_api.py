@@ -3,10 +3,8 @@ import os
 from botocore.exceptions import NoCredentialsError
 import pytest
 import smartsheet
-from unittest.mock import patch, Mock
-import uuid_module.smartsheet_api as smartsheet_api
+from unittest.mock import patch
 from uuid_module.variables import dev_minutes, dev_workspace_id
-from uuid_module.helper import get_secret, get_secret_name
 cwd = os.path.dirname(os.path.abspath(__file__))
 
 
@@ -44,7 +42,8 @@ def workspace_fixture():
 #         os.environ["SMARTSHEET_ACCESS_TOKEN"] = get_secret(secret_name)
 
 
-def test_write_rows_to_sheet(monkeypatch, row, sheet):
+def test_write_rows_to_sheet(row, sheet):
+    import uuid_module.smartsheet_api as smartsheet_api
     rows_to_write = [row]
     with pytest.raises(TypeError):
         smartsheet_api.write_rows_to_sheet("rows_to_write", sheet)
@@ -63,7 +62,8 @@ def test_write_rows_to_sheet(monkeypatch, row, sheet):
         assert response['result']['statusCode'] == 200
 
 
-def test_get_workspace(workspace_fixture, monkeypatch):
+def test_get_workspace(workspace_fixture):
+    import uuid_module.smartsheet_api as smartsheet_api
     workspace, workspaces = workspace_fixture
     with pytest.raises(TypeError):
         smartsheet_api.get_workspace("workspace_id")
@@ -79,6 +79,7 @@ def test_get_workspace(workspace_fixture, monkeypatch):
 
 
 def test_get_sheet(sheet):
+    import uuid_module.smartsheet_api as smartsheet_api
     sheet_id = sheet.id
     with pytest.raises(TypeError):
         smartsheet_api.get_sheet("sheet_id", minutes=dev_minutes)
@@ -91,6 +92,7 @@ def test_get_sheet(sheet):
 
 
 def test_get_row(sheet, row):
+    import uuid_module.smartsheet_api as smartsheet_api
     sheet_id = sheet.id
     row_id = row.id
     with pytest.raises(TypeError):

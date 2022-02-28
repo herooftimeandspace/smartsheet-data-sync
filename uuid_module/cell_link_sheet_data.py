@@ -3,15 +3,13 @@ import logging
 import re
 import smartsheet
 
-from uuid_module.helper import (chunks, get_cell_data, get_cell_value,
+from uuid_module.helper import (get_cell_data, get_cell_value,
                                 get_column_map, has_cell_link, json_extract)
 from uuid_module.smartsheet_api import write_rows_to_sheet
 from uuid_module.variables import (assignee_col, description_col, duration_col,
                                    jira_col, predecessor_col, start_col,
                                    status_col, task_col)
 from uuid_module.write_data import write_predecessor_dates
-
-logger = logging.getLogger(__name__)
 
 
 def write_uuid_cell_links(project_data_index, source_sheets):

@@ -1,17 +1,14 @@
 import logging
-# import os
 import re
-
+import app.config as config
 import smartsheet
 
-from uuid_module.get_data import (get_all_sheet_ids,
-                                  refresh_source_sheets)
 from uuid_module.helper import (get_cell_data, get_cell_value, get_column_map,
                                 has_cell_link)
 from uuid_module.smartsheet_api import get_sheet, write_rows_to_sheet
 from uuid_module.variables import (dev_jira_idx_sheet, dev_minutes,
                                    dev_workspace_id, prod_jira_idx_sheet,
-                                   uuid_col, dev_push_jira_tickets_sheet)
+                                   uuid_col)
 
 project_columns = ["Summary", "Tasks", "Issue Type", "Jira Ticket",
                    "Parent Ticket", "Program", "Initiative", "Team", "UUID",
@@ -23,6 +20,8 @@ jira_index_columns = ["Tasks", "Issue Type", "Jira Ticket", "Issue Links",
 
 
 def refresh_sheets(minutes=dev_minutes):
+    from uuid_module.get_data import (get_all_sheet_ids,
+                                      refresh_source_sheets)
     if not isinstance(minutes, int):
         msg = str("Minutes should be type: int, not {}").format(type(minutes))
         raise TypeError(msg)
@@ -445,11 +444,10 @@ def create_tickets(minutes=dev_minutes):
     logging.debug(msg)
     if parent:
         # Write parent rows
-        # TODO: toggle hidden flag to prevent pushing again (filter
-        # above)
-        rows_to_write = form_rows(parent, index_col_map)
-        # TODO: Make environment-aware
-        write_rows_to_sheet(rows_to_write, dev_push_jira_tickets_sheet)
+        ticket_sheet = get_sheet(config.push_tickets_sheet, config.minutes)
+        push_tickets_col_map = get_column_map(ticket_sheet)
+        rows_to_write = form_rows(parent, push_tickets_col_map)
+        write_rows_to_sheet(rows_to_write, config.push_tickets_sheet)
     elif not parent:
         msg = str("No parent or child rows remain to be written to the "
                   "Push Tickets Sheet.")

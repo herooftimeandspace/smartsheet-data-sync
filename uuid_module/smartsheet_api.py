@@ -1,29 +1,18 @@
 import logging
-import os
 
 import smartsheet
-from botocore.exceptions import NoCredentialsError
 
-from uuid_module.helper import (chunks, get_secret, get_secret_name,
-                                get_timestamp)
+from uuid_module.helper import chunks, get_timestamp
 from uuid_module.variables import dev_minutes, dev_workspace_id
 
-# Set the SMARTSHEET_ACCESS_TOKEN by pulling from the AWS Secrets API, based
-# on the environment variable passed in.
-secret_name = get_secret_name()
-try:
-    os.environ["SMARTSHEET_ACCESS_TOKEN"] = get_secret(secret_name)
-except (NoCredentialsError, TypeError):
-    msg = str("Refresh Isengard credentials")
-    logging.error(msg)
-    exit()
 
-# Initialize the Smartsheet client and make sure we don't miss any errors.
-logging.debug("------------------------")
-logging.debug("Initializing Smartsheet Client API")
-logging.debug("------------------------")
-smartsheet_client = smartsheet.Smartsheet()
-smartsheet_client.errors_as_exceptions(True)
+def set_smartsheet_client():
+    # Set the SMARTSHEET_ACCESS_TOKEN by pulling from the AWS Secrets API,
+    # based on the environment variable passed in.
+    # Defer importing the token and secrets until all modules are loaded.
+    global smartsheet_client
+    import app.config as config
+    smartsheet_client = config.smartsheet_client
 
 
 # TODO: Handle passing in smartsheet.Sheet objects
