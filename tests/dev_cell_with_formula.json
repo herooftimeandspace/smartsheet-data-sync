@@ -1,0 +1,4 @@
+{
+    "columnId": 5830481605355396,
+    "formula": "=IFERROR(PARENT(UUID@row), \"\")"
+}
