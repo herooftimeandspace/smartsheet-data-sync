@@ -68,19 +68,16 @@
                         <details>
             <summary>View Source</summary>
             <div class="pdoc-code codehilite"><pre><span></span><span class="kn">import</span> <span class="nn">logging</span>
-<span class="c1"># import os</span>
 <span class="kn">import</span> <span class="nn">re</span>
 <span class="kn">import</span> <span class="nn">app.config</span> <span class="k">as</span> <span class="nn">config</span>
 <span class="kn">import</span> <span class="nn">smartsheet</span>
 
-<span class="kn">from</span> <span class="nn">uuid_module.get_data</span> <span class="kn">import</span> <span class="p">(</span><span class="n">get_all_sheet_ids</span><span class="p">,</span>
-                                  <span class="n">refresh_source_sheets</span><span class="p">)</span>
 <span class="kn">from</span> <span class="nn">uuid_module.helper</span> <span class="kn">import</span> <span class="p">(</span><span class="n">get_cell_data</span><span class="p">,</span> <span class="n">get_cell_value</span><span class="p">,</span> <span class="n">get_column_map</span><span class="p">,</span>
                                 <span class="n">has_cell_link</span><span class="p">)</span>
 <span class="kn">from</span> <span class="nn">uuid_module.smartsheet_api</span> <span class="kn">import</span> <span class="n">get_sheet</span><span class="p">,</span> <span class="n">write_rows_to_sheet</span>
 <span class="kn">from</span> <span class="nn">uuid_module.variables</span> <span class="kn">import</span> <span class="p">(</span><span class="n">dev_jira_idx_sheet</span><span class="p">,</span> <span class="n">dev_minutes</span><span class="p">,</span>
                                    <span class="n">dev_workspace_id</span><span class="p">,</span> <span class="n">prod_jira_idx_sheet</span><span class="p">,</span>
-                                   <span class="n">uuid_col</span><span class="p">,</span> <span class="n">dev_push_jira_tickets_sheet</span><span class="p">)</span>
+                                   <span class="n">uuid_col</span><span class="p">)</span>
 
 <span class="n">project_columns</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;Summary&quot;</span><span class="p">,</span> <span class="s2">&quot;Tasks&quot;</span><span class="p">,</span> <span class="s2">&quot;Issue Type&quot;</span><span class="p">,</span> <span class="s2">&quot;Jira Ticket&quot;</span><span class="p">,</span>
                    <span class="s2">&quot;Parent Ticket&quot;</span><span class="p">,</span> <span class="s2">&quot;Program&quot;</span><span class="p">,</span> <span class="s2">&quot;Initiative&quot;</span><span class="p">,</span> <span class="s2">&quot;Team&quot;</span><span class="p">,</span> <span class="s2">&quot;UUID&quot;</span><span class="p">,</span>
@@ -92,6 +89,8 @@
 
 
 <span class="k">def</span> <span class="nf">refresh_sheets</span><span class="p">(</span><span class="n">minutes</span><span class="o">=</span><span class="n">dev_minutes</span><span class="p">):</span>
+    <span class="kn">from</span> <span class="nn">uuid_module.get_data</span> <span class="kn">import</span> <span class="p">(</span><span class="n">get_all_sheet_ids</span><span class="p">,</span>
+                                      <span class="n">refresh_source_sheets</span><span class="p">)</span>
     <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">minutes</span><span class="p">,</span> <span class="nb">int</span><span class="p">):</span>
         <span class="n">msg</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="s2">&quot;Minutes should be type: int, not </span><span class="si">{}</span><span class="s2">&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="nb">type</span><span class="p">(</span><span class="n">minutes</span><span class="p">))</span>
         <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
@@ -542,6 +541,8 @@
             <details>
             <summary>View Source</summary>
             <div class="pdoc-code codehilite"><pre><span></span><span class="k">def</span> <span class="nf">refresh_sheets</span><span class="p">(</span><span class="n">minutes</span><span class="o">=</span><span class="n">dev_minutes</span><span class="p">):</span>
+    <span class="kn">from</span> <span class="nn">uuid_module.get_data</span> <span class="kn">import</span> <span class="p">(</span><span class="n">get_all_sheet_ids</span><span class="p">,</span>
+                                      <span class="n">refresh_source_sheets</span><span class="p">)</span>
     <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">minutes</span><span class="p">,</span> <span class="nb">int</span><span class="p">):</span>
         <span class="n">msg</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="s2">&quot;Minutes should be type: int, not </span><span class="si">{}</span><span class="s2">&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="nb">type</span><span class="p">(</span><span class="n">minutes</span><span class="p">))</span>
         <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
