@@ -5,12 +5,9 @@ import time
 import app.config as config
 from uuid_module.create_jira_tickets import create_tickets
 # from uuid_module.cell_link_sheet_data import write_uuid_cell_links
-from uuid_module.get_data import (get_all_row_data, get_all_sheet_ids,
-                                  get_blank_uuids, get_sub_indexes,
-                                  refresh_source_sheets)
+
 from uuid_module.helper import truncate
 from uuid_module.variables import sheet_columns
-from uuid_module.write_data import write_jira_index_cell_links, write_uuids
 
 
 sheet_id_lock = threading.Lock()
@@ -19,6 +16,10 @@ project_index_lock = threading.Lock()
 
 
 def full_jira_sync(minutes):
+    from uuid_module.get_data import (get_all_row_data, get_all_sheet_ids,
+                                      get_blank_uuids, get_sub_indexes,
+                                      refresh_source_sheets)
+    from uuid_module.write_data import write_jira_index_cell_links, write_uuids
     """Executes a full Jira sync across all sheets in the workspace.
 
     Args:
@@ -142,6 +143,8 @@ def full_jira_sync(minutes):
 
 
 def full_smartsheet_sync():
+    from uuid_module.get_data import (get_all_row_data, get_all_sheet_ids,
+                                      refresh_source_sheets)
     """Sync Smartsheet data between rows using UUID
     """
     start = time.time()
