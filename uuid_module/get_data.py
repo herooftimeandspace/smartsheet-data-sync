@@ -8,7 +8,6 @@ import pytz
 
 from uuid_module.helper import (get_cell_data, get_cell_value, get_column_map,
                                 get_timestamp)
-import uuid_module.helper as conf
 from uuid_module.smartsheet_api import get_sheet, get_workspace
 from uuid_module.variables import (dev_jira_idx_sheet, dev_minutes,
                                    dev_workspace_id, jira_col, summary_col,
@@ -435,7 +434,7 @@ def get_all_sheet_ids(minutes=dev_minutes,
 
     # Don't include the JIRA index sheet or the Push Tickets sheet as part of
     # the sheet collection, if present.
-    sheets_to_remove = [conf.index_sheet, conf.push_tickets_sheet]
+    sheets_to_remove = [config.index_sheet, config.push_tickets_sheet]
     for sheet_id in sheets_to_remove:
         try:
             sheet_ids.remove(sheet_id)
