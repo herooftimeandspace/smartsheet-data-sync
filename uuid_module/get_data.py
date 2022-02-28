@@ -2,7 +2,7 @@ import json
 import logging
 from collections import defaultdict
 from datetime import datetime
-
+import app.config as config
 import pytz
 
 
