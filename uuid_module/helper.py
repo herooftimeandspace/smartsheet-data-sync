@@ -1,17 +1,8 @@
-import base64
 import json
 import logging
 import math
 from datetime import datetime, timedelta
 import smartsheet
-import app.config as config
-
-
-from uuid_module.variables import (dev_jira_idx_sheet, dev_minutes,
-                                   dev_push_jira_tickets_sheet,
-                                   dev_workspace_id, prod_jira_idx_sheet,
-                                   prod_minutes, prod_push_jira_tickets_sheet,
-                                   prod_workspace_id)
 
 logger = logging.getLogger(__name__)
 

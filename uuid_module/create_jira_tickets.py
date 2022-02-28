@@ -1,5 +1,4 @@
 import logging
-# import os
 import re
 import app.config as config
 import smartsheet
@@ -11,7 +10,7 @@ from uuid_module.helper import (get_cell_data, get_cell_value, get_column_map,
 from uuid_module.smartsheet_api import get_sheet, write_rows_to_sheet
 from uuid_module.variables import (dev_jira_idx_sheet, dev_minutes,
                                    dev_workspace_id, prod_jira_idx_sheet,
-                                   uuid_col, dev_push_jira_tickets_sheet)
+                                   uuid_col)
 
 project_columns = ["Summary", "Tasks", "Issue Type", "Jira Ticket",
                    "Parent Ticket", "Program", "Initiative", "Team", "UUID",

@@ -214,8 +214,9 @@ def main():
     logging.debug("Adding job to write new Jira tickets in real time. "
                   "Interval = every 5 minutes.")
     logging.debug("------------------------")
+    # TODO: Revert to 5 mins before merging with debug
     config.scheduler.add_job(create_tickets,
                              'interval',
                              args=[config.minutes],
-                             minutes=5)
+                             minutes=1)
     return True

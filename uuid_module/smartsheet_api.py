@@ -1,9 +1,6 @@
 import logging
-import os
-import sys
 
 import smartsheet
-from botocore.exceptions import NoCredentialsError
 
 from uuid_module.helper import chunks, get_timestamp
 from uuid_module.variables import dev_minutes, dev_workspace_id

@@ -2,7 +2,6 @@ import json
 import logging
 import re
 import smartsheet
-import app.config as config
 
 from uuid_module.helper import (get_cell_data, get_cell_value,
                                 get_column_map, has_cell_link, json_extract)

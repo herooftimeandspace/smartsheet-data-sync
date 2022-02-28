@@ -1,7 +1,6 @@
 import app.app as app
 import app.config as config
 import logging
-import os
 
 if __name__ == '__main__':
     """Runs main(). If main returns True, starts the scheduler. If main
