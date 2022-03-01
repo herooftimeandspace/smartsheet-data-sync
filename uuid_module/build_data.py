@@ -20,6 +20,13 @@ def build_linked_cell(jira_index_sheet, jira_index_col_map, dest_col_map,
                           link will pull data
         column (str): The name of the column to write to in both sheets
 
+    Raises:
+        TypeError: Jira Index Sheet must be a Smartsheet Sheet object
+        TypeError: Index Column Map must be a dict
+        TypeError: Destination Column Map must be a dict
+        TypeError: Index Row ID must be a string
+        TypeError: Column must be a string
+
     Returns:
         Cell: The cell object to be written back to the destination, with
               link to the Jira Index Sheet.
@@ -68,6 +75,9 @@ def dest_indexes(project_data):
                              and relevant data from the
                              get_all_row_data function.
 
+    Raises:
+        TypeError: Project data must be a dict
+
     Returns:
         dict: a list of destination sheet IDs and a list of
               destination row IDs.
@@ -106,8 +116,16 @@ def build_row(row, columns_to_link, dest_col_map, jira_index_sheet,
         dest_col_map (dict): The column name:id map for the destination sheet
         idx_row_id (str): The row ID in the Jira Index sheet where the cell
                           link will pull data
-        smartsheet_client (Object): The Smartsheet client to interact
-                                    with the API
+
+    Raises:
+        TypeError: Row must be a Smartsheet Row object
+        TypeError: Columns to link must be a list of column IDs
+        TypeError: Destination Column Map must be a dict of
+                   Column Names: Column IDs
+        TypeError: Jira Index Sheet must be a Smartsheet Sheet object
+        TypeError: Jira Index Column Map must be a dict of
+                   Column Names: Column IDs
+        TypeError: Jira Index Row ID must be a string
 
     Returns:
         Row: If cells were appended to the row, returns the new row, otherwise

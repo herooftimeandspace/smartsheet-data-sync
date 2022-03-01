@@ -2,7 +2,6 @@ import json
 import logging
 import math
 from datetime import datetime, timedelta
-
 import smartsheet
 
 logger = logging.getLogger(__name__)
@@ -20,7 +19,6 @@ def get_cell_data(row, column_name, column_map):
         TypeError: Validates row is a Smartsheet Row object
         TypeError: Validates column_name is a string
         TypeError: Validates column_map is a dict
-        KeyError: Raises KeyError if the column name isn't in the dictionary
 
     Returns:
         cell (Cell): A Cell object or None if the column is not found in the
@@ -105,22 +103,28 @@ def has_cell_link(old_cell, direction):
     # Load the cell values as a json object
     cell_json = json.loads(str(old_cell))
 
-    try:
-        if direction == "In":
-            # Check the status of the link.
+    if direction == "In":
+        # Check the status of the link.
+        try:
             linked_cell = cell_json['linkInFromCell']
-            status = linked_cell['status']
-            # TODO: return status, fix upstream code to accept status values
-            if status == 'OK':
-                return "Linked"
-            elif status == 'BROKEN':
-                return "Broken"
-        elif direction == "Out":
-            # Always set to Linked, unless it's invalid.
+        except KeyError:
+            return "Unlinked"
+
+        status = linked_cell['status']
+        return status
+        # if status == 'OK':
+        #     return "Linked"
+        # elif status == 'BROKEN':
+        #     return "Broken"
+    elif direction == "Out":
+        # Always set to Linked if the value exists, unless it's invalid.
+        try:
             linked_cell = cell_json['linksOutToCells']
             return "Linked"
-    except KeyError:
-        raise KeyError("Unlinked")
+        except KeyError:
+            return "Unlinked"
+    else:
+        return None
 
 
 def get_cell_value(row, col_name, col_map):
@@ -181,7 +185,7 @@ def json_extract(obj, key):
     # Validate data types before attempting to process.
     if not isinstance(obj, dict):
         raise TypeError("Obj must be a dict (json).")
-    elif not isinstance(key, str):
+    if not isinstance(key, str):
         raise TypeError("Key must be a string.")
 
     # Create an empty list as an 'array'
@@ -271,11 +275,11 @@ def chunks(source, n):
         n (int): The number of items in the list to chunk together
 
     Raises:
-        TypeError: Validates source is a list
-        TypeError: Validates n is an int
-        ValueError: Validates n must be non-zero
-        ValueError: Validates n > 0
-        ValueError: Validates length of list is greater than n
+        TypeError: Source must be a list
+        TypeError: n must be an Int
+        ValueError: n must be non-zero
+        ValueError: n must be greater than zero
+        ValueError: Length of the list must be greater than n
 
     Yields:
         source (list): The sub-list of chunked items

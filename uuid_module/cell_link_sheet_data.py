@@ -1,6 +1,7 @@
 import json
 import logging
 import re
+
 import smartsheet
 
 from uuid_module.helper import (chunks, get_cell_data, get_cell_value,
@@ -9,8 +10,6 @@ from uuid_module.variables import (assignee_col, description_col, duration_col,
                                    jira_col, predecessor_col, start_col,
                                    status_col, task_col)
 from uuid_module.write_data import write_predecessor_dates
-
-logger = logging.getLogger(__name__)
 
 
 def write_uuid_cell_links(project_data_index, source_sheets,
@@ -22,10 +21,9 @@ def write_uuid_cell_links(project_data_index, source_sheets,
     Args:
         project_data_index (dict): All UUIDs and the row values
         source_sheets (list): All sheet objects in all workspaces
-        smartsheet_client (Object): The Smartsheet client to interact
-                                    with the API
 
     Raises:
+        TypeError: Project Data Index must be a dict
         ValueError: If the project index data passed in is None,
                     raises and logs an error.
     """
