@@ -24,7 +24,6 @@ def refresh_source_sheets(sheet_ids, minutes=0):
        from the workspaces.
 
     Args:
-        smartsheet_client (client): Allows interaction with the Smartsheet API
         sheet_ids (list): The list of Smartsheet sheet IDs to parse
         minutes (int, optional): Number of minutes into the past that the API
                                  should pull sheet and row data, if greater
@@ -191,7 +190,7 @@ def get_blank_uuids(source_sheets):
 
     Returns:
         dict: A nested set of dictionaries
-        none: There are no sheets to update.
+        None: There are no sheets to update.
     """
     if not isinstance(source_sheets, list):
         msg = str("Source Sheets should be type: list not type {}"
@@ -276,10 +275,10 @@ def load_jira_index(index_sheet=dev_jira_idx_sheet):
        every time to get the most up-to-date version of the sheet data.
 
     Args:
-        index_sheet (Sheet): The Jira index sheet to load. Defaults to Dev.
+        index_sheet (int): The Jira index sheet to load. Defaults to Dev.
 
     Raises:
-        TypeError: Validates smartsheet_client is a Smartsheet Client object.
+        TypeError: Index Sheet must be an int.
 
     Returns:
         sheet: A Smartsheet Sheet object that includes all data for the Jira
@@ -289,6 +288,7 @@ def load_jira_index(index_sheet=dev_jira_idx_sheet):
               row ID as the value.
 
     """
+    # TODO: Refactor for smartsheet.sheet object / dict instead of Int
     if not isinstance(index_sheet, int):
         msg = str("Index Sheet should be type: int not type {}"
                   "").format(type(index_sheet))
@@ -365,12 +365,22 @@ def get_all_sheet_ids(minutes=dev_minutes,
        workspace as defined in the workspace_id.
 
     Args:
-        smartsheet_client (Object): The Smartsheet client to interact
-                                    with the API
+        minutes (int): Number of minutes into the past to filter sheets and
+                       rows. Defaults to Dev
+        workspace_id (int, list): One or more Workspaces to check for changes.
+                                  Defaults to Dev
+        index_sheet (int): The Index Sheet ID. Defaults to Dev
+
+    Raises:
+        TypeError: Minutes must be an Int
+        TypeError: Workspace ID must be an Int or list of Ints
+        TypeError: Index Sheet must be an Int
+        ValueError: Minutes must be a positive integer or 0
 
     Returns:
-        list: A list of all sheet IDs across every workspace
+        list: A list of Sheet IDs (Int) across every workspace
     """
+
     if not isinstance(minutes, int):
         msg = str("Minutes should be type: int, not {}").format(type(minutes))
         raise TypeError(msg)
@@ -385,6 +395,11 @@ def get_all_sheet_ids(minutes=dev_minutes,
     if minutes < 0:
         msg = str("Minutes should be >= 0, not {}").format(minutes)
         raise ValueError(msg)
+    for id in workspace_id:
+        if not isinstance(id, int):
+            msg = str("Workspace ID in list should be type: int, not {}"
+                      "").format(type(id))
+            raise ValueError(msg)
 
     # Get the workspace Smartsheet object from the workspace_id
     # configured in our variables.
@@ -394,7 +409,6 @@ def get_all_sheet_ids(minutes=dev_minutes,
     sheet_ids = []
 
     for ws_id in workspace_id:
-        # TEST with smartsheet_api.py
         workspace = get_workspace(ws_id)
 
         if workspace.folders:

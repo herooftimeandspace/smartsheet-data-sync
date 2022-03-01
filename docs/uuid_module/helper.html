@@ -94,7 +94,6 @@
 <span class="sd">        TypeError: Validates row is a Smartsheet Row object</span>
 <span class="sd">        TypeError: Validates column_name is a string</span>
 <span class="sd">        TypeError: Validates column_map is a dict</span>
-<span class="sd">        KeyError: Raises KeyError if the column name isn&#39;t in the dictionary</span>
 
 <span class="sd">    Returns:</span>
 <span class="sd">        cell (Cell): A Cell object or None if the column is not found in the</span>
@@ -351,11 +350,11 @@
 <span class="sd">        n (int): The number of items in the list to chunk together</span>
 
 <span class="sd">    Raises:</span>
-<span class="sd">        TypeError: Validates source is a list</span>
-<span class="sd">        TypeError: Validates n is an int</span>
-<span class="sd">        ValueError: Validates n must be non-zero</span>
-<span class="sd">        ValueError: Validates n &gt; 0</span>
-<span class="sd">        ValueError: Validates length of list is greater than n</span>
+<span class="sd">        TypeError: Source must be a list</span>
+<span class="sd">        TypeError: n must be an Int</span>
+<span class="sd">        ValueError: n must be non-zero</span>
+<span class="sd">        ValueError: n must be greater than zero</span>
+<span class="sd">        ValueError: Length of the list must be greater than n</span>
 
 <span class="sd">    Yields:</span>
 <span class="sd">        source (list): The sub-list of chunked items</span>
@@ -410,7 +409,6 @@
 <span class="sd">        TypeError: Validates row is a Smartsheet Row object</span>
 <span class="sd">        TypeError: Validates column_name is a string</span>
 <span class="sd">        TypeError: Validates column_map is a dict</span>
-<span class="sd">        KeyError: Raises KeyError if the column name isn&#39;t in the dictionary</span>
 
 <span class="sd">    Returns:</span>
 <span class="sd">        cell (Cell): A Cell object or None if the column is not found in the</span>
@@ -452,7 +450,6 @@
 <li><strong>TypeError:</strong>  Validates row is a Smartsheet Row object</li>
 <li><strong>TypeError:</strong>  Validates column_name is a string</li>
 <li><strong>TypeError:</strong>  Validates column_map is a dict</li>
-<li><strong>KeyError:</strong>  Raises KeyError if the column name isn't in the dictionary</li>
 </ul>
 
 <h6 id="returns">Returns</h6>
@@ -940,11 +937,11 @@ Defaults to 0.</li>
 <span class="sd">        n (int): The number of items in the list to chunk together</span>
 
 <span class="sd">    Raises:</span>
-<span class="sd">        TypeError: Validates source is a list</span>
-<span class="sd">        TypeError: Validates n is an int</span>
-<span class="sd">        ValueError: Validates n must be non-zero</span>
-<span class="sd">        ValueError: Validates n &gt; 0</span>
-<span class="sd">        ValueError: Validates length of list is greater than n</span>
+<span class="sd">        TypeError: Source must be a list</span>
+<span class="sd">        TypeError: n must be an Int</span>
+<span class="sd">        ValueError: n must be non-zero</span>
+<span class="sd">        ValueError: n must be greater than zero</span>
+<span class="sd">        ValueError: Length of the list must be greater than n</span>
 
 <span class="sd">    Yields:</span>
 <span class="sd">        source (list): The sub-list of chunked items</span>
@@ -988,11 +985,11 @@ Defaults to 0.</li>
 <h6 id="raises">Raises</h6>
 
 <ul>
-<li><strong>TypeError:</strong>  Validates source is a list</li>
-<li><strong>TypeError:</strong>  Validates n is an int</li>
-<li><strong>ValueError:</strong>  Validates n must be non-zero</li>
-<li><strong>ValueError:</strong>  Validates n &gt; 0</li>
-<li><strong>ValueError:</strong>  Validates length of list is greater than n</li>
+<li><strong>TypeError:</strong>  Source must be a list</li>
+<li><strong>TypeError:</strong>  n must be an Int</li>
+<li><strong>ValueError:</strong>  n must be non-zero</li>
+<li><strong>ValueError:</strong>  n must be greater than zero</li>
+<li><strong>ValueError:</strong>  Length of the list must be greater than n</li>
 </ul>
 
 <h6 id="yields">Yields</h6>

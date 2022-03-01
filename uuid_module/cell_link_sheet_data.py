@@ -20,10 +20,9 @@ def write_uuid_cell_links(project_data_index, source_sheets):
     Args:
         project_data_index (dict): All UUIDs and the row values
         source_sheets (list): All sheet objects in all workspaces
-        smartsheet_client (Object): The Smartsheet client to interact
-                                    with the API
 
     Raises:
+        TypeError: Project Data Index must be a dict
         ValueError: If the project index data passed in is None,
                     raises and logs an error.
     """

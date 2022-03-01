@@ -16,10 +16,6 @@ project_index_lock = threading.Lock()
 
 
 def full_jira_sync(minutes):
-    from uuid_module.get_data import (get_all_row_data, get_all_sheet_ids,
-                                      get_blank_uuids, get_sub_indexes,
-                                      refresh_source_sheets)
-    from uuid_module.write_data import write_jira_index_cell_links, write_uuids
     """Executes a full Jira sync across all sheets in the workspace.
 
     Args:
@@ -29,6 +25,10 @@ def full_jira_sync(minutes):
         TypeError: Minutes should be an INT
         ValueError: Minutes should be a positive number, or zero
     """
+    from uuid_module.get_data import (get_all_row_data, get_all_sheet_ids,
+                                      get_blank_uuids, get_sub_indexes,
+                                      refresh_source_sheets)
+    from uuid_module.write_data import write_jira_index_cell_links, write_uuids
     if not isinstance(minutes, int):
         msg = str("Minutes should be type: int, not {}").format(type(minutes))
         raise TypeError(msg)
@@ -143,10 +143,10 @@ def full_jira_sync(minutes):
 
 
 def full_smartsheet_sync():
-    from uuid_module.get_data import (get_all_row_data, get_all_sheet_ids,
-                                      refresh_source_sheets)
     """Sync Smartsheet data between rows using UUID
     """
+    from uuid_module.get_data import (get_all_row_data, get_all_sheet_ids,
+                                      refresh_source_sheets)
     start = time.time()
     msg = str("Starting refresh of Smartsheet project data.").format()
     logging.debug(msg)

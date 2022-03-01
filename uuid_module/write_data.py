@@ -189,7 +189,7 @@ def check_uuid(uuid_value, jira_value, uuid_list, jira_data_values):
         list: uuid_list if the UUID is not found in the uuid_list after
               appending the new UUID, or jira_data_values if the UUID
               value is None
-        none: If the 'if' checks fail.
+        None: If the 'if' checks fail.
     """
     if not isinstance(uuid_value, list):
         msg = str("UUID Value must be type: list, not"
@@ -373,15 +373,9 @@ def write_predecessor_dates(src_data, project_data_index):
         new_row.cells.append(new_start_date_cell)
 
         # Send the updated row to the destination sheet.
-        # TODO: TEST with smartsheet_api.py
-        try:
-            write_rows_to_sheet(new_row, dest_sheet, write_method="update")
-            msg = str("Uploaded new start date {} to ancestor "
-                      "predecessor").format(start_date)
-            logging.debug(msg)
-        except Exception as e:
-            # result = smartsheet_client.Sheets.update_rows(dest_sheet_id,
-            #                                               new_row)
-            logging.debug(e)
+        write_rows_to_sheet(new_row, dest_sheet, write_method="update")
+        msg = str("Uploaded new start date {} to ancestor "
+                  "predecessor").format(start_date)
+        logging.debug(msg)
 
         return True

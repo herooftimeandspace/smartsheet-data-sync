@@ -89,6 +89,23 @@
 
 
 <span class="k">def</span> <span class="nf">refresh_sheets</span><span class="p">(</span><span class="n">minutes</span><span class="o">=</span><span class="n">dev_minutes</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Refreshes the list of sheets in all workspaces. Captures any sheet</span>
+<span class="sd">       modified after &#39;minutes&#39;</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        minutes (int, optional): The number of minutes used to filter out</span>
+<span class="sd">        sheets. Defaults to dev_minutes.</span>
+
+<span class="sd">    Raises:</span>
+<span class="sd">        TypeError: Minutes must be an int</span>
+<span class="sd">        ValueError: Minutes must be a positive integer or 0</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        source_sheets (list): All sheets modified in the last N minutes</span>
+<span class="sd">        index_sheet (smartsheet.Sheet): The Jira Index sheet</span>
+<span class="sd">        index_col_map (dict): The column map of the Jira Index Sheet in the</span>
+<span class="sd">                              form of Column Name: Column ID</span>
+<span class="sd">    &quot;&quot;&quot;</span>
     <span class="kn">from</span> <span class="nn">uuid_module.get_data</span> <span class="kn">import</span> <span class="p">(</span><span class="n">get_all_sheet_ids</span><span class="p">,</span>
                                       <span class="n">refresh_source_sheets</span><span class="p">)</span>
     <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">minutes</span><span class="p">,</span> <span class="nb">int</span><span class="p">):</span>
@@ -119,6 +136,23 @@
 <span class="c1"># https://smartsheet-platform.github.io/api-docs/#specify-row-location</span>
 <span class="c1"># specifically parent_id, sibling_id</span>
 <span class="k">def</span> <span class="nf">form_rows</span><span class="p">(</span><span class="n">row_dict</span><span class="p">,</span> <span class="n">index_col_map</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Forms new rows to write to the Jira Push Tickets Sheet</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        row_dict (dict): A dictionary of all rows to parse</span>
+<span class="sd">        index_col_map (dict): The column map of the Jira Index Sheet in the</span>
+<span class="sd">                              form of Column Name: Column ID</span>
+
+<span class="sd">    Raises:</span>
+<span class="sd">        TypeError: Row Dictionary should be a dict</span>
+<span class="sd">        TypeError: Index Column Map should be a dict</span>
+<span class="sd">        ValueError: Row Dictionary should not be empty</span>
+<span class="sd">        ValueError: Index Column Map must not be empty</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        list: A list of rows and the associated data to upload into</span>
+<span class="sd">              Smartsheet.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
     <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">row_dict</span><span class="p">,</span> <span class="nb">dict</span><span class="p">):</span>
         <span class="n">msg</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="s2">&quot;Row Dictionary should be type dict, not type </span><span class="si">{}</span><span class="s2">&quot;</span>
                   <span class="s2">&quot;&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="nb">type</span><span class="p">(</span><span class="n">row_dict</span><span class="p">))</span>
@@ -224,6 +258,21 @@
 <span class="k">def</span> <span class="nf">link_jira_index_to_sheet</span><span class="p">(</span><span class="n">sheet</span><span class="p">,</span> <span class="n">sheet_col_map</span><span class="p">,</span>
                              <span class="n">index_sheet</span><span class="p">,</span>
                              <span class="n">index_col_map</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Uses the UUID column to identify the row that originally pushed data</span>
+<span class="sd">       into Jira. Copies the Jira Ticket back into the Program Plan</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        sheet (smartsheet.Sheet): The Sheet to push the Jira Ticket into</span>
+<span class="sd">        sheet_col_map (dict): The column map of the destination sheet</span>
+<span class="sd">        index_sheet (smartsheet.Sheet): The Jira Index Sheet</span>
+<span class="sd">        index_col_map (dict): The column map of the Jira Index Sheet</span>
+
+<span class="sd">    Raises:</span>
+<span class="sd">        TypeError: Sheet must be a dict or smartsheet.Sheet object</span>
+<span class="sd">        TypeError: Sheet Column Map must be a dict</span>
+<span class="sd">        TypeError: Index Sheet must be a dict or smartsheet.Sheet object</span>
+<span class="sd">        TypeError: Index Column Map must be a dict</span>
+<span class="sd">    &quot;&quot;&quot;</span>
     <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">sheet</span><span class="p">,</span> <span class="p">(</span><span class="nb">dict</span><span class="p">,</span> <span class="n">smartsheet</span><span class="o">.</span><span class="n">models</span><span class="o">.</span><span class="n">Sheet</span><span class="p">)):</span>
         <span class="n">msg</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="s2">&quot;Sheet should be dict or smartsheet.Sheet, not </span><span class="si">{}</span><span class="s2">&quot;</span>
                   <span class="s2">&quot;&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="nb">type</span><span class="p">(</span><span class="n">sheet</span><span class="p">))</span>
@@ -330,6 +379,21 @@
 
 
 <span class="k">def</span> <span class="nf">build_row_data</span><span class="p">(</span><span class="n">row</span><span class="p">,</span> <span class="n">col_map</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Builds the row data necessary to create new tickets in Jira. Manually</span>
+<span class="sd">       parses a row from a Program Plan and copies select data into the Push</span>
+<span class="sd">       Jira Ticket Sheet</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        row (smartsheet.Row): The Row to parse</span>
+<span class="sd">        col_map (dict): The column map of Column Name: Column ID</span>
+
+<span class="sd">    Raises:</span>
+<span class="sd">        TypeError: Row must be a dict or smartsheet.models.Row</span>
+<span class="sd">        TypeError: Column map must be a dict</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        dict: A dictionary of the subest of row data to upload to Smartsheet</span>
+<span class="sd">    &quot;&quot;&quot;</span>
     <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">row</span><span class="p">,</span> <span class="p">(</span><span class="nb">dict</span><span class="p">,</span> <span class="n">smartsheet</span><span class="o">.</span><span class="n">models</span><span class="o">.</span><span class="n">Row</span><span class="p">)):</span>
         <span class="n">msg</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="s2">&quot;Sheet should be dict or smartsheet.Sheet, not </span><span class="si">{}</span><span class="s2">&quot;</span>
                   <span class="s2">&quot;&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="nb">type</span><span class="p">(</span><span class="n">row</span><span class="p">))</span>
@@ -351,6 +415,25 @@
 
 
 <span class="k">def</span> <span class="nf">create_ticket_index</span><span class="p">(</span><span class="n">source_sheets</span><span class="p">,</span> <span class="n">index_sheet</span><span class="p">,</span> <span class="n">index_col_map</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Loads in all sheets recently modified and creates an index of any rows</span>
+<span class="sd">       that are ready to create a Jira Ticket or are pending an existing Jira</span>
+<span class="sd">       Ticket creation.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        source_sheets (list): A list of all Smartsheet Sheet objects</span>
+<span class="sd">        index_sheet (smartsheet.Sheet): The Jira Index Sheet</span>
+<span class="sd">        index_col_map (dict): The Jira Index Sheet column map in the form of</span>
+<span class="sd">                              Column Name: Column ID</span>
+
+<span class="sd">    Raises:</span>
+<span class="sd">        TypeError: Source Sheets must be a list of sheets</span>
+<span class="sd">        TypeError: Index Sheet must be a dict or Smartsheet Sheet object</span>
+<span class="sd">        TypeError: Index Column Map must be a dict</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        dict: A dictionary of all tickets that should be created across all</span>
+<span class="sd">              Program Plans</span>
+<span class="sd">    &quot;&quot;&quot;</span>
     <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">source_sheets</span><span class="p">,</span> <span class="nb">list</span><span class="p">):</span>
         <span class="n">msg</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="s2">&quot;Sheet should be dict or smartsheet.Sheet, not </span><span class="si">{}</span><span class="s2">&quot;</span>
                   <span class="s2">&quot;&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="nb">type</span><span class="p">(</span><span class="n">source_sheets</span><span class="p">))</span>
@@ -496,6 +579,18 @@
 <span class="c1"># from the Jira Ticket field and/or filtering out UUID matches + nonNull</span>
 <span class="c1"># Jira Ticket field on the Index sheet</span>
 <span class="k">def</span> <span class="nf">create_tickets</span><span class="p">(</span><span class="n">minutes</span><span class="o">=</span><span class="n">dev_minutes</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Main function passed to the scheduler to parse and upload data to</span>
+<span class="sd">       Smartsheet so that new Jira Tickets can be created.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        minutes (int, optional): Number of minutes in the past used to filter</span>
+<span class="sd">                                 sheets and sheet data. Defaults to</span>
+<span class="sd">                                 dev_minutes.</span>
+
+<span class="sd">    Raises:</span>
+<span class="sd">        TypeError: Minutes must be an int</span>
+<span class="sd">        ValueError: Minutes must be a positive integer or 0</span>
+<span class="sd">    &quot;&quot;&quot;</span>
     <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">minutes</span><span class="p">,</span> <span class="nb">int</span><span class="p">):</span>
         <span class="n">msg</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="s2">&quot;Minutes should be type: int, not </span><span class="si">{}</span><span class="s2">&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="nb">type</span><span class="p">(</span><span class="n">minutes</span><span class="p">))</span>
         <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
@@ -541,6 +636,23 @@
             <details>
             <summary>View Source</summary>
             <div class="pdoc-code codehilite"><pre><span></span><span class="k">def</span> <span class="nf">refresh_sheets</span><span class="p">(</span><span class="n">minutes</span><span class="o">=</span><span class="n">dev_minutes</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Refreshes the list of sheets in all workspaces. Captures any sheet</span>
+<span class="sd">       modified after &#39;minutes&#39;</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        minutes (int, optional): The number of minutes used to filter out</span>
+<span class="sd">        sheets. Defaults to dev_minutes.</span>
+
+<span class="sd">    Raises:</span>
+<span class="sd">        TypeError: Minutes must be an int</span>
+<span class="sd">        ValueError: Minutes must be a positive integer or 0</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        source_sheets (list): All sheets modified in the last N minutes</span>
+<span class="sd">        index_sheet (smartsheet.Sheet): The Jira Index sheet</span>
+<span class="sd">        index_col_map (dict): The column map of the Jira Index Sheet in the</span>
+<span class="sd">                              form of Column Name: Column ID</span>
+<span class="sd">    &quot;&quot;&quot;</span>
     <span class="kn">from</span> <span class="nn">uuid_module.get_data</span> <span class="kn">import</span> <span class="p">(</span><span class="n">get_all_sheet_ids</span><span class="p">,</span>
                                       <span class="n">refresh_source_sheets</span><span class="p">)</span>
     <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">minutes</span><span class="p">,</span> <span class="nb">int</span><span class="p">):</span>
@@ -566,7 +678,33 @@
 
         </details>
 
-    
+            <div class="docstring"><p>Refreshes the list of sheets in all workspaces. Captures any sheet
+   modified after 'minutes'</p>
+
+<h6 id="args">Args</h6>
+
+<ul>
+<li><strong>minutes (int, optional):</strong>  The number of minutes used to filter out</li>
+<li>sheets. Defaults to dev_minutes.</li>
+</ul>
+
+<h6 id="raises">Raises</h6>
+
+<ul>
+<li><strong>TypeError:</strong>  Minutes must be an int</li>
+<li><strong>ValueError:</strong>  Minutes must be a positive integer or 0</li>
+</ul>
+
+<h6 id="returns">Returns</h6>
+
+<blockquote>
+  <p>source_sheets (list): All sheets modified in the last N minutes
+  index_sheet (smartsheet.Sheet): The Jira Index sheet
+  index_col_map (dict): The column map of the Jira Index Sheet in the
+                        form of Column Name: Column ID</p>
+</blockquote>
+</div>
+
 
                 </section>
                 <section id="form_rows">
@@ -580,6 +718,23 @@
             <details>
             <summary>View Source</summary>
             <div class="pdoc-code codehilite"><pre><span></span><span class="k">def</span> <span class="nf">form_rows</span><span class="p">(</span><span class="n">row_dict</span><span class="p">,</span> <span class="n">index_col_map</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Forms new rows to write to the Jira Push Tickets Sheet</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        row_dict (dict): A dictionary of all rows to parse</span>
+<span class="sd">        index_col_map (dict): The column map of the Jira Index Sheet in the</span>
+<span class="sd">                              form of Column Name: Column ID</span>
+
+<span class="sd">    Raises:</span>
+<span class="sd">        TypeError: Row Dictionary should be a dict</span>
+<span class="sd">        TypeError: Index Column Map should be a dict</span>
+<span class="sd">        ValueError: Row Dictionary should not be empty</span>
+<span class="sd">        ValueError: Index Column Map must not be empty</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        list: A list of rows and the associated data to upload into</span>
+<span class="sd">              Smartsheet.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
     <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">row_dict</span><span class="p">,</span> <span class="nb">dict</span><span class="p">):</span>
         <span class="n">msg</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="s2">&quot;Row Dictionary should be type dict, not type </span><span class="si">{}</span><span class="s2">&quot;</span>
                   <span class="s2">&quot;&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="nb">type</span><span class="p">(</span><span class="n">row_dict</span><span class="p">))</span>
@@ -684,7 +839,33 @@
 
         </details>
 
-    
+            <div class="docstring"><p>Forms new rows to write to the Jira Push Tickets Sheet</p>
+
+<h6 id="args">Args</h6>
+
+<ul>
+<li><strong>row_dict (dict):</strong>  A dictionary of all rows to parse</li>
+<li><strong>index_col_map (dict):</strong>  The column map of the Jira Index Sheet in the
+form of Column Name: Column ID</li>
+</ul>
+
+<h6 id="raises">Raises</h6>
+
+<ul>
+<li><strong>TypeError:</strong>  Row Dictionary should be a dict</li>
+<li><strong>TypeError:</strong>  Index Column Map should be a dict</li>
+<li><strong>ValueError:</strong>  Row Dictionary should not be empty</li>
+<li><strong>ValueError:</strong>  Index Column Map must not be empty</li>
+</ul>
+
+<h6 id="returns">Returns</h6>
+
+<blockquote>
+  <p>list: A list of rows and the associated data to upload into
+        Smartsheet.</p>
+</blockquote>
+</div>
+
 
                 </section>
                 <section id="link_jira_index_to_sheet">
@@ -700,6 +881,21 @@
             <div class="pdoc-code codehilite"><pre><span></span><span class="k">def</span> <span class="nf">link_jira_index_to_sheet</span><span class="p">(</span><span class="n">sheet</span><span class="p">,</span> <span class="n">sheet_col_map</span><span class="p">,</span>
                              <span class="n">index_sheet</span><span class="p">,</span>
                              <span class="n">index_col_map</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Uses the UUID column to identify the row that originally pushed data</span>
+<span class="sd">       into Jira. Copies the Jira Ticket back into the Program Plan</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        sheet (smartsheet.Sheet): The Sheet to push the Jira Ticket into</span>
+<span class="sd">        sheet_col_map (dict): The column map of the destination sheet</span>
+<span class="sd">        index_sheet (smartsheet.Sheet): The Jira Index Sheet</span>
+<span class="sd">        index_col_map (dict): The column map of the Jira Index Sheet</span>
+
+<span class="sd">    Raises:</span>
+<span class="sd">        TypeError: Sheet must be a dict or smartsheet.Sheet object</span>
+<span class="sd">        TypeError: Sheet Column Map must be a dict</span>
+<span class="sd">        TypeError: Index Sheet must be a dict or smartsheet.Sheet object</span>
+<span class="sd">        TypeError: Index Column Map must be a dict</span>
+<span class="sd">    &quot;&quot;&quot;</span>
     <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">sheet</span><span class="p">,</span> <span class="p">(</span><span class="nb">dict</span><span class="p">,</span> <span class="n">smartsheet</span><span class="o">.</span><span class="n">models</span><span class="o">.</span><span class="n">Sheet</span><span class="p">)):</span>
         <span class="n">msg</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="s2">&quot;Sheet should be dict or smartsheet.Sheet, not </span><span class="si">{}</span><span class="s2">&quot;</span>
                   <span class="s2">&quot;&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="nb">type</span><span class="p">(</span><span class="n">sheet</span><span class="p">))</span>
@@ -794,7 +990,28 @@
 
         </details>
 
-    
+            <div class="docstring"><p>Uses the UUID column to identify the row that originally pushed data
+   into Jira. Copies the Jira Ticket back into the Program Plan</p>
+
+<h6 id="args">Args</h6>
+
+<ul>
+<li><strong>sheet (smartsheet.Sheet):</strong>  The Sheet to push the Jira Ticket into</li>
+<li><strong>sheet_col_map (dict):</strong>  The column map of the destination sheet</li>
+<li><strong>index_sheet (smartsheet.Sheet):</strong>  The Jira Index Sheet</li>
+<li><strong>index_col_map (dict):</strong>  The column map of the Jira Index Sheet</li>
+</ul>
+
+<h6 id="raises">Raises</h6>
+
+<ul>
+<li><strong>TypeError:</strong>  Sheet must be a dict or smartsheet.Sheet object</li>
+<li><strong>TypeError:</strong>  Sheet Column Map must be a dict</li>
+<li><strong>TypeError:</strong>  Index Sheet must be a dict or smartsheet.Sheet object</li>
+<li><strong>TypeError:</strong>  Index Column Map must be a dict</li>
+</ul>
+</div>
+
 
                 </section>
                 <section id="build_row_data">
@@ -808,6 +1025,21 @@
             <details>
             <summary>View Source</summary>
             <div class="pdoc-code codehilite"><pre><span></span><span class="k">def</span> <span class="nf">build_row_data</span><span class="p">(</span><span class="n">row</span><span class="p">,</span> <span class="n">col_map</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Builds the row data necessary to create new tickets in Jira. Manually</span>
+<span class="sd">       parses a row from a Program Plan and copies select data into the Push</span>
+<span class="sd">       Jira Ticket Sheet</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        row (smartsheet.Row): The Row to parse</span>
+<span class="sd">        col_map (dict): The column map of Column Name: Column ID</span>
+
+<span class="sd">    Raises:</span>
+<span class="sd">        TypeError: Row must be a dict or smartsheet.models.Row</span>
+<span class="sd">        TypeError: Column map must be a dict</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        dict: A dictionary of the subest of row data to upload to Smartsheet</span>
+<span class="sd">    &quot;&quot;&quot;</span>
     <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">row</span><span class="p">,</span> <span class="p">(</span><span class="nb">dict</span><span class="p">,</span> <span class="n">smartsheet</span><span class="o">.</span><span class="n">models</span><span class="o">.</span><span class="n">Row</span><span class="p">)):</span>
         <span class="n">msg</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="s2">&quot;Sheet should be dict or smartsheet.Sheet, not </span><span class="si">{}</span><span class="s2">&quot;</span>
                   <span class="s2">&quot;&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="nb">type</span><span class="p">(</span><span class="n">row</span><span class="p">))</span>
@@ -830,7 +1062,31 @@
 
         </details>
 
-    
+            <div class="docstring"><p>Builds the row data necessary to create new tickets in Jira. Manually
+   parses a row from a Program Plan and copies select data into the Push
+   Jira Ticket Sheet</p>
+
+<h6 id="args">Args</h6>
+
+<ul>
+<li><strong>row (smartsheet.Row):</strong>  The Row to parse</li>
+<li><strong>col_map (dict):</strong>  The column map of Column Name: Column ID</li>
+</ul>
+
+<h6 id="raises">Raises</h6>
+
+<ul>
+<li><strong>TypeError:</strong>  Row must be a dict or smartsheet.models.Row</li>
+<li><strong>TypeError:</strong>  Column map must be a dict</li>
+</ul>
+
+<h6 id="returns">Returns</h6>
+
+<blockquote>
+  <p>dict: A dictionary of the subest of row data to upload to Smartsheet</p>
+</blockquote>
+</div>
+
 
                 </section>
                 <section id="create_ticket_index">
@@ -844,6 +1100,25 @@
             <details>
             <summary>View Source</summary>
             <div class="pdoc-code codehilite"><pre><span></span><span class="k">def</span> <span class="nf">create_ticket_index</span><span class="p">(</span><span class="n">source_sheets</span><span class="p">,</span> <span class="n">index_sheet</span><span class="p">,</span> <span class="n">index_col_map</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Loads in all sheets recently modified and creates an index of any rows</span>
+<span class="sd">       that are ready to create a Jira Ticket or are pending an existing Jira</span>
+<span class="sd">       Ticket creation.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        source_sheets (list): A list of all Smartsheet Sheet objects</span>
+<span class="sd">        index_sheet (smartsheet.Sheet): The Jira Index Sheet</span>
+<span class="sd">        index_col_map (dict): The Jira Index Sheet column map in the form of</span>
+<span class="sd">                              Column Name: Column ID</span>
+
+<span class="sd">    Raises:</span>
+<span class="sd">        TypeError: Source Sheets must be a list of sheets</span>
+<span class="sd">        TypeError: Index Sheet must be a dict or Smartsheet Sheet object</span>
+<span class="sd">        TypeError: Index Column Map must be a dict</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        dict: A dictionary of all tickets that should be created across all</span>
+<span class="sd">              Program Plans</span>
+<span class="sd">    &quot;&quot;&quot;</span>
     <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">source_sheets</span><span class="p">,</span> <span class="nb">list</span><span class="p">):</span>
         <span class="n">msg</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="s2">&quot;Sheet should be dict or smartsheet.Sheet, not </span><span class="si">{}</span><span class="s2">&quot;</span>
                   <span class="s2">&quot;&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="nb">type</span><span class="p">(</span><span class="n">source_sheets</span><span class="p">))</span>
@@ -987,7 +1262,35 @@
 
         </details>
 
-    
+            <div class="docstring"><p>Loads in all sheets recently modified and creates an index of any rows
+   that are ready to create a Jira Ticket or are pending an existing Jira
+   Ticket creation.</p>
+
+<h6 id="args">Args</h6>
+
+<ul>
+<li><strong>source_sheets (list):</strong>  A list of all Smartsheet Sheet objects</li>
+<li><strong>index_sheet (smartsheet.Sheet):</strong>  The Jira Index Sheet</li>
+<li><strong>index_col_map (dict):</strong>  The Jira Index Sheet column map in the form of
+Column Name: Column ID</li>
+</ul>
+
+<h6 id="raises">Raises</h6>
+
+<ul>
+<li><strong>TypeError:</strong>  Source Sheets must be a list of sheets</li>
+<li><strong>TypeError:</strong>  Index Sheet must be a dict or Smartsheet Sheet object</li>
+<li><strong>TypeError:</strong>  Index Column Map must be a dict</li>
+</ul>
+
+<h6 id="returns">Returns</h6>
+
+<blockquote>
+  <p>dict: A dictionary of all tickets that should be created across all
+        Program Plans</p>
+</blockquote>
+</div>
+
 
                 </section>
                 <section id="create_tickets">
@@ -1001,6 +1304,18 @@
             <details>
             <summary>View Source</summary>
             <div class="pdoc-code codehilite"><pre><span></span><span class="k">def</span> <span class="nf">create_tickets</span><span class="p">(</span><span class="n">minutes</span><span class="o">=</span><span class="n">dev_minutes</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Main function passed to the scheduler to parse and upload data to</span>
+<span class="sd">       Smartsheet so that new Jira Tickets can be created.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        minutes (int, optional): Number of minutes in the past used to filter</span>
+<span class="sd">                                 sheets and sheet data. Defaults to</span>
+<span class="sd">                                 dev_minutes.</span>
+
+<span class="sd">    Raises:</span>
+<span class="sd">        TypeError: Minutes must be an int</span>
+<span class="sd">        ValueError: Minutes must be a positive integer or 0</span>
+<span class="sd">    &quot;&quot;&quot;</span>
     <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">minutes</span><span class="p">,</span> <span class="nb">int</span><span class="p">):</span>
         <span class="n">msg</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="s2">&quot;Minutes should be type: int, not </span><span class="si">{}</span><span class="s2">&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="nb">type</span><span class="p">(</span><span class="n">minutes</span><span class="p">))</span>
         <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
@@ -1034,7 +1349,25 @@
 
         </details>
 
-    
+            <div class="docstring"><p>Main function passed to the scheduler to parse and upload data to
+   Smartsheet so that new Jira Tickets can be created.</p>
+
+<h6 id="args">Args</h6>
+
+<ul>
+<li><strong>minutes (int, optional):</strong>  Number of minutes in the past used to filter
+sheets and sheet data. Defaults to
+dev_minutes.</li>
+</ul>
+
+<h6 id="raises">Raises</h6>
+
+<ul>
+<li><strong>TypeError:</strong>  Minutes must be an int</li>
+<li><strong>ValueError:</strong>  Minutes must be a positive integer or 0</li>
+</ul>
+</div>
+
 
                 </section>
     </main>

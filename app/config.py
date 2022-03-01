@@ -97,6 +97,19 @@ def get_secret(secret_name):
 
 
 def get_secret_name(env="--debug"):
+    """Gets the name of the secret name to query based on the environmental
+       variable set when the app is loaded
+
+    Args:
+        env (str, optional): The environment variable. Defaults to "--debug".
+
+    Raises:
+        TypeError: Must be a string
+        ValueError: Must be on of the approved flags
+
+    Returns:
+        str: The Name of the secret to use with the AWS Secrets API.
+    """
     if not isinstance(env, str):
         raise TypeError("Env is not type: str")
     elif env not in ("-d", "--debug", "-debug", "-p", "--prod", "-prod", "-s",
@@ -293,6 +306,15 @@ def set_logging_config(env):
 
 
 def init(args):
+    """Initializes the app and creates global environment variables to use
+       elsewhere in the app based on the flag passed in on the command line.
+
+    Args:
+        args (list): List of args passed by sys.args[1:]
+
+    Returns:
+        dict: The total configuration dict with all global variables
+    """
     start = time.time()
     global config
     global env

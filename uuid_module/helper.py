@@ -19,7 +19,6 @@ def get_cell_data(row, column_name, column_map):
         TypeError: Validates row is a Smartsheet Row object
         TypeError: Validates column_name is a string
         TypeError: Validates column_map is a dict
-        KeyError: Raises KeyError if the column name isn't in the dictionary
 
     Returns:
         cell (Cell): A Cell object or None if the column is not found in the
@@ -276,11 +275,11 @@ def chunks(source, n):
         n (int): The number of items in the list to chunk together
 
     Raises:
-        TypeError: Validates source is a list
-        TypeError: Validates n is an int
-        ValueError: Validates n must be non-zero
-        ValueError: Validates n > 0
-        ValueError: Validates length of list is greater than n
+        TypeError: Source must be a list
+        TypeError: n must be an Int
+        ValueError: n must be non-zero
+        ValueError: n must be greater than zero
+        ValueError: Length of the list must be greater than n
 
     Yields:
         source (list): The sub-list of chunked items

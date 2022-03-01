@@ -74,10 +74,9 @@
 <span class="sd">    Args:</span>
 <span class="sd">        project_data_index (dict): All UUIDs and the row values</span>
 <span class="sd">        source_sheets (list): All sheet objects in all workspaces</span>
-<span class="sd">        smartsheet_client (Object): The Smartsheet client to interact</span>
-<span class="sd">                                    with the API</span>
 
 <span class="sd">    Raises:</span>
+<span class="sd">        TypeError: Project Data Index must be a dict</span>
 <span class="sd">        ValueError: If the project index data passed in is None,</span>
 <span class="sd">                    raises and logs an error.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
@@ -416,10 +415,9 @@
 <span class="sd">    Args:</span>
 <span class="sd">        project_data_index (dict): All UUIDs and the row values</span>
 <span class="sd">        source_sheets (list): All sheet objects in all workspaces</span>
-<span class="sd">        smartsheet_client (Object): The Smartsheet client to interact</span>
-<span class="sd">                                    with the API</span>
 
 <span class="sd">    Raises:</span>
+<span class="sd">        TypeError: Project Data Index must be a dict</span>
 <span class="sd">        ValueError: If the project index data passed in is None,</span>
 <span class="sd">                    raises and logs an error.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
@@ -748,13 +746,12 @@
 <ul>
 <li><strong>project_data_index (dict):</strong>  All UUIDs and the row values</li>
 <li><strong>source_sheets (list):</strong>  All sheet objects in all workspaces</li>
-<li><strong>smartsheet_client (Object):</strong>  The Smartsheet client to interact
-with the API</li>
 </ul>
 
 <h6 id="raises">Raises</h6>
 
 <ul>
+<li><strong>TypeError:</strong>  Project Data Index must be a dict</li>
 <li><strong>ValueError:</strong>  If the project index data passed in is None,
 raises and logs an error.</li>
 </ul>

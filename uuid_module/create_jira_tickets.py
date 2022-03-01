@@ -20,6 +20,23 @@ jira_index_columns = ["Tasks", "Issue Type", "Jira Ticket", "Issue Links",
 
 
 def refresh_sheets(minutes=dev_minutes):
+    """Refreshes the list of sheets in all workspaces. Captures any sheet
+       modified after 'minutes'
+
+    Args:
+        minutes (int, optional): The number of minutes used to filter out
+        sheets. Defaults to dev_minutes.
+
+    Raises:
+        TypeError: Minutes must be an int
+        ValueError: Minutes must be a positive integer or 0
+
+    Returns:
+        source_sheets (list): All sheets modified in the last N minutes
+        index_sheet (smartsheet.Sheet): The Jira Index sheet
+        index_col_map (dict): The column map of the Jira Index Sheet in the
+                              form of Column Name: Column ID
+    """
     from uuid_module.get_data import (get_all_sheet_ids,
                                       refresh_source_sheets)
     if not isinstance(minutes, int):
@@ -50,6 +67,23 @@ def refresh_sheets(minutes=dev_minutes):
 # https://smartsheet-platform.github.io/api-docs/#specify-row-location
 # specifically parent_id, sibling_id
 def form_rows(row_dict, index_col_map):
+    """Forms new rows to write to the Jira Push Tickets Sheet
+
+    Args:
+        row_dict (dict): A dictionary of all rows to parse
+        index_col_map (dict): The column map of the Jira Index Sheet in the
+                              form of Column Name: Column ID
+
+    Raises:
+        TypeError: Row Dictionary should be a dict
+        TypeError: Index Column Map should be a dict
+        ValueError: Row Dictionary should not be empty
+        ValueError: Index Column Map must not be empty
+
+    Returns:
+        list: A list of rows and the associated data to upload into
+              Smartsheet.
+    """
     if not isinstance(row_dict, dict):
         msg = str("Row Dictionary should be type dict, not type {}"
                   "").format(type(row_dict))
@@ -155,6 +189,21 @@ def form_rows(row_dict, index_col_map):
 def link_jira_index_to_sheet(sheet, sheet_col_map,
                              index_sheet,
                              index_col_map):
+    """Uses the UUID column to identify the row that originally pushed data
+       into Jira. Copies the Jira Ticket back into the Program Plan
+
+    Args:
+        sheet (smartsheet.Sheet): The Sheet to push the Jira Ticket into
+        sheet_col_map (dict): The column map of the destination sheet
+        index_sheet (smartsheet.Sheet): The Jira Index Sheet
+        index_col_map (dict): The column map of the Jira Index Sheet
+
+    Raises:
+        TypeError: Sheet must be a dict or smartsheet.Sheet object
+        TypeError: Sheet Column Map must be a dict
+        TypeError: Index Sheet must be a dict or smartsheet.Sheet object
+        TypeError: Index Column Map must be a dict
+    """
     if not isinstance(sheet, (dict, smartsheet.models.Sheet)):
         msg = str("Sheet should be dict or smartsheet.Sheet, not {}"
                   "").format(type(sheet))
@@ -261,6 +310,21 @@ def link_jira_index_to_sheet(sheet, sheet_col_map,
 
 
 def build_row_data(row, col_map):
+    """Builds the row data necessary to create new tickets in Jira. Manually
+       parses a row from a Program Plan and copies select data into the Push
+       Jira Ticket Sheet
+
+    Args:
+        row (smartsheet.Row): The Row to parse
+        col_map (dict): The column map of Column Name: Column ID
+
+    Raises:
+        TypeError: Row must be a dict or smartsheet.models.Row
+        TypeError: Column map must be a dict
+
+    Returns:
+        dict: A dictionary of the subest of row data to upload to Smartsheet
+    """
     if not isinstance(row, (dict, smartsheet.models.Row)):
         msg = str("Sheet should be dict or smartsheet.Sheet, not {}"
                   "").format(type(row))
@@ -282,6 +346,25 @@ def build_row_data(row, col_map):
 
 
 def create_ticket_index(source_sheets, index_sheet, index_col_map):
+    """Loads in all sheets recently modified and creates an index of any rows
+       that are ready to create a Jira Ticket or are pending an existing Jira
+       Ticket creation.
+
+    Args:
+        source_sheets (list): A list of all Smartsheet Sheet objects
+        index_sheet (smartsheet.Sheet): The Jira Index Sheet
+        index_col_map (dict): The Jira Index Sheet column map in the form of
+                              Column Name: Column ID
+
+    Raises:
+        TypeError: Source Sheets must be a list of sheets
+        TypeError: Index Sheet must be a dict or Smartsheet Sheet object
+        TypeError: Index Column Map must be a dict
+
+    Returns:
+        dict: A dictionary of all tickets that should be created across all
+              Program Plans
+    """
     if not isinstance(source_sheets, list):
         msg = str("Sheet should be dict or smartsheet.Sheet, not {}"
                   "").format(type(source_sheets))
@@ -427,6 +510,18 @@ def create_ticket_index(source_sheets, index_sheet, index_col_map):
 # from the Jira Ticket field and/or filtering out UUID matches + nonNull
 # Jira Ticket field on the Index sheet
 def create_tickets(minutes=dev_minutes):
+    """Main function passed to the scheduler to parse and upload data to
+       Smartsheet so that new Jira Tickets can be created.
+
+    Args:
+        minutes (int, optional): Number of minutes in the past used to filter
+                                 sheets and sheet data. Defaults to
+                                 dev_minutes.
+
+    Raises:
+        TypeError: Minutes must be an int
+        ValueError: Minutes must be a positive integer or 0
+    """
     if not isinstance(minutes, int):
         msg = str("Minutes should be type: int, not {}").format(type(minutes))
         raise TypeError(msg)

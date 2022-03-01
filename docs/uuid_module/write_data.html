@@ -252,7 +252,7 @@
 <span class="sd">        list: uuid_list if the UUID is not found in the uuid_list after</span>
 <span class="sd">              appending the new UUID, or jira_data_values if the UUID</span>
 <span class="sd">              value is None</span>
-<span class="sd">        none: If the &#39;if&#39; checks fail.</span>
+<span class="sd">        None: If the &#39;if&#39; checks fail.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">uuid_value</span><span class="p">,</span> <span class="nb">list</span><span class="p">):</span>
         <span class="n">msg</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="s2">&quot;UUID Value must be type: list, not&quot;</span>
@@ -436,16 +436,10 @@
         <span class="n">new_row</span><span class="o">.</span><span class="n">cells</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">new_start_date_cell</span><span class="p">)</span>
 
         <span class="c1"># Send the updated row to the destination sheet.</span>
-        <span class="c1"># TODO: TEST with smartsheet_api.py</span>
-        <span class="k">try</span><span class="p">:</span>
-            <span class="n">write_rows_to_sheet</span><span class="p">(</span><span class="n">new_row</span><span class="p">,</span> <span class="n">dest_sheet</span><span class="p">,</span> <span class="n">write_method</span><span class="o">=</span><span class="s2">&quot;update&quot;</span><span class="p">)</span>
-            <span class="n">msg</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="s2">&quot;Uploaded new start date </span><span class="si">{}</span><span class="s2"> to ancestor &quot;</span>
-                      <span class="s2">&quot;predecessor&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">start_date</span><span class="p">)</span>
-            <span class="n">logging</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
-        <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
-            <span class="c1"># result = smartsheet_client.Sheets.update_rows(dest_sheet_id,</span>
-            <span class="c1">#                                               new_row)</span>
-            <span class="n">logging</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="n">e</span><span class="p">)</span>
+        <span class="n">write_rows_to_sheet</span><span class="p">(</span><span class="n">new_row</span><span class="p">,</span> <span class="n">dest_sheet</span><span class="p">,</span> <span class="n">write_method</span><span class="o">=</span><span class="s2">&quot;update&quot;</span><span class="p">)</span>
+        <span class="n">msg</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="s2">&quot;Uploaded new start date </span><span class="si">{}</span><span class="s2"> to ancestor &quot;</span>
+                  <span class="s2">&quot;predecessor&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">start_date</span><span class="p">)</span>
+        <span class="n">logging</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
 
         <span class="k">return</span> <span class="kc">True</span>
 </pre></div>
@@ -703,7 +697,7 @@ Defaults to the Dev Jira Index Sheet</li>
 <span class="sd">        list: uuid_list if the UUID is not found in the uuid_list after</span>
 <span class="sd">              appending the new UUID, or jira_data_values if the UUID</span>
 <span class="sd">              value is None</span>
-<span class="sd">        none: If the &#39;if&#39; checks fail.</span>
+<span class="sd">        None: If the &#39;if&#39; checks fail.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">uuid_value</span><span class="p">,</span> <span class="nb">list</span><span class="p">):</span>
         <span class="n">msg</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="s2">&quot;UUID Value must be type: list, not&quot;</span>
@@ -784,7 +778,7 @@ from the Jira Index</li>
   list: uuid_list if the UUID is not found in the uuid_list after
         appending the new UUID, or jira_data_values if the UUID
         value is None
-  none: If the 'if' checks fail.</p>
+  None: If the 'if' checks fail.</p>
 </blockquote>
 </div>
 
@@ -926,16 +920,10 @@ from the Jira Index</li>
         <span class="n">new_row</span><span class="o">.</span><span class="n">cells</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">new_start_date_cell</span><span class="p">)</span>
 
         <span class="c1"># Send the updated row to the destination sheet.</span>
-        <span class="c1"># TODO: TEST with smartsheet_api.py</span>
-        <span class="k">try</span><span class="p">:</span>
-            <span class="n">write_rows_to_sheet</span><span class="p">(</span><span class="n">new_row</span><span class="p">,</span> <span class="n">dest_sheet</span><span class="p">,</span> <span class="n">write_method</span><span class="o">=</span><span class="s2">&quot;update&quot;</span><span class="p">)</span>
-            <span class="n">msg</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="s2">&quot;Uploaded new start date </span><span class="si">{}</span><span class="s2"> to ancestor &quot;</span>
-                      <span class="s2">&quot;predecessor&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">start_date</span><span class="p">)</span>
-            <span class="n">logging</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
-        <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
-            <span class="c1"># result = smartsheet_client.Sheets.update_rows(dest_sheet_id,</span>
-            <span class="c1">#                                               new_row)</span>
-            <span class="n">logging</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="n">e</span><span class="p">)</span>
+        <span class="n">write_rows_to_sheet</span><span class="p">(</span><span class="n">new_row</span><span class="p">,</span> <span class="n">dest_sheet</span><span class="p">,</span> <span class="n">write_method</span><span class="o">=</span><span class="s2">&quot;update&quot;</span><span class="p">)</span>
+        <span class="n">msg</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="s2">&quot;Uploaded new start date </span><span class="si">{}</span><span class="s2"> to ancestor &quot;</span>
+                  <span class="s2">&quot;predecessor&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">start_date</span><span class="p">)</span>
+        <span class="n">logging</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
 
         <span class="k">return</span> <span class="kc">True</span>
 </pre></div>
