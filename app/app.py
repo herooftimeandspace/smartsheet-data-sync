@@ -56,6 +56,15 @@ def full_jira_sync(minutes):
     with sheet_index_lock:
         source_sheets = refresh_source_sheets(sheet_ids, minutes)
 
+    if not source_sheets:
+        end = time.time()
+        elapsed = end - start
+        elapsed = truncate(elapsed, 3)
+        msg = str("Sheet index is empty. "
+                  "Aborting after {} seconds.").format(elapsed)
+        logging.info(msg)
+        return msg
+
     blank_uuid_index = get_blank_uuids(source_sheets)
     if blank_uuid_index:
         logging.info("There are {} project sheets to be updated "
@@ -64,15 +73,6 @@ def full_jira_sync(minutes):
         if sheets_updated:
             logging.info("{} project sheet(s) updated with UUIDs"
                          "".format(sheets_updated))
-
-    if not source_sheets:
-        end = time.time()
-        elapsed = end - start
-        elapsed = truncate(elapsed, 3)
-        msg = str("Sheet index is empty. "
-                  "Aborting after {} seconds.").format(elapsed)
-        logging.info(msg)
-        return
 
     global project_index_lock
     with project_index_lock:
@@ -94,7 +94,7 @@ def full_jira_sync(minutes):
         msg = str("Project UUID Index is empty. "
                   "Aborting after {} seconds.").format(elapsed)
         logging.info(msg)
-        return
+        return msg
 
     try:
         jira_sub_index, project_sub_index = get_sub_indexes(
@@ -137,9 +137,10 @@ def full_jira_sync(minutes):
     end = time.time()
     elapsed = end - start
     elapsed = truncate(elapsed, 3)
-    logging.info(
-        "Full Jira sync took: {} seconds.".format(elapsed))
+    msg = str("Full Jira sync took: {} seconds.").format(elapsed)
+    logging.info(msg)
     gc.collect()
+    return msg
 
 
 def full_smartsheet_sync():
@@ -194,24 +195,24 @@ def main():
         bool: Returns True if main successfully initialized and scheduled jobs,
               False if not.
     """
-    # logging.debug("------------------------")
-    # logging.debug("Adding job to refresh Jira tickets in real time. "
-    #               "Interval = every 30 seconds.")
-    # logging.debug("------------------------")
-    # config.scheduler.add_job(full_jira_sync,
-    #                          'interval',
-    #                          args=[config.minutes],
-    #                          seconds=30)
+    logging.debug("------------------------")
+    logging.debug("Adding job to refresh Jira tickets in real time. "
+                  "Interval = every 30 seconds.")
+    logging.debug("------------------------")
+    config.scheduler.add_job(full_jira_sync,
+                             'interval',
+                             args=[config.minutes],
+                             seconds=30)
 
-    # logging.debug("------------------------")
-    # logging.debug("Adding job to get all data in the past week. "
-    #               "Cron = every day at 1:00am UTC.")
-    # logging.debug("------------------------")
-    # config.scheduler.add_job(full_jira_sync,
-    #                          'cron',
-    #                          args=[10080],
-    #                          day='*/1',
-    #                          hour='1')
+    logging.debug("------------------------")
+    logging.debug("Adding job to get all data in the past week. "
+                  "Cron = every day at 1:00am UTC.")
+    logging.debug("------------------------")
+    config.scheduler.add_job(full_jira_sync,
+                             'cron',
+                             args=[10080],
+                             day='*/1',
+                             hour='1')
 
     logging.debug("------------------------")
     logging.debug("Adding job to write new Jira tickets in real time. "
