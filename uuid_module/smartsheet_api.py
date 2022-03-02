@@ -101,19 +101,26 @@ def write_rows_to_sheet(rows_to_write, sheet, write_method="add"):
                     try:
                         result = smartsheet_client.Sheets.\
                             update_rows(sheet_id, i)
-                    except Exception as e:
-                        logging.warning(e.message)
+                        msg = str("Smartsheet API responded with the "
+                                  "following message: {}"
+                                  "").format(result.result)
+                        logging.info(msg)
+                        return result
+                    except Exception as result:
+                        logging.warning(result.message)
+                        return result
             else:
                 try:
                     result = smartsheet_client.Sheets.\
                         update_rows(sheet_id, rows_to_write)
-                except Exception as e:
-                    logging.warning(e.message)
+                    msg = str("Smartsheet API responded with the "
+                              "following message: {}").format(result.result)
+                    logging.info(msg)
+                    return result
+                except Exception as result:
+                    logging.warning(result.message)
+                    return result
 
-            msg = str("Smartsheet API responded with the "
-                      "following message: {}").format(result.result)
-            logging.info(msg)
-            return result
     else:
         msg = str("No rows added to Sheet ID: "
                   "{} | Sheet Name: {}").format(sheet_id, sheet_name)
