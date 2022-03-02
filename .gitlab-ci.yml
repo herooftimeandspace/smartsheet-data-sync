@@ -4,7 +4,7 @@
 # Dependency Scanning customization: https://docs.gitlab.com/ee/user/application_security/dependency_scanning/#customizing-the-dependency-scanning-settings
 # Note that environment variables can be set in several places
 # See https://docs.gitlab.com/ee/ci/variables/#cicd-variable-precedence
-image: python:3.7
+image: python:3.8
 variables:
   PIP_CACHE_DIR: "$CI_PROJECT_DIR/.cache/pip"
 cache:
@@ -32,14 +32,12 @@ flake8:
   stage: lint
   script:
     - export PATH=$PATH:~/.local/bin
-    # - python3 -m pip install flake8
     - python3 -m pip install -r test_requirements.txt
     - flake8 --max-line-length=80 --per-file-ignores="__init__.py:F401" ./*.py
     - flake8 --max-line-length=80 --per-file-ignores="__init__.py:F401" ./uuid_module/*.py
 
 coverage:
   stage: lint
-  # image: python:3.7
   tags:
     - copilot
   script:
@@ -57,8 +55,11 @@ coverage:
 
 sast:
   stage: test
+  tags:
+    - copilot
 include:
   - template: Security/SAST.gitlab-ci.yml
+  - template: Security/Secret-Detection.gitlab-ci.yml
 
 # pages:
 #   stage: pages
