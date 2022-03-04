@@ -222,5 +222,5 @@ def main():
     config.scheduler.add_job(create_tickets,
                              'interval',
                              args=[config.minutes],
-                             minutes=5)
+                             minutes=2)
     return True
