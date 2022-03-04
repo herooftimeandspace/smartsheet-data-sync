@@ -81,19 +81,29 @@ def write_rows_to_sheet(rows_to_write, sheet, write_method="add"):
                     try:
                         result = smartsheet_client.Sheets.add_rows(sheet_id,
                                                                    i)
-                    except Exception as e:
-                        logging.warning(e.message)
+                        msg = str("Smartsheet API responded with the "
+                                  "following message: {} | Result Code: {}."
+                                  "").format(result.message,
+                                             result.result_code)
+                        logging.info(msg)
+                        return result
+                    except Exception as result:
+                        logging.warning(result.message)
+                        return result
             else:
                 try:
                     result = smartsheet_client.Sheets.add_rows(sheet_id,
                                                                rows_to_write)
-                except Exception as e:
-                    logging.warning(e.message)
-            msg = str("Smartsheet API responded with the "
-                      "following message: {}").format(result)
-            logging.info(msg)
-            return result
-
+                    msg = str("Smartsheet API responded with the "
+                              "following message: {} | Result Code: {}."
+                              "").format(result.message,
+                                         result.result_code)
+                    logging.info(msg)
+                    return result
+                except Exception as result:
+                    logging.warning(result.message)
+                    return result
+        # TODO: Handle results better (get HTTP codes, messages)
         elif rows_to_write and write_method == "update":
             if len(rows_to_write) > 125:
                 chunked_cells = chunks(rows_to_write, 125)
@@ -102,8 +112,9 @@ def write_rows_to_sheet(rows_to_write, sheet, write_method="add"):
                         result = smartsheet_client.Sheets.\
                             update_rows(sheet_id, i)
                         msg = str("Smartsheet API responded with the "
-                                  "following message: {}"
-                                  "").format(result.result)
+                                  "following message: {} | Result Code: {}."
+                                  "").format(result.message,
+                                             result.result_code)
                         logging.info(msg)
                         return result
                     except Exception as result:
@@ -114,7 +125,8 @@ def write_rows_to_sheet(rows_to_write, sheet, write_method="add"):
                     result = smartsheet_client.Sheets.\
                         update_rows(sheet_id, rows_to_write)
                     msg = str("Smartsheet API responded with the "
-                              "following message: {}").format(result.result)
+                              "following message: {} | Result Code: {}."
+                              "").format(result.message, result.result_code)
                     logging.info(msg)
                     return result
                 except Exception as result:
