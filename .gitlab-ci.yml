@@ -22,23 +22,22 @@ before_script:
 
 
 stages:
-- coverage
+- lint
 - pages
 - test
-- security
 - deploy
 
 
 flake8:
-  stage: coverage
+  stage: lint
   script:
   - export PATH=$PATH:~/.local/bin
   - python3 -m pip install -r test_requirements.txt
   - flake8 --max-line-length=80 --per-file-ignores="__init__.py:F401" ./*.py
   - flake8 --max-line-length=80 --per-file-ignores="__init__.py:F401" ./uuid_module/*.py
 
-pytest:
-  stage: coverage
+coverage:
+  stage: lint
   tags:
   - copilot
   script:
@@ -60,13 +59,7 @@ sast:
   - ''
 include:
   - template: Security/SAST.gitlab-ci.yml
-
-security:
-  stage: security
-  before_script:
-  - ''
-include:
-  - template: Security/Secret-Detection.gitlab-ci.yml
+  # - template: Security/Secret-Detection.gitlab-ci.yml
 
 # pages:
 #   stage: pages
