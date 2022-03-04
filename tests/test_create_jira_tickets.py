@@ -221,15 +221,15 @@ def test_build_index_sheet_sub_index(index_sheet_fixture):
     import uuid_module.create_jira_tickets as create_jira_tickets
     index_sheet, index_col_map = index_sheet_fixture
     with pytest.raises(TypeError):
-        create_jira_tickets.build_index_sheet_sub_index(
+        create_jira_tickets.build_sheet_sub_index(
             "index_sheet", index_col_map)
     with pytest.raises(TypeError):
-        create_jira_tickets.build_index_sheet_sub_index(
+        create_jira_tickets.build_sheet_sub_index(
             index_sheet, "index_col_map")
     with pytest.raises(TypeError):
-        create_jira_tickets.build_index_sheet_sub_index(None, index_col_map)
+        create_jira_tickets.build_sheet_sub_index(None, index_col_map)
     with pytest.raises(TypeError):
-        create_jira_tickets.build_index_sheet_sub_index(index_sheet, None)
+        create_jira_tickets.build_sheet_sub_index(index_sheet, None)
 
 
 def test_push_jira_tickets_to_sheet(sheet_fixture, index_sheet_fixture):
