@@ -168,7 +168,7 @@ def build_row(row, columns_to_link, dest_col_map, jira_index_sheet,
             else:
                 raise KeyError
 
-        if cell_check == "Linked":
+        if cell_check in ("Linked", "OK"):
             msg = str("Valid cell link: RowID {} | Row Number {} | "
                       "ColName {} | Cell Value {}").format(row.id,
                                                            row.row_number, col,
