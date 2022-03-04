@@ -55,6 +55,8 @@ coverage:
 
 sast:
   stage: test
+  before_script:
+  - ''
 include:
   - template: Security/SAST.gitlab-ci.yml
   - template: Security/Secret-Detection.gitlab-ci.yml
