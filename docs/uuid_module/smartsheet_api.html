@@ -147,19 +147,29 @@
                     <span class="k">try</span><span class="p">:</span>
                         <span class="n">result</span> <span class="o">=</span> <span class="n">smartsheet_client</span><span class="o">.</span><span class="n">Sheets</span><span class="o">.</span><span class="n">add_rows</span><span class="p">(</span><span class="n">sheet_id</span><span class="p">,</span>
                                                                    <span class="n">i</span><span class="p">)</span>
-                    <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
-                        <span class="n">logging</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="n">e</span><span class="o">.</span><span class="n">message</span><span class="p">)</span>
+                        <span class="n">msg</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="s2">&quot;Smartsheet API responded with the &quot;</span>
+                                  <span class="s2">&quot;following message: </span><span class="si">{}</span><span class="s2"> | Result Code: </span><span class="si">{}</span><span class="s2">.&quot;</span>
+                                  <span class="s2">&quot;&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">result</span><span class="o">.</span><span class="n">message</span><span class="p">,</span>
+                                             <span class="n">result</span><span class="o">.</span><span class="n">result_code</span><span class="p">)</span>
+                        <span class="n">logging</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
+                        <span class="k">return</span> <span class="n">result</span>
+                    <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">result</span><span class="p">:</span>
+                        <span class="n">logging</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="n">result</span><span class="o">.</span><span class="n">message</span><span class="p">)</span>
+                        <span class="k">return</span> <span class="n">result</span>
             <span class="k">else</span><span class="p">:</span>
                 <span class="k">try</span><span class="p">:</span>
                     <span class="n">result</span> <span class="o">=</span> <span class="n">smartsheet_client</span><span class="o">.</span><span class="n">Sheets</span><span class="o">.</span><span class="n">add_rows</span><span class="p">(</span><span class="n">sheet_id</span><span class="p">,</span>
                                                                <span class="n">rows_to_write</span><span class="p">)</span>
-                <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
-                    <span class="n">logging</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="n">e</span><span class="o">.</span><span class="n">message</span><span class="p">)</span>
-            <span class="n">msg</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="s2">&quot;Smartsheet API responded with the &quot;</span>
-                      <span class="s2">&quot;following message: </span><span class="si">{}</span><span class="s2">&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">result</span><span class="p">)</span>
-            <span class="n">logging</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
-            <span class="k">return</span> <span class="n">result</span>
-
+                    <span class="n">msg</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="s2">&quot;Smartsheet API responded with the &quot;</span>
+                              <span class="s2">&quot;following message: </span><span class="si">{}</span><span class="s2"> | Result Code: </span><span class="si">{}</span><span class="s2">.&quot;</span>
+                              <span class="s2">&quot;&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">result</span><span class="o">.</span><span class="n">message</span><span class="p">,</span>
+                                         <span class="n">result</span><span class="o">.</span><span class="n">result_code</span><span class="p">)</span>
+                    <span class="n">logging</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
+                    <span class="k">return</span> <span class="n">result</span>
+                <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">result</span><span class="p">:</span>
+                    <span class="n">logging</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="n">result</span><span class="o">.</span><span class="n">message</span><span class="p">)</span>
+                    <span class="k">return</span> <span class="n">result</span>
+        <span class="c1"># TODO: Handle results better (get HTTP codes, messages)</span>
         <span class="k">elif</span> <span class="n">rows_to_write</span> <span class="ow">and</span> <span class="n">write_method</span> <span class="o">==</span> <span class="s2">&quot;update&quot;</span><span class="p">:</span>
             <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">rows_to_write</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">125</span><span class="p">:</span>
                 <span class="n">chunked_cells</span> <span class="o">=</span> <span class="n">chunks</span><span class="p">(</span><span class="n">rows_to_write</span><span class="p">,</span> <span class="mi">125</span><span class="p">)</span>
@@ -167,18 +177,28 @@
                     <span class="k">try</span><span class="p">:</span>
                         <span class="n">result</span> <span class="o">=</span> <span class="n">smartsheet_client</span><span class="o">.</span><span class="n">Sheets</span><span class="o">.</span>\
                             <span class="n">update_rows</span><span class="p">(</span><span class="n">sheet_id</span><span class="p">,</span> <span class="n">i</span><span class="p">)</span>
-                    <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
-                        <span class="n">logging</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="n">e</span><span class="o">.</span><span class="n">message</span><span class="p">)</span>
+                        <span class="n">msg</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="s2">&quot;Smartsheet API responded with the &quot;</span>
+                                  <span class="s2">&quot;following message: </span><span class="si">{}</span><span class="s2"> | Result Code: </span><span class="si">{}</span><span class="s2">.&quot;</span>
+                                  <span class="s2">&quot;&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">result</span><span class="o">.</span><span class="n">message</span><span class="p">,</span>
+                                             <span class="n">result</span><span class="o">.</span><span class="n">result_code</span><span class="p">)</span>
+                        <span class="n">logging</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
+                        <span class="k">return</span> <span class="n">result</span>
+                    <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">result</span><span class="p">:</span>
+                        <span class="n">logging</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="n">result</span><span class="o">.</span><span class="n">message</span><span class="p">)</span>
+                        <span class="k">return</span> <span class="n">result</span>
             <span class="k">else</span><span class="p">:</span>
                 <span class="k">try</span><span class="p">:</span>
                     <span class="n">result</span> <span class="o">=</span> <span class="n">smartsheet_client</span><span class="o">.</span><span class="n">Sheets</span><span class="o">.</span>\
                         <span class="n">update_rows</span><span class="p">(</span><span class="n">sheet_id</span><span class="p">,</span> <span class="n">rows_to_write</span><span class="p">)</span>
-                <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
-                    <span class="n">logging</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="n">e</span><span class="o">.</span><span class="n">message</span><span class="p">)</span>
-            <span class="n">msg</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="s2">&quot;Smartsheet API responded with the &quot;</span>
-                      <span class="s2">&quot;following message: </span><span class="si">{}</span><span class="s2">&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">result</span><span class="p">)</span>
-            <span class="n">logging</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
-            <span class="k">return</span> <span class="n">result</span>
+                    <span class="n">msg</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="s2">&quot;Smartsheet API responded with the &quot;</span>
+                              <span class="s2">&quot;following message: </span><span class="si">{}</span><span class="s2"> | Result Code: </span><span class="si">{}</span><span class="s2">.&quot;</span>
+                              <span class="s2">&quot;&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">result</span><span class="o">.</span><span class="n">message</span><span class="p">,</span> <span class="n">result</span><span class="o">.</span><span class="n">result_code</span><span class="p">)</span>
+                    <span class="n">logging</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
+                    <span class="k">return</span> <span class="n">result</span>
+                <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">result</span><span class="p">:</span>
+                    <span class="n">logging</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="n">result</span><span class="o">.</span><span class="n">message</span><span class="p">)</span>
+                    <span class="k">return</span> <span class="n">result</span>
+
     <span class="k">else</span><span class="p">:</span>
         <span class="n">msg</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="s2">&quot;No rows added to Sheet ID: &quot;</span>
                   <span class="s2">&quot;</span><span class="si">{}</span><span class="s2"> | Sheet Name: </span><span class="si">{}</span><span class="s2">&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">sheet_id</span><span class="p">,</span> <span class="n">sheet_name</span><span class="p">)</span>
@@ -393,19 +413,29 @@
                     <span class="k">try</span><span class="p">:</span>
                         <span class="n">result</span> <span class="o">=</span> <span class="n">smartsheet_client</span><span class="o">.</span><span class="n">Sheets</span><span class="o">.</span><span class="n">add_rows</span><span class="p">(</span><span class="n">sheet_id</span><span class="p">,</span>
                                                                    <span class="n">i</span><span class="p">)</span>
-                    <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
-                        <span class="n">logging</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="n">e</span><span class="o">.</span><span class="n">message</span><span class="p">)</span>
+                        <span class="n">msg</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="s2">&quot;Smartsheet API responded with the &quot;</span>
+                                  <span class="s2">&quot;following message: </span><span class="si">{}</span><span class="s2"> | Result Code: </span><span class="si">{}</span><span class="s2">.&quot;</span>
+                                  <span class="s2">&quot;&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">result</span><span class="o">.</span><span class="n">message</span><span class="p">,</span>
+                                             <span class="n">result</span><span class="o">.</span><span class="n">result_code</span><span class="p">)</span>
+                        <span class="n">logging</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
+                        <span class="k">return</span> <span class="n">result</span>
+                    <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">result</span><span class="p">:</span>
+                        <span class="n">logging</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="n">result</span><span class="o">.</span><span class="n">message</span><span class="p">)</span>
+                        <span class="k">return</span> <span class="n">result</span>
             <span class="k">else</span><span class="p">:</span>
                 <span class="k">try</span><span class="p">:</span>
                     <span class="n">result</span> <span class="o">=</span> <span class="n">smartsheet_client</span><span class="o">.</span><span class="n">Sheets</span><span class="o">.</span><span class="n">add_rows</span><span class="p">(</span><span class="n">sheet_id</span><span class="p">,</span>
                                                                <span class="n">rows_to_write</span><span class="p">)</span>
-                <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
-                    <span class="n">logging</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="n">e</span><span class="o">.</span><span class="n">message</span><span class="p">)</span>
-            <span class="n">msg</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="s2">&quot;Smartsheet API responded with the &quot;</span>
-                      <span class="s2">&quot;following message: </span><span class="si">{}</span><span class="s2">&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">result</span><span class="p">)</span>
-            <span class="n">logging</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
-            <span class="k">return</span> <span class="n">result</span>
-
+                    <span class="n">msg</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="s2">&quot;Smartsheet API responded with the &quot;</span>
+                              <span class="s2">&quot;following message: </span><span class="si">{}</span><span class="s2"> | Result Code: </span><span class="si">{}</span><span class="s2">.&quot;</span>
+                              <span class="s2">&quot;&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">result</span><span class="o">.</span><span class="n">message</span><span class="p">,</span>
+                                         <span class="n">result</span><span class="o">.</span><span class="n">result_code</span><span class="p">)</span>
+                    <span class="n">logging</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
+                    <span class="k">return</span> <span class="n">result</span>
+                <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">result</span><span class="p">:</span>
+                    <span class="n">logging</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="n">result</span><span class="o">.</span><span class="n">message</span><span class="p">)</span>
+                    <span class="k">return</span> <span class="n">result</span>
+        <span class="c1"># TODO: Handle results better (get HTTP codes, messages)</span>
         <span class="k">elif</span> <span class="n">rows_to_write</span> <span class="ow">and</span> <span class="n">write_method</span> <span class="o">==</span> <span class="s2">&quot;update&quot;</span><span class="p">:</span>
             <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">rows_to_write</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">125</span><span class="p">:</span>
                 <span class="n">chunked_cells</span> <span class="o">=</span> <span class="n">chunks</span><span class="p">(</span><span class="n">rows_to_write</span><span class="p">,</span> <span class="mi">125</span><span class="p">)</span>
@@ -413,18 +443,28 @@
                     <span class="k">try</span><span class="p">:</span>
                         <span class="n">result</span> <span class="o">=</span> <span class="n">smartsheet_client</span><span class="o">.</span><span class="n">Sheets</span><span class="o">.</span>\
                             <span class="n">update_rows</span><span class="p">(</span><span class="n">sheet_id</span><span class="p">,</span> <span class="n">i</span><span class="p">)</span>
-                    <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
-                        <span class="n">logging</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="n">e</span><span class="o">.</span><span class="n">message</span><span class="p">)</span>
+                        <span class="n">msg</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="s2">&quot;Smartsheet API responded with the &quot;</span>
+                                  <span class="s2">&quot;following message: </span><span class="si">{}</span><span class="s2"> | Result Code: </span><span class="si">{}</span><span class="s2">.&quot;</span>
+                                  <span class="s2">&quot;&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">result</span><span class="o">.</span><span class="n">message</span><span class="p">,</span>
+                                             <span class="n">result</span><span class="o">.</span><span class="n">result_code</span><span class="p">)</span>
+                        <span class="n">logging</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
+                        <span class="k">return</span> <span class="n">result</span>
+                    <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">result</span><span class="p">:</span>
+                        <span class="n">logging</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="n">result</span><span class="o">.</span><span class="n">message</span><span class="p">)</span>
+                        <span class="k">return</span> <span class="n">result</span>
             <span class="k">else</span><span class="p">:</span>
                 <span class="k">try</span><span class="p">:</span>
                     <span class="n">result</span> <span class="o">=</span> <span class="n">smartsheet_client</span><span class="o">.</span><span class="n">Sheets</span><span class="o">.</span>\
                         <span class="n">update_rows</span><span class="p">(</span><span class="n">sheet_id</span><span class="p">,</span> <span class="n">rows_to_write</span><span class="p">)</span>
-                <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
-                    <span class="n">logging</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="n">e</span><span class="o">.</span><span class="n">message</span><span class="p">)</span>
-            <span class="n">msg</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="s2">&quot;Smartsheet API responded with the &quot;</span>
-                      <span class="s2">&quot;following message: </span><span class="si">{}</span><span class="s2">&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">result</span><span class="p">)</span>
-            <span class="n">logging</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
-            <span class="k">return</span> <span class="n">result</span>
+                    <span class="n">msg</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="s2">&quot;Smartsheet API responded with the &quot;</span>
+                              <span class="s2">&quot;following message: </span><span class="si">{}</span><span class="s2"> | Result Code: </span><span class="si">{}</span><span class="s2">.&quot;</span>
+                              <span class="s2">&quot;&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">result</span><span class="o">.</span><span class="n">message</span><span class="p">,</span> <span class="n">result</span><span class="o">.</span><span class="n">result_code</span><span class="p">)</span>
+                    <span class="n">logging</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
+                    <span class="k">return</span> <span class="n">result</span>
+                <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">result</span><span class="p">:</span>
+                    <span class="n">logging</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="n">result</span><span class="o">.</span><span class="n">message</span><span class="p">)</span>
+                    <span class="k">return</span> <span class="n">result</span>
+
     <span class="k">else</span><span class="p">:</span>
         <span class="n">msg</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="s2">&quot;No rows added to Sheet ID: &quot;</span>
                   <span class="s2">&quot;</span><span class="si">{}</span><span class="s2"> | Sheet Name: </span><span class="si">{}</span><span class="s2">&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">sheet_id</span><span class="p">,</span> <span class="n">sheet_name</span><span class="p">)</span>
