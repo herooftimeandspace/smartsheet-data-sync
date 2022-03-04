@@ -25,6 +25,7 @@ stages:
 - coverage
 - pages
 - test
+- security
 - deploy
 
 
@@ -60,8 +61,8 @@ sast:
 include:
   - template: Security/SAST.gitlab-ci.yml
 
-secret_detection:
-  stage: test
+security:
+  stage: security
   before_script:
   - ''
 include:
