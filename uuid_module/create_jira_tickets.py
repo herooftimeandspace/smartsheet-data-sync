@@ -2,12 +2,12 @@ import logging
 import re
 import app.config as config
 import smartsheet
+import time
 
 from uuid_module.helper import (get_cell_data, get_cell_value, get_column_map,
-                                has_cell_link)
+                                has_cell_link, truncate)
 from uuid_module.smartsheet_api import get_sheet, write_rows_to_sheet
-from uuid_module.variables import (dev_jira_idx_sheet, dev_minutes,
-                                   dev_workspace_id, prod_jira_idx_sheet,
+from uuid_module.variables import (dev_minutes,
                                    uuid_col)
 
 project_columns = ["Summary", "Tasks", "Issue Type", "Jira Ticket",
@@ -46,8 +46,8 @@ def refresh_sheets(minutes=dev_minutes):
         msg = str("Minutes should be >= 0, not {}").format(minutes)
         raise ValueError(msg)
 
-    sheet_ids = get_all_sheet_ids(minutes, workspace_id=dev_workspace_id,
-                                  index_sheet=dev_jira_idx_sheet)
+    sheet_ids = get_all_sheet_ids(minutes, config.workspace_id,
+                                  config.index_sheet)
     msg = str("Sheet IDs object type {}, object values {}").format(
         type(sheet_ids), sheet_ids)
     logging.debug(msg)
@@ -55,7 +55,7 @@ def refresh_sheets(minutes=dev_minutes):
 
     # TODO: Load index sheet and kick off 2 functions. 1: Create new tickets
     # 2: Copy created tickets to program sheets via UUID
-    index_sheet = get_sheet(prod_jira_idx_sheet)
+    index_sheet = get_sheet(config.index_sheet)
     index_col_map = get_column_map(index_sheet)
     return source_sheets, index_sheet, index_col_map
 
@@ -66,7 +66,7 @@ def refresh_sheets(minutes=dev_minutes):
 # TODO: Handle indentation. See API docs
 # https://smartsheet-platform.github.io/api-docs/#specify-row-location
 # specifically parent_id, sibling_id
-def form_rows(row_dict, index_col_map):
+def form_rows(row_dict, col_map):
     """Forms new rows to write to the Jira Push Tickets Sheet
 
     Args:
@@ -88,18 +88,18 @@ def form_rows(row_dict, index_col_map):
         msg = str("Row Dictionary should be type dict, not type {}"
                   "").format(type(row_dict))
         raise TypeError(msg)
-    if not isinstance(index_col_map, dict):
+    if not isinstance(col_map, dict):
         msg = str("Index Col Map should be type dict, not type {}"
-                  "").format(type(index_col_map))
+                  "").format(type(col_map))
         raise TypeError(msg)
     if not row_dict:
         msg = str("Row Dictionary should not be empty")
         raise ValueError(msg)
-    if not index_col_map:
+    if not col_map:
         msg = str("Index Column Map should not be empty")
         raise ValueError(msg)
 
-    index_rows_to_add = []
+    rows_to_add = []
     for _, data in row_dict.items():
         new_row = smartsheet.models.Row()
         new_row.to_bottom = True
@@ -116,7 +116,7 @@ def form_rows(row_dict, index_col_map):
                 continue
 
             try:
-                col_id = index_col_map[col_name]
+                col_id = col_map[col_name]
             except KeyError:
                 msg = str("KeyError when looking up column name {} in "
                           "the Jira Index Column Map").format(col_name)
@@ -144,73 +144,64 @@ def form_rows(row_dict, index_col_map):
         if labels:
             labels = [sub.replace(' ', '-') for sub in labels]
             labels = [sub.replace('---', '-') for sub in labels]
-        # logging.debug(labels)
             new_row.cells.append({
-                'column_id': index_col_map['Labels'],
+                'column_id': col_map['Labels'],
                 'object_value': {
                     'objectType': "MULTI_PICKLIST",
                     'values': labels
                 }
             })
-        # TODO: Add handling for "Project" Issue Type
-        if data['Parent Issue Type'] in ("Epic", "Story", "Project"):
+        if data['Parent Issue Type'] in ("Epic", "Story", "Project", "Task"):
             ticket = data['Parent Ticket']
             issue_link = str("implements {}").format(ticket)
             new_row.cells.append({
-                'column_id': index_col_map['Issue Links'],
+                'column_id': col_map['Issue Links'],
                 'object_value': issue_link
             })
         if data['Issue Type'] == "Epic":
             epic_name = data['Tasks']
             new_row.cells.append({
-                'column_id': index_col_map['Epic Name'],
+                'column_id': col_map['Epic Name'],
                 'object_value': epic_name
             })
         if data['Issue Type'] == "Story" and \
                 data['Parent Issue Type'] == "Epic":
             epic_link = data['Parent Ticket']
             new_row.cells.append({
-                'column_id': index_col_map['Epic Link'],
+                'column_id': col_map['Epic Link'],
                 'object_value': epic_link
             })
         components = ["Autogenerated by Smartsheet", "Sync to Smartsheet"]
         new_row.cells.append({
-            'column_id': index_col_map['Components'],
+            'column_id': col_map['Components'],
             'object_value': {
                 'objectType': "MULTI_PICKLIST",
                 'values': components
             }
         })
 
-        index_rows_to_add.append(new_row)
-    return index_rows_to_add
+        rows_to_add.append(new_row)
+    return rows_to_add
 
 
-def link_jira_index_to_sheet(sheet, sheet_col_map,
-                             index_sheet,
-                             index_col_map):
+def link_jira_index_to_sheet(source_sheets, index_sheet, index_col_map):
     """Uses the UUID column to identify the row that originally pushed data
        into Jira. Copies the Jira Ticket back into the Program Plan
 
     Args:
         sheet (smartsheet.Sheet): The Sheet to push the Jira Ticket into
-        sheet_col_map (dict): The column map of the destination sheet
+        # sheet_col_map (dict): The column map of the destination sheet
         index_sheet (smartsheet.Sheet): The Jira Index Sheet
         index_col_map (dict): The column map of the Jira Index Sheet
 
     Raises:
-        TypeError: Sheet must be a dict or smartsheet.Sheet object
-        TypeError: Sheet Column Map must be a dict
+        TypeError: Sheet must be a list of sheets
         TypeError: Index Sheet must be a dict or smartsheet.Sheet object
         TypeError: Index Column Map must be a dict
     """
-    if not isinstance(sheet, (dict, smartsheet.models.Sheet)):
-        msg = str("Sheet should be dict or smartsheet.Sheet, not {}"
-                  "").format(type(sheet))
-        raise TypeError(msg)
-    if not isinstance(sheet_col_map, dict):
-        msg = str("Sheet Column Map should be dict, not {}"
-                  "").format(type(sheet_col_map))
+    if not isinstance(source_sheets, list):
+        msg = str("Sheet should be a list, not {}"
+                  "").format(type(source_sheets))
         raise TypeError(msg)
     if not isinstance(index_sheet, (dict, smartsheet.models.Sheet)):
         msg = str("Index Sheet should be dict or smartsheet.Sheet, not {}"
@@ -221,80 +212,50 @@ def link_jira_index_to_sheet(sheet, sheet_col_map,
                   "").format(type(index_col_map))
         raise TypeError(msg)
 
-    rows_to_update = []
-    for row in index_sheet.rows:
-        uuid_value = get_cell_value(row, 'UUID', index_col_map)
-        jira_ticket = get_cell_value(row, 'Jira Ticket', index_col_map)
+    sheets_updated = 0
+    sub_index = build_index_sheet_sub_index(index_sheet, index_col_map)
+    if not sub_index:
+        msg = str("Sub-index of Jira Tickets to link is empty")
+        logging.debug(msg)
+        return sheets_updated
 
-        if not uuid_value:
-            msg = str("UUID is {} in Row ID: {} | Sheet ID: {} "
-                      "| Sheet Name: {}").format(uuid_value, row.id,
-                                                 index_sheet.id,
-                                                 index_sheet.name)
-            logging.debug(msg)
-            continue
-        elif not jira_ticket:
-            msg = str("Jira Value is {} in Row ID: {} | Sheet ID: {} "
-                      "| Sheet Name: {}").format(jira_ticket, row.id,
-                                                 index_sheet.id,
-                                                 index_sheet.name)
-            logging.debug(msg)
-            continue
+    for sheet in source_sheets:
+        sheet_col_map = get_column_map(sheet)
+        rows_to_update = []
 
-        jira_link = get_cell_data(row, 'Jira Ticket', index_col_map)
-        try:
-            cell_link_status = has_cell_link(jira_link, "Out")
-            if cell_link_status in ('Linked', 'OK'):
-                # Skip linked rows
-                msg = str("Jira Ticket: {} has already been pushed to "
-                          "Row ID: {} | Sheet ID: {} "
-                          "| Sheet Name: {}").format(jira_ticket, row.id,
-                                                     sheet.id, sheet.name)
+        for uuid_value, jira_ticket in sub_index.items():
+            if not int(uuid_value.split("-")[0]) == sheet.id:
+                msg = str("UUID does not match the Sheet ID. UUID value: {} | "
+                          "Sheet ID: {} | Sheet Name: {}"
+                          "").format(uuid_value, sheet.id, sheet.name)
                 logging.debug(msg)
                 continue
-        except KeyError as e:
-            msg = str("Error getting linked status: {}").format(e)
-            logging.warning(msg)
+            elif int(uuid_value.split("-")[0]) == sheet.id:
+                msg = str("UUID and Sheet ID match")
+                logging.debug(msg)
+            else:
+                logging.error("Something went wrong pushing tickets back to "
+                              "plan sheets")
 
-        if bool(re.match(r"\d+-\d+-\d+-\d+", uuid_value)):
-            msg = str("UUID column has a value and matches the UUID pattern.")
+            new_row = smartsheet.models.Row()
+            new_row.id = int(uuid_value.split("-")[1])
+            new_row.cells.append({
+                'column_id': sheet_col_map['Jira Ticket'],
+                'object_value': jira_ticket
+            })
+            rows_to_update.append(new_row)
+        if rows_to_update:
+            msg = str("Updating {} rows with newly created Jira Tickets"
+                      "").format(len(rows_to_update))
             logging.debug(msg)
+            write_rows_to_sheet(rows_to_update, sheet, write_method="update")
+            sheets_updated += 1
         else:
-            msg = str("UUID does not match the pattern. UUID value: {}"
-                      "").format(uuid_value)
-            logging.debug(msg)
-            continue
-
-        if not int(uuid_value.split("-")[0]) == sheet.id:
-            msg = str("UUID does not match the Sheet ID. UUID value: {} | "
-                      "Sheet ID: {} | Sheet Name: {}"
-                      "").format(uuid_value, sheet.id, sheet.name)
-            logging.debug(msg)
-            continue
-        elif int(uuid_value.split("-")[0]) == sheet.id:
-            msg = str("UUID and Sheet ID match")
-            logging.debug(msg)
-        else:
-            logging.error("Something went wrong pushing tickets back to "
-                          "plan sheets")
-
-        new_row = smartsheet.models.Row()
-        new_row.id = int(uuid_value.split("-")[1])
-        new_row.cells.append({
-            'column_id': sheet_col_map['Jira Ticket'],
-            'object_value': jira_ticket
-        })
-        rows_to_update.append(new_row)
-    if rows_to_update:
-        msg = str("Updating {} rows with newly created Jira Tickets"
-                  "").format(len(rows_to_update))
-        logging.debug(msg)
-        write_rows_to_sheet(rows_to_update, sheet, write_method="update")
-    else:
-        msg = str("All Jira Tickets have pre-existing links to Sheet ID: {} "
-                  "| Sheet Name: {}").format(sheet.id, sheet.name)
-        logging.info(msg)
-
+            msg = str("All Jira Tickets have pre-existing links to "
+                      "Sheet ID: {} | Sheet Name: {}").format(sheet.id,
+                                                              sheet.name)
+            logging.info(msg)
+    return sheets_updated
 
 # def link_predecessor_tickets(parent):
 #     Follow predecessor tree, link issues as you go
@@ -307,6 +268,71 @@ def link_jira_index_to_sheet(sheet, sheet_col_map,
 #     4. Form row, add to list of rows to create and push to Jira
 #        Index
 #     return parent
+
+
+def build_index_sheet_sub_index(index_sheet, index_col_map):
+    if not isinstance(index_sheet, (dict, smartsheet.models.Sheet)):
+        raise TypeError
+    if not isinstance(index_col_map, dict):
+        raise TypeError
+    if not index_sheet:
+        raise ValueError
+    if not index_col_map:
+        raise ValueError
+    # UUID: Jira Ticket
+    sub_index = {}
+    for row in index_sheet.rows:
+
+        uuid_value = get_cell_data(row, 'UUID', index_col_map)
+        jira_value = get_cell_data(row, 'Jira Ticket', index_col_map)
+
+        if uuid_value is None or jira_value is None:
+            # Skip empty Jira Tickets or UUIDs
+            continue
+        uuid = str(uuid_value.value)
+        jira_ticket = str(jira_value.value)
+        if uuid == "None" or jira_ticket == "None":
+            # Skip None values returned as strings
+            continue
+
+        if bool(re.match(r"\d+-\d+-\d+-\d+", uuid)):
+            msg = str(
+                "UUID column has a value and matches the UUID pattern.")
+            logging.debug(msg)
+        else:
+            msg = str("UUID does not match the pattern. UUID value: {}"
+                      "").format(uuid)
+            logging.debug(msg)
+            continue
+
+        msg = str("Row Number: {} - UUID: {} type: {} - Jira Ticket: {} "
+                  "type: {}").format(row.row_number, uuid,
+                                     type(uuid), jira_ticket,
+                                     type(jira_ticket))
+        logging.debug(msg)
+        sheet_id = uuid.split("-")[0]
+        row_id = uuid.split("-")[1]
+        msg = str("Sheet ID: {} | Row ID: {}").format(sheet_id, row_id)
+        logging.debug(msg)
+
+        try:
+            cell_link_status = has_cell_link(jira_value, "Out")
+            if cell_link_status in ('Linked', 'OK'):
+                # Skip linked rows
+                msg = str("Jira Ticket: {} has already been pushed to "
+                          "Sheet ID: {} | Row ID: {}"
+                          "").format(jira_ticket, sheet_id, row_id)
+                logging.debug(msg)
+                continue
+            elif cell_link_status == "Unlinked":
+                # Jira Ticket cell is unlinked, add to index
+                logging.debug(cell_link_status).format()
+                sub_index[uuid_value] = jira_ticket
+        except KeyError as e:
+            msg = str("Error getting linked status: {}").format(e)
+            logging.warning(msg)
+            continue
+    return sub_index
 
 
 def build_row_data(row, col_map):
@@ -379,6 +405,8 @@ def create_ticket_index(source_sheets, index_sheet, index_col_map):
         raise TypeError(msg)
 
     tickets_to_create = {}
+    pending_count = 0
+    parent_pending_count = 0
 
     for sheet in source_sheets:
         col_map = get_column_map(sheet)
@@ -386,15 +414,13 @@ def create_ticket_index(source_sheets, index_sheet, index_col_map):
                   "").format(len(sheet.rows), sheet.id, sheet.name)
         logging.info(msg)
         try:
-            if col_map[uuid_col]:
-                pass
+            _ = col_map[uuid_col]
         except KeyError:
             msg = str("Sheet ID {} | Sheet Name {} doesn't have UUID column. "
                       "Skipping sheet. (KeyError)").format(sheet.id,
                                                            sheet.name)
             logging.debug(msg)
             continue
-        link_jira_index_to_sheet(sheet, col_map, index_sheet, index_col_map)
 
         sheet_rows_to_update = []
         for row in sheet.rows:
@@ -456,13 +482,21 @@ def create_ticket_index(source_sheets, index_sheet, index_col_map):
                 logging.debug(msg)
                 logging.debug(row_data)
                 continue
-            if row_data["Jira Ticket"] == "Pending..."\
-                    or row_data['Parent Ticket'] == "Pending...":
+            if row_data["Jira Ticket"] == "Pending...":
                 # Skip any row that's already in process
                 msg = str("Skipped because Jira Ticket or Parent Ticket "
                           "column was set to Pending...")
                 logging.debug(msg)
                 logging.debug(row_data)
+                pending_count += 1
+                continue
+            if row_data['Parent Ticket'] == "Pending...":
+                # Skip any row that's already in process
+                msg = str("Skipped because Parent Ticket column was set to "
+                          "Pending...")
+                logging.debug(msg)
+                logging.debug(row_data)
+                parent_pending_count += 1
                 continue
             if row_data['Parent Ticket'] not in ('Create', 'create',
                                                  'Pending...', None):
@@ -478,8 +512,11 @@ def create_ticket_index(source_sheets, index_sheet, index_col_map):
                         'object_value': "Pending..."
                     })
                     sheet_rows_to_update.append(new_row)
-                    msg = str("Parent Ticket isn't Create or Pending... but"
-                              "it does have a value. Adding row_data to "
+                    pending_count += 1
+                    # TODO: Validate Jira ticket so that comments don't
+                    # cause errors.
+                    msg = str("Parent Ticket isn't 'Create' or 'Pending...' "
+                              "but it does have a value. Adding row_data to "
                               "tickets_to_create and setting Jira Ticket "
                               "to Pending...")
                     logging.debug(msg)
@@ -496,6 +533,12 @@ def create_ticket_index(source_sheets, index_sheet, index_col_map):
             msg = str("No rows to update for Sheet ID: {}, Sheet Name: {}"
                       "").format(sheet.id, sheet.name)
             logging.info(msg)
+
+        msg = str("Sheet ID: {} | Sheet Name: {} has {} rows pending ticket "
+                  "creation. {} rows are waiting on parent ticket "
+                  "creation.").format(sheet.id, sheet.name, pending_count,
+                                      parent_pending_count)
+        logging.info(msg)
 
     logging.debug("Top-level Rows to create first")
     logging.debug("------------------------")
@@ -528,26 +571,48 @@ def create_tickets(minutes=dev_minutes):
     if minutes < 0:
         msg = str("Minutes should be >= 0, not {}").format(minutes)
         raise ValueError(msg)
-
+    start = time.time()
     source_sheets, index_sheet, index_col_map = refresh_sheets(minutes)
-    parent = create_ticket_index(
+    # Link back created tickets first
+    sheets_updated = link_jira_index_to_sheet(
+        source_sheets, index_sheet, index_col_map)
+    msg = str("Updated {} Plan sheets with newly created Jira tickets."
+              "").format(sheets_updated)
+    logging.info(msg)
+
+    # Create an index of rows pending ticket creation.
+    tickets_to_create = create_ticket_index(
         source_sheets, index_sheet, index_col_map)
     logging.debug("Parent Dict")
     logging.debug("------------------------")
-    logging.debug(parent)
-    msg = str("Parent Length: {}").format(len(parent))
+    logging.debug(tickets_to_create)
+    msg = str("Parent Length: {}").format(len(tickets_to_create))
     logging.debug(msg)
-    if parent:
+    if tickets_to_create:
         # Write parent rows
-        ticket_sheet = get_sheet(config.push_tickets_sheet, config.minutes)
-        push_tickets_col_map = get_column_map(ticket_sheet)
-        rows_to_write = form_rows(parent, push_tickets_col_map)
+        push_ticket_sheet = get_sheet(
+            config.push_tickets_sheet, config.minutes)
+        push_tickets_col_map = get_column_map(push_ticket_sheet)
+        rows_to_write = form_rows(tickets_to_create, push_tickets_col_map)
         write_rows_to_sheet(rows_to_write, config.push_tickets_sheet)
-    elif not parent:
+        end = time.time()
+        elapsed = end - start
+        elapsed = truncate(elapsed, 2)
+        logging.info("Create new tickets from Program Plan line items "
+                     "took: {} seconds.".format(elapsed))
+        return True
+    elif not tickets_to_create:
         msg = str("No parent or child rows remain to be written to the "
                   "Push Tickets Sheet.")
         logging.info(msg)
+        end = time.time()
+        elapsed = end - start
+        elapsed = truncate(elapsed, 2)
+        logging.info("Create new tickets from Program Plan line items "
+                     "took: {} seconds.".format(elapsed))
+        return False
     else:
         msg = str("Looping through rows rows to create Jira Tickts "
                   "failed with an unknown error.")
         logging.warning(msg)
+        return None
