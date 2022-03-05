@@ -139,6 +139,10 @@ def full_jira_sync(minutes):
     elapsed = truncate(elapsed, 3)
     msg = str("Full Jira sync took: {} seconds.").format(elapsed)
     logging.info(msg)
+    if elapsed > 30:
+        msg = str("Full Jira Sync took longer than "
+                  "the interval")
+        logging.warning(msg)
     gc.collect()
     return msg
 
@@ -179,6 +183,10 @@ def full_smartsheet_sync():
     elapsed = truncate(elapsed, 3)
     logging.info(
         "Full Smartsheet cross-sheet sync took: {} seconds.".format(elapsed))
+    if elapsed > 120:
+        msg = str("Full Smartsheet cross-sync took longer than "
+                  "the interval")
+        logging.warning(msg)
     gc.collect()
 
 

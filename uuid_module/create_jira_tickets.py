@@ -669,6 +669,9 @@ def create_tickets(minutes=dev_minutes):
         elapsed = truncate(elapsed, 2)
         logging.info("Create new tickets from Program Plan line items "
                      "took: {} seconds.".format(elapsed))
+        if elapsed > 120:
+            msg = str("Create Jira Tickets took longer than the interval")
+            logging.warning(msg)
         return True
     elif not tickets_to_create:
         msg = str("No parent or child rows remain to be written to the "
@@ -679,6 +682,9 @@ def create_tickets(minutes=dev_minutes):
         elapsed = truncate(elapsed, 2)
         logging.info("Create new tickets from Program Plan line items "
                      "took: {} seconds.".format(elapsed))
+        if elapsed > 120:
+            msg = str("Create Jira Tickets took longer than the interval")
+            logging.warning(msg)
         return False
     else:
         msg = str("Looping through rows rows to create Jira Tickts "
