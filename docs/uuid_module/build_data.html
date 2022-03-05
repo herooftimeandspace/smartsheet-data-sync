@@ -228,7 +228,7 @@
             <span class="k">else</span><span class="p">:</span>
                 <span class="k">raise</span> <span class="ne">KeyError</span>
 
-        <span class="k">if</span> <span class="n">cell_check</span> <span class="o">==</span> <span class="s2">&quot;Linked&quot;</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">cell_check</span> <span class="ow">in</span> <span class="p">(</span><span class="s2">&quot;Linked&quot;</span><span class="p">,</span> <span class="s2">&quot;OK&quot;</span><span class="p">):</span>
             <span class="n">msg</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="s2">&quot;Valid cell link: RowID </span><span class="si">{}</span><span class="s2"> | Row Number </span><span class="si">{}</span><span class="s2"> | &quot;</span>
                       <span class="s2">&quot;ColName </span><span class="si">{}</span><span class="s2"> | Cell Value </span><span class="si">{}</span><span class="s2">&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">row</span><span class="o">.</span><span class="n">id</span><span class="p">,</span>
                                                            <span class="n">row</span><span class="o">.</span><span class="n">row_number</span><span class="p">,</span> <span class="n">col</span><span class="p">,</span>
@@ -544,7 +544,7 @@ get_all_row_data function.</li>
             <span class="k">else</span><span class="p">:</span>
                 <span class="k">raise</span> <span class="ne">KeyError</span>
 
-        <span class="k">if</span> <span class="n">cell_check</span> <span class="o">==</span> <span class="s2">&quot;Linked&quot;</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">cell_check</span> <span class="ow">in</span> <span class="p">(</span><span class="s2">&quot;Linked&quot;</span><span class="p">,</span> <span class="s2">&quot;OK&quot;</span><span class="p">):</span>
             <span class="n">msg</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="s2">&quot;Valid cell link: RowID </span><span class="si">{}</span><span class="s2"> | Row Number </span><span class="si">{}</span><span class="s2"> | &quot;</span>
                       <span class="s2">&quot;ColName </span><span class="si">{}</span><span class="s2"> | Cell Value </span><span class="si">{}</span><span class="s2">&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">row</span><span class="o">.</span><span class="n">id</span><span class="p">,</span>
                                                            <span class="n">row</span><span class="o">.</span><span class="n">row_number</span><span class="p">,</span> <span class="n">col</span><span class="p">,</span>

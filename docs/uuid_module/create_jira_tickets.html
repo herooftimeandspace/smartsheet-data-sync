@@ -37,10 +37,16 @@
                     <a class="function" href="#form_rows">form_rows</a>
             </li>
             <li>
+                    <a class="function" href="#get_push_tickets_sheet">get_push_tickets_sheet</a>
+            </li>
+            <li>
                     <a class="function" href="#link_jira_index_to_sheet">link_jira_index_to_sheet</a>
             </li>
             <li>
-                    <a class="function" href="#build_index_sheet_sub_index">build_index_sheet_sub_index</a>
+                    <a class="function" href="#build_sheet_sub_index">build_sheet_sub_index</a>
+            </li>
+            <li>
+                    <a class="function" href="#copy_uuid_to_index_sheet">copy_uuid_to_index_sheet</a>
             </li>
             <li>
                     <a class="function" href="#build_row_data">build_row_data</a>
@@ -203,8 +209,7 @@
                       <span class="s2">&quot;&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">col_name</span><span class="p">,</span> <span class="n">col_id</span><span class="p">,</span> <span class="n">value</span><span class="p">)</span>
             <span class="n">logging</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
 
-        <span class="c1"># Manually create labels, epic name, epic link, all other data for</span>
-        <span class="c1"># use in Jira here</span>
+        <span class="c1"># Create labels for program, initiative and team</span>
         <span class="n">labels</span> <span class="o">=</span> <span class="p">[</span><span class="n">data</span><span class="p">[</span><span class="s1">&#39;Program&#39;</span><span class="p">],</span> <span class="n">data</span><span class="p">[</span><span class="s1">&#39;Initiative&#39;</span><span class="p">],</span> <span class="n">data</span><span class="p">[</span><span class="s1">&#39;Team&#39;</span><span class="p">]]</span>
         <span class="k">if</span> <span class="n">data</span><span class="p">[</span><span class="s1">&#39;Inject&#39;</span><span class="p">]:</span>
             <span class="n">labels</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s2">&quot;Inject&quot;</span><span class="p">)</span>
@@ -223,26 +228,7 @@
                     <span class="s1">&#39;values&#39;</span><span class="p">:</span> <span class="n">labels</span>
                 <span class="p">}</span>
             <span class="p">})</span>
-        <span class="k">if</span> <span class="n">data</span><span class="p">[</span><span class="s1">&#39;Parent Issue Type&#39;</span><span class="p">]</span> <span class="ow">in</span> <span class="p">(</span><span class="s2">&quot;Epic&quot;</span><span class="p">,</span> <span class="s2">&quot;Story&quot;</span><span class="p">,</span> <span class="s2">&quot;Project&quot;</span><span class="p">,</span> <span class="s2">&quot;Task&quot;</span><span class="p">):</span>
-            <span class="n">ticket</span> <span class="o">=</span> <span class="n">data</span><span class="p">[</span><span class="s1">&#39;Parent Ticket&#39;</span><span class="p">]</span>
-            <span class="n">issue_link</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="s2">&quot;implements </span><span class="si">{}</span><span class="s2">&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">ticket</span><span class="p">)</span>
-            <span class="n">new_row</span><span class="o">.</span><span class="n">cells</span><span class="o">.</span><span class="n">append</span><span class="p">({</span>
-                <span class="s1">&#39;column_id&#39;</span><span class="p">:</span> <span class="n">col_map</span><span class="p">[</span><span class="s1">&#39;Issue Links&#39;</span><span class="p">],</span>
-                <span class="s1">&#39;object_value&#39;</span><span class="p">:</span> <span class="n">issue_link</span>
-            <span class="p">})</span>
-        <span class="k">if</span> <span class="n">data</span><span class="p">[</span><span class="s1">&#39;Issue Type&#39;</span><span class="p">]</span> <span class="o">==</span> <span class="s2">&quot;Epic&quot;</span><span class="p">:</span>
-            <span class="n">epic_name</span> <span class="o">=</span> <span class="n">data</span><span class="p">[</span><span class="s1">&#39;Tasks&#39;</span><span class="p">]</span>
-            <span class="n">new_row</span><span class="o">.</span><span class="n">cells</span><span class="o">.</span><span class="n">append</span><span class="p">({</span>
-                <span class="s1">&#39;column_id&#39;</span><span class="p">:</span> <span class="n">col_map</span><span class="p">[</span><span class="s1">&#39;Epic Name&#39;</span><span class="p">],</span>
-                <span class="s1">&#39;object_value&#39;</span><span class="p">:</span> <span class="n">epic_name</span>
-            <span class="p">})</span>
-        <span class="k">if</span> <span class="n">data</span><span class="p">[</span><span class="s1">&#39;Issue Type&#39;</span><span class="p">]</span> <span class="o">==</span> <span class="s2">&quot;Story&quot;</span> <span class="ow">and</span> \
-                <span class="n">data</span><span class="p">[</span><span class="s1">&#39;Parent Issue Type&#39;</span><span class="p">]</span> <span class="o">==</span> <span class="s2">&quot;Epic&quot;</span><span class="p">:</span>
-            <span class="n">epic_link</span> <span class="o">=</span> <span class="n">data</span><span class="p">[</span><span class="s1">&#39;Parent Ticket&#39;</span><span class="p">]</span>
-            <span class="n">new_row</span><span class="o">.</span><span class="n">cells</span><span class="o">.</span><span class="n">append</span><span class="p">({</span>
-                <span class="s1">&#39;column_id&#39;</span><span class="p">:</span> <span class="n">col_map</span><span class="p">[</span><span class="s1">&#39;Epic Link&#39;</span><span class="p">],</span>
-                <span class="s1">&#39;object_value&#39;</span><span class="p">:</span> <span class="n">epic_link</span>
-            <span class="p">})</span>
+        <span class="c1"># Add standard components for syncing</span>
         <span class="n">components</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;Autogenerated by Smartsheet&quot;</span><span class="p">,</span> <span class="s2">&quot;Sync to Smartsheet&quot;</span><span class="p">]</span>
         <span class="n">new_row</span><span class="o">.</span><span class="n">cells</span><span class="o">.</span><span class="n">append</span><span class="p">({</span>
             <span class="s1">&#39;column_id&#39;</span><span class="p">:</span> <span class="n">col_map</span><span class="p">[</span><span class="s1">&#39;Components&#39;</span><span class="p">],</span>
@@ -251,9 +237,41 @@
                 <span class="s1">&#39;values&#39;</span><span class="p">:</span> <span class="n">components</span>
             <span class="p">}</span>
         <span class="p">})</span>
+        <span class="c1"># Link issues together. If the parent is an epic, use Epic links,</span>
+        <span class="c1"># otherwise use issue links. If the issue is an epic, set Epic</span>
+        <span class="c1"># Name.</span>
+        <span class="k">if</span> <span class="n">data</span><span class="p">[</span><span class="s1">&#39;Issue Type&#39;</span><span class="p">]</span> <span class="o">==</span> <span class="s2">&quot;Epic&quot;</span><span class="p">:</span>
+            <span class="n">epic_name</span> <span class="o">=</span> <span class="n">data</span><span class="p">[</span><span class="s1">&#39;Tasks&#39;</span><span class="p">]</span>
+            <span class="n">new_row</span><span class="o">.</span><span class="n">cells</span><span class="o">.</span><span class="n">append</span><span class="p">({</span>
+                <span class="s1">&#39;column_id&#39;</span><span class="p">:</span> <span class="n">col_map</span><span class="p">[</span><span class="s1">&#39;Epic Name&#39;</span><span class="p">],</span>
+                <span class="s1">&#39;object_value&#39;</span><span class="p">:</span> <span class="n">epic_name</span>
+            <span class="p">})</span>
+        <span class="k">if</span> <span class="n">data</span><span class="p">[</span><span class="s1">&#39;Issue Type&#39;</span><span class="p">]</span> <span class="ow">in</span> <span class="p">(</span><span class="s2">&quot;Story&quot;</span><span class="p">,</span> <span class="s2">&quot;Task&quot;</span><span class="p">,</span> <span class="s2">&quot;Project&quot;</span><span class="p">):</span>
+            <span class="k">if</span> <span class="n">data</span><span class="p">[</span><span class="s1">&#39;Parent Issue Type&#39;</span><span class="p">]</span> <span class="o">==</span> <span class="s2">&quot;Epic&quot;</span><span class="p">:</span>
+                <span class="n">epic_link</span> <span class="o">=</span> <span class="n">data</span><span class="p">[</span><span class="s1">&#39;Parent Ticket&#39;</span><span class="p">]</span>
+                <span class="n">new_row</span><span class="o">.</span><span class="n">cells</span><span class="o">.</span><span class="n">append</span><span class="p">({</span>
+                    <span class="s1">&#39;column_id&#39;</span><span class="p">:</span> <span class="n">col_map</span><span class="p">[</span><span class="s1">&#39;Epic Link&#39;</span><span class="p">],</span>
+                    <span class="s1">&#39;object_value&#39;</span><span class="p">:</span> <span class="n">epic_link</span>
+                <span class="p">})</span>
+            <span class="k">elif</span> <span class="n">data</span><span class="p">[</span><span class="s1">&#39;Parent Issue Type&#39;</span><span class="p">]</span> <span class="o">!=</span> <span class="s2">&quot;Epic&quot;</span><span class="p">:</span>
+                <span class="n">ticket</span> <span class="o">=</span> <span class="n">data</span><span class="p">[</span><span class="s1">&#39;Parent Ticket&#39;</span><span class="p">]</span>
+                <span class="n">issue_link</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="s2">&quot;implements </span><span class="si">{}</span><span class="s2">&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">ticket</span><span class="p">)</span>
+                <span class="n">new_row</span><span class="o">.</span><span class="n">cells</span><span class="o">.</span><span class="n">append</span><span class="p">({</span>
+                    <span class="s1">&#39;column_id&#39;</span><span class="p">:</span> <span class="n">col_map</span><span class="p">[</span><span class="s1">&#39;Issue Links&#39;</span><span class="p">],</span>
+                    <span class="s1">&#39;object_value&#39;</span><span class="p">:</span> <span class="n">issue_link</span>
+                <span class="p">})</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="k">pass</span>  <span class="c1"># Do nothing with links</span>
 
         <span class="n">rows_to_add</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">new_row</span><span class="p">)</span>
     <span class="k">return</span> <span class="n">rows_to_add</span>
+
+
+<span class="k">def</span> <span class="nf">get_push_tickets_sheet</span><span class="p">():</span>
+    <span class="n">push_ticket_sheet</span> <span class="o">=</span> <span class="n">get_sheet</span><span class="p">(</span>
+        <span class="n">config</span><span class="o">.</span><span class="n">push_tickets_sheet</span><span class="p">,</span> <span class="n">config</span><span class="o">.</span><span class="n">minutes</span><span class="p">)</span>
+    <span class="n">push_tickets_col_map</span> <span class="o">=</span> <span class="n">get_column_map</span><span class="p">(</span><span class="n">push_ticket_sheet</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">push_ticket_sheet</span><span class="p">,</span> <span class="n">push_tickets_col_map</span>
 
 
 <span class="k">def</span> <span class="nf">link_jira_index_to_sheet</span><span class="p">(</span><span class="n">source_sheets</span><span class="p">,</span> <span class="n">index_sheet</span><span class="p">,</span> <span class="n">index_col_map</span><span class="p">):</span>
@@ -285,7 +303,7 @@
         <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
 
     <span class="n">sheets_updated</span> <span class="o">=</span> <span class="mi">0</span>
-    <span class="n">sub_index</span> <span class="o">=</span> <span class="n">build_index_sheet_sub_index</span><span class="p">(</span><span class="n">index_sheet</span><span class="p">,</span> <span class="n">index_col_map</span><span class="p">)</span>
+    <span class="n">sub_index</span> <span class="o">=</span> <span class="n">build_sheet_sub_index</span><span class="p">(</span><span class="n">index_sheet</span><span class="p">,</span> <span class="n">index_col_map</span><span class="p">)</span>
     <span class="k">if</span> <span class="ow">not</span> <span class="n">sub_index</span><span class="p">:</span>
         <span class="n">msg</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="s2">&quot;Sub-index of Jira Tickets to link is empty&quot;</span><span class="p">)</span>
         <span class="n">logging</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
@@ -296,13 +314,24 @@
         <span class="n">rows_to_update</span> <span class="o">=</span> <span class="p">[]</span>
 
         <span class="k">for</span> <span class="n">uuid_value</span><span class="p">,</span> <span class="n">jira_ticket</span> <span class="ow">in</span> <span class="n">sub_index</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
-            <span class="k">if</span> <span class="ow">not</span> <span class="nb">int</span><span class="p">(</span><span class="n">uuid_value</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s2">&quot;-&quot;</span><span class="p">)[</span><span class="mi">0</span><span class="p">])</span> <span class="o">==</span> <span class="n">sheet</span><span class="o">.</span><span class="n">id</span><span class="p">:</span>
+            <span class="k">try</span><span class="p">:</span>
+                <span class="n">uuid_value</span> <span class="o">=</span> <span class="n">uuid_value</span><span class="o">.</span><span class="n">value</span>
+                <span class="n">uuid_sheet_id</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">uuid_value</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s2">&quot;-&quot;</span><span class="p">)[</span><span class="mi">0</span><span class="p">])</span>
+            <span class="k">except</span> <span class="ne">AttributeError</span> <span class="k">as</span> <span class="n">error</span><span class="p">:</span>
+                <span class="n">msg</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="s2">&quot;</span><span class="si">{}</span><span class="s2"> raised. Dumping values. uuid_value: </span><span class="si">{}</span><span class="s2">, &quot;</span>
+                          <span class="s2">&quot;jira_ticket: </span><span class="si">{}</span><span class="s2">, sub_index: </span><span class="si">{}</span><span class="s2">&quot;</span>
+                          <span class="s2">&quot;&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">error</span><span class="p">,</span> <span class="n">uuid_value</span><span class="p">,</span> <span class="n">jira_ticket</span><span class="p">,</span>
+                                     <span class="n">sub_index</span><span class="p">)</span>
+                <span class="n">logging</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
+                <span class="k">continue</span>
+
+            <span class="k">if</span> <span class="ow">not</span> <span class="n">uuid_sheet_id</span> <span class="o">==</span> <span class="n">sheet</span><span class="o">.</span><span class="n">id</span><span class="p">:</span>
                 <span class="n">msg</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="s2">&quot;UUID does not match the Sheet ID. UUID value: </span><span class="si">{}</span><span class="s2"> | &quot;</span>
                           <span class="s2">&quot;Sheet ID: </span><span class="si">{}</span><span class="s2"> | Sheet Name: </span><span class="si">{}</span><span class="s2">&quot;</span>
                           <span class="s2">&quot;&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">uuid_value</span><span class="p">,</span> <span class="n">sheet</span><span class="o">.</span><span class="n">id</span><span class="p">,</span> <span class="n">sheet</span><span class="o">.</span><span class="n">name</span><span class="p">)</span>
                 <span class="n">logging</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
                 <span class="k">continue</span>
-            <span class="k">elif</span> <span class="nb">int</span><span class="p">(</span><span class="n">uuid_value</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s2">&quot;-&quot;</span><span class="p">)[</span><span class="mi">0</span><span class="p">])</span> <span class="o">==</span> <span class="n">sheet</span><span class="o">.</span><span class="n">id</span><span class="p">:</span>
+            <span class="k">elif</span> <span class="n">uuid_sheet_id</span> <span class="o">==</span> <span class="n">sheet</span><span class="o">.</span><span class="n">id</span><span class="p">:</span>
                 <span class="n">msg</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="s2">&quot;UUID and Sheet ID match&quot;</span><span class="p">)</span>
                 <span class="n">logging</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
             <span class="k">else</span><span class="p">:</span>
@@ -342,15 +371,21 @@
 <span class="c1">#     return parent</span>
 
 
-<span class="k">def</span> <span class="nf">build_index_sheet_sub_index</span><span class="p">(</span><span class="n">index_sheet</span><span class="p">,</span> <span class="n">index_col_map</span><span class="p">):</span>
+<span class="k">def</span> <span class="nf">build_sheet_sub_index</span><span class="p">(</span><span class="n">index_sheet</span><span class="p">,</span> <span class="n">index_col_map</span><span class="p">):</span>
     <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">index_sheet</span><span class="p">,</span> <span class="p">(</span><span class="nb">dict</span><span class="p">,</span> <span class="n">smartsheet</span><span class="o">.</span><span class="n">models</span><span class="o">.</span><span class="n">Sheet</span><span class="p">)):</span>
-        <span class="k">raise</span> <span class="ne">TypeError</span>
+        <span class="n">msg</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="s2">&quot;Index Sheet should be dict or smartsheet.Sheet, not </span><span class="si">{}</span><span class="s2">&quot;</span>
+                  <span class="s2">&quot;&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="nb">type</span><span class="p">(</span><span class="n">index_sheet</span><span class="p">))</span>
+        <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
     <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">index_col_map</span><span class="p">,</span> <span class="nb">dict</span><span class="p">):</span>
-        <span class="k">raise</span> <span class="ne">TypeError</span>
+        <span class="n">msg</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="s2">&quot;Index Column Map should be dict, not </span><span class="si">{}</span><span class="s2">&quot;</span>
+                  <span class="s2">&quot;&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="nb">type</span><span class="p">(</span><span class="n">index_col_map</span><span class="p">))</span>
+        <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
     <span class="k">if</span> <span class="ow">not</span> <span class="n">index_sheet</span><span class="p">:</span>
-        <span class="k">raise</span> <span class="ne">ValueError</span>
+        <span class="n">msg</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="s2">&quot;Index Sheet should not be </span><span class="si">{}</span><span class="s2">&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">index_sheet</span><span class="p">)</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
     <span class="k">if</span> <span class="ow">not</span> <span class="n">index_col_map</span><span class="p">:</span>
-        <span class="k">raise</span> <span class="ne">ValueError</span>
+        <span class="n">msg</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="s2">&quot;Index Col Map should not be </span><span class="si">{}</span><span class="s2">&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">index_sheet</span><span class="p">)</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
     <span class="c1"># UUID: Jira Ticket</span>
     <span class="n">sub_index</span> <span class="o">=</span> <span class="p">{}</span>
     <span class="k">for</span> <span class="n">row</span> <span class="ow">in</span> <span class="n">index_sheet</span><span class="o">.</span><span class="n">rows</span><span class="p">:</span>
@@ -397,14 +432,49 @@
                 <span class="n">logging</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
                 <span class="k">continue</span>
             <span class="k">elif</span> <span class="n">cell_link_status</span> <span class="o">==</span> <span class="s2">&quot;Unlinked&quot;</span><span class="p">:</span>
-                <span class="c1"># Jira Ticket cell is unlinked, add to index</span>
-                <span class="n">logging</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="n">cell_link_status</span><span class="p">)</span><span class="o">.</span><span class="n">format</span><span class="p">()</span>
+                <span class="n">msg</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="s2">&quot;Jira Ticket </span><span class="si">{}</span><span class="s2"> cell is </span><span class="si">{}</span><span class="s2">, adding to index&quot;</span>
+                          <span class="s2">&quot;&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">jira_ticket</span><span class="p">,</span> <span class="n">cell_link_status</span><span class="p">)</span>
+                <span class="n">logging</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
                 <span class="n">sub_index</span><span class="p">[</span><span class="n">uuid_value</span><span class="p">]</span> <span class="o">=</span> <span class="n">jira_ticket</span>
         <span class="k">except</span> <span class="ne">KeyError</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
             <span class="n">msg</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="s2">&quot;Error getting linked status: </span><span class="si">{}</span><span class="s2">&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">e</span><span class="p">)</span>
             <span class="n">logging</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
             <span class="k">continue</span>
     <span class="k">return</span> <span class="n">sub_index</span>
+
+
+<span class="k">def</span> <span class="nf">copy_uuid_to_index_sheet</span><span class="p">(</span><span class="n">index_sheet</span><span class="p">,</span> <span class="n">index_col_map</span><span class="p">):</span>
+    <span class="n">rows_to_write</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="n">push_ticket_sheet</span><span class="p">,</span> <span class="n">push_tickets_col_map</span> <span class="o">=</span> <span class="n">get_push_tickets_sheet</span><span class="p">()</span>
+    <span class="n">sub_index</span> <span class="o">=</span> <span class="n">build_sheet_sub_index</span><span class="p">(</span><span class="n">push_ticket_sheet</span><span class="p">,</span> <span class="n">push_tickets_col_map</span><span class="p">)</span>
+    <span class="k">for</span> <span class="n">row</span> <span class="ow">in</span> <span class="n">index_sheet</span><span class="o">.</span><span class="n">rows</span><span class="p">:</span>
+        <span class="n">jira_ticket</span> <span class="o">=</span> <span class="n">get_cell_data</span><span class="p">(</span><span class="n">row</span><span class="p">,</span> <span class="s1">&#39;Jira Ticket&#39;</span><span class="p">,</span> <span class="n">index_col_map</span><span class="p">)</span>
+        <span class="n">uuid_value</span> <span class="o">=</span> <span class="n">get_cell_data</span><span class="p">(</span><span class="n">row</span><span class="p">,</span> <span class="s1">&#39;UUID&#39;</span><span class="p">,</span> <span class="n">index_col_map</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">uuid_value</span><span class="o">.</span><span class="n">value</span><span class="p">:</span>
+            <span class="c1"># Skip rows with UUIDs.</span>
+            <span class="k">continue</span>
+        <span class="k">for</span> <span class="n">uuid</span><span class="p">,</span> <span class="n">sub_ticket</span> <span class="ow">in</span> <span class="n">sub_index</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+            <span class="k">if</span> <span class="n">sub_ticket</span> <span class="o">==</span> <span class="n">jira_ticket</span><span class="o">.</span><span class="n">value</span><span class="p">:</span>
+                <span class="n">msg</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="s2">&quot;Push ticket </span><span class="si">{}</span><span class="s2"> matches Index ticket </span><span class="si">{}</span><span class="s2">, writing &quot;</span>
+                          <span class="s2">&quot;UUID: </span><span class="si">{}</span><span class="s2">&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">sub_ticket</span><span class="p">,</span> <span class="n">jira_ticket</span><span class="o">.</span><span class="n">value</span><span class="p">,</span>
+                                             <span class="n">uuid</span><span class="o">.</span><span class="n">value</span><span class="p">)</span>
+                <span class="n">logging</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
+                <span class="n">new_row</span> <span class="o">=</span> <span class="n">smartsheet</span><span class="o">.</span><span class="n">models</span><span class="o">.</span><span class="n">Row</span><span class="p">()</span>
+                <span class="n">new_row</span><span class="o">.</span><span class="n">id</span> <span class="o">=</span> <span class="n">row</span><span class="o">.</span><span class="n">id</span>
+                <span class="n">new_row</span><span class="o">.</span><span class="n">cells</span><span class="o">.</span><span class="n">append</span><span class="p">({</span>
+                    <span class="s1">&#39;column_id&#39;</span><span class="p">:</span> <span class="n">index_col_map</span><span class="p">[</span><span class="s1">&#39;UUID&#39;</span><span class="p">],</span>
+                    <span class="s1">&#39;object_value&#39;</span><span class="p">:</span> <span class="n">uuid</span><span class="o">.</span><span class="n">value</span>
+                <span class="p">})</span>
+                <span class="n">rows_to_write</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">new_row</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">rows_to_write</span><span class="p">:</span>
+        <span class="n">write_rows_to_sheet</span><span class="p">(</span><span class="n">rows_to_write</span><span class="p">,</span> <span class="n">index_sheet</span><span class="p">,</span>
+                            <span class="n">write_method</span><span class="o">=</span><span class="s2">&quot;update&quot;</span><span class="p">)</span>
+        <span class="k">return</span> <span class="kc">True</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">msg</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="s2">&quot;No UUIDs copied to Sheet ID: </span><span class="si">{}</span><span class="s2">, Sheet Name: </span><span class="si">{}</span><span class="s2">&quot;</span>
+                  <span class="s2">&quot;&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">index_sheet</span><span class="o">.</span><span class="n">id</span><span class="p">,</span> <span class="n">index_sheet</span><span class="o">.</span><span class="n">name</span><span class="p">)</span>
+        <span class="n">logging</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
+        <span class="k">return</span> <span class="kc">False</span>
 
 
 <span class="k">def</span> <span class="nf">build_row_data</span><span class="p">(</span><span class="n">row</span><span class="p">,</span> <span class="n">col_map</span><span class="p">):</span>
@@ -645,6 +715,13 @@
         <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
     <span class="n">start</span> <span class="o">=</span> <span class="n">time</span><span class="o">.</span><span class="n">time</span><span class="p">()</span>
     <span class="n">source_sheets</span><span class="p">,</span> <span class="n">index_sheet</span><span class="p">,</span> <span class="n">index_col_map</span> <span class="o">=</span> <span class="n">refresh_sheets</span><span class="p">(</span><span class="n">minutes</span><span class="p">)</span>
+
+    <span class="c1"># Copy UUIDs from Push sheet to Index Sheet</span>
+    <span class="n">result</span> <span class="o">=</span> <span class="n">copy_uuid_to_index_sheet</span><span class="p">(</span><span class="n">index_sheet</span><span class="p">,</span> <span class="n">index_col_map</span><span class="p">)</span>
+    <span class="c1"># Refresh the index sheet since we just wrote data</span>
+    <span class="k">if</span> <span class="n">result</span><span class="p">:</span>
+        <span class="n">index_sheet</span> <span class="o">=</span> <span class="n">get_sheet</span><span class="p">(</span><span class="n">config</span><span class="o">.</span><span class="n">index_sheet</span><span class="p">,</span> <span class="n">config</span><span class="o">.</span><span class="n">minutes</span><span class="p">)</span>
+
     <span class="c1"># Link back created tickets first</span>
     <span class="n">sheets_updated</span> <span class="o">=</span> <span class="n">link_jira_index_to_sheet</span><span class="p">(</span>
         <span class="n">source_sheets</span><span class="p">,</span> <span class="n">index_sheet</span><span class="p">,</span> <span class="n">index_col_map</span><span class="p">)</span>
@@ -662,9 +739,7 @@
     <span class="n">logging</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
     <span class="k">if</span> <span class="n">tickets_to_create</span><span class="p">:</span>
         <span class="c1"># Write parent rows</span>
-        <span class="n">push_ticket_sheet</span> <span class="o">=</span> <span class="n">get_sheet</span><span class="p">(</span>
-            <span class="n">config</span><span class="o">.</span><span class="n">push_tickets_sheet</span><span class="p">,</span> <span class="n">config</span><span class="o">.</span><span class="n">minutes</span><span class="p">)</span>
-        <span class="n">push_tickets_col_map</span> <span class="o">=</span> <span class="n">get_column_map</span><span class="p">(</span><span class="n">push_ticket_sheet</span><span class="p">)</span>
+        <span class="n">_</span><span class="p">,</span> <span class="n">push_tickets_col_map</span> <span class="o">=</span> <span class="n">get_push_tickets_sheet</span><span class="p">()</span>
         <span class="n">rows_to_write</span> <span class="o">=</span> <span class="n">form_rows</span><span class="p">(</span><span class="n">tickets_to_create</span><span class="p">,</span> <span class="n">push_tickets_col_map</span><span class="p">)</span>
         <span class="n">write_rows_to_sheet</span><span class="p">(</span><span class="n">rows_to_write</span><span class="p">,</span> <span class="n">config</span><span class="o">.</span><span class="n">push_tickets_sheet</span><span class="p">)</span>
         <span class="n">end</span> <span class="o">=</span> <span class="n">time</span><span class="o">.</span><span class="n">time</span><span class="p">()</span>
@@ -850,8 +925,7 @@
                       <span class="s2">&quot;&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">col_name</span><span class="p">,</span> <span class="n">col_id</span><span class="p">,</span> <span class="n">value</span><span class="p">)</span>
             <span class="n">logging</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
 
-        <span class="c1"># Manually create labels, epic name, epic link, all other data for</span>
-        <span class="c1"># use in Jira here</span>
+        <span class="c1"># Create labels for program, initiative and team</span>
         <span class="n">labels</span> <span class="o">=</span> <span class="p">[</span><span class="n">data</span><span class="p">[</span><span class="s1">&#39;Program&#39;</span><span class="p">],</span> <span class="n">data</span><span class="p">[</span><span class="s1">&#39;Initiative&#39;</span><span class="p">],</span> <span class="n">data</span><span class="p">[</span><span class="s1">&#39;Team&#39;</span><span class="p">]]</span>
         <span class="k">if</span> <span class="n">data</span><span class="p">[</span><span class="s1">&#39;Inject&#39;</span><span class="p">]:</span>
             <span class="n">labels</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s2">&quot;Inject&quot;</span><span class="p">)</span>
@@ -870,26 +944,7 @@
                     <span class="s1">&#39;values&#39;</span><span class="p">:</span> <span class="n">labels</span>
                 <span class="p">}</span>
             <span class="p">})</span>
-        <span class="k">if</span> <span class="n">data</span><span class="p">[</span><span class="s1">&#39;Parent Issue Type&#39;</span><span class="p">]</span> <span class="ow">in</span> <span class="p">(</span><span class="s2">&quot;Epic&quot;</span><span class="p">,</span> <span class="s2">&quot;Story&quot;</span><span class="p">,</span> <span class="s2">&quot;Project&quot;</span><span class="p">,</span> <span class="s2">&quot;Task&quot;</span><span class="p">):</span>
-            <span class="n">ticket</span> <span class="o">=</span> <span class="n">data</span><span class="p">[</span><span class="s1">&#39;Parent Ticket&#39;</span><span class="p">]</span>
-            <span class="n">issue_link</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="s2">&quot;implements </span><span class="si">{}</span><span class="s2">&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">ticket</span><span class="p">)</span>
-            <span class="n">new_row</span><span class="o">.</span><span class="n">cells</span><span class="o">.</span><span class="n">append</span><span class="p">({</span>
-                <span class="s1">&#39;column_id&#39;</span><span class="p">:</span> <span class="n">col_map</span><span class="p">[</span><span class="s1">&#39;Issue Links&#39;</span><span class="p">],</span>
-                <span class="s1">&#39;object_value&#39;</span><span class="p">:</span> <span class="n">issue_link</span>
-            <span class="p">})</span>
-        <span class="k">if</span> <span class="n">data</span><span class="p">[</span><span class="s1">&#39;Issue Type&#39;</span><span class="p">]</span> <span class="o">==</span> <span class="s2">&quot;Epic&quot;</span><span class="p">:</span>
-            <span class="n">epic_name</span> <span class="o">=</span> <span class="n">data</span><span class="p">[</span><span class="s1">&#39;Tasks&#39;</span><span class="p">]</span>
-            <span class="n">new_row</span><span class="o">.</span><span class="n">cells</span><span class="o">.</span><span class="n">append</span><span class="p">({</span>
-                <span class="s1">&#39;column_id&#39;</span><span class="p">:</span> <span class="n">col_map</span><span class="p">[</span><span class="s1">&#39;Epic Name&#39;</span><span class="p">],</span>
-                <span class="s1">&#39;object_value&#39;</span><span class="p">:</span> <span class="n">epic_name</span>
-            <span class="p">})</span>
-        <span class="k">if</span> <span class="n">data</span><span class="p">[</span><span class="s1">&#39;Issue Type&#39;</span><span class="p">]</span> <span class="o">==</span> <span class="s2">&quot;Story&quot;</span> <span class="ow">and</span> \
-                <span class="n">data</span><span class="p">[</span><span class="s1">&#39;Parent Issue Type&#39;</span><span class="p">]</span> <span class="o">==</span> <span class="s2">&quot;Epic&quot;</span><span class="p">:</span>
-            <span class="n">epic_link</span> <span class="o">=</span> <span class="n">data</span><span class="p">[</span><span class="s1">&#39;Parent Ticket&#39;</span><span class="p">]</span>
-            <span class="n">new_row</span><span class="o">.</span><span class="n">cells</span><span class="o">.</span><span class="n">append</span><span class="p">({</span>
-                <span class="s1">&#39;column_id&#39;</span><span class="p">:</span> <span class="n">col_map</span><span class="p">[</span><span class="s1">&#39;Epic Link&#39;</span><span class="p">],</span>
-                <span class="s1">&#39;object_value&#39;</span><span class="p">:</span> <span class="n">epic_link</span>
-            <span class="p">})</span>
+        <span class="c1"># Add standard components for syncing</span>
         <span class="n">components</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;Autogenerated by Smartsheet&quot;</span><span class="p">,</span> <span class="s2">&quot;Sync to Smartsheet&quot;</span><span class="p">]</span>
         <span class="n">new_row</span><span class="o">.</span><span class="n">cells</span><span class="o">.</span><span class="n">append</span><span class="p">({</span>
             <span class="s1">&#39;column_id&#39;</span><span class="p">:</span> <span class="n">col_map</span><span class="p">[</span><span class="s1">&#39;Components&#39;</span><span class="p">],</span>
@@ -898,6 +953,31 @@
                 <span class="s1">&#39;values&#39;</span><span class="p">:</span> <span class="n">components</span>
             <span class="p">}</span>
         <span class="p">})</span>
+        <span class="c1"># Link issues together. If the parent is an epic, use Epic links,</span>
+        <span class="c1"># otherwise use issue links. If the issue is an epic, set Epic</span>
+        <span class="c1"># Name.</span>
+        <span class="k">if</span> <span class="n">data</span><span class="p">[</span><span class="s1">&#39;Issue Type&#39;</span><span class="p">]</span> <span class="o">==</span> <span class="s2">&quot;Epic&quot;</span><span class="p">:</span>
+            <span class="n">epic_name</span> <span class="o">=</span> <span class="n">data</span><span class="p">[</span><span class="s1">&#39;Tasks&#39;</span><span class="p">]</span>
+            <span class="n">new_row</span><span class="o">.</span><span class="n">cells</span><span class="o">.</span><span class="n">append</span><span class="p">({</span>
+                <span class="s1">&#39;column_id&#39;</span><span class="p">:</span> <span class="n">col_map</span><span class="p">[</span><span class="s1">&#39;Epic Name&#39;</span><span class="p">],</span>
+                <span class="s1">&#39;object_value&#39;</span><span class="p">:</span> <span class="n">epic_name</span>
+            <span class="p">})</span>
+        <span class="k">if</span> <span class="n">data</span><span class="p">[</span><span class="s1">&#39;Issue Type&#39;</span><span class="p">]</span> <span class="ow">in</span> <span class="p">(</span><span class="s2">&quot;Story&quot;</span><span class="p">,</span> <span class="s2">&quot;Task&quot;</span><span class="p">,</span> <span class="s2">&quot;Project&quot;</span><span class="p">):</span>
+            <span class="k">if</span> <span class="n">data</span><span class="p">[</span><span class="s1">&#39;Parent Issue Type&#39;</span><span class="p">]</span> <span class="o">==</span> <span class="s2">&quot;Epic&quot;</span><span class="p">:</span>
+                <span class="n">epic_link</span> <span class="o">=</span> <span class="n">data</span><span class="p">[</span><span class="s1">&#39;Parent Ticket&#39;</span><span class="p">]</span>
+                <span class="n">new_row</span><span class="o">.</span><span class="n">cells</span><span class="o">.</span><span class="n">append</span><span class="p">({</span>
+                    <span class="s1">&#39;column_id&#39;</span><span class="p">:</span> <span class="n">col_map</span><span class="p">[</span><span class="s1">&#39;Epic Link&#39;</span><span class="p">],</span>
+                    <span class="s1">&#39;object_value&#39;</span><span class="p">:</span> <span class="n">epic_link</span>
+                <span class="p">})</span>
+            <span class="k">elif</span> <span class="n">data</span><span class="p">[</span><span class="s1">&#39;Parent Issue Type&#39;</span><span class="p">]</span> <span class="o">!=</span> <span class="s2">&quot;Epic&quot;</span><span class="p">:</span>
+                <span class="n">ticket</span> <span class="o">=</span> <span class="n">data</span><span class="p">[</span><span class="s1">&#39;Parent Ticket&#39;</span><span class="p">]</span>
+                <span class="n">issue_link</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="s2">&quot;implements </span><span class="si">{}</span><span class="s2">&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">ticket</span><span class="p">)</span>
+                <span class="n">new_row</span><span class="o">.</span><span class="n">cells</span><span class="o">.</span><span class="n">append</span><span class="p">({</span>
+                    <span class="s1">&#39;column_id&#39;</span><span class="p">:</span> <span class="n">col_map</span><span class="p">[</span><span class="s1">&#39;Issue Links&#39;</span><span class="p">],</span>
+                    <span class="s1">&#39;object_value&#39;</span><span class="p">:</span> <span class="n">issue_link</span>
+                <span class="p">})</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="k">pass</span>  <span class="c1"># Do nothing with links</span>
 
         <span class="n">rows_to_add</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">new_row</span><span class="p">)</span>
     <span class="k">return</span> <span class="n">rows_to_add</span>
@@ -932,6 +1012,28 @@ form of Column Name: Column ID</li>
 </blockquote>
 </div>
 
+
+                </section>
+                <section id="get_push_tickets_sheet">
+                            <div class="attr function"><a class="headerlink" href="#get_push_tickets_sheet">#&nbsp;&nbsp</a>
+
+        
+            <span class="def">def</span>
+            <span class="name">get_push_tickets_sheet</span><span class="signature">()</span>:
+    </div>
+
+            <details>
+            <summary>View Source</summary>
+            <div class="pdoc-code codehilite"><pre><span></span><span class="k">def</span> <span class="nf">get_push_tickets_sheet</span><span class="p">():</span>
+    <span class="n">push_ticket_sheet</span> <span class="o">=</span> <span class="n">get_sheet</span><span class="p">(</span>
+        <span class="n">config</span><span class="o">.</span><span class="n">push_tickets_sheet</span><span class="p">,</span> <span class="n">config</span><span class="o">.</span><span class="n">minutes</span><span class="p">)</span>
+    <span class="n">push_tickets_col_map</span> <span class="o">=</span> <span class="n">get_column_map</span><span class="p">(</span><span class="n">push_ticket_sheet</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">push_ticket_sheet</span><span class="p">,</span> <span class="n">push_tickets_col_map</span>
+</pre></div>
+
+        </details>
+
+    
 
                 </section>
                 <section id="link_jira_index_to_sheet">
@@ -973,7 +1075,7 @@ form of Column Name: Column ID</li>
         <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
 
     <span class="n">sheets_updated</span> <span class="o">=</span> <span class="mi">0</span>
-    <span class="n">sub_index</span> <span class="o">=</span> <span class="n">build_index_sheet_sub_index</span><span class="p">(</span><span class="n">index_sheet</span><span class="p">,</span> <span class="n">index_col_map</span><span class="p">)</span>
+    <span class="n">sub_index</span> <span class="o">=</span> <span class="n">build_sheet_sub_index</span><span class="p">(</span><span class="n">index_sheet</span><span class="p">,</span> <span class="n">index_col_map</span><span class="p">)</span>
     <span class="k">if</span> <span class="ow">not</span> <span class="n">sub_index</span><span class="p">:</span>
         <span class="n">msg</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="s2">&quot;Sub-index of Jira Tickets to link is empty&quot;</span><span class="p">)</span>
         <span class="n">logging</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
@@ -984,13 +1086,24 @@ form of Column Name: Column ID</li>
         <span class="n">rows_to_update</span> <span class="o">=</span> <span class="p">[]</span>
 
         <span class="k">for</span> <span class="n">uuid_value</span><span class="p">,</span> <span class="n">jira_ticket</span> <span class="ow">in</span> <span class="n">sub_index</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
-            <span class="k">if</span> <span class="ow">not</span> <span class="nb">int</span><span class="p">(</span><span class="n">uuid_value</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s2">&quot;-&quot;</span><span class="p">)[</span><span class="mi">0</span><span class="p">])</span> <span class="o">==</span> <span class="n">sheet</span><span class="o">.</span><span class="n">id</span><span class="p">:</span>
+            <span class="k">try</span><span class="p">:</span>
+                <span class="n">uuid_value</span> <span class="o">=</span> <span class="n">uuid_value</span><span class="o">.</span><span class="n">value</span>
+                <span class="n">uuid_sheet_id</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">uuid_value</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s2">&quot;-&quot;</span><span class="p">)[</span><span class="mi">0</span><span class="p">])</span>
+            <span class="k">except</span> <span class="ne">AttributeError</span> <span class="k">as</span> <span class="n">error</span><span class="p">:</span>
+                <span class="n">msg</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="s2">&quot;</span><span class="si">{}</span><span class="s2"> raised. Dumping values. uuid_value: </span><span class="si">{}</span><span class="s2">, &quot;</span>
+                          <span class="s2">&quot;jira_ticket: </span><span class="si">{}</span><span class="s2">, sub_index: </span><span class="si">{}</span><span class="s2">&quot;</span>
+                          <span class="s2">&quot;&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">error</span><span class="p">,</span> <span class="n">uuid_value</span><span class="p">,</span> <span class="n">jira_ticket</span><span class="p">,</span>
+                                     <span class="n">sub_index</span><span class="p">)</span>
+                <span class="n">logging</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
+                <span class="k">continue</span>
+
+            <span class="k">if</span> <span class="ow">not</span> <span class="n">uuid_sheet_id</span> <span class="o">==</span> <span class="n">sheet</span><span class="o">.</span><span class="n">id</span><span class="p">:</span>
                 <span class="n">msg</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="s2">&quot;UUID does not match the Sheet ID. UUID value: </span><span class="si">{}</span><span class="s2"> | &quot;</span>
                           <span class="s2">&quot;Sheet ID: </span><span class="si">{}</span><span class="s2"> | Sheet Name: </span><span class="si">{}</span><span class="s2">&quot;</span>
                           <span class="s2">&quot;&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">uuid_value</span><span class="p">,</span> <span class="n">sheet</span><span class="o">.</span><span class="n">id</span><span class="p">,</span> <span class="n">sheet</span><span class="o">.</span><span class="n">name</span><span class="p">)</span>
                 <span class="n">logging</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
                 <span class="k">continue</span>
-            <span class="k">elif</span> <span class="nb">int</span><span class="p">(</span><span class="n">uuid_value</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s2">&quot;-&quot;</span><span class="p">)[</span><span class="mi">0</span><span class="p">])</span> <span class="o">==</span> <span class="n">sheet</span><span class="o">.</span><span class="n">id</span><span class="p">:</span>
+            <span class="k">elif</span> <span class="n">uuid_sheet_id</span> <span class="o">==</span> <span class="n">sheet</span><span class="o">.</span><span class="n">id</span><span class="p">:</span>
                 <span class="n">msg</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="s2">&quot;UUID and Sheet ID match&quot;</span><span class="p">)</span>
                 <span class="n">logging</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
             <span class="k">else</span><span class="p">:</span>
@@ -1043,25 +1156,31 @@ form of Column Name: Column ID</li>
 
 
                 </section>
-                <section id="build_index_sheet_sub_index">
-                            <div class="attr function"><a class="headerlink" href="#build_index_sheet_sub_index">#&nbsp;&nbsp</a>
+                <section id="build_sheet_sub_index">
+                            <div class="attr function"><a class="headerlink" href="#build_sheet_sub_index">#&nbsp;&nbsp</a>
 
         
             <span class="def">def</span>
-            <span class="name">build_index_sheet_sub_index</span><span class="signature">(index_sheet, index_col_map)</span>:
+            <span class="name">build_sheet_sub_index</span><span class="signature">(index_sheet, index_col_map)</span>:
     </div>
 
             <details>
             <summary>View Source</summary>
-            <div class="pdoc-code codehilite"><pre><span></span><span class="k">def</span> <span class="nf">build_index_sheet_sub_index</span><span class="p">(</span><span class="n">index_sheet</span><span class="p">,</span> <span class="n">index_col_map</span><span class="p">):</span>
+            <div class="pdoc-code codehilite"><pre><span></span><span class="k">def</span> <span class="nf">build_sheet_sub_index</span><span class="p">(</span><span class="n">index_sheet</span><span class="p">,</span> <span class="n">index_col_map</span><span class="p">):</span>
     <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">index_sheet</span><span class="p">,</span> <span class="p">(</span><span class="nb">dict</span><span class="p">,</span> <span class="n">smartsheet</span><span class="o">.</span><span class="n">models</span><span class="o">.</span><span class="n">Sheet</span><span class="p">)):</span>
-        <span class="k">raise</span> <span class="ne">TypeError</span>
+        <span class="n">msg</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="s2">&quot;Index Sheet should be dict or smartsheet.Sheet, not </span><span class="si">{}</span><span class="s2">&quot;</span>
+                  <span class="s2">&quot;&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="nb">type</span><span class="p">(</span><span class="n">index_sheet</span><span class="p">))</span>
+        <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
     <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">index_col_map</span><span class="p">,</span> <span class="nb">dict</span><span class="p">):</span>
-        <span class="k">raise</span> <span class="ne">TypeError</span>
+        <span class="n">msg</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="s2">&quot;Index Column Map should be dict, not </span><span class="si">{}</span><span class="s2">&quot;</span>
+                  <span class="s2">&quot;&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="nb">type</span><span class="p">(</span><span class="n">index_col_map</span><span class="p">))</span>
+        <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
     <span class="k">if</span> <span class="ow">not</span> <span class="n">index_sheet</span><span class="p">:</span>
-        <span class="k">raise</span> <span class="ne">ValueError</span>
+        <span class="n">msg</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="s2">&quot;Index Sheet should not be </span><span class="si">{}</span><span class="s2">&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">index_sheet</span><span class="p">)</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
     <span class="k">if</span> <span class="ow">not</span> <span class="n">index_col_map</span><span class="p">:</span>
-        <span class="k">raise</span> <span class="ne">ValueError</span>
+        <span class="n">msg</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="s2">&quot;Index Col Map should not be </span><span class="si">{}</span><span class="s2">&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">index_sheet</span><span class="p">)</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
     <span class="c1"># UUID: Jira Ticket</span>
     <span class="n">sub_index</span> <span class="o">=</span> <span class="p">{}</span>
     <span class="k">for</span> <span class="n">row</span> <span class="ow">in</span> <span class="n">index_sheet</span><span class="o">.</span><span class="n">rows</span><span class="p">:</span>
@@ -1108,14 +1227,64 @@ form of Column Name: Column ID</li>
                 <span class="n">logging</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
                 <span class="k">continue</span>
             <span class="k">elif</span> <span class="n">cell_link_status</span> <span class="o">==</span> <span class="s2">&quot;Unlinked&quot;</span><span class="p">:</span>
-                <span class="c1"># Jira Ticket cell is unlinked, add to index</span>
-                <span class="n">logging</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="n">cell_link_status</span><span class="p">)</span><span class="o">.</span><span class="n">format</span><span class="p">()</span>
+                <span class="n">msg</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="s2">&quot;Jira Ticket </span><span class="si">{}</span><span class="s2"> cell is </span><span class="si">{}</span><span class="s2">, adding to index&quot;</span>
+                          <span class="s2">&quot;&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">jira_ticket</span><span class="p">,</span> <span class="n">cell_link_status</span><span class="p">)</span>
+                <span class="n">logging</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
                 <span class="n">sub_index</span><span class="p">[</span><span class="n">uuid_value</span><span class="p">]</span> <span class="o">=</span> <span class="n">jira_ticket</span>
         <span class="k">except</span> <span class="ne">KeyError</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
             <span class="n">msg</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="s2">&quot;Error getting linked status: </span><span class="si">{}</span><span class="s2">&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">e</span><span class="p">)</span>
             <span class="n">logging</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
             <span class="k">continue</span>
     <span class="k">return</span> <span class="n">sub_index</span>
+</pre></div>
+
+        </details>
+
+    
+
+                </section>
+                <section id="copy_uuid_to_index_sheet">
+                            <div class="attr function"><a class="headerlink" href="#copy_uuid_to_index_sheet">#&nbsp;&nbsp</a>
+
+        
+            <span class="def">def</span>
+            <span class="name">copy_uuid_to_index_sheet</span><span class="signature">(index_sheet, index_col_map)</span>:
+    </div>
+
+            <details>
+            <summary>View Source</summary>
+            <div class="pdoc-code codehilite"><pre><span></span><span class="k">def</span> <span class="nf">copy_uuid_to_index_sheet</span><span class="p">(</span><span class="n">index_sheet</span><span class="p">,</span> <span class="n">index_col_map</span><span class="p">):</span>
+    <span class="n">rows_to_write</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="n">push_ticket_sheet</span><span class="p">,</span> <span class="n">push_tickets_col_map</span> <span class="o">=</span> <span class="n">get_push_tickets_sheet</span><span class="p">()</span>
+    <span class="n">sub_index</span> <span class="o">=</span> <span class="n">build_sheet_sub_index</span><span class="p">(</span><span class="n">push_ticket_sheet</span><span class="p">,</span> <span class="n">push_tickets_col_map</span><span class="p">)</span>
+    <span class="k">for</span> <span class="n">row</span> <span class="ow">in</span> <span class="n">index_sheet</span><span class="o">.</span><span class="n">rows</span><span class="p">:</span>
+        <span class="n">jira_ticket</span> <span class="o">=</span> <span class="n">get_cell_data</span><span class="p">(</span><span class="n">row</span><span class="p">,</span> <span class="s1">&#39;Jira Ticket&#39;</span><span class="p">,</span> <span class="n">index_col_map</span><span class="p">)</span>
+        <span class="n">uuid_value</span> <span class="o">=</span> <span class="n">get_cell_data</span><span class="p">(</span><span class="n">row</span><span class="p">,</span> <span class="s1">&#39;UUID&#39;</span><span class="p">,</span> <span class="n">index_col_map</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">uuid_value</span><span class="o">.</span><span class="n">value</span><span class="p">:</span>
+            <span class="c1"># Skip rows with UUIDs.</span>
+            <span class="k">continue</span>
+        <span class="k">for</span> <span class="n">uuid</span><span class="p">,</span> <span class="n">sub_ticket</span> <span class="ow">in</span> <span class="n">sub_index</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+            <span class="k">if</span> <span class="n">sub_ticket</span> <span class="o">==</span> <span class="n">jira_ticket</span><span class="o">.</span><span class="n">value</span><span class="p">:</span>
+                <span class="n">msg</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="s2">&quot;Push ticket </span><span class="si">{}</span><span class="s2"> matches Index ticket </span><span class="si">{}</span><span class="s2">, writing &quot;</span>
+                          <span class="s2">&quot;UUID: </span><span class="si">{}</span><span class="s2">&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">sub_ticket</span><span class="p">,</span> <span class="n">jira_ticket</span><span class="o">.</span><span class="n">value</span><span class="p">,</span>
+                                             <span class="n">uuid</span><span class="o">.</span><span class="n">value</span><span class="p">)</span>
+                <span class="n">logging</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
+                <span class="n">new_row</span> <span class="o">=</span> <span class="n">smartsheet</span><span class="o">.</span><span class="n">models</span><span class="o">.</span><span class="n">Row</span><span class="p">()</span>
+                <span class="n">new_row</span><span class="o">.</span><span class="n">id</span> <span class="o">=</span> <span class="n">row</span><span class="o">.</span><span class="n">id</span>
+                <span class="n">new_row</span><span class="o">.</span><span class="n">cells</span><span class="o">.</span><span class="n">append</span><span class="p">({</span>
+                    <span class="s1">&#39;column_id&#39;</span><span class="p">:</span> <span class="n">index_col_map</span><span class="p">[</span><span class="s1">&#39;UUID&#39;</span><span class="p">],</span>
+                    <span class="s1">&#39;object_value&#39;</span><span class="p">:</span> <span class="n">uuid</span><span class="o">.</span><span class="n">value</span>
+                <span class="p">})</span>
+                <span class="n">rows_to_write</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">new_row</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">rows_to_write</span><span class="p">:</span>
+        <span class="n">write_rows_to_sheet</span><span class="p">(</span><span class="n">rows_to_write</span><span class="p">,</span> <span class="n">index_sheet</span><span class="p">,</span>
+                            <span class="n">write_method</span><span class="o">=</span><span class="s2">&quot;update&quot;</span><span class="p">)</span>
+        <span class="k">return</span> <span class="kc">True</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">msg</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="s2">&quot;No UUIDs copied to Sheet ID: </span><span class="si">{}</span><span class="s2">, Sheet Name: </span><span class="si">{}</span><span class="s2">&quot;</span>
+                  <span class="s2">&quot;&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">index_sheet</span><span class="o">.</span><span class="n">id</span><span class="p">,</span> <span class="n">index_sheet</span><span class="o">.</span><span class="n">name</span><span class="p">)</span>
+        <span class="n">logging</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
+        <span class="k">return</span> <span class="kc">False</span>
 </pre></div>
 
         </details>
@@ -1450,6 +1619,13 @@ Column Name: Column ID</li>
         <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
     <span class="n">start</span> <span class="o">=</span> <span class="n">time</span><span class="o">.</span><span class="n">time</span><span class="p">()</span>
     <span class="n">source_sheets</span><span class="p">,</span> <span class="n">index_sheet</span><span class="p">,</span> <span class="n">index_col_map</span> <span class="o">=</span> <span class="n">refresh_sheets</span><span class="p">(</span><span class="n">minutes</span><span class="p">)</span>
+
+    <span class="c1"># Copy UUIDs from Push sheet to Index Sheet</span>
+    <span class="n">result</span> <span class="o">=</span> <span class="n">copy_uuid_to_index_sheet</span><span class="p">(</span><span class="n">index_sheet</span><span class="p">,</span> <span class="n">index_col_map</span><span class="p">)</span>
+    <span class="c1"># Refresh the index sheet since we just wrote data</span>
+    <span class="k">if</span> <span class="n">result</span><span class="p">:</span>
+        <span class="n">index_sheet</span> <span class="o">=</span> <span class="n">get_sheet</span><span class="p">(</span><span class="n">config</span><span class="o">.</span><span class="n">index_sheet</span><span class="p">,</span> <span class="n">config</span><span class="o">.</span><span class="n">minutes</span><span class="p">)</span>
+
     <span class="c1"># Link back created tickets first</span>
     <span class="n">sheets_updated</span> <span class="o">=</span> <span class="n">link_jira_index_to_sheet</span><span class="p">(</span>
         <span class="n">source_sheets</span><span class="p">,</span> <span class="n">index_sheet</span><span class="p">,</span> <span class="n">index_col_map</span><span class="p">)</span>
@@ -1467,9 +1643,7 @@ Column Name: Column ID</li>
     <span class="n">logging</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
     <span class="k">if</span> <span class="n">tickets_to_create</span><span class="p">:</span>
         <span class="c1"># Write parent rows</span>
-        <span class="n">push_ticket_sheet</span> <span class="o">=</span> <span class="n">get_sheet</span><span class="p">(</span>
-            <span class="n">config</span><span class="o">.</span><span class="n">push_tickets_sheet</span><span class="p">,</span> <span class="n">config</span><span class="o">.</span><span class="n">minutes</span><span class="p">)</span>
-        <span class="n">push_tickets_col_map</span> <span class="o">=</span> <span class="n">get_column_map</span><span class="p">(</span><span class="n">push_ticket_sheet</span><span class="p">)</span>
+        <span class="n">_</span><span class="p">,</span> <span class="n">push_tickets_col_map</span> <span class="o">=</span> <span class="n">get_push_tickets_sheet</span><span class="p">()</span>
         <span class="n">rows_to_write</span> <span class="o">=</span> <span class="n">form_rows</span><span class="p">(</span><span class="n">tickets_to_create</span><span class="p">,</span> <span class="n">push_tickets_col_map</span><span class="p">)</span>
         <span class="n">write_rows_to_sheet</span><span class="p">(</span><span class="n">rows_to_write</span><span class="p">,</span> <span class="n">config</span><span class="o">.</span><span class="n">push_tickets_sheet</span><span class="p">)</span>
         <span class="n">end</span> <span class="o">=</span> <span class="n">time</span><span class="o">.</span><span class="n">time</span><span class="p">()</span>
