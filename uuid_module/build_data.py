@@ -186,7 +186,7 @@ def build_row(row, columns_to_link, dest_col_map, jira_index_sheet,
                       "ColName {} | Cell link {}").format(
                 row.id, row.row_number, col, link_cell.link_in_from_cell)
             logging.debug(msg)
-        elif cell_check == "Broken":
+        elif cell_check in ("Broken", "BROKEN"):
             unlink_cell = smartsheet.models.Cell()
             unlink_cell.id = int(dest_col_map[col])
             unlink_cell.value = old_cell.value
