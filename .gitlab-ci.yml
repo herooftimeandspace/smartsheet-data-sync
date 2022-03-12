@@ -43,7 +43,7 @@ coverage:
   script:
   - export PATH=$PATH:~/.local/bin
   - python3 -m pip install -r test_requirements.txt
-  - pytest --cov-config=.coveragerc --cov=./ -vvv
+  - pytest -x --cov-config=.coveragerc --cov=./ -vvv
   - coverage xml --include="./**" -o coverage.xml
   artifacts:
     paths:
