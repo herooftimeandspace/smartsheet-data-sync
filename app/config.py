@@ -10,16 +10,11 @@ import smartsheet
 from apscheduler.executors.pool import ProcessPoolExecutor, ThreadPoolExecutor
 from apscheduler.schedulers.background import BlockingScheduler
 from botocore.exceptions import ClientError
-from uuid_module.helper import json_extract, truncate
-from uuid_module.variables import (dev_jira_idx_sheet, dev_minutes,
-                                   dev_push_jira_tickets_sheet,
-                                   dev_workspace_id, log_location,
-                                   module_log_name, prod_jira_idx_sheet,
-                                   prod_minutes, prod_push_jira_tickets_sheet,
-                                   prod_workspace_id)
+import uuid_module.helper as helper
+import uuid_module.variables as app_vars
 
 cwd = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-log_location = os.path.join(cwd, log_location)
+log_location = os.path.join(cwd, app_vars.log_location)
 logger = logging.getLogger(__name__)
 
 
@@ -87,7 +82,7 @@ def get_secret(secret_name):
             secret = get_secret_value_response['SecretString']
 
             api_key = json.loads(str(secret))
-            api_key = json_extract(api_key, "SMARTSHEET_ACCESS_TOKEN")
+            api_key = helper.json_extract(api_key, "SMARTSHEET_ACCESS_TOKEN")
             api_key = ''.join(map(str, api_key))
             return api_key
         else:
@@ -150,10 +145,10 @@ def set_env_vars(env):
     global push_tickets_sheet
 
     if env in ("-s", "--staging", "-staging", "-d", "--debug", "-debug"):
-        workspace_id = dev_workspace_id
-        index_sheet = dev_jira_idx_sheet
-        minutes = dev_minutes
-        push_tickets_sheet = dev_push_jira_tickets_sheet
+        workspace_id = app_vars.dev_workspace_id
+        index_sheet = app_vars.dev_jira_idx_sheet
+        minutes = app_vars.dev_minutes
+        push_tickets_sheet = app_vars.dev_push_jira_tickets_sheet
         env_msg = str("Using Staging variables for workspace_id "
                       "and Jira index sheet. Set workspace_id to: {}, "
                       "index_sheet to: {}, and minutes to: {}. "
@@ -161,10 +156,10 @@ def set_env_vars(env):
                       "").format(workspace_id, index_sheet, minutes,
                                  push_tickets_sheet)
     elif env in ("-p", "--prod", "-prod"):
-        workspace_id = prod_workspace_id
-        index_sheet = prod_jira_idx_sheet
-        minutes = prod_minutes
-        push_tickets_sheet = prod_push_jira_tickets_sheet
+        workspace_id = app_vars.prod_workspace_id
+        index_sheet = app_vars.prod_jira_idx_sheet
+        minutes = app_vars.prod_minutes
+        push_tickets_sheet = app_vars.prod_push_jira_tickets_sheet
         env_msg = str("Using Prod environment variables for workspace_id "
                       "and Jira index sheet. Set workspace_id to: {}, "
                       "index_sheet to: {}, and minutes to: {}. "
@@ -172,10 +167,10 @@ def set_env_vars(env):
                       "").format(workspace_id, index_sheet, minutes,
                                  push_tickets_sheet)
     else:
-        workspace_id = dev_workspace_id
-        index_sheet = dev_jira_idx_sheet
-        minutes = dev_minutes
-        push_tickets_sheet = dev_push_jira_tickets_sheet
+        workspace_id = app_vars.dev_workspace_id
+        index_sheet = app_vars.dev_jira_idx_sheet
+        minutes = app_vars.dev_minutes
+        push_tickets_sheet = app_vars.dev_push_jira_tickets_sheet
         env_msg = str("Invalid flag: {}. Using Staging variables. Set "
                       "workspace_id to: {}, index_sheet to: {}, and minutes "
                       "to: {}. Pushing tickets to {}"
@@ -286,7 +281,7 @@ def set_logging_config(env):
                     'class': 'logging.FileHandler',
                     'formatter': 'f',
                     'level': logging.DEBUG,
-                    'filename': log_location + module_log_name
+                    'filename': log_location + app_vars.module_log_name
                 },
                 'docker': {
                     'class': 'logging.StreamHandler',
@@ -334,7 +329,7 @@ def init(args):
     logging_config = set_logging_config(env)
     try:
         os.mkdir(log_location)
-        f = open(log_location + module_log_name, "w")
+        f = open(log_location + app_vars.module_log_name, "w")
         f.close
         dictConfig(logging_config)
     except FileExistsError:
@@ -375,7 +370,7 @@ def init(args):
 
     end = time.time()
     elapsed = end - start
-    elapsed = truncate(elapsed, 2)
+    elapsed = helper.truncate(elapsed, 2)
     logging.debug("Initialization took: {}".format(elapsed))
 
     return config

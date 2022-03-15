@@ -1,5 +1,6 @@
-import pytest
 import os
+
+import pytest
 
 
 @pytest.fixture
@@ -58,16 +59,16 @@ def test_case_0(env_fixture, env_dict):
     assert module_0.index_sheet == env_dict['index_sheet']
     assert module_0.minutes == env_dict['minutes']
     assert module_0.push_tickets_sheet == env_dict['push_tickets_sheet']
-    assert module_0.dev_jira_idx_sheet == 5786250381682564
-    assert module_0.dev_minutes == 525600
-    assert module_0.dev_workspace_id == [2618107878500228]
-    assert module_0.dev_push_jira_tickets_sheet == 3312520078354308
-    assert module_0.prod_jira_idx_sheet == 5366809688860548
-    assert module_0.prod_minutes == 65
-    assert module_0.prod_workspace_id == [8158274374657924,
-                                          1479840747546500,
-                                          6569226535233412]
-    var_1 = module_0.prod_push_jira_tickets_sheet
+    assert module_0.app_vars.dev_jira_idx_sheet == 5786250381682564
+    assert module_0.app_vars.dev_minutes == 525600
+    assert module_0.app_vars.dev_workspace_id == [2618107878500228]
+    assert module_0.app_vars.dev_push_jira_tickets_sheet == 3312520078354308
+    assert module_0.app_vars.prod_jira_idx_sheet == 5366809688860548
+    assert module_0.app_vars.prod_minutes == 65
+    assert module_0.app_vars.prod_workspace_id == [8158274374657924,
+                                                   1479840747546500,
+                                                   6569226535233412]
+    var_1 = module_0.app_vars.prod_push_jira_tickets_sheet
     assert var_1 is None
     assert module_0.logger.filters == []
     assert module_0.logger.name == 'app.config'
