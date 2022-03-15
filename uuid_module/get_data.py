@@ -2,16 +2,14 @@ import json
 import logging
 from collections import defaultdict
 from datetime import datetime
+
 import app.config as config
 import pytz
+import smartsheet
 
-
-from uuid_module.helper import (get_cell_data, get_cell_value, get_column_map,
-                                get_timestamp)
-from uuid_module.smartsheet_api import get_sheet, get_workspace
-from uuid_module.variables import (dev_jira_idx_sheet, dev_minutes,
-                                   dev_workspace_id, jira_col, summary_col,
-                                   uuid_col)
+import uuid_module.helper as helper
+import uuid_module.smartsheet_api as smartsheet_api
+import uuid_module.variables as app_vars
 
 logger = logging.getLogger(__name__)
 
@@ -46,7 +44,7 @@ def refresh_source_sheets(sheet_ids, minutes=0):
     source_sheets = []
     for sheet_id in sheet_ids:
         # Query the Smartsheet API for the sheet details
-        sheet = get_sheet(sheet_id, minutes)
+        sheet = smartsheet_api.get_sheet(sheet_id, minutes)
         source_sheets.append(sheet)
         logging.debug("Loaded Sheet ID: {} | "
                       "Sheet Name: {}".format(sheet.id, sheet.name))
@@ -100,19 +98,21 @@ def get_all_row_data(source_sheets, columns, minutes):
     # Create the empty dict we'll pass back
     all_row_data = {}
 
-    modified_since, _ = get_timestamp(minutes)
+    modified_since, _ = helper.get_timestamp(minutes)
     modified_since = utc.localize(modified_since)
     modified_since = modified_since.replace(tzinfo=utc)
 
     for sheet in source_sheets:
         # Iterate through the columns and map the column ID to the column name
-        col_map = get_column_map(sheet)
+        col_map = helper.get_column_map(sheet)
 
         for row in sheet.rows:
-            summary_cell = get_cell_value(
-                row, summary_col, col_map)
+            # TODO: Replace with get_cell_data
+            summary_cell = helper.get_cell_value(
+                row, app_vars.summary_col, col_map)
             try:
-                uuid_cell = get_cell_data(row, uuid_col, col_map)
+                uuid_cell = helper.get_cell_data(
+                    row, app_vars.uuid_col, col_map)
             except KeyError:
                 logging.debug("Sheet ID {} | Sheet Name {} "
                               "doesn't have UUID column. "
@@ -158,7 +158,8 @@ def get_all_row_data(source_sheets, columns, minutes):
                     # Check if the cell exists, using the row ID and the
                     # column name. If the cell exists, append its value
                     # to the row_data list.
-                    cell = get_cell_value(row, col_name, col_map)
+                    # TODO: Replace with get_cell_data
+                    cell = helper.get_cell_value(row, col_name, col_map)
                     row_data[col_name] = cell
 
                     msg = str("Appending {}: {} to dict").format(
@@ -196,6 +197,14 @@ def get_blank_uuids(source_sheets):
         msg = str("Source Sheets should be type: list not type {}"
                   "").format(type(source_sheets))
         raise TypeError(msg)
+    if source_sheets is None:
+        msg = str("Source Sheets list is empty.")
+        logging.info(msg)
+        return None
+    for id in source_sheets:
+        if not isinstance(id, smartsheet.models.Sheet):
+            msg = "Sheets in Source Sheets must be Smartsheet Sheet objects"
+            raise ValueError(msg)
 
     # Create an empty dict of sheets to update
     sheets_to_update = {}
@@ -204,9 +213,9 @@ def get_blank_uuids(source_sheets):
     for sheet in source_sheets:
         logging.debug("Loaded " + str(len(sheet.rows)) + " rows from sheet: "
                       + str(sheet.id) + " | Sheet Name: " + sheet.name)
-        col_map = get_column_map(sheet)
+        col_map = helper.get_column_map(sheet)
         try:
-            column_id = col_map[uuid_col]
+            column_id = col_map[app_vars.uuid_col]
         except KeyError:
             logging.debug("Sheet ID {} | Sheet Name {} "
                           "doesn't have UUID column. "
@@ -220,7 +229,8 @@ def get_blank_uuids(source_sheets):
         for row in sheet.rows:
             # Get the existing UUID value and the timestamp when the row was
             # created.
-            uuid_value = get_cell_value(row, uuid_col, col_map)
+            # TODO: Replace with get_cell_data
+            uuid_value = helper.get_cell_value(row, app_vars.uuid_col, col_map)
             created_at = str(row.created_at)
 
             # Strip out all characters except the numbers in the timestamp.
@@ -237,7 +247,7 @@ def get_blank_uuids(source_sheets):
             if uuid_value == uuid:
                 msg = str("Cell at Column Name: {} | Row ID: {} | "
                           "Row Number: {}, {} matches existing UUID. "
-                          "Cell skipped.").format(uuid_col, row.id,
+                          "Cell skipped.").format(app_vars.uuid_col, row.id,
                                                   row.row_number, uuid)
                 logging.debug(msg)
                 continue
@@ -245,11 +255,12 @@ def get_blank_uuids(source_sheets):
                 msg = str("Cell at Column Name: {} | Row ID: {} | "
                           "Row Number: {} has an existing value of {}. "
                           "Tagging for update. "
-                          "{}.").format(uuid_col, row.id, row.row_number,
+                          "{}.").format(app_vars.uuid_col, row.id,
+                                        row.row_number,
                                         uuid_value, uuid)
                 logging.debug(msg)
                 rows_to_update[row.id] = {
-                    "column_id": col_map[uuid_col], "uuid": uuid}
+                    "column_id": col_map[app_vars.uuid_col], "uuid": uuid}
             else:
                 msg = str("There was an issue parsing rows in the sheet. "
                           "Sheet ID: {} | Sheet Name: {}"
@@ -270,7 +281,7 @@ def get_blank_uuids(source_sheets):
         return None
 
 
-def load_jira_index(index_sheet=dev_jira_idx_sheet):
+def load_jira_index(index_sheet_id=app_vars.dev_jira_idx_sheet):
     """Create indexes on the Jira index rows. Pulls from the Smartsheet API
        every time to get the most up-to-date version of the sheet data.
 
@@ -289,17 +300,23 @@ def load_jira_index(index_sheet=dev_jira_idx_sheet):
 
     """
     # TODO: Refactor for smartsheet.sheet object / dict instead of Int
-    if not isinstance(index_sheet, int):
+    if not isinstance(index_sheet_id, int):
         msg = str("Index Sheet should be type: int not type {}"
-                  "").format(type(index_sheet))
+                  "").format(type(index_sheet_id))
         raise TypeError(msg)
+    if index_sheet_id not in [app_vars.dev_jira_idx_sheet,
+                              app_vars.prod_jira_idx_sheet]:
+        msg = str("Index Sheet ID is {} but it should be {} or {}"
+                  "").format(index_sheet_id, app_vars.prod_jira_idx_sheet,
+                             app_vars.dev_jira_idx_sheet)
+        raise ValueError(msg)
 
-    jira_index_sheet = get_sheet(index_sheet, minutes=0)
+    jira_index_sheet = smartsheet_api.get_sheet(index_sheet_id, minutes=0)
     msg = str("{} rows loaded from sheet ID: {} | Sheet name: {}"
               "").format(len(jira_index_sheet.rows), jira_index_sheet.id,
                          jira_index_sheet.name)
     logging.debug(msg)
-    jira_index_col_map = get_column_map(jira_index_sheet)
+    jira_index_col_map = helper.get_column_map(jira_index_sheet)
 
     # Create a dict of rows where the values are lists.
     jira_index_rows = defaultdict(list)
@@ -307,8 +324,8 @@ def load_jira_index(index_sheet=dev_jira_idx_sheet):
     # Iterate through the rows on the Index sheet. If there's a Jira ticket
     # in the row, return it and its details.
     for row in jira_index_sheet.rows:
-        jira_cell = get_cell_data(
-            row, jira_col, jira_index_col_map)
+        jira_cell = helper.get_cell_data(
+            row, app_vars.jira_col, jira_index_col_map)
         if jira_cell is None:
             logging.debug("Jira cell doesn't exist. Skipping.")
             continue
@@ -337,30 +354,27 @@ def get_sub_indexes(project_data):
         msg = str("Project data must be type: dict not type: {}."
                   "").format(type(project_data))
         raise TypeError(msg)
+    if project_data is None:
+        msg = str("Project data cannot be empty")
+        raise ValueError(msg)
 
     jira_sub_index = defaultdict(list)
     project_sub_index = defaultdict(list)
 
-    try:
-        for k, v in project_data.items():
-            if jira_col in v.keys():
-                if v[jira_col] is not None:
-                    # UUID: Jira Ticket
-                    project_sub_index[k] = v[jira_col]
-                    ticket = v[jira_col]
-                    jira_sub_index[ticket].append(k)
-    except AttributeError as e:
-        msg = str("Project Data is {}. Aborting "
-                  "creating sub-indexes. {}").format(project_data, e)
-        logging.warning(msg)
-        return
+    for k, v in project_data.items():
+        if app_vars.jira_col in v.keys():
+            if v[app_vars.jira_col] is not None:
+                # UUID: Jira Ticket
+                project_sub_index[k] = v[app_vars.jira_col]
+                ticket = v[app_vars.jira_col]
+                jira_sub_index[ticket].append(k)
 
     return jira_sub_index, project_sub_index
 
 
-def get_all_sheet_ids(minutes=dev_minutes,
-                      workspace_id=dev_workspace_id,
-                      index_sheet=dev_jira_idx_sheet):
+def get_all_sheet_ids(minutes=app_vars.dev_minutes,
+                      workspace_id=app_vars.dev_workspace_id,
+                      index_sheet=app_vars.dev_jira_idx_sheet):
     """Get all the sheet IDs from every sheet in every folder, subfolder and
        workspace as defined in the workspace_id.
 
@@ -403,13 +417,13 @@ def get_all_sheet_ids(minutes=dev_minutes,
 
     # Get the workspace Smartsheet object from the workspace_id
     # configured in our variables.
-    modified_since, _ = get_timestamp(minutes)
+    modified_since, _ = helper.get_timestamp(minutes)
     modified_since = utc.localize(modified_since)
     modified_since = modified_since.replace(tzinfo=utc)
     sheet_ids = []
 
     for ws_id in workspace_id:
-        workspace = get_workspace(ws_id)
+        workspace = smartsheet_api.get_workspace(ws_id)
 
         if workspace.folders:
             ws = str(workspace)
