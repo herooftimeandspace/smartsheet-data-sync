@@ -1,9 +1,10 @@
+import datetime
 import json
 import os
 
 import pytest
 import smartsheet
-import datetime
+import uuid_module.helper as helper
 from freezegun import freeze_time
 
 true = True
@@ -197,14 +198,12 @@ def test_get_cell_data(row, col_name, col_map):
 
 
 def test_get_column_map(sheet, col_map):
-    import uuid_module.helper as helper
     with pytest.raises(TypeError):
         helper.get_column_map("Sheet")
     assert helper.get_column_map(sheet) == col_map
 
 
 def test_has_cell_link(cell, bad_cell, direction):
-    import uuid_module.helper as helper
     with pytest.raises(TypeError):
         helper.has_cell_link("cell", direction)
     with pytest.raises(TypeError):
@@ -220,7 +219,6 @@ def test_has_cell_link(cell, bad_cell, direction):
 
 
 def test_get_cell_value(row, col_name, col_map):
-    import uuid_module.helper as helper
     with pytest.raises(TypeError):
         helper.get_cell_value("Row", col_name, col_map)
     with pytest.raises(TypeError):
@@ -232,7 +230,6 @@ def test_get_cell_value(row, col_name, col_map):
 
 
 def test_json_extract(json_extract_fixture):
-    import uuid_module.helper as helper
     obj, key = json_extract_fixture
     with pytest.raises(TypeError):
         helper.json_extract("String", -1)
@@ -243,7 +240,6 @@ def test_json_extract(json_extract_fixture):
 
 
 def test_truncate(number, decimals):
-    import uuid_module.helper as helper
     with pytest.raises(TypeError):
         helper.truncate("Benny's Adventure Team", 4)
     with pytest.raises(TypeError):
@@ -255,7 +251,6 @@ def test_truncate(number, decimals):
 
 @freeze_time("2012-01-14 12:13:00")
 def test_get_timestamp(decimals):
-    import uuid_module.helper as helper
     with pytest.raises(TypeError):
         helper.get_timestamp("number")
     with pytest.raises(ValueError):
@@ -269,7 +264,6 @@ def test_get_timestamp(decimals):
 
 
 def test_chunks(simple_list, decimals):
-    import uuid_module.helper as helper
     with pytest.raises(TypeError):
         for i in helper.chunks("simple_list", 3):
             pass

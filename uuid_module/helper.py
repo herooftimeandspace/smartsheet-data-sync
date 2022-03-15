@@ -2,6 +2,7 @@ import json
 import logging
 import math
 from datetime import datetime, timedelta
+
 import smartsheet
 
 logger = logging.getLogger(__name__)
@@ -125,6 +126,8 @@ def has_cell_link(old_cell, direction):
             return "Unlinked"
     else:
         return None
+
+# TODO: Replace with get_cell_data
 
 
 def get_cell_value(row, col_name, col_map):
