@@ -1,9 +1,10 @@
-from venv import create
-import pytest
-from unittest.mock import patch, create_autospec
 import json
-import smartsheet
 import os
+from unittest.mock import create_autospec, patch
+
+import pytest
+import smartsheet
+import uuid_module.helper as helper
 
 cwd = os.path.dirname(os.path.abspath(__file__))
 
@@ -28,7 +29,7 @@ def sheet_fixture():
         sheet_json = json.load(f)
 
     def no_uuid_col_fixture(sheet_json):
-        sheet_json['columns'][20]['name'] = "Not UUID"
+        sheet_json['columns'][20]['title'] = "Not UUID"
         no_uuid_col = smartsheet.models.Sheet(sheet_json)
         return no_uuid_col
 
@@ -44,10 +45,15 @@ def sheet_fixture():
     return sheet, sheet_list, sheet_no_uuid_col, sheet_no_summary_col
 
 
-@pytest.fixture()
-def one_sheet():
-    sheet, _, _, _ = sheet_fixture
-    return sheet
+@pytest.fixture(scope="module")
+def jira_index_sheet_fixture():
+    with open(cwd + '/dev_jira_index_sheet.json') as f:
+        dev_idx_sheet = json.load(f)
+        dev_idx_sheet = smartsheet.models.Sheet(dev_idx_sheet)
+    with open(cwd + '/dev_jira_idx_rows.json') as f:
+        dev_idx_rows = json.load(f)
+    dev_idx_col_map = helper.get_column_map(dev_idx_sheet)
+    return dev_idx_sheet, dev_idx_col_map, dev_idx_rows
 
 
 def set_init_fixture():
@@ -73,48 +79,198 @@ def test_full_jira_sync_0(env_dict):
     with pytest.raises(ValueError):
         app.full_jira_sync(-1337)
     # app.full_jira_sync(minutes)
-    assert app.sheet_columns == ["UUID", "Tasks", "Description",
-                                 "Status", "Assigned To", "Jira Ticket",
-                                 "Duration", "Start", "Finish", "Predecessors",
-                                 "Summary"]
+    assert app.app_vars.sheet_columns == ["UUID", "Tasks", "Description",
+                                          "Status", "Assigned To",
+                                          "Jira Ticket", "Duration", "Start",
+                                          "Finish", "Predecessors", "Summary"]
 
 
-# @patch("uuid_module.smartsheet_api.write_rows_to_sheet",
-#        {"result": {"statusCode": 200}})
-# @patch("uuid_module.get_data.get_all_sheet_ids", None)
-# def test_full_jira_sync_1(env_dict, sheet_fixture):
+def test_full_jira_sync_1(env_dict):
+    import app.app as app
+    minutes = env_dict['minutes']
+
+    @patch("uuid_module.smartsheet_api.write_rows_to_sheet",
+           return_value={"result": {"statusCode": 200}})
+    @patch("uuid_module.get_data.get_all_sheet_ids", return_value=[])
+    def test_0(mock_0, mock_1):
+        var_0 = app.full_jira_sync(minutes)
+        return var_0
+
+    result_0 = test_0()
+    assert isinstance(result_0, str)
+    result_1 = "Sheet index is empty. " in result_0
+    assert result_1 is True
+
+
+def test_full_jira_sync_2(env_dict, sheet_fixture):
+    import app.app as app
+    sheet, _, _, _ = sheet_fixture
+    minutes = env_dict['minutes']
+
+    @patch("uuid_module.get_data.refresh_source_sheets", return_value=[sheet])
+    @patch("uuid_module.get_data.get_all_sheet_ids",
+           return_value=[3027747506284420])
+    @patch("uuid_module.write_data.write_uuids", return_value=1)
+    @patch("uuid_module.get_data.get_all_row_data",
+           return_value={})
+    def test_0(mock_0, mock_1, mock_2, mock_3):
+        var_0 = app.full_jira_sync(minutes)
+        return var_0
+
+    result_0 = test_0()
+    assert isinstance(result_0, str)
+    result_1 = "Project UUID Index is empty. " in result_0
+    assert result_1 is True
+
+
+def test_full_jira_sync_3(env_dict, sheet_fixture):
+    import app.app as app
+    sheet, _, _, _ = sheet_fixture
+    minutes = env_dict['minutes']
+
+    @patch("uuid_module.get_data.refresh_source_sheets", return_value=[sheet])
+    @patch("uuid_module.get_data.get_all_sheet_ids",
+           return_value=[3027747506284420])
+    @patch("uuid_module.write_data.write_uuids", return_value=1)
+    @patch("uuid_module.get_data.get_sub_indexes",
+           return_value=({"UUID": "Value"}, {}))
+    def test_0(mock_0, mock_1, mock_2, mock_3):
+        var_0 = app.full_jira_sync(minutes)
+        return var_0
+
+    result_0 = test_0()
+    assert isinstance(result_0, str)
+    result_1 = "Project sub-index is empty. " in result_0
+    assert result_1 is True
+
+
+def test_full_jira_sync_4(env_dict, sheet_fixture):
+    import app.app as app
+    sheet, _, _, _ = sheet_fixture
+    minutes = env_dict['minutes']
+
+    @patch("uuid_module.get_data.refresh_source_sheets", return_value=[sheet])
+    @patch("uuid_module.get_data.get_all_sheet_ids",
+           return_value=[3027747506284420])
+    @patch("uuid_module.write_data.write_uuids", return_value=1)
+    @patch("uuid_module.get_data.get_sub_indexes",
+           return_value=({}, {"UUID": "Value"}))
+    def test_0(mock_0, mock_1, mock_2, mock_3):
+        var_0 = app.full_jira_sync(minutes)
+        return var_0
+
+    result_0 = test_0()
+    assert isinstance(result_0, str)
+    result_1 = "Jira sub-index is empty. " in result_0
+    assert result_1 is True
+
+
+def test_full_jira_sync_5(env_dict, sheet_fixture, jira_index_sheet_fixture):
+    import app.app as app
+    sheet, _, _, _ = sheet_fixture
+    index_sheet, index_col_map, index_rows = jira_index_sheet_fixture
+    minutes = env_dict['minutes']
+
+    @patch("uuid_module.get_data.refresh_source_sheets", return_value=[sheet])
+    @patch("uuid_module.get_data.get_all_sheet_ids",
+           return_value=[3027747506284420])
+    @patch("uuid_module.smartsheet_api.write_rows_to_sheet",
+           return_value={"result": {"statusCode": 200}})
+    @patch("uuid_module.get_data.load_jira_index",
+           return_value=(index_sheet, index_col_map, index_rows))
+    def test_0(mock_0, mock_1, mock_2, mock_3):
+        var_0 = app.full_jira_sync(minutes)
+        return var_0
+
+    @patch("uuid_module.get_data.refresh_source_sheets",
+           return_value=[sheet])
+    @patch("uuid_module.get_data.get_all_sheet_ids",
+           return_value=[3027747506284420])
+    @patch("uuid_module.smartsheet_api.write_rows_to_sheet",
+           return_value={"result": {"statusCode": 200}})
+    @patch("uuid_module.helper.truncate", return_value=45)
+    @patch("uuid_module.get_data.load_jira_index",
+           return_value=(index_sheet, index_col_map, index_rows))
+    def test_1(mock_0, mock_1, mock_2, mock_3, mock_4):
+        var_0, var_1 = app.full_jira_sync(minutes)
+        return var_0, var_1
+
+    result_0 = test_0()
+    result_1 = "Full Jira sync took: " in result_0
+    assert isinstance(result_0, str)
+    assert result_1 is True
+
+    _, result_2 = test_1()
+    result_3 = "seconds longer than the interval." in result_2
+    assert isinstance(result_2, str)
+    assert result_3 is True
+
+
+def test_full_smartsheet_sync_0(env_dict):
+    import app.app as app
+    with pytest.raises(TypeError):
+        app.full_smartsheet_sync("minutes")
+    with pytest.raises(ValueError):
+        app.full_smartsheet_sync(-1337)
+    assert app.app_vars.sheet_columns == ["UUID", "Tasks", "Description",
+                                          "Status", "Assigned To",
+                                          "Jira Ticket", "Duration", "Start",
+                                          "Finish", "Predecessors", "Summary"]
+
+
+def test_full_smartsheet_sync_1(env_dict):
+    import app.app as app
+
+    # sheet, _, _, _ = sheet_fixture
+    environment_variables = env_dict
+    minutes = environment_variables['minutes']
+
+    @ patch("uuid_module.smartsheet_api.write_rows_to_sheet",
+            return_value={"result": {"statusCode": 200}})
+    @ patch("uuid_module.get_data.get_all_sheet_ids", return_value=[])
+    def test_0(mock_0, mock_1):
+        var_0 = app.full_smartsheet_sync(minutes)
+        return var_0
+    result_0 = test_0()
+
+    assert isinstance(result_0, str)
+    result_1 = "Sheet index is empty. " in result_0
+    assert result_1 is True
+
+
+def test_full_smartsheet_sync_2(env_dict, sheet_fixture):
+    import app.app as app
+    sheet, _, _, _ = sheet_fixture
+    minutes = env_dict['minutes']
+
+    @patch("uuid_module.get_data.refresh_source_sheets", return_value=[sheet])
+    @patch("uuid_module.smartsheet_api.write_rows_to_sheet",
+           return_value={"result": {"statusCode": 200}})
+    def test_0(mock_0, mock_1):
+        var_0 = app.full_smartsheet_sync(minutes)
+        return var_0
+
+    result_0 = test_0()
+    assert isinstance(result_0, str)
+    result_1 = "Full Smartsheet cross-sheet sync took" in result_0
+    assert result_1 is True
+
+
+# def test_full_smartsheet_sync_3(env_dict, sheet_fixture):
 #     import app.app as app
-#     # sheet, _, _, _ = sheet_fixture
-#     environment_variables = env_dict
-#     minutes = environment_variables['minutes']
-#     var_0 = app.full_jira_sync(minutes)
-#     assert isinstance(var_0, str)
-#     result = "Sheet index is empty. " in var_0
-#     assert result is True
+#     sheet, _, _, _ = sheet_fixture
+#     minutes = env_dict['minutes']
 
+#     @patch("uuid_module.get_data.refresh_source_sheets",
+#            return_value=[sheet])
+#     @patch("uuid_module.smartsheet_api.write_rows_to_sheet",
+#            return_value={"result": {"statusCode": 200}})
+#     @patch("uuid_module.helper.truncate", return_value=180)
+#     def test_0(mock_0, mock_1, mock_2):
+#         var_0, var_1 = app.full_smartsheet_sync(minutes)
+#         return var_0, var_1
 
-# @patch("uuid_module.get_data.refresh_source_sheets", [one_sheet])
-# @patch("uuid_module.get_data.get_all_sheet_ids", [3027747506284420])
-# @patch("uuid_module.write_data_write_uuids", 1)
-# @patch("uuid_module.get_data.get_all_row_data", (None, None))
-# def test_full_jira_sync_2(env_dict):
-#     import app.app as app
-#     import uuid_module.get_data as get
-#     import uuid_module.smartsheet_api as api
-#     import uuid_module.write_data as write
-#     refresh_source_sheets = create_autospec(
-#         get.refresh_source_sheets, return_value=True)
-#     get_all_sheet_ids = create_autospec(
-#         get.get_all_sheet_ids, return_value=True)
-#     write_rows_to_sheet = \
-#         create_autospec(write.write_rows_to_sheet, return_value={
-#             "result": {"statusCode": 200}})
-#     write_uuids = create_autospec(write.write_uuids, return_value=1)
-#     get_all_row_data = create_autospec(
-#         get.get_all_row_data, return_value=(None, None))
-#     environment_variables = env_dict
-#     minutes = environment_variables['minutes']
-#     var_0 = app.full_jira_sync(minutes)
-#     assert isinstance(var_0, str)
-#     result = "Project UUID Index is empty. " in var_0
-#     assert result is True
+#     _, result_0 = test_0()
+#     assert isinstance(result_0, str)
+#     result_1 = "seconds longer than " in result_0
+#     assert result_1 is True

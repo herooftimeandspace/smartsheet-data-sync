@@ -2,12 +2,14 @@ import gc
 import logging
 import threading
 import time
-import app.config as config
-from uuid_module.create_jira_tickets import create_tickets
-# from uuid_module.cell_link_sheet_data import write_uuid_cell_links
 
-from uuid_module.helper import truncate
-from uuid_module.variables import sheet_columns
+import uuid_module.create_jira_tickets as create_jira_tickets
+import uuid_module.helper as helper
+import uuid_module.variables as app_vars
+
+import app.config as config
+
+# import uuid_module.cell_link_sheet_data as uuid_links
 
 
 sheet_id_lock = threading.Lock()
@@ -25,10 +27,8 @@ def full_jira_sync(minutes):
         TypeError: Minutes should be an INT
         ValueError: Minutes should be a positive number, or zero
     """
-    from uuid_module.get_data import (get_all_row_data, get_all_sheet_ids,
-                                      get_blank_uuids, get_sub_indexes,
-                                      refresh_source_sheets)
-    from uuid_module.write_data import write_jira_index_cell_links, write_uuids
+    import uuid_module.get_data as get_data
+    import uuid_module.write_data as write_data
     if not isinstance(minutes, int):
         msg = str("Minutes should be type: int, not {}").format(type(minutes))
         raise TypeError(msg)
@@ -46,7 +46,7 @@ def full_jira_sync(minutes):
     global sheet_id_lock
 
     with sheet_id_lock:
-        sheet_ids = get_all_sheet_ids(
+        sheet_ids = get_data.get_all_sheet_ids(
             minutes, config.workspace_id, config.index_sheet)
         sheet_ids = list(set(sheet_ids))
 
@@ -54,34 +54,30 @@ def full_jira_sync(minutes):
     # since the last run.
     global sheet_index_lock
     with sheet_index_lock:
-        source_sheets = refresh_source_sheets(sheet_ids, minutes)
+        source_sheets = get_data.refresh_source_sheets(sheet_ids, minutes)
 
     if not source_sheets:
         end = time.time()
         elapsed = end - start
-        elapsed = truncate(elapsed, 3)
+        elapsed = helper.truncate(elapsed, 3)
         msg = str("Sheet index is empty. "
                   "Aborting after {} seconds.").format(elapsed)
         logging.info(msg)
         return msg
 
-    blank_uuid_index = get_blank_uuids(source_sheets)
+    blank_uuid_index = get_data.get_blank_uuids(source_sheets)
     if blank_uuid_index:
         logging.info("There are {} project sheets to be updated "
                      "with UUIDs".format(len(blank_uuid_index)))
-        sheets_updated = write_uuids(blank_uuid_index)
+        sheets_updated = write_data.write_uuids(blank_uuid_index)
         if sheets_updated:
             logging.info("{} project sheet(s) updated with UUIDs"
                          "".format(sheets_updated))
 
     global project_index_lock
     with project_index_lock:
-        try:
-            project_uuid_index = get_all_row_data(
-                source_sheets, sheet_columns, minutes)
-        except ValueError as e:
-            msg = str("Getting all row data returned an error. {}").format(e)
-            logging.error(msg)
+        project_uuid_index = get_data.get_all_row_data(
+            source_sheets, app_vars.sheet_columns, minutes)
 
     if project_uuid_index:
         logging.info("Project Index is {} "
@@ -90,104 +86,125 @@ def full_jira_sync(minutes):
     if not project_uuid_index:
         end = time.time()
         elapsed = end - start
-        elapsed = truncate(elapsed, 3)
+        elapsed = helper.truncate(elapsed, 3)
         msg = str("Project UUID Index is empty. "
                   "Aborting after {} seconds.").format(elapsed)
         logging.info(msg)
         return msg
 
-    try:
-        jira_sub_index, project_sub_index = get_sub_indexes(
-            project_uuid_index)
-    except ValueError as e:
-        msg = str("Getting sub-indexes returned an error. {}").format(e)
-        logging.error(msg)
+    jira_sub_index, project_sub_index = get_data.get_sub_indexes(
+        project_uuid_index)
+
+    if not project_sub_index:
+        end = time.time()
+        elapsed = end - start
+        elapsed = helper.truncate(elapsed, 3)
+        msg = str("Project sub-index is empty. "
+                  "Aborting after {} seconds.").format(elapsed)
+        logging.info(msg)
+        return msg
 
     if project_sub_index:
         logging.info("Project Sub Index is {} "
                      "items long".format(len(project_sub_index)))
 
-    if not project_sub_index:
+    if not jira_sub_index:
         end = time.time()
         elapsed = end - start
-        elapsed = truncate(elapsed, 3)
-        msg = str("Project sub-index is empty. "
+        elapsed = helper.truncate(elapsed, 3)
+        msg = str("Jira sub-index is empty. "
                   "Aborting after {} seconds.").format(elapsed)
         logging.info(msg)
-        return
+        return msg
 
     if jira_sub_index:
         logging.info("Jira Sub Index is {} "
                      "items long".format(len(jira_sub_index)))
 
-    if not jira_sub_index:
-        end = time.time()
-        elapsed = end - start
-        elapsed = truncate(elapsed, 3)
-        msg = str("Jira sub-index is empty. "
-                  "Aborting after {} seconds.").format(elapsed)
-        logging.info(msg)
-        return
-
-    write_jira_index_cell_links(project_sub_index, config.index_sheet)
+    write_data.write_jira_index_cell_links(project_sub_index,
+                                           config.index_sheet)
 
     # write_uuid_cell_links(project_uuid_index,
     #                       source_sheets)
 
     end = time.time()
     elapsed = end - start
-    elapsed = truncate(elapsed, 3)
+    elapsed = helper.truncate(elapsed, 3)
     msg = str("Full Jira sync took: {} seconds.").format(elapsed)
     logging.info(msg)
-    if elapsed > 30:
-        msg = str("Full Jira Sync took longer than "
-                  "the interval")
-        logging.warning(msg)
     gc.collect()
-    return msg
+    if elapsed > 30:
+        delta = elapsed - 30
+        warn_msg = str("Full Jira Sync took {} seconds longer than "
+                       "the interval.").format(delta)
+        logging.warning(warn_msg)
+        return msg, warn_msg
+    else:
+        return msg
 
 
-def full_smartsheet_sync():
+def full_smartsheet_sync(minutes):
     """Sync Smartsheet data between rows using UUID
     """
-    from uuid_module.get_data import (get_all_row_data, get_all_sheet_ids,
-                                      refresh_source_sheets)
-    start = time.time()
-    msg = str("Starting refresh of Smartsheet project data.").format()
-    logging.debug(msg)
+    import uuid_module.get_data as get_data
+    import uuid_module.write_data as write_data
+    if not isinstance(minutes, int):
+        msg = str("Minutes should be type: int, not {}").format(type(minutes))
+        raise TypeError(msg)
+    if minutes < 0:
+        msg = str("Minutes should be >= 0, not {}").format(minutes)
+        raise ValueError(msg)
 
+    start = time.time()
+    msg = str("Starting refresh of Smartsheet project data. "
+              "Looking back {} minutes from {}"
+              "").format(minutes,
+                         time.strftime('%Y-%m-%d %H:%M:%S',
+                                       time.localtime(start)))
+    logging.debug(msg)
     global sheet_id_lock
+
     with sheet_id_lock:
-        sheet_ids = get_all_sheet_ids(
-            config.minutes, config.workspace_id, config.index_sheet)
+        sheet_ids = get_data.get_all_sheet_ids(
+            minutes, config.workspace_id, config.index_sheet)
         sheet_ids = list(set(sheet_ids))
 
     # Calculate a number minutes ago to get only the rows that were modified
     # since the last run.
     global sheet_index_lock
     with sheet_index_lock:
-        source_sheets = refresh_source_sheets(sheet_ids, config.minutes)
+        source_sheets = get_data.refresh_source_sheets(sheet_ids, minutes)
+
+    if not source_sheets:
+        end = time.time()
+        elapsed = end - start
+        elapsed = helper.truncate(elapsed, 3)
+        msg = str("Sheet index is empty. "
+                  "Aborting after {} seconds.").format(elapsed)
+        logging.info(msg)
+        return msg
 
     with project_index_lock:
-        try:
-            project_uuid_index = get_all_row_data(
-                source_sheets, sheet_columns, config.minutes)
-        except ValueError as e:
-            msg = str("Getting all row data returned an error. {}").format(e)
-            logging.error(msg)
+        project_uuid_index = get_data.get_all_row_data(
+            source_sheets, app_vars.sheet_columns, config.minutes)
 
     # write_uuid_cell_links(project_uuid_index, source_sheets)
 
     end = time.time()
     elapsed = end - start
-    elapsed = truncate(elapsed, 3)
-    logging.info(
-        "Full Smartsheet cross-sheet sync took: {} seconds.".format(elapsed))
-    if elapsed > 120:
-        msg = str("Full Smartsheet cross-sync took longer than "
-                  "the interval")
-        logging.warning(msg)
+    elapsed = helper.truncate(elapsed, 3)
+    msg = str("Full Smartsheet cross-sheet sync took: {} seconds."
+              "").format(elapsed)
+    logging.info(msg)
     gc.collect()
+    if elapsed > 120:
+        delta = elapsed - 120
+        warn_msg = str("Full Smartsheet cross-sheet sync took {} seconds "
+                       "longer than the interval.").format(delta)
+        logging.warning(warn_msg)
+        return msg, warn_msg
+    else:
+        return msg
 
 
 def main():
@@ -227,7 +244,7 @@ def main():
                   "Interval = every 5 minutes.")
     logging.debug("------------------------")
     # TODO: Revert to 5 mins before merging with debug
-    config.scheduler.add_job(create_tickets,
+    config.scheduler.add_job(create_jira_tickets.create_tickets,
                              'interval',
                              args=[config.minutes],
                              minutes=2)
