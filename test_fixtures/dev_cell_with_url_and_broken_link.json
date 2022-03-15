@@ -1,0 +1,13 @@
+{
+    "columnId": 2171306908116868,
+    "value": "Test create sub-task from SS",
+    "objectValue": "Test create sub-task from SS",
+    "displayValue": "Test create sub-task from SS",
+    "linkInFromCell": {
+        "status": "BROKEN",
+        "sheetId": 5690054296266628,
+        "rowId": 5858214046263172,
+        "columnId": 1993865916901252,
+        "sheetName": "Catch-All"
+    }
+}
