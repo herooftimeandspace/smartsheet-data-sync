@@ -1,7 +1,9 @@
 import json
 import logging
 import math
+import os
 from datetime import datetime, timedelta
+from pathlib import Path
 
 import smartsheet
 
@@ -310,3 +312,12 @@ def chunks(source, n):
 
     for i in range(0, len(source), n):
         yield source[i:i + n]
+
+
+def get_local_paths():
+    cwd = os.path.dirname(os.path.abspath(__file__))
+    p = Path(cwd)
+    root = p.parent
+    fixtures_dir = p.parent
+    fixtures_dir = str(str(fixtures_dir) + "/test_fixtures")
+    return root, fixtures_dir
