@@ -2,8 +2,8 @@ import logging
 
 import smartsheet
 
-from uuid_module.helper import chunks, get_timestamp
-from uuid_module.variables import dev_minutes, dev_workspace_id
+import uuid_module.helper as helper
+import uuid_module.variables as app_vars
 
 
 def set_smartsheet_client():
@@ -76,7 +76,7 @@ def write_rows_to_sheet(rows_to_write, sheet, write_method="add"):
             # the rows into segments of 125. Anything over 125 will cause
             # the API to fail.
             if len(rows_to_write) > 125:
-                chunked_cells = chunks(rows_to_write, 125)
+                chunked_cells = helper.chunks(rows_to_write, 125)
                 for i in chunked_cells:
                     try:
                         result = smartsheet_client.Sheets.add_rows(sheet_id,
@@ -106,7 +106,7 @@ def write_rows_to_sheet(rows_to_write, sheet, write_method="add"):
         # TODO: Handle results better (get HTTP codes, messages)
         elif rows_to_write and write_method == "update":
             if len(rows_to_write) > 125:
-                chunked_cells = chunks(rows_to_write, 125)
+                chunked_cells = helper.chunks(rows_to_write, 125)
                 for i in chunked_cells:
                     try:
                         result = smartsheet_client.Sheets.\
@@ -140,7 +140,7 @@ def write_rows_to_sheet(rows_to_write, sheet, write_method="add"):
         return None
 
 
-def get_workspace(workspace_id=dev_workspace_id):
+def get_workspace(workspace_id=app_vars.dev_workspace_id):
     """Gets all reports, sheets, and dashboards from a given Workspace ID.
     LoadAll = True to get objects from all nested folders in the Workspace.
 
@@ -172,7 +172,7 @@ def get_workspace(workspace_id=dev_workspace_id):
         return workspace
 
 
-def get_sheet(sheet_id, minutes=dev_minutes):
+def get_sheet(sheet_id, minutes=app_vars.dev_minutes):
     """Gets a sheet from the Smartsheet API via Sheet ID.
 
     Args:
@@ -200,7 +200,7 @@ def get_sheet(sheet_id, minutes=dev_minutes):
         raise TypeError(msg)
 
     if minutes > 0:
-        _, modified_since = get_timestamp(minutes)
+        _, modified_since = helper.get_timestamp(minutes)
 
         sheet = smartsheet_client.Sheets.get_sheet(
             sheet_id, include='object_value', level=2,
@@ -209,7 +209,7 @@ def get_sheet(sheet_id, minutes=dev_minutes):
         sheet = smartsheet_client.Sheets.get_sheet(
             sheet_id, include='object_value', level=2)
     else:
-        modified_since, _ = get_timestamp(minutes)
+        modified_since, _ = helper.get_timestamp(minutes)
         sheet = smartsheet_client.Sheets.get_sheet(
             sheet_id, include='object_value', level=2,
             rows_modified_since=modified_since)
