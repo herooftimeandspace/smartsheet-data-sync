@@ -83,6 +83,7 @@ deploy_staging:
   - copilot svc deploy --name smartsheet-data-sync-backend --env staging
   - docker rm -v $(docker ps -a -q -f status=exited) || true
   - docker rmi $(docker images -f "dangling=true" -q) || true
+  - docker image prune -a --force --filter "until=730h" || true
   environment:
     name: Staging
   only:
@@ -97,6 +98,7 @@ deploy_prod:
   - copilot svc deploy --name smartsheet-data-sync-backend --env prod
   - docker rm -v $(docker ps -a -q -f status=exited) || true
   - docker rmi $(docker images -f "dangling=true" -q) || true
+  - docker image prune -a --force --filter "until=730h" || true
   environment:
     name: Production
   only:
