@@ -1,14 +1,14 @@
 import logging
 import re
-import app.config as config
-import smartsheet
 import time
 
-from uuid_module.helper import (get_cell_data, get_cell_value, get_column_map,
-                                has_cell_link, truncate)
-from uuid_module.smartsheet_api import get_sheet, write_rows_to_sheet
-from uuid_module.variables import (dev_minutes,
-                                   uuid_col)
+import app.config as config
+import smartsheet
+
+import uuid_module.helper as helper
+import uuid_module.smartsheet_api as smartsheet_api
+import uuid_module.variables as app_vars
+import uuid_module.get_data as get_data
 
 project_columns = ["Summary", "Tasks", "Issue Type", "Jira Ticket",
                    "Parent Ticket", "Program", "Initiative", "Team", "UUID",
@@ -19,45 +19,44 @@ jira_index_columns = ["Tasks", "Issue Type", "Jira Ticket", "Issue Links",
                       "Epic Name", "Summary", "Inject", "KTLO", "UUID"]
 
 
-def refresh_sheets(minutes=dev_minutes):
-    """Refreshes the list of sheets in all workspaces. Captures any sheet
-       modified after 'minutes'
+# def refresh_sheets(minutes=app_vars.dev_minutes):
+#     """Refreshes the list of sheets in all workspaces. Captures any sheet
+#        modified after 'minutes'
 
-    Args:
-        minutes (int, optional): The number of minutes used to filter out
-        sheets. Defaults to dev_minutes.
+#     Args:
+#         minutes (int, optional): The number of minutes used to filter out
+#         sheets. Defaults to dev_minutes.
 
-    Raises:
-        TypeError: Minutes must be an int
-        ValueError: Minutes must be a positive integer or 0
+#     Raises:
+#         TypeError: Minutes must be an int
+#         ValueError: Minutes must be a positive integer or 0
 
-    Returns:
-        source_sheets (list): All sheets modified in the last N minutes
-        index_sheet (smartsheet.Sheet): The Jira Index sheet
-        index_col_map (dict): The column map of the Jira Index Sheet in the
-                              form of Column Name: Column ID
-    """
-    from uuid_module.get_data import (get_all_sheet_ids,
-                                      refresh_source_sheets)
-    if not isinstance(minutes, int):
-        msg = str("Minutes should be type: int, not {}").format(type(minutes))
-        raise TypeError(msg)
-    if minutes < 0:
-        msg = str("Minutes should be >= 0, not {}").format(minutes)
-        raise ValueError(msg)
+#     Returns:
+#         source_sheets (list): All sheets modified in the last N minutes
+#         index_sheet (smartsheet.Sheet): The Jira Index sheet
+#         index_col_map (dict): The column map of the Jira Index Sheet in the
+#                               form of Column Name: Column ID
+#     """
+#     import uuid_module.get_data as get_data
+#     if not isinstance(minutes, int):
+#         msg = str("Minutes should be type: int, not {}").format(type(minutes))
+#         raise TypeError(msg)
+#     if minutes < 0:
+#         msg = str("Minutes should be >= 0, not {}").format(minutes)
+#         raise ValueError(msg)
 
-    sheet_ids = get_all_sheet_ids(minutes, config.workspace_id,
-                                  config.index_sheet)
-    msg = str("Sheet IDs object type {}, object values {}").format(
-        type(sheet_ids), sheet_ids)
-    logging.debug(msg)
-    source_sheets = refresh_source_sheets(sheet_ids, minutes)
+#     sheet_ids = get_data.get_all_sheet_ids(minutes, config.workspace_id,
+#                                            config.index_sheet)
+#     msg = str("Sheet IDs object type {}, object values {}").format(
+#         type(sheet_ids), sheet_ids)
+#     logging.debug(msg)
+#     source_sheets = get_data.refresh_source_sheets(sheet_ids, minutes)
 
-    # TODO: Load index sheet and kick off 2 functions. 1: Create new tickets
-    # 2: Copy created tickets to program sheets via UUID
-    index_sheet = get_sheet(config.index_sheet)
-    index_col_map = get_column_map(index_sheet)
-    return source_sheets, index_sheet, index_col_map
+#     # TODO: Load index sheet and kick off 2 functions. 1: Create new tickets
+#     # 2: Copy created tickets to program sheets via UUID
+#     index_sheet = smartsheet_api.get_sheet(config.index_sheet)
+#     index_col_map = helper.get_column_map(index_sheet)
+#     return source_sheets, index_sheet, index_col_map
 
 
 # TODO: Refactor for the full chain of issue types across multiple Jira
@@ -190,9 +189,9 @@ def form_rows(row_dict, col_map):
 
 
 def get_push_tickets_sheet():
-    push_ticket_sheet = get_sheet(
+    push_ticket_sheet = smartsheet_api.get_sheet(
         config.push_tickets_sheet, config.minutes)
-    push_tickets_col_map = get_column_map(push_ticket_sheet)
+    push_tickets_col_map = helper.get_column_map(push_ticket_sheet)
     return push_ticket_sheet, push_tickets_col_map
 
 
@@ -232,7 +231,7 @@ def link_jira_index_to_sheet(source_sheets, index_sheet, index_col_map):
         return sheets_updated
 
     for sheet in source_sheets:
-        sheet_col_map = get_column_map(sheet)
+        sheet_col_map = helper.get_column_map(sheet)
         rows_to_update = []
 
         for uuid_value, jira_ticket in sub_index.items():
@@ -271,7 +270,8 @@ def link_jira_index_to_sheet(source_sheets, index_sheet, index_col_map):
             msg = str("Updating {} rows with newly created Jira Tickets"
                       "").format(len(rows_to_update))
             logging.debug(msg)
-            write_rows_to_sheet(rows_to_update, sheet, write_method="update")
+            smartsheet_api.write_rows_to_sheet(rows_to_update, sheet,
+                                               write_method="update")
             sheets_updated += 1
         else:
             msg = str("All Jira Tickets have pre-existing links to "
@@ -312,8 +312,8 @@ def build_sheet_sub_index(index_sheet, index_col_map):
     sub_index = {}
     for row in index_sheet.rows:
 
-        uuid_value = get_cell_data(row, 'UUID', index_col_map)
-        jira_value = get_cell_data(row, 'Jira Ticket', index_col_map)
+        uuid_value = helper.get_cell_data(row, 'UUID', index_col_map)
+        jira_value = helper.get_cell_data(row, 'Jira Ticket', index_col_map)
 
         if uuid_value is None or jira_value is None:
             # Skip empty Jira Tickets or UUIDs
@@ -345,7 +345,7 @@ def build_sheet_sub_index(index_sheet, index_col_map):
         logging.debug(msg)
 
         try:
-            cell_link_status = has_cell_link(jira_value, "Out")
+            cell_link_status = helper.has_cell_link(jira_value, "Out")
             if cell_link_status in ('Linked', 'OK'):
                 # Skip linked rows
                 msg = str("Jira Ticket: {} has already been pushed to "
@@ -370,8 +370,8 @@ def copy_uuid_to_index_sheet(index_sheet, index_col_map):
     push_ticket_sheet, push_tickets_col_map = get_push_tickets_sheet()
     sub_index = build_sheet_sub_index(push_ticket_sheet, push_tickets_col_map)
     for row in index_sheet.rows:
-        jira_ticket = get_cell_data(row, 'Jira Ticket', index_col_map)
-        uuid_value = get_cell_data(row, 'UUID', index_col_map)
+        jira_ticket = helper.get_cell_data(row, 'Jira Ticket', index_col_map)
+        uuid_value = helper.get_cell_data(row, 'UUID', index_col_map)
         if uuid_value.value:
             # Skip rows with UUIDs.
             continue
@@ -389,8 +389,8 @@ def copy_uuid_to_index_sheet(index_sheet, index_col_map):
                 })
                 rows_to_write.append(new_row)
     if rows_to_write:
-        write_rows_to_sheet(rows_to_write, index_sheet,
-                            write_method="update")
+        smartsheet_api.write_rows_to_sheet(rows_to_write, index_sheet,
+                                           write_method="update")
         return True
     else:
         msg = str("No UUIDs copied to Sheet ID: {}, Sheet Name: {}"
@@ -427,7 +427,8 @@ def build_row_data(row, col_map):
     row_data = {}
     for col in project_columns:
         try:
-            cell_value = get_cell_value(row, col, col_map)
+            # TODO: Replace with get_cell_data
+            cell_value = helper.get_cell_value(row, col, col_map)
             row_data[col] = cell_value
         except KeyError:
             continue
@@ -473,12 +474,12 @@ def create_ticket_index(source_sheets, index_sheet, index_col_map):
     parent_pending_count = 0
 
     for sheet in source_sheets:
-        col_map = get_column_map(sheet)
+        col_map = helper.get_column_map(sheet)
         msg = str("Loaded {} rows from Sheet ID: {} | Sheet Name: {}"
                   "").format(len(sheet.rows), sheet.id, sheet.name)
         logging.info(msg)
         try:
-            _ = col_map[uuid_col]
+            _ = col_map[app_vars.uuid_col]
         except KeyError:
             msg = str("Sheet ID {} | Sheet Name {} doesn't have UUID column. "
                       "Skipping sheet. (KeyError)").format(sheet.id,
@@ -591,8 +592,8 @@ def create_ticket_index(source_sheets, index_sheet, index_col_map):
 
         # Validate that there are rows to write.
         if sheet_rows_to_update:
-            write_rows_to_sheet(sheet_rows_to_update, sheet,
-                                write_method="update")
+            smartsheet_api.write_rows_to_sheet(sheet_rows_to_update, sheet,
+                                               write_method="update")
         else:
             msg = str("No rows to update for Sheet ID: {}, Sheet Name: {}"
                       "").format(sheet.id, sheet.name)
@@ -616,7 +617,7 @@ def create_ticket_index(source_sheets, index_sheet, index_col_map):
 # TODO: Drop parent rows once written to index sheet by removing the "Create"
 # from the Jira Ticket field and/or filtering out UUID matches + nonNull
 # Jira Ticket field on the Index sheet
-def create_tickets(minutes=dev_minutes):
+def create_tickets(minutes=app_vars.dev_minutes):
     """Main function passed to the scheduler to parse and upload data to
        Smartsheet so that new Jira Tickets can be created.
 
@@ -636,13 +637,26 @@ def create_tickets(minutes=dev_minutes):
         msg = str("Minutes should be >= 0, not {}").format(minutes)
         raise ValueError(msg)
     start = time.time()
-    source_sheets, index_sheet, index_col_map = refresh_sheets(minutes)
+    # source_sheets, index_sheet, index_col_map = refresh_sheets(minutes)
+
+    sheet_ids = get_data.get_all_sheet_ids(minutes, config.workspace_id,
+                                           config.index_sheet)
+    msg = str("Sheet IDs object type {}, object values {}").format(
+        type(sheet_ids), sheet_ids)
+    logging.debug(msg)
+    source_sheets = get_data.refresh_source_sheets(sheet_ids, minutes)
+
+    # TODO: Load index sheet and kick off 2 functions. 1: Create new tickets
+    # 2: Copy created tickets to program sheets via UUID
+    index_sheet = smartsheet_api.get_sheet(config.index_sheet)
+    index_col_map = helper.get_column_map(index_sheet)
 
     # Copy UUIDs from Push sheet to Index Sheet
     result = copy_uuid_to_index_sheet(index_sheet, index_col_map)
     # Refresh the index sheet since we just wrote data
     if result:
-        index_sheet = get_sheet(config.index_sheet, config.minutes)
+        index_sheet = smartsheet_api.get_sheet(config.index_sheet,
+                                               config.minutes)
 
     # Link back created tickets first
     sheets_updated = link_jira_index_to_sheet(
@@ -663,10 +677,11 @@ def create_tickets(minutes=dev_minutes):
         # Write parent rows
         _, push_tickets_col_map = get_push_tickets_sheet()
         rows_to_write = form_rows(tickets_to_create, push_tickets_col_map)
-        write_rows_to_sheet(rows_to_write, config.push_tickets_sheet)
+        smartsheet_api.write_rows_to_sheet(rows_to_write,
+                                           config.push_tickets_sheet)
         end = time.time()
         elapsed = end - start
-        elapsed = truncate(elapsed, 2)
+        elapsed = helper.truncate(elapsed, 2)
         logging.info("Create new tickets from Program Plan line items "
                      "took: {} seconds.".format(elapsed))
         if elapsed > 120:
@@ -679,7 +694,7 @@ def create_tickets(minutes=dev_minutes):
         logging.info(msg)
         end = time.time()
         elapsed = end - start
-        elapsed = truncate(elapsed, 2)
+        elapsed = helper.truncate(elapsed, 2)
         logging.info("Create new tickets from Program Plan line items "
                      "took: {} seconds.".format(elapsed))
         if elapsed > 120:
