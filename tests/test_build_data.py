@@ -2,22 +2,28 @@
 import json
 import logging
 import os
+
 import pytest
 import smartsheet
+import uuid_module.variables as app_vars
+import uuid_module.helper as helper
 from freezegun import freeze_time
-from uuid_module.variables import (assignee_col, jira_col, dev_minutes,
-                                   sheet_columns, status_col, task_col)
+
 logger = logging.getLogger(__name__)
 cwd = os.path.dirname(os.path.abspath(__file__))
 
 
 @pytest.fixture(scope="module")
-def jira_index_sheet():
+def jira_index_fixture():
     with open(cwd + '/dev_jira_index_sheet.json') as f:
-        dev_idx_sheet = json.load(f)
-        dev_idx_sheet_dict = dict(dev_idx_sheet)
-        dev_idx_sheet = smartsheet.models.Sheet(dev_idx_sheet)
-    return dev_idx_sheet, dev_idx_sheet_dict
+        sheet = json.load(f)
+        sheet = smartsheet.models.Sheet(sheet)
+    col_map = helper.get_column_map(sheet)
+
+    with open(cwd + '/dev_jira_index_row.json') as f:
+        row_json = json.load(f)
+        row = smartsheet.models.Row(row_json)
+    return sheet, col_map, row
 
 
 @pytest.fixture(scope="module")
@@ -25,37 +31,21 @@ def sheet_fixture():
     with open(cwd + '/dev_program_plan.json') as f:
         sheet_json = json.load(f)
 
-    def no_uuid_col_fixture(sheet_json):
-        sheet_json['columns'][20]['name'] = "Not UUID"
+    def no_uuid_col(sheet_json):
+        sheet_json['columns'][20]['title'] = "Not UUID"
         no_uuid_col = smartsheet.models.Sheet(sheet_json)
         return no_uuid_col
 
-    def no_summary_col_fixture(sheet_json):
+    def no_summary_col(sheet_json):
         sheet_json['columns'][4]['name'] = "Not Summary"
         no_summary_col = smartsheet.models.Sheet(sheet_json)
         return no_summary_col
 
     sheet = smartsheet.models.Sheet(sheet_json)
-    sheet_list = [sheet]
-    sheet_no_uuid_col = no_uuid_col_fixture(sheet_json)
-    sheet_no_summary_col = no_summary_col_fixture(sheet_json)
-    return sheet, sheet_list, sheet_no_uuid_col, sheet_no_summary_col
-
-
-@pytest.fixture(scope="module")
-def jira_index_col_map(jira_index_sheet):
-    from uuid_module.helper import get_column_map
-    jira_index_sheet, _ = jira_index_sheet
-    jira_index_col_map = get_column_map(jira_index_sheet)
-    return jira_index_col_map
-
-
-@pytest.fixture(scope="module")
-def dest_col_map(sheet_fixture):
-    from uuid_module.helper import get_column_map
-    sheet, _, _, _ = sheet_fixture
-    dest_col_map = get_column_map(sheet)
-    return dest_col_map
+    col_map = helper.get_column_map(sheet)
+    sheet_no_uuid_col = no_uuid_col(sheet_json)
+    sheet_no_summary_col = no_summary_col(sheet_json)
+    return sheet, col_map, sheet_no_uuid_col, sheet_no_summary_col
 
 
 @pytest.fixture
@@ -69,34 +59,11 @@ def row_fixture():
     return linked_row, unlinked_row
 
 
-@pytest.fixture(scope="module")
-def idx_row_id():
-    with open(cwd + '/dev_jira_index_row.json') as f:
-        row_json = json.load(f)
-    return str(row_json['id'])
-
-
-@pytest.fixture
-def columns():
-    columns = sheet_columns
-    return columns
-
-
 @pytest.fixture
 def columns_to_link():
-    columns_to_link = [jira_col, status_col, task_col, assignee_col]
+    columns_to_link = [app_vars.jira_col, app_vars.status_col,
+                       app_vars.task_col, app_vars.assignee_col]
     return columns_to_link
-
-
-@pytest.fixture
-def jira_column():
-    return jira_col
-
-
-@pytest.fixture
-def minutes_fixture():
-    min = dev_minutes
-    return min
 
 
 @pytest.fixture(scope="module")
@@ -105,73 +72,86 @@ def env():
 
 
 # TODO: Validate returned data is not malformed
-def test_build_linked_cell(jira_index_sheet, jira_index_col_map,
-                           dest_col_map, idx_row_id, jira_column):
-    from uuid_module.build_data import build_linked_cell
-    jira_index_sheet, _ = jira_index_sheet
+def test_build_linked_cell(jira_index_fixture, sheet_fixture):
+    import uuid_module.build_data as build_data
+    jira_index_sheet, jira_index_col_map, jira_index_row = jira_index_fixture
+    idx_row_id = jira_index_row.id
+    _, dest_col_map, _, _ = sheet_fixture
     with pytest.raises(TypeError):
-        build_linked_cell("jira_index_sheet", jira_index_col_map, dest_col_map,
-                          idx_row_id, jira_column)
+        build_data.build_linked_cell("jira_index_sheet", jira_index_col_map,
+                                     dest_col_map, idx_row_id,
+                                     app_vars.jira_col)
     with pytest.raises(TypeError):
-        build_linked_cell(jira_index_sheet, "jira_index_col_map",
-                          dest_col_map, idx_row_id, jira_column)
+        build_data.build_linked_cell(jira_index_sheet, "jira_index_col_map",
+                                     dest_col_map, idx_row_id,
+                                     app_vars.jira_col)
     with pytest.raises(TypeError):
-        build_linked_cell(jira_index_sheet, jira_index_col_map,
-                          "dest_col_map", idx_row_id, jira_column)
+        build_data.build_linked_cell(jira_index_sheet, jira_index_col_map,
+                                     "dest_col_map", idx_row_id,
+                                     app_vars.jira_col)
     with pytest.raises(TypeError):
-        build_linked_cell(jira_index_sheet, jira_index_col_map,
-                          dest_col_map, 7, jira_column)
+        build_data.build_linked_cell(jira_index_sheet, jira_index_col_map,
+                                     dest_col_map, [1337], app_vars.jira_col)
     with pytest.raises(TypeError):
-        build_linked_cell(jira_index_sheet, jira_index_col_map,
-                          dest_col_map, idx_row_id, 7)
+        build_data.build_linked_cell(jira_index_sheet, jira_index_col_map,
+                                     dest_col_map, idx_row_id, 7)
 
-    link_cell = build_linked_cell(jira_index_sheet, jira_index_col_map,
-                                  dest_col_map, idx_row_id, jira_column)
+    link_cell = build_data.build_linked_cell(jira_index_sheet,
+                                             jira_index_col_map, dest_col_map,
+                                             idx_row_id, app_vars.jira_col)
     assert type(link_cell) == smartsheet.models.cell.Cell
 
 
 # TODO: Validate returned data is not malformed
 @freeze_time("2021-11-18 21:23:54")
-def test_dest_indexes(sheet_fixture, columns, minutes_fixture):
-    from uuid_module.build_data import dest_indexes
-    from uuid_module.get_data import get_all_row_data
-    _, sheet_list, _, _ = sheet_fixture
-    project_data = get_all_row_data(sheet_list, columns, minutes_fixture)
+def test_dest_indexes(sheet_fixture):
+    import uuid_module.build_data as build_data
+    import uuid_module.get_data as get_data
+    import app.config as config
+    sheet, _, _, _ = sheet_fixture
+    project_data = get_data.get_all_row_data(
+        [sheet], app_vars.sheet_columns, config.minutes)
 
     with pytest.raises(TypeError):
-        dest_indexes("project_data")
+        build_data.dest_indexes("project_data")
 
-    dest_sheet_index = dest_indexes(project_data)
+    dest_sheet_index = build_data.dest_indexes(project_data)
     assert type(dest_sheet_index) == tuple
 
 
 # TODO: Valdate returned data is not malformed
-def test_build_row(row_fixture, columns_to_link, dest_col_map,
-                   jira_index_sheet, jira_index_col_map, idx_row_id):
-    from uuid_module.build_data import build_row
-    jira_index_sheet, _ = jira_index_sheet
+def test_build_row(row_fixture, columns_to_link, sheet_fixture,
+                   jira_index_fixture):
+    import uuid_module.build_data as build_data
+    _, dest_col_map, _, _ = sheet_fixture
+    jira_index_sheet, jira_index_col_map, jira_index_row = jira_index_fixture
+    idx_row_id = jira_index_row.id
     _, row = row_fixture
     with pytest.raises(TypeError):
-        build_row("row", columns_to_link, dest_col_map, jira_index_sheet,
-                  jira_index_col_map, idx_row_id)
+        build_data.build_row("row", columns_to_link, dest_col_map,
+                             jira_index_sheet, jira_index_col_map, idx_row_id)
     with pytest.raises(TypeError):
-        build_row(row, "columns_to_link", dest_col_map, jira_index_sheet,
-                  jira_index_col_map, idx_row_id)
+        build_data.build_row(row, "columns_to_link", dest_col_map,
+                             jira_index_sheet, jira_index_col_map, idx_row_id)
     with pytest.raises(TypeError):
-        build_row(row, columns_to_link, "dest_col_map", jira_index_sheet,
-                  jira_index_col_map, idx_row_id)
+        build_data.build_row(row, columns_to_link, "dest_col_map",
+                             jira_index_sheet, jira_index_col_map, idx_row_id)
     with pytest.raises(TypeError):
-        build_row(row, columns_to_link, dest_col_map, "jira_index_sheet",
-                  jira_index_col_map, idx_row_id)
+        build_data.build_row(row, columns_to_link, dest_col_map,
+                             "jira_index_sheet", jira_index_col_map,
+                             idx_row_id)
     with pytest.raises(TypeError):
-        build_row(row, columns_to_link, dest_col_map, jira_index_sheet,
-                  "jira_index_col_map", idx_row_id)
+        build_data.build_row(row, columns_to_link, dest_col_map,
+                             jira_index_sheet, "jira_index_col_map",
+                             idx_row_id)
     with pytest.raises(TypeError):
-        build_row(row, columns_to_link, dest_col_map, jira_index_sheet,
-                  jira_index_col_map, 7)
+        build_data.build_row(row, columns_to_link, dest_col_map,
+                             jira_index_sheet, jira_index_col_map,
+                             ["thing 1", "thing 2"])
 
-    new_row = build_row(row, columns_to_link, dest_col_map, jira_index_sheet,
-                        jira_index_col_map, idx_row_id)
+    new_row = build_data.build_row(row, columns_to_link, dest_col_map,
+                                   jira_index_sheet, jira_index_col_map,
+                                   idx_row_id)
     assert type(new_row) == smartsheet.models.row.Row
 
 

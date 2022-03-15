@@ -1,7 +1,9 @@
 import logging
-import smartsheet
 from collections import defaultdict
-from uuid_module.helper import get_cell_data, has_cell_link
+
+import smartsheet
+
+import uuid_module.helper as helper
 
 logger = logging.getLogger(__name__)
 
@@ -43,18 +45,21 @@ def build_linked_cell(jira_index_sheet, jira_index_col_map, dest_col_map,
         msg = str("Destination column map must be type: dict, not"
                   " {}").format(type(jira_index_sheet))
         raise TypeError(msg)
-    if not isinstance(idx_row_id, str):
-        msg = str("Jira Index Row ID must be type: str, not"
+    # TODO: Fix to int instead of str, or both
+    if not isinstance(idx_row_id, (str, int)):
+        msg = str("Jira Index Row ID must be type: str or int, not"
                   " {}").format(type(idx_row_id))
         raise TypeError(msg)
     if not isinstance(column, str):
         msg = str("Column must be type: str, not"
                   " {}").format(type(column))
         raise TypeError(msg)
+    if isinstance(idx_row_id, str):
+        idx_row_id = int(idx_row_id)
 
     new_cell_link = smartsheet.models.CellLink()
     new_cell_link.sheet_id = jira_index_sheet.id
-    new_cell_link.row_id = int(idx_row_id)
+    new_cell_link.row_id = idx_row_id
     new_cell_link.column_id = int(jira_index_col_map[column])
 
     new_cell = smartsheet.models.Cell()
@@ -151,17 +156,21 @@ def build_row(row, columns_to_link, dest_col_map, jira_index_sheet,
         msg = str("Jira Index Column Map must be type: dict, not"
                   " {}").format(type(jira_index_col_map))
         raise TypeError(msg)
-    if not isinstance(idx_row_id, str):
-        msg = str("Jira Index Row ID must be type: str, not"
+    if not isinstance(idx_row_id, (str, int)):
+        msg = str("Jira Index Row ID must be type: str or int, not"
                   " {}").format(type(idx_row_id))
         raise TypeError(msg)
+    if isinstance(idx_row_id, int):
+        # Convert int to str.
+        # TODO: Refactor build_linked_cell to take int instead of str
+        idx_row_id = str(idx_row_id)
 
     new_row = smartsheet.models.Row()
     new_row.id = row.id
     for col in columns_to_link:
-        old_cell = get_cell_data(row, col, dest_col_map)
+        old_cell = helper.get_cell_data(row, col, dest_col_map)
         try:
-            cell_check = has_cell_link(old_cell, 'In')
+            cell_check = helper.has_cell_link(old_cell, 'In')
         except KeyError as e:
             if str(e) == str("'Unlinked'"):
                 cell_check = "Unlinked"
