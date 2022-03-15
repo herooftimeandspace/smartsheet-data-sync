@@ -1,15 +1,13 @@
 import json
 import logging
 import re
+
 import smartsheet
 
-from uuid_module.helper import (get_cell_data, get_cell_value,
-                                get_column_map, has_cell_link, json_extract)
-from uuid_module.smartsheet_api import write_rows_to_sheet
-from uuid_module.variables import (assignee_col, description_col, duration_col,
-                                   jira_col, predecessor_col, start_col,
-                                   status_col, task_col)
-from uuid_module.write_data import write_predecessor_dates
+import uuid_module.helper as helper
+import uuid_module.smartsheet_api as smartsheet_api
+import uuid_module.variables as app_vars
+import uuid_module.write_data as write_data
 
 
 def write_uuid_cell_links(project_data_index, source_sheets):
@@ -51,61 +49,66 @@ def write_uuid_cell_links(project_data_index, source_sheets):
         dest_uuid_col_dict = {}
         source_uuid_col_dict = {}
 
-        if row_data[description_col] is None:
+        if row_data[app_vars.description_col] is None:
             msg = str("Description is {}. No cell link needed. "
                       "Continuing to next UUID"
-                      "").format(row_data[description_col])
+                      "").format(row_data[app_vars.description_col])
             logging.debug(msg)
             continue
-        elif row_data[description_col] not in project_data_index.keys():
+        elif row_data[app_vars.description_col] \
+                not in project_data_index.keys():
             msg = str("{} in the description field doesn't match any "
                       "UUID in the index. Continuing to next "
-                      "UUID.").format(row_data[description_col])
+                      "UUID.").format(row_data[app_vars.description_col])
             logging.debug(msg)
             continue
-        elif dest_uuid == row_data[description_col]:
+        elif dest_uuid == row_data[app_vars.description_col]:
             msg = str("UUID {} can't link to itself. "
                       "Continuing to next UUID.").format(dest_uuid)
             logging.warning(msg)
             continue
-        elif row_data[jira_col]:
+        elif row_data[app_vars.jira_col]:
             msg = str("Row has a Jira ticket value of {}. "
                       "Jira cell links are preferred over UUID links, "
-                      "Continuing to next UUID.").format(row_data[jira_col])
+                      "Continuing to next UUID."
+                      "").format(row_data[app_vars.jira_col])
             logging.debug(msg)
             continue
-        elif row_data[predecessor_col] is not None \
-                and row_data[start_col] is None:
+        elif row_data[app_vars.predecessor_col] is not None \
+                and row_data[app_vars.start_col] is None:
             msg = str("Row has a predecessor value of {} but a start date "
                       "of {}. Continuing to next UUID."
-                      "").format(row_data[predecessor_col])
+                      "").format(row_data[app_vars.predecessor_col])
             logging.debug(msg)
             continue
-        elif row_data[predecessor_col] is not None \
-                and row_data[start_col] is not None:
+        elif row_data[app_vars.predecessor_col] is not None \
+                and row_data[app_vars.start_col] is not None:
             msg = str("Checking predecessor(s) for start date {}, "
                       "starting with predecessor row {}"
-                      "").format(row_data[start_col],
-                                 row_data[predecessor_col])
+                      "").format(row_data[app_vars.start_col],
+                                 row_data[app_vars.predecessor_col])
             logging.debug(msg)
-            result = write_predecessor_dates(row_data, project_data_index)
+            result = write_data.write_predecessor_dates(row_data,
+                                                        project_data_index)
             if result:
-                sync_columns = [status_col, assignee_col, task_col,
-                                duration_col]
+                sync_columns = [app_vars.status_col, app_vars.assignee_col,
+                                app_vars.task_col, app_vars.duration_col]
             else:
-                sync_columns = [status_col, assignee_col, task_col,
-                                start_col, duration_col]
+                sync_columns = [app_vars.status_col, app_vars.assignee_col,
+                                app_vars.task_col, app_vars.start_col,
+                                app_vars.duration_col]
                 result = False
             msg = str("Writing predecessor dates returned {}. Setting "
                       "sync columns to {}.").format(result, sync_columns)
             logging.debug(msg)
-        elif row_data[predecessor_col] is None:
-            sync_columns = [status_col, assignee_col, task_col,
-                            start_col, duration_col]
+        elif row_data[app_vars.predecessor_col] is None:
+            sync_columns = [app_vars.status_col, app_vars.assignee_col,
+                            app_vars.task_col, app_vars.start_col,
+                            app_vars.duration_col]
             msg = str("Row has a predecessor value of {} but a start date "
                       "of {}. Setting sync columns to {}"
-                      "").format(row_data[predecessor_col],
-                                 row_data[start_col],
+                      "").format(row_data[app_vars.predecessor_col],
+                                 row_data[app_vars.start_col],
                                  sync_columns)
             logging.debug(msg)
         else:
@@ -132,16 +135,17 @@ def write_uuid_cell_links(project_data_index, source_sheets):
 
         # Make sure that the description matches our UUID pattern
         if bool(re.match(r"\d+-\d+-\d+-\d+",
-                         row_data[description_col])):
+                         row_data[app_vars.description_col])):
             # Create a cell link from source_uuid -> uuid
-            source_uuid = row_data[description_col]  # Pull from this UUID
+            # Pull from this UUID
+            source_uuid = row_data[app_vars.description_col]
             dest_sheet = None
             for dest_sheet in source_sheets:
                 # Load column names and IDs for the dest_sheet sheet.
                 if int(dest_uuid.split("-")[0]) == dest_sheet.id:
-                    column_names = json_extract(
+                    column_names = helper.json_extract(
                         json.loads(str(dest_sheet)), "title")
-                    column_ids = json_extract(
+                    column_ids = helper.json_extract(
                         json.loads(str(dest_sheet)), "id")
                     dest_uuid_col_dict = dict(zip(column_names, column_ids))
                     dest_sheet = dest_sheet
@@ -171,9 +175,10 @@ def write_uuid_cell_links(project_data_index, source_sheets):
             for src_sheet in source_sheets:
                 # Load column names and IDs for the src_sheet sheet.
                 if int(source_uuid.split("-")[0]) == src_sheet.id:
-                    column_names = json_extract(
+                    column_names = helper.json_extract(
                         json.loads(str(src_sheet)), "title")
-                    column_ids = json_extract(json.loads(str(src_sheet)), "id")
+                    column_ids = helper.json_extract(
+                        json.loads(str(src_sheet)), "id")
                     source_uuid_col_dict = dict(zip(column_names, column_ids))
                     src_sheet = src_sheet
                     break
@@ -201,7 +206,7 @@ def write_uuid_cell_links(project_data_index, source_sheets):
 
             new_row = smartsheet.models.Row()
             new_row.id = int(dest_uuid.split("-")[1])
-            dest_col_map = get_column_map(dest_sheet)
+            dest_col_map = helper.get_column_map(dest_sheet)
             dest_row = None
             for row in dest_sheet.rows:
                 if row.id == new_row.id:
@@ -222,15 +227,16 @@ def write_uuid_cell_links(project_data_index, source_sheets):
             else:
                 logging.debug(dest_row)
                 if dest_row is not None:
-                    desc_cell = get_cell_value(
-                        dest_row, description_col, dest_col_map)
+                    # TODO: Replace with get_cell_data
+                    desc_cell = helper.get_cell_value(
+                        dest_row, app_vars.description_col, dest_col_map)
                     logging.debug(desc_cell)
 
             for col in sync_columns:
                 if dest_row:
-                    cell = get_cell_data(row, col, dest_col_map)
-                    link_status = has_cell_link(cell, 'In')
-                    link_out_status = has_cell_link(cell, 'Out')
+                    cell = helper.get_cell_data(row, col, dest_col_map)
+                    link_status = helper.has_cell_link(cell, 'In')
+                    link_out_status = helper.has_cell_link(cell, 'Out')
                     msg = str("{}, {}").format(cell, link_status)
                     logging.debug(msg)
                 else:
@@ -334,7 +340,7 @@ def write_uuid_cell_links(project_data_index, source_sheets):
                                                  dest_sheet.id,
                                                  dest_sheet.name)
             logging.info(msg)
-            write_rows_to_sheet(rows_to_update, dest_sheet,
-                                write_method="update")
+            smartsheet_api.write_rows_to_sheet(rows_to_update, dest_sheet,
+                                               write_method="update")
         else:
             logging.debug("No updates required.")
