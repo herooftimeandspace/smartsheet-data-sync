@@ -22,7 +22,6 @@ before_script:
 
 
 stages:
-- lint
 - coverage
 - pages
 - test
@@ -30,7 +29,7 @@ stages:
 
 
 flake8:
-  stage: lint
+  stage: coverage
   script:
   - export PATH=$PATH:~/.local/bin
   - python3 -m pip install -r test_requirements.txt
@@ -39,7 +38,6 @@ flake8:
 
 pytest_lite:
   stage: coverage
-  needs: ["flake8"]
   tags:
   - copilot
   script:
@@ -61,7 +59,6 @@ pytest_lite:
 
 pytest_full:
   stage: coverage
-  needs: ["flake8"]
   tags:
   - copilot
   script:
