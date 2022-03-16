@@ -258,11 +258,15 @@ def test_get_workspace_0(workspace_fixture):
 
 
 def test_get_workspace_1(workspace_fixture):
-    workspace, _ = workspace_fixture
+    _, workspaces = workspace_fixture
     workspace_ids = [app_vars.dev_workspace_id[0],
                      app_vars.dev_workspace_id[0]]
     response_0 = smartsheet_api.get_workspace(workspace_ids)
-    assert response_0.id == workspace.id
+    assert isinstance(response_0, list)
+    for res in response_0:
+        assert isinstance(res, smartsheet.models.Workspace)
+        for ws in workspaces:
+            assert res.id == ws.id
 
 
 def test_get_sheet(sheet_fixture):
