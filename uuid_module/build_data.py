@@ -169,22 +169,23 @@ def build_row(row, columns_to_link, dest_col_map, jira_index_sheet,
     new_row.id = row.id
     for col in columns_to_link:
         old_cell = helper.get_cell_data(row, col, dest_col_map)
-        try:
-            cell_check = helper.has_cell_link(old_cell, 'In')
-        except KeyError as e:
-            if str(e) == str("'Unlinked'"):
-                cell_check = "Unlinked"
-            else:
-                raise KeyError
+        cell_check = helper.has_cell_link(old_cell, 'In')
+
+        if not cell_check:
+            msg = str("Cell is valid and unlinked, but is {}. Continuing "
+                      "to the next cell.").format(cell_check)
+            logging.debug(msg)
+            continue
 
         if cell_check in ("Linked", "OK"):
             msg = str("Valid cell link: RowID {} | Row Number {} | "
-                      "ColName {} | Cell Value {}").format(row.id,
-                                                           row.row_number, col,
-                                                           old_cell.
-                                                           link_in_from_cell)
+                      "ColName {} | Cell Value {}"
+                      "").format(row.id, row.row_number, col,
+                                 old_cell.link_in_from_cell)
             logging.debug(msg)
-        elif cell_check == "Unlinked":
+            continue
+
+        if cell_check in ("Unlinked", "INVALID"):
             link_cell = build_linked_cell(jira_index_sheet,
                                           jira_index_col_map,
                                           dest_col_map,
@@ -195,23 +196,19 @@ def build_row(row, columns_to_link, dest_col_map, jira_index_sheet,
                       "ColName {} | Cell link {}").format(
                 row.id, row.row_number, col, link_cell.link_in_from_cell)
             logging.debug(msg)
-        elif cell_check in ("Broken", "BROKEN"):
+            continue
+
+        if cell_check in ("Broken", "BROKEN"):
             unlink_cell = smartsheet.models.Cell()
             unlink_cell.id = int(dest_col_map[col])
             unlink_cell.value = old_cell.value
             new_row.cells.append(unlink_cell)
-            msg = str("Broken Cell Link: Row ID {} | Row Number {} | "
-                      "ColName {} | Cell link {}".format(row.id,
-                                                         row.row_number, col,
-                                                         unlink_cell.
-                                                         link_in_from_cell))
+            msg = str("Unlinking Broken Cell Link: Row ID {} | "
+                      "Row Number {} | ColName {} | Cell link {}"
+                      "").format(row.id, row.row_number, col,
+                                 unlink_cell.link_in_from_cell)
             logging.debug(msg)
-        elif cell_check is None:
-            msg = str("Cell is valid and unlinked, but is {}. Continuing "
-                      "to the next cell.").format(cell_check)
-            logging.debug(msg)
-        else:
-            logging.warning("Unknown state for cell links.")
+            continue
     if new_row.cells:
         return new_row
     else:

@@ -313,14 +313,16 @@ def build_sheet_sub_index(index_sheet, index_col_map):
     sub_index = {}
     for row in index_sheet.rows:
 
-        uuid_value = helper.get_cell_data(row, 'UUID', index_col_map)
-        jira_value = helper.get_cell_data(row, 'Jira Ticket', index_col_map)
+        uuid_cell = helper.get_cell_data(row, 'UUID', index_col_map)
+        jira_cell = helper.get_cell_data(row, 'Jira Ticket', index_col_map)
 
-        if uuid_value is None or jira_value is None:
+        if not uuid_cell or not jira_cell:
             # Skip empty Jira Tickets or UUIDs
             continue
-        uuid = str(uuid_value.value)
-        jira_ticket = str(jira_value.value)
+
+        uuid = str(uuid_cell.value)
+        jira_ticket = str(jira_cell.value)
+
         if uuid == "None" or jira_ticket == "None":
             # Skip None values returned as strings
             continue
@@ -340,29 +342,29 @@ def build_sheet_sub_index(index_sheet, index_col_map):
                                      type(uuid), jira_ticket,
                                      type(jira_ticket))
         logging.debug(msg)
-        sheet_id = uuid.split("-")[0]
-        row_id = uuid.split("-")[1]
-        msg = str("Sheet ID: {} | Row ID: {}").format(sheet_id, row_id)
+        split = uuid.split("-")
+        sheet_id = int(split[0])
+        row_id = int(split[1])
+        col_id = int(split[2])
+        msg = str("Sheet ID: {} | Row ID: {}").format(sheet_id, row_id, col_id)
         logging.debug(msg)
+        cell_link_status = helper.has_cell_link(jira_cell, "Out",
+                                                sheet_id=sheet_id,
+                                                row_id=row_id,
+                                                col_id=col_id)
 
-        try:
-            cell_link_status = helper.has_cell_link(jira_value, "Out")
-            if cell_link_status in ('Linked', 'OK'):
-                # Skip linked rows
-                msg = str("Jira Ticket: {} has already been pushed to "
-                          "Sheet ID: {} | Row ID: {}"
-                          "").format(jira_ticket, sheet_id, row_id)
-                logging.debug(msg)
-                continue
-            elif cell_link_status == "Unlinked":
-                msg = str("Jira Ticket {} cell is {}, adding to index"
-                          "").format(jira_ticket, cell_link_status)
-                logging.debug(msg)
-                sub_index[uuid_value] = jira_ticket
-        except KeyError as e:
-            msg = str("Error getting linked status: {}").format(e)
-            logging.warning(msg)
+        if cell_link_status in ('Linked', 'OK'):
+            # Skip linked rows
+            msg = str("Jira Ticket: {} has already been pushed to "
+                      "Sheet ID: {} | Row ID: {}"
+                      "").format(jira_ticket, sheet_id, row_id)
+            logging.debug(msg)
             continue
+        if cell_link_status in ("Unlinked", "INVALID"):
+            msg = str("Jira Ticket {} cell is {}, adding to index"
+                      "").format(jira_ticket, cell_link_status)
+            logging.debug(msg)
+            sub_index[uuid_cell] = jira_ticket
     return sub_index
 
 

@@ -1,4 +1,3 @@
-import json
 import logging
 import math
 import os
@@ -68,7 +67,7 @@ def get_column_map(sheet):
     return column_map
 
 
-def has_cell_link(old_cell, direction):
+def has_cell_link(old_cell, direction, **kwargs):
     """Determine if an existing cell already has a cell link, which direction
        and whether it needs to be repaired. Returning None currently disabled
        because it caused the script to skip valid cells that should have been
@@ -98,40 +97,67 @@ def has_cell_link(old_cell, direction):
         msg = str("Direction should type: str not type: {}"
                   "").format(type(direction))
         raise TypeError(msg)
+    if not isinstance(kwargs, (dict, type(None))):
+        msg = str("Keyword Args should be type: dict or None not type: {}"
+                  "").format(type(kwargs))
+        raise TypeError(msg)
+    if isinstance(kwargs, dict):
+        for k, v in kwargs.items():
+            if not isinstance(k, str):
+                msg = str("Keyword Args key should be type: str not type: {}"
+                          "").format(type(k))
+                raise TypeError(msg)
+            if not isinstance(v, int):
+                msg = str("Keyword Args value should be type: int not type: {}"
+                          "").format(type(v))
+                raise TypeError(msg)
     if direction not in ("In", "Out"):
         msg = str("Direction should be either 'In' or 'Out' not '{}'"
                   "").format(direction)
         raise ValueError(msg)
 
-    # Load the cell values as a json object
-    cell_json = json.loads(str(old_cell))
-
     if direction == "In":
         # Check the status of the link.
         try:
-            linked_cell = cell_json['linkInFromCell']
-        except KeyError:
+            status = old_cell.link_in_from_cell.status
+            return str(status)
+        except AttributeError:
             return "Unlinked"
 
-        status = linked_cell['status']
-        return status
-        # if status == 'OK':
-        #     return "Linked"
-        # elif status == 'BROKEN':
-        #     return "Broken"
-    elif direction == "Out":
-        # Always set to Linked if the value exists, unless it's invalid.
+    if direction == "Out" and not kwargs:
         try:
-            linked_cell = cell_json['linksOutToCells']
-            return "Linked"
-        except KeyError:
+            status = old_cell.links_out_to_cells[0].status
+        except IndexError:
             return "Unlinked"
-    else:
-        return None
+        return "Linked"
+
+    if direction == "Out" and kwargs:
+        def check_value_exist(test_dict, *values):
+            return all(v in test_dict for v in values)
+        result = check_value_exist(kwargs.keys(),
+                                   "sheet_id", "row_id",
+                                   "col_id")
+        if result:
+            sheet_id = kwargs["sheet_id"]
+            row_id = kwargs["row_id"]
+            col_id = kwargs["col_id"]
+        else:
+            has_cell_link(old_cell, "Out")
+        # Check to see if our IDs are in the link_out object
+        for link in old_cell.links_out_to_cells:
+            if not sheet_id == link.sheet_id:
+                continue
+            if not row_id == link.row_id:
+                continue
+            if not col_id == link.column_id:
+                continue
+            else:
+                return str(link.status)
+        else:
+            return "Unlinked"
+
 
 # TODO: Replace with get_cell_data
-
-
 def get_cell_value(row, col_name, col_map):
     """
     Get the value of the cell or return None

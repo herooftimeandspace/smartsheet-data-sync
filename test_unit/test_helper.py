@@ -14,19 +14,37 @@ _, cwd = helper.get_local_paths()
 
 
 @pytest.fixture
-def sheet():
+def sheet_fixture():
     with open(cwd + '/dev_program_plan.json') as f:
         sheet_json = json.load(f)
+
+    def no_uuid_col_fixture(sheet_json):
+        sheet_json['columns'][20]['title'] = "Not UUID"
+        no_uuid_col = smartsheet.models.Sheet(sheet_json)
+        return no_uuid_col
+
+    def no_summary_col_fixture(sheet_json):
+        sheet_json['columns'][4]['name'] = "Not Summary"
+        no_summary_col = smartsheet.models.Sheet(sheet_json)
+        return no_summary_col
+
     sheet = smartsheet.models.Sheet(sheet_json)
-    return sheet
+    col_map = helper.get_column_map(sheet)
+    sheet_no_uuid_col = no_uuid_col_fixture(sheet_json)
+    sheet_no_summary_col = no_summary_col_fixture(sheet_json)
+    return sheet, col_map, sheet_no_uuid_col, sheet_no_summary_col
 
 
 @pytest.fixture
-def row():
+def row_fixture():
     with open(cwd + '/dev_program_plan_row.json') as f:
         row_json = json.load(f)
-    row = smartsheet.models.Row(row_json)
-    return row
+    linked_row = smartsheet.models.Row(row_json)
+
+    with open(cwd + '/dev_program_plan_unlinked_row.json') as f:
+        row_json = json.load(f)
+    unlinked_row = smartsheet.models.Row(row_json)
+    return linked_row, unlinked_row
 
 
 @pytest.fixture
@@ -131,21 +149,6 @@ def bad_cell():
 
 
 @pytest.fixture
-def direction():
-    return "In"
-
-
-@pytest.fixture
-def number():
-    return 3.1415
-
-
-@pytest.fixture
-def decimals():
-    return 3
-
-
-@pytest.fixture
 def json_extract_fixture():
     with open(cwd + '/dev_cell_with_formula.json') as f:
         cell_json = json.load(f)
@@ -157,11 +160,6 @@ def simple_list():
     return [1, 2, 3, 4, 5, 6]
 
 
-@pytest.fixture
-def env_fixture():
-    return "--debug"
-
-
 def set_init_fixture():
     import app.config as config
     config.init(["--debug"])
@@ -169,7 +167,8 @@ def set_init_fixture():
     smartsheet_client = config.smartsheet_client
 
 
-def test_get_cell_data(row, col_name, col_map):
+def test_get_cell_data(row_fixture, col_name, col_map):
+    row, _ = row_fixture
     import uuid_module.helper as helper
     with pytest.raises(TypeError):
         helper.get_cell_data("Row", col_name, col_map)
@@ -196,34 +195,105 @@ def test_get_cell_data(row, col_name, col_map):
         test_fixture_cell_data.formula)
 
 
-def test_get_column_map(sheet, col_map):
+def test_get_column_map_0():
     with pytest.raises(TypeError):
         helper.get_column_map("Sheet")
+
+
+def test_get_column_map_1(sheet_fixture):
+    sheet, col_map, _, _ = sheet_fixture
     assert helper.get_column_map(sheet) == col_map
 
 
-def test_has_cell_link(cell, bad_cell, direction):
+def test_has_cell_link_0(cell):
+    direction = "In"
     with pytest.raises(TypeError):
         helper.has_cell_link("cell", direction)
     with pytest.raises(TypeError):
         helper.has_cell_link(cell, 7)
+    with pytest.raises(TypeError):
+        helper.has_cell_link(cell, "In", sheet_id="Sheet ID")
     with pytest.raises(ValueError):
         helper.has_cell_link(cell, "Sideways")
+
+
+def test_has_cell_link_1(cell, bad_cell):
+    direction = "In"
     assert helper.has_cell_link(cell, direction) == "OK"
     assert helper.has_cell_link(bad_cell, direction) == "Unlinked"
-    try:
-        helper.has_cell_link(bad_cell, "Out")
-    except KeyError as k:
-        assert str(k) == str("'Unlinked'")
 
 
-def test_get_cell_value(row, col_name, col_map):
+def test_has_cell_link_2(sheet_fixture, row_fixture):
+    _, col_map, _, _ = sheet_fixture
+    linked_row, _ = row_fixture
+    jira_cell = helper.get_cell_data(linked_row, "Jira Ticket", col_map)
+    cell_link_status = helper.has_cell_link(jira_cell, "In")
+    assert cell_link_status == "OK"
+    assert str(jira_cell.link_in_from_cell.status) == str(cell_link_status)
+
+
+# TODO: Swap fixtures for Index Sheet to get OUT links
+def test_has_cell_link_3(sheet_fixture, row_fixture):
+    _, col_map, _, _ = sheet_fixture
+    linked_row, _ = row_fixture
+    jira_cell = helper.get_cell_data(linked_row, "Jira Ticket", col_map)
+    i = 0
+    while i <= (len(jira_cell.links_out_to_cells) - 1):
+        cell_link_status = helper.has_cell_link(
+            jira_cell, "Out",
+            sheet_id=jira_cell.links_out_to_cells[i].sheet_id,
+            row_id=jira_cell.links_out_to_cells[i].row_id,
+            col_id=jira_cell.links_out_to_cells[i].column_id)
+        assert cell_link_status == "OK"
+        assert str(jira_cell.links_out_to_cells[i].status) == str(
+            cell_link_status)
+        i += 1
+
+
+# TODO: Swap fixtures for Index Sheet to get OUT links
+def test_has_cell_link_4(sheet_fixture, row_fixture):
+    _, col_map, _, _ = sheet_fixture
+    linked_row, _ = row_fixture
+    jira_cell = helper.get_cell_data(linked_row, "Jira Ticket", col_map)
+    i = 0
+    while i <= (len(jira_cell.links_out_to_cells) - 1):
+        cell_link_status = helper.has_cell_link(
+            jira_cell, "Out")
+        assert cell_link_status == "Linked"
+        i += 1
+
+
+def test_has_cell_link_5(sheet_fixture, row_fixture):
+    sheet, col_map, _, _ = sheet_fixture
+    linked_row, _ = row_fixture
+    no_link = helper.get_cell_data(linked_row, "Finish", col_map)
+    link_in_status = helper.has_cell_link(no_link, "In")
+    link_out_status = helper.has_cell_link(no_link, "Out")
+    link_out_with_args = helper.has_cell_link(
+        no_link, "Out", sheet_id=sheet.id,
+        row_id=linked_row.id,
+        col_id=col_map['Finish'])
+    assert link_in_status == "Unlinked"
+    assert link_out_status == "Unlinked"
+    assert link_out_with_args == "Unlinked"
+
+
+def test_get_cell_value_0(sheet_fixture, row_fixture, col_name):
+    _, col_map, _, _ = sheet_fixture
+    row, _ = row_fixture
     with pytest.raises(TypeError):
         helper.get_cell_value("Row", col_name, col_map)
     with pytest.raises(TypeError):
         helper.get_cell_value(row, 1, col_map)
     with pytest.raises(TypeError):
         helper.get_cell_value(row, col_name, "col_map")
+    assert helper.get_cell_value(
+        row, col_name, col_map) == "Performance Tests"
+
+
+def test_get_cell_value_1(sheet_fixture, row_fixture, col_name):
+    _, col_map, _, _ = sheet_fixture
+    row, _ = row_fixture
     assert helper.get_cell_value(
         row, col_name, col_map) == "Performance Tests"
 
@@ -238,23 +308,27 @@ def test_json_extract(json_extract_fixture):
         "=IFERROR(PARENT(UUID@row), \"\")"]
 
 
-def test_truncate(number, decimals):
+def test_truncate_0():
     with pytest.raises(TypeError):
         helper.truncate("Benny's Adventure Team", 4)
     with pytest.raises(TypeError):
-        helper.truncate(number, "decimals")
+        helper.truncate(3.1337, "decimals")
     with pytest.raises(ValueError):
-        helper.truncate(number, -1)
-    assert helper.truncate(number, decimals) == 3.141
+        helper.truncate(3.1337, -1)
+    assert helper.truncate(3.1415, 2) == 3.14
 
 
 @freeze_time("2012-01-14 12:13:00")
-def test_get_timestamp(decimals):
+def test_get_timestamp_0():
     with pytest.raises(TypeError):
         helper.get_timestamp("number")
     with pytest.raises(ValueError):
         helper.get_timestamp(-5)
-    modified_since, modified_since_iso = helper.get_timestamp(decimals)
+
+
+@freeze_time("2012-01-14 12:13:00")
+def test_get_timestamp_1():
+    modified_since, modified_since_iso = helper.get_timestamp(3)
     assert datetime.datetime.now() == datetime.datetime(2012, 1, 14, 12, 13, 0)
     assert modified_since == datetime.datetime(
         2012, 1, 14, 12, 10, 00)  # "2012-01-14T12:10:00"
@@ -262,7 +336,7 @@ def test_get_timestamp(decimals):
         2012, 1, 14, 12, 10, 00).isoformat()  # "2012-01-14T12:10:00"
 
 
-def test_chunks(simple_list, decimals):
+def test_chunks_0(simple_list):
     with pytest.raises(TypeError):
         for i in helper.chunks("simple_list", 3):
             pass
@@ -278,7 +352,10 @@ def test_chunks(simple_list, decimals):
     with pytest.raises(ValueError):
         for i in helper.chunks(simple_list, 10):
             pass
-    for i in helper.chunks(simple_list, decimals):
+
+
+def test_chunks(simple_list):
+    for i in helper.chunks(simple_list, 3):
         assert len(i) == 3
 
 
