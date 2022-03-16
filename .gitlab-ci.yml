@@ -23,9 +23,9 @@ before_script:
 
 stages:
 - lint
+- coverage
 - pages
 - test
-# - integration
 - deploy
 
 
@@ -37,14 +37,15 @@ flake8:
   - flake8 --max-line-length=80 --per-file-ignores="__init__.py:F401" ./*.py
   - flake8 --max-line-length=80 --per-file-ignores="__init__.py:F401" ./uuid_module/*.py
 
-coverage:
-  stage: lint
+pytest_lite:
+  stage: coverage
+  needs: flake8
   tags:
   - copilot
   script:
   - export PATH=$PATH:~/.local/bin
   - python3 -m pip install -r test_requirements.txt
-  - pytest test_unit/ -x -W ignore::DeprecationWarning --cov-config=.coveragerc --cov=./ -vvv
+  - pytest test_unit/ test_integration/ -x -W ignore::DeprecationWarning --cov-config=.coveragerc --cov=./ -vvv
   - coverage xml --include="./**" -o coverage.xml
   artifacts:
     paths:
@@ -53,23 +54,32 @@ coverage:
       junit:
       - coverage.xml
   coverage: '/^TOTAL.+?(\d+\%)$/'
+  except:
+  - main
+  - staging
+  - debug
 
-# integration:
-#   stage: intgration
-#   tags:
-#   - copilot
-#   script:
-#   - export PATH=$PATH:~/.local/bin
-#   - python3 -m pip install -r test_requirements.txt
-#   - pytest test_integration/ -x -W ignore::DeprecationWarning --cov-config=.coveragerc --cov=./ -vvv
-#   - coverage xml --include="./**" -o coverage.xml
-#   artifacts:
-#     paths:
-#     - coverage.xml
-#     reports:
-#       junit:
-#       - coverage.xml
-#   coverage: '/^TOTAL.+?(\d+\%)$/'
+pytest_full:
+  stage: coverage
+  needs: flake8
+  tags:
+  - copilot
+  script:
+  - export PATH=$PATH:~/.local/bin
+  - python3 -m pip install -r test_requirements.txt
+  - pytest test_unit/ test_integration/ -x -W ignore::DeprecationWarning --cov-config=.coveragerc --cov=./ -vvv
+  - coverage xml --include="./**" -o coverage.xml
+  artifacts:
+    paths:
+    - coverage.xml
+    reports:
+      junit:
+      - coverage.xml
+  coverage: '/^TOTAL.+?(\d+\%)$/'
+  only:
+  - main
+  - staging
+  - debug
 
 sast:
   stage: test
