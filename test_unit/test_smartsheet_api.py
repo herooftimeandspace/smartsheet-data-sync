@@ -137,7 +137,7 @@ def test_get_workspace_1(workspace_fixture):
     @patch("uuid_module.smartsheet_api.get_workspace", return_value=workspace)
     def test_0(mock_0):
         response = smartsheet_api.get_workspace(
-            workspace_id=app_vars.dev_workspace_id)
+            workspace_id=app_vars.dev_workspace_id[0])
         return response
     response_0 = test_0()
     assert response_0 == workspace
@@ -148,8 +148,8 @@ def test_get_workspace_2(workspace_fixture):
 
     @patch("uuid_module.smartsheet_api.get_workspace", return_value=workspaces)
     def test_1(mock_0):
-        mock_workspaces = [app_vars.dev_workspace_id,
-                           app_vars.dev_workspace_id]
+        mock_workspaces = [app_vars.dev_workspace_id[0],
+                           app_vars.dev_workspace_id[0]]
         response = smartsheet_api.get_workspace(workspace_id=mock_workspaces)
         return response
     response_1 = test_1()

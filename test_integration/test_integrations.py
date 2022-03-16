@@ -253,7 +253,15 @@ def test_updating_rows_1(setup_new_sheet):
 
 def test_get_workspace_0(workspace_fixture):
     workspace, _ = workspace_fixture
-    response_0 = smartsheet_api.get_workspace(app_vars.dev_workspace_id)
+    response_0 = smartsheet_api.get_workspace(app_vars.dev_workspace_id[0])
+    assert response_0.id == workspace.id
+
+
+def test_get_workspace_1(workspace_fixture):
+    workspace, _ = workspace_fixture
+    workspace_ids = [app_vars.dev_workspace_id[0],
+                     app_vars.dev_workspace_id[0]]
+    response_0 = smartsheet_api.get_workspace(workspace_ids)
     assert response_0.id == workspace.id
 
 
