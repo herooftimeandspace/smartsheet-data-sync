@@ -4,6 +4,7 @@ from unittest.mock import patch
 import pytest
 import smartsheet
 import uuid_module.helper as helper
+import uuid_module.smartsheet_api as smartsheet_api
 import uuid_module.variables as app_vars
 
 _, cwd = helper.get_local_paths()
@@ -35,7 +36,6 @@ def workspace_fixture():
 
 
 def test_write_rows_to_sheet_0(row, sheet):
-    import uuid_module.smartsheet_api as smartsheet_api
     rows_to_write = [row]
     with pytest.raises(TypeError):
         smartsheet_api.write_rows_to_sheet("rows_to_write", sheet)
@@ -43,13 +43,15 @@ def test_write_rows_to_sheet_0(row, sheet):
         smartsheet_api.write_rows_to_sheet(rows_to_write, "sheet")
     with pytest.raises(TypeError):
         smartsheet_api.write_rows_to_sheet(rows_to_write, sheet,
-                                           write_method=["This is a List"])
+                                           write_method=1337)
+    with pytest.raises(ValueError):
+        smartsheet_api.write_rows_to_sheet(rows_to_write, sheet,
+                                           write_method="Add")
     with pytest.raises(ValueError):
         smartsheet_api.write_rows_to_sheet([], sheet)
 
 
 def test_write_rows_to_sheet_1(row, sheet):
-    import uuid_module.smartsheet_api as smartsheet_api
     rows_to_write = [row]
 
     @patch("uuid_module.smartsheet_api.write_rows_to_sheet",
@@ -62,37 +64,93 @@ def test_write_rows_to_sheet_1(row, sheet):
     assert response['result']['statusCode'] == 200
 
 
-def test_get_workspace_0(workspace_fixture):
-    import uuid_module.smartsheet_api as smartsheet_api
-    workspace, workspaces = workspace_fixture
+def test_write_rows_to_sheet_2(row, sheet):
+    rows_to_write = [row]
+
+    @patch("uuid_module.smartsheet_api.write_rows_to_sheet",
+           return_value={"result": {"statusCode": 200}})
+    def test_0(mock_0):
+        response = smartsheet_api.write_rows_to_sheet(
+            rows_to_write, sheet.id)
+        return response
+    response = test_0()
+    assert response['result']['statusCode'] == 200
+
+
+def test_write_rows_to_sheet_3(row, sheet):
+    i = 0
+    rows_to_write = []
+    while i <= 150:
+        rows_to_write.append(row)
+        i += 1
+
+    @patch("uuid_module.smartsheet_api.write_rows_to_sheet",
+           return_value={"result": {"statusCode": 200}})
+    def test_0(mock_0):
+        response = smartsheet_api.write_rows_to_sheet(
+            rows_to_write, sheet, write_method="add")
+        return response
+    response = test_0()
+    assert response['result']['statusCode'] == 200
+
+
+def test_write_rows_to_sheet_4(row, sheet):
+    rows_to_write = [row]
+
+    @patch("uuid_module.smartsheet_api.write_rows_to_sheet",
+           return_value={"result": {"statusCode": 200}})
+    def test_0(mock_0):
+        response = smartsheet_api.write_rows_to_sheet(
+            rows_to_write, sheet, write_method="update")
+        return response
+    response = test_0()
+    assert response['result']['statusCode'] == 200
+
+
+def test_write_rows_to_sheet_5(row, sheet):
+    i = 0
+    rows_to_write = []
+    while i <= 150:
+        rows_to_write.append(row)
+        i += 1
+
+    @patch("uuid_module.smartsheet_api.write_rows_to_sheet",
+           return_value={"result": {"statusCode": 200}})
+    def test_0(mock_0):
+        response = smartsheet_api.write_rows_to_sheet(
+            rows_to_write, sheet, write_method="update")
+        return response
+    response = test_0()
+    assert response['result']['statusCode'] == 200
+
+
+def test_get_workspace_0():
     with pytest.raises(TypeError):
         smartsheet_api.get_workspace("workspace_id")
-    with patch("uuid_module.smartsheet_api.get_workspace") as func_mock:
-        func_mock.return_value = workspace
-        response = smartsheet_api.get_workspace(app_vars.dev_workspace_id)
-        assert response == workspace
-    with patch("uuid_module.smartsheet_api.get_workspace") as func_mock:
-        func_mock.return_value = workspaces
-        app_vars.dev_workspace_id.append(app_vars.dev_workspace_id[0])
-        response = smartsheet_api.get_workspace(app_vars.dev_workspace_id)
-        assert response == workspaces
+    with pytest.raises(ValueError):
+        smartsheet_api.get_workspace([])
 
 
 def test_get_workspace_1(workspace_fixture):
-    import uuid_module.smartsheet_api as smartsheet_api
-    workspace, workspaces = workspace_fixture
+    workspace, _ = workspace_fixture
 
     @patch("uuid_module.smartsheet_api.get_workspace", return_value=workspace)
     def test_0(mock_0):
-        response = smartsheet_api.get_workspace(app_vars.dev_workspace_id)
+        response = smartsheet_api.get_workspace(
+            workspace_id=app_vars.dev_workspace_id)
         return response
     response_0 = test_0()
     assert response_0 == workspace
 
+
+def test_get_workspace_2(workspace_fixture):
+    _, workspaces = workspace_fixture
+
     @patch("uuid_module.smartsheet_api.get_workspace", return_value=workspaces)
     def test_1(mock_0):
-        app_vars.dev_workspace_id.append(app_vars.dev_workspace_id[0])
-        response = smartsheet_api.get_workspace(app_vars.dev_workspace_id)
+        mock_workspaces = [app_vars.dev_workspace_id,
+                           app_vars.dev_workspace_id]
+        response = smartsheet_api.get_workspace(workspace_id=mock_workspaces)
         return response
     response_1 = test_1()
     assert response_1 == workspaces
@@ -111,7 +169,30 @@ def test_get_sheet_1(sheet):
 
     @patch("uuid_module.smartsheet_api.get_sheet", return_value=sheet)
     def test_0(mock_0):
-        response = smartsheet_api.get_sheet(sheet.id, app_vars.dev_minutes)
+        response = smartsheet_api.get_sheet(
+            sheet.id, minutes=app_vars.dev_minutes)
+        return response
+    response = test_0()
+    assert response == sheet
+
+
+def test_get_sheet_2(sheet):
+    import uuid_module.smartsheet_api as smartsheet_api
+
+    @patch("uuid_module.smartsheet_api.get_sheet", return_value=sheet)
+    def test_0(mock_0):
+        response = smartsheet_api.get_sheet(sheet.id, minutes=5)
+        return response
+    response = test_0()
+    assert response == sheet
+
+
+def test_get_sheet_3(sheet):
+    import uuid_module.smartsheet_api as smartsheet_api
+
+    @patch("uuid_module.smartsheet_api.get_sheet", return_value=sheet)
+    def test_0(mock_0):
+        response = smartsheet_api.get_sheet(sheet.id, minutes=0)
         return response
     response = test_0()
     assert response == sheet

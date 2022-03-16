@@ -39,7 +39,8 @@ jira_index_columns = ["Tasks", "Issue Type", "Jira Ticket", "Issue Links",
 #     """
 #     import uuid_module.get_data as get_data
 #     if not isinstance(minutes, int):
-#         msg = str("Minutes should be type: int, not {}").format(type(minutes))
+#         msg = str("Minutes should be type: int, not {}"
+#                   "").format(type(minutes))
 #         raise TypeError(msg)
 #     if minutes < 0:
 #         msg = str("Minutes should be >= 0, not {}").format(minutes)

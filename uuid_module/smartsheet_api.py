@@ -45,25 +45,21 @@ def write_rows_to_sheet(rows_to_write, sheet, write_method="add"):
         msg = str("Write method must be type: str not type {}"
                   "").format(type(write_method))
         raise TypeError(msg)
+    if write_method not in ["add", "update"]:
+        msg = str("Write method must be 'add' or 'update', not {}"
+                  "").format(write_method)
+        raise ValueError(msg)
     if len(rows_to_write) <= 0:
         msg = str("Rows to write must have 1 or more rows in the list, "
                   "not {}").format(len(rows_to_write))
         raise ValueError(msg)
 
-    if isinstance(sheet, (dict, smartsheet.models.sheet.Sheet)):
+    if isinstance(sheet, (dict, smartsheet.models.Sheet)):
         sheet_id = int(sheet.id)
         sheet_name = str(sheet.name)
     elif isinstance(sheet, int):
         sheet_id = sheet
         sheet_name = "Sheet Name not provided"
-    else:
-        msg = "Warning, Type checks passed but sheet is neither a"
-        "Smartsheet sheet object, nor an INT."
-        logging.warning(msg)
-        logging.debug("Dumping data to log")
-        msg = str("Rows to Write: {} | Sheet: {} | Write Method: {}"
-                  "").format(rows_to_write, sheet, write_method)
-        logging.debug(msg)
 
     if rows_to_write:
         msg = str("Writing {} rows back to Sheet ID: {} "
@@ -86,10 +82,10 @@ def write_rows_to_sheet(rows_to_write, sheet, write_method="add"):
                                   "").format(result.message,
                                              result.result_code)
                         logging.info(msg)
-                        return result
                     except Exception as result:
                         logging.warning(result.message)
                         return result
+                return result
             else:
                 try:
                     result = smartsheet_client.Sheets.add_rows(sheet_id,
@@ -116,10 +112,10 @@ def write_rows_to_sheet(rows_to_write, sheet, write_method="add"):
                                   "").format(result.message,
                                              result.result_code)
                         logging.info(msg)
-                        return result
                     except Exception as result:
                         logging.warning(result.message)
                         return result
+                return result
             else:
                 try:
                     result = smartsheet_client.Sheets.\
@@ -156,9 +152,12 @@ def get_workspace(workspace_id=app_vars.dev_workspace_id):
         in the workspace
     """
     if not isinstance(workspace_id, (int, list)):
-        msg = str("Sheet ID must be type: int or list"
+        msg = str("Workspace ID must be type: int or list"
                   "not type: {}").format(type(workspace_id))
         raise TypeError(msg)
+    if not workspace_id:
+        msg = str("Workspace ID must not be an empty list.")
+        raise ValueError(msg)
     if isinstance(workspace_id, int):
         workspace = smartsheet_client.Workspaces.get_workspace(
             workspace_id, load_all=True)
@@ -169,7 +168,7 @@ def get_workspace(workspace_id=app_vars.dev_workspace_id):
             workspace = smartsheet_client.Workspaces.get_workspace(
                 ws_id, load_all=True)
             workspaces.append(workspace)
-        return workspace
+        return workspaces
 
 
 def get_sheet(sheet_id, minutes=app_vars.dev_minutes):
