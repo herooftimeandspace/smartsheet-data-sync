@@ -388,14 +388,16 @@
     <span class="n">sub_index</span> <span class="o">=</span> <span class="p">{}</span>
     <span class="k">for</span> <span class="n">row</span> <span class="ow">in</span> <span class="n">index_sheet</span><span class="o">.</span><span class="n">rows</span><span class="p">:</span>
 
-        <span class="n">uuid_value</span> <span class="o">=</span> <span class="n">helper</span><span class="o">.</span><span class="n">get_cell_data</span><span class="p">(</span><span class="n">row</span><span class="p">,</span> <span class="s1">&#39;UUID&#39;</span><span class="p">,</span> <span class="n">index_col_map</span><span class="p">)</span>
-        <span class="n">jira_value</span> <span class="o">=</span> <span class="n">helper</span><span class="o">.</span><span class="n">get_cell_data</span><span class="p">(</span><span class="n">row</span><span class="p">,</span> <span class="s1">&#39;Jira Ticket&#39;</span><span class="p">,</span> <span class="n">index_col_map</span><span class="p">)</span>
+        <span class="n">uuid_cell</span> <span class="o">=</span> <span class="n">helper</span><span class="o">.</span><span class="n">get_cell_data</span><span class="p">(</span><span class="n">row</span><span class="p">,</span> <span class="s1">&#39;UUID&#39;</span><span class="p">,</span> <span class="n">index_col_map</span><span class="p">)</span>
+        <span class="n">jira_cell</span> <span class="o">=</span> <span class="n">helper</span><span class="o">.</span><span class="n">get_cell_data</span><span class="p">(</span><span class="n">row</span><span class="p">,</span> <span class="s1">&#39;Jira Ticket&#39;</span><span class="p">,</span> <span class="n">index_col_map</span><span class="p">)</span>
 
-        <span class="k">if</span> <span class="n">uuid_value</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">or</span> <span class="n">jira_value</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">uuid_cell</span> <span class="ow">or</span> <span class="ow">not</span> <span class="n">jira_cell</span><span class="p">:</span>
             <span class="c1"># Skip empty Jira Tickets or UUIDs</span>
             <span class="k">continue</span>
-        <span class="n">uuid</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">uuid_value</span><span class="o">.</span><span class="n">value</span><span class="p">)</span>
-        <span class="n">jira_ticket</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">jira_value</span><span class="o">.</span><span class="n">value</span><span class="p">)</span>
+
+        <span class="n">uuid</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">uuid_cell</span><span class="o">.</span><span class="n">value</span><span class="p">)</span>
+        <span class="n">jira_ticket</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">jira_cell</span><span class="o">.</span><span class="n">value</span><span class="p">)</span>
+
         <span class="k">if</span> <span class="n">uuid</span> <span class="o">==</span> <span class="s2">&quot;None&quot;</span> <span class="ow">or</span> <span class="n">jira_ticket</span> <span class="o">==</span> <span class="s2">&quot;None&quot;</span><span class="p">:</span>
             <span class="c1"># Skip None values returned as strings</span>
             <span class="k">continue</span>
@@ -415,29 +417,29 @@
                                      <span class="nb">type</span><span class="p">(</span><span class="n">uuid</span><span class="p">),</span> <span class="n">jira_ticket</span><span class="p">,</span>
                                      <span class="nb">type</span><span class="p">(</span><span class="n">jira_ticket</span><span class="p">))</span>
         <span class="n">logging</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
-        <span class="n">sheet_id</span> <span class="o">=</span> <span class="n">uuid</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s2">&quot;-&quot;</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
-        <span class="n">row_id</span> <span class="o">=</span> <span class="n">uuid</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s2">&quot;-&quot;</span><span class="p">)[</span><span class="mi">1</span><span class="p">]</span>
-        <span class="n">msg</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="s2">&quot;Sheet ID: </span><span class="si">{}</span><span class="s2"> | Row ID: </span><span class="si">{}</span><span class="s2">&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">sheet_id</span><span class="p">,</span> <span class="n">row_id</span><span class="p">)</span>
+        <span class="n">split</span> <span class="o">=</span> <span class="n">uuid</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s2">&quot;-&quot;</span><span class="p">)</span>
+        <span class="n">sheet_id</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">split</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+        <span class="n">row_id</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">split</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span>
+        <span class="n">col_id</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">split</span><span class="p">[</span><span class="mi">2</span><span class="p">])</span>
+        <span class="n">msg</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="s2">&quot;Sheet ID: </span><span class="si">{}</span><span class="s2"> | Row ID: </span><span class="si">{}</span><span class="s2">&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">sheet_id</span><span class="p">,</span> <span class="n">row_id</span><span class="p">,</span> <span class="n">col_id</span><span class="p">)</span>
         <span class="n">logging</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
+        <span class="n">cell_link_status</span> <span class="o">=</span> <span class="n">helper</span><span class="o">.</span><span class="n">has_cell_link</span><span class="p">(</span><span class="n">jira_cell</span><span class="p">,</span> <span class="s2">&quot;Out&quot;</span><span class="p">,</span>
+                                                <span class="n">sheet_id</span><span class="o">=</span><span class="n">sheet_id</span><span class="p">,</span>
+                                                <span class="n">row_id</span><span class="o">=</span><span class="n">row_id</span><span class="p">,</span>
+                                                <span class="n">col_id</span><span class="o">=</span><span class="n">col_id</span><span class="p">)</span>
 
-        <span class="k">try</span><span class="p">:</span>
-            <span class="n">cell_link_status</span> <span class="o">=</span> <span class="n">helper</span><span class="o">.</span><span class="n">has_cell_link</span><span class="p">(</span><span class="n">jira_value</span><span class="p">,</span> <span class="s2">&quot;Out&quot;</span><span class="p">)</span>
-            <span class="k">if</span> <span class="n">cell_link_status</span> <span class="ow">in</span> <span class="p">(</span><span class="s1">&#39;Linked&#39;</span><span class="p">,</span> <span class="s1">&#39;OK&#39;</span><span class="p">):</span>
-                <span class="c1"># Skip linked rows</span>
-                <span class="n">msg</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="s2">&quot;Jira Ticket: </span><span class="si">{}</span><span class="s2"> has already been pushed to &quot;</span>
-                          <span class="s2">&quot;Sheet ID: </span><span class="si">{}</span><span class="s2"> | Row ID: </span><span class="si">{}</span><span class="s2">&quot;</span>
-                          <span class="s2">&quot;&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">jira_ticket</span><span class="p">,</span> <span class="n">sheet_id</span><span class="p">,</span> <span class="n">row_id</span><span class="p">)</span>
-                <span class="n">logging</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
-                <span class="k">continue</span>
-            <span class="k">elif</span> <span class="n">cell_link_status</span> <span class="o">==</span> <span class="s2">&quot;Unlinked&quot;</span><span class="p">:</span>
-                <span class="n">msg</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="s2">&quot;Jira Ticket </span><span class="si">{}</span><span class="s2"> cell is </span><span class="si">{}</span><span class="s2">, adding to index&quot;</span>
-                          <span class="s2">&quot;&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">jira_ticket</span><span class="p">,</span> <span class="n">cell_link_status</span><span class="p">)</span>
-                <span class="n">logging</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
-                <span class="n">sub_index</span><span class="p">[</span><span class="n">uuid_value</span><span class="p">]</span> <span class="o">=</span> <span class="n">jira_ticket</span>
-        <span class="k">except</span> <span class="ne">KeyError</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
-            <span class="n">msg</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="s2">&quot;Error getting linked status: </span><span class="si">{}</span><span class="s2">&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">e</span><span class="p">)</span>
-            <span class="n">logging</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">cell_link_status</span> <span class="ow">in</span> <span class="p">(</span><span class="s1">&#39;Linked&#39;</span><span class="p">,</span> <span class="s1">&#39;OK&#39;</span><span class="p">):</span>
+            <span class="c1"># Skip linked rows</span>
+            <span class="n">msg</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="s2">&quot;Jira Ticket: </span><span class="si">{}</span><span class="s2"> has already been pushed to &quot;</span>
+                      <span class="s2">&quot;Sheet ID: </span><span class="si">{}</span><span class="s2"> | Row ID: </span><span class="si">{}</span><span class="s2">&quot;</span>
+                      <span class="s2">&quot;&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">jira_ticket</span><span class="p">,</span> <span class="n">sheet_id</span><span class="p">,</span> <span class="n">row_id</span><span class="p">)</span>
+            <span class="n">logging</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
             <span class="k">continue</span>
+        <span class="k">if</span> <span class="n">cell_link_status</span> <span class="ow">in</span> <span class="p">(</span><span class="s2">&quot;Unlinked&quot;</span><span class="p">,</span> <span class="s2">&quot;INVALID&quot;</span><span class="p">):</span>
+            <span class="n">msg</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="s2">&quot;Jira Ticket </span><span class="si">{}</span><span class="s2"> cell is </span><span class="si">{}</span><span class="s2">, adding to index&quot;</span>
+                      <span class="s2">&quot;&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">jira_ticket</span><span class="p">,</span> <span class="n">cell_link_status</span><span class="p">)</span>
+            <span class="n">logging</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
+            <span class="n">sub_index</span><span class="p">[</span><span class="n">uuid_cell</span><span class="p">]</span> <span class="o">=</span> <span class="n">jira_ticket</span>
     <span class="k">return</span> <span class="n">sub_index</span>
 
 
@@ -1123,14 +1125,16 @@ form of Column Name: Column ID</li>
     <span class="n">sub_index</span> <span class="o">=</span> <span class="p">{}</span>
     <span class="k">for</span> <span class="n">row</span> <span class="ow">in</span> <span class="n">index_sheet</span><span class="o">.</span><span class="n">rows</span><span class="p">:</span>
 
-        <span class="n">uuid_value</span> <span class="o">=</span> <span class="n">helper</span><span class="o">.</span><span class="n">get_cell_data</span><span class="p">(</span><span class="n">row</span><span class="p">,</span> <span class="s1">&#39;UUID&#39;</span><span class="p">,</span> <span class="n">index_col_map</span><span class="p">)</span>
-        <span class="n">jira_value</span> <span class="o">=</span> <span class="n">helper</span><span class="o">.</span><span class="n">get_cell_data</span><span class="p">(</span><span class="n">row</span><span class="p">,</span> <span class="s1">&#39;Jira Ticket&#39;</span><span class="p">,</span> <span class="n">index_col_map</span><span class="p">)</span>
+        <span class="n">uuid_cell</span> <span class="o">=</span> <span class="n">helper</span><span class="o">.</span><span class="n">get_cell_data</span><span class="p">(</span><span class="n">row</span><span class="p">,</span> <span class="s1">&#39;UUID&#39;</span><span class="p">,</span> <span class="n">index_col_map</span><span class="p">)</span>
+        <span class="n">jira_cell</span> <span class="o">=</span> <span class="n">helper</span><span class="o">.</span><span class="n">get_cell_data</span><span class="p">(</span><span class="n">row</span><span class="p">,</span> <span class="s1">&#39;Jira Ticket&#39;</span><span class="p">,</span> <span class="n">index_col_map</span><span class="p">)</span>
 
-        <span class="k">if</span> <span class="n">uuid_value</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">or</span> <span class="n">jira_value</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">uuid_cell</span> <span class="ow">or</span> <span class="ow">not</span> <span class="n">jira_cell</span><span class="p">:</span>
             <span class="c1"># Skip empty Jira Tickets or UUIDs</span>
             <span class="k">continue</span>
-        <span class="n">uuid</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">uuid_value</span><span class="o">.</span><span class="n">value</span><span class="p">)</span>
-        <span class="n">jira_ticket</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">jira_value</span><span class="o">.</span><span class="n">value</span><span class="p">)</span>
+
+        <span class="n">uuid</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">uuid_cell</span><span class="o">.</span><span class="n">value</span><span class="p">)</span>
+        <span class="n">jira_ticket</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">jira_cell</span><span class="o">.</span><span class="n">value</span><span class="p">)</span>
+
         <span class="k">if</span> <span class="n">uuid</span> <span class="o">==</span> <span class="s2">&quot;None&quot;</span> <span class="ow">or</span> <span class="n">jira_ticket</span> <span class="o">==</span> <span class="s2">&quot;None&quot;</span><span class="p">:</span>
             <span class="c1"># Skip None values returned as strings</span>
             <span class="k">continue</span>
@@ -1150,29 +1154,29 @@ form of Column Name: Column ID</li>
                                      <span class="nb">type</span><span class="p">(</span><span class="n">uuid</span><span class="p">),</span> <span class="n">jira_ticket</span><span class="p">,</span>
                                      <span class="nb">type</span><span class="p">(</span><span class="n">jira_ticket</span><span class="p">))</span>
         <span class="n">logging</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
-        <span class="n">sheet_id</span> <span class="o">=</span> <span class="n">uuid</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s2">&quot;-&quot;</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
-        <span class="n">row_id</span> <span class="o">=</span> <span class="n">uuid</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s2">&quot;-&quot;</span><span class="p">)[</span><span class="mi">1</span><span class="p">]</span>
-        <span class="n">msg</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="s2">&quot;Sheet ID: </span><span class="si">{}</span><span class="s2"> | Row ID: </span><span class="si">{}</span><span class="s2">&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">sheet_id</span><span class="p">,</span> <span class="n">row_id</span><span class="p">)</span>
+        <span class="n">split</span> <span class="o">=</span> <span class="n">uuid</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s2">&quot;-&quot;</span><span class="p">)</span>
+        <span class="n">sheet_id</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">split</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+        <span class="n">row_id</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">split</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span>
+        <span class="n">col_id</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">split</span><span class="p">[</span><span class="mi">2</span><span class="p">])</span>
+        <span class="n">msg</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="s2">&quot;Sheet ID: </span><span class="si">{}</span><span class="s2"> | Row ID: </span><span class="si">{}</span><span class="s2">&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">sheet_id</span><span class="p">,</span> <span class="n">row_id</span><span class="p">,</span> <span class="n">col_id</span><span class="p">)</span>
         <span class="n">logging</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
+        <span class="n">cell_link_status</span> <span class="o">=</span> <span class="n">helper</span><span class="o">.</span><span class="n">has_cell_link</span><span class="p">(</span><span class="n">jira_cell</span><span class="p">,</span> <span class="s2">&quot;Out&quot;</span><span class="p">,</span>
+                                                <span class="n">sheet_id</span><span class="o">=</span><span class="n">sheet_id</span><span class="p">,</span>
+                                                <span class="n">row_id</span><span class="o">=</span><span class="n">row_id</span><span class="p">,</span>
+                                                <span class="n">col_id</span><span class="o">=</span><span class="n">col_id</span><span class="p">)</span>
 
-        <span class="k">try</span><span class="p">:</span>
-            <span class="n">cell_link_status</span> <span class="o">=</span> <span class="n">helper</span><span class="o">.</span><span class="n">has_cell_link</span><span class="p">(</span><span class="n">jira_value</span><span class="p">,</span> <span class="s2">&quot;Out&quot;</span><span class="p">)</span>
-            <span class="k">if</span> <span class="n">cell_link_status</span> <span class="ow">in</span> <span class="p">(</span><span class="s1">&#39;Linked&#39;</span><span class="p">,</span> <span class="s1">&#39;OK&#39;</span><span class="p">):</span>
-                <span class="c1"># Skip linked rows</span>
-                <span class="n">msg</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="s2">&quot;Jira Ticket: </span><span class="si">{}</span><span class="s2"> has already been pushed to &quot;</span>
-                          <span class="s2">&quot;Sheet ID: </span><span class="si">{}</span><span class="s2"> | Row ID: </span><span class="si">{}</span><span class="s2">&quot;</span>
-                          <span class="s2">&quot;&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">jira_ticket</span><span class="p">,</span> <span class="n">sheet_id</span><span class="p">,</span> <span class="n">row_id</span><span class="p">)</span>
-                <span class="n">logging</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
-                <span class="k">continue</span>
-            <span class="k">elif</span> <span class="n">cell_link_status</span> <span class="o">==</span> <span class="s2">&quot;Unlinked&quot;</span><span class="p">:</span>
-                <span class="n">msg</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="s2">&quot;Jira Ticket </span><span class="si">{}</span><span class="s2"> cell is </span><span class="si">{}</span><span class="s2">, adding to index&quot;</span>
-                          <span class="s2">&quot;&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">jira_ticket</span><span class="p">,</span> <span class="n">cell_link_status</span><span class="p">)</span>
-                <span class="n">logging</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
-                <span class="n">sub_index</span><span class="p">[</span><span class="n">uuid_value</span><span class="p">]</span> <span class="o">=</span> <span class="n">jira_ticket</span>
-        <span class="k">except</span> <span class="ne">KeyError</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
-            <span class="n">msg</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="s2">&quot;Error getting linked status: </span><span class="si">{}</span><span class="s2">&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">e</span><span class="p">)</span>
-            <span class="n">logging</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">cell_link_status</span> <span class="ow">in</span> <span class="p">(</span><span class="s1">&#39;Linked&#39;</span><span class="p">,</span> <span class="s1">&#39;OK&#39;</span><span class="p">):</span>
+            <span class="c1"># Skip linked rows</span>
+            <span class="n">msg</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="s2">&quot;Jira Ticket: </span><span class="si">{}</span><span class="s2"> has already been pushed to &quot;</span>
+                      <span class="s2">&quot;Sheet ID: </span><span class="si">{}</span><span class="s2"> | Row ID: </span><span class="si">{}</span><span class="s2">&quot;</span>
+                      <span class="s2">&quot;&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">jira_ticket</span><span class="p">,</span> <span class="n">sheet_id</span><span class="p">,</span> <span class="n">row_id</span><span class="p">)</span>
+            <span class="n">logging</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
             <span class="k">continue</span>
+        <span class="k">if</span> <span class="n">cell_link_status</span> <span class="ow">in</span> <span class="p">(</span><span class="s2">&quot;Unlinked&quot;</span><span class="p">,</span> <span class="s2">&quot;INVALID&quot;</span><span class="p">):</span>
+            <span class="n">msg</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="s2">&quot;Jira Ticket </span><span class="si">{}</span><span class="s2"> cell is </span><span class="si">{}</span><span class="s2">, adding to index&quot;</span>
+                      <span class="s2">&quot;&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">jira_ticket</span><span class="p">,</span> <span class="n">cell_link_status</span><span class="p">)</span>
+            <span class="n">logging</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
+            <span class="n">sub_index</span><span class="p">[</span><span class="n">uuid_cell</span><span class="p">]</span> <span class="o">=</span> <span class="n">jira_ticket</span>
     <span class="k">return</span> <span class="n">sub_index</span>
 </pre></div>
 

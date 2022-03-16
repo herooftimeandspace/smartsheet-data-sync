@@ -76,8 +76,7 @@
                 
                         <details>
             <summary>View Source</summary>
-            <div class="codehilite"><pre><span></span><span class="kn">import</span> <span class="nn">json</span>
-<span class="kn">import</span> <span class="nn">logging</span>
+            <div class="codehilite"><pre><span></span><span class="kn">import</span> <span class="nn">logging</span>
 <span class="kn">import</span> <span class="nn">math</span>
 <span class="kn">import</span> <span class="nn">os</span>
 <span class="kn">from</span> <span class="nn">datetime</span> <span class="kn">import</span> <span class="n">datetime</span><span class="p">,</span> <span class="n">timedelta</span>
@@ -146,7 +145,7 @@
     <span class="k">return</span> <span class="n">column_map</span>
 
 
-<span class="k">def</span> <span class="nf">has_cell_link</span><span class="p">(</span><span class="n">old_cell</span><span class="p">,</span> <span class="n">direction</span><span class="p">):</span>
+<span class="k">def</span> <span class="nf">has_cell_link</span><span class="p">(</span><span class="n">old_cell</span><span class="p">,</span> <span class="n">direction</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;Determine if an existing cell already has a cell link, which direction</span>
 <span class="sd">       and whether it needs to be repaired. Returning None currently disabled</span>
 <span class="sd">       because it caused the script to skip valid cells that should have been</span>
@@ -176,40 +175,67 @@
         <span class="n">msg</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="s2">&quot;Direction should type: str not type: </span><span class="si">{}</span><span class="s2">&quot;</span>
                   <span class="s2">&quot;&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="nb">type</span><span class="p">(</span><span class="n">direction</span><span class="p">))</span>
         <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">kwargs</span><span class="p">,</span> <span class="p">(</span><span class="nb">dict</span><span class="p">,</span> <span class="nb">type</span><span class="p">(</span><span class="kc">None</span><span class="p">))):</span>
+        <span class="n">msg</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="s2">&quot;Keyword Args should be type: dict or None not type: </span><span class="si">{}</span><span class="s2">&quot;</span>
+                  <span class="s2">&quot;&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="nb">type</span><span class="p">(</span><span class="n">kwargs</span><span class="p">))</span>
+        <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
+    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">kwargs</span><span class="p">,</span> <span class="nb">dict</span><span class="p">):</span>
+        <span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">k</span><span class="p">,</span> <span class="nb">str</span><span class="p">):</span>
+                <span class="n">msg</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="s2">&quot;Keyword Args key should be type: str not type: </span><span class="si">{}</span><span class="s2">&quot;</span>
+                          <span class="s2">&quot;&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="nb">type</span><span class="p">(</span><span class="n">k</span><span class="p">))</span>
+                <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">v</span><span class="p">,</span> <span class="nb">int</span><span class="p">):</span>
+                <span class="n">msg</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="s2">&quot;Keyword Args value should be type: int not type: </span><span class="si">{}</span><span class="s2">&quot;</span>
+                          <span class="s2">&quot;&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="nb">type</span><span class="p">(</span><span class="n">v</span><span class="p">))</span>
+                <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
     <span class="k">if</span> <span class="n">direction</span> <span class="ow">not</span> <span class="ow">in</span> <span class="p">(</span><span class="s2">&quot;In&quot;</span><span class="p">,</span> <span class="s2">&quot;Out&quot;</span><span class="p">):</span>
         <span class="n">msg</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="s2">&quot;Direction should be either &#39;In&#39; or &#39;Out&#39; not &#39;</span><span class="si">{}</span><span class="s2">&#39;&quot;</span>
                   <span class="s2">&quot;&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">direction</span><span class="p">)</span>
         <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
 
-    <span class="c1"># Load the cell values as a json object</span>
-    <span class="n">cell_json</span> <span class="o">=</span> <span class="n">json</span><span class="o">.</span><span class="n">loads</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">old_cell</span><span class="p">))</span>
-
     <span class="k">if</span> <span class="n">direction</span> <span class="o">==</span> <span class="s2">&quot;In&quot;</span><span class="p">:</span>
         <span class="c1"># Check the status of the link.</span>
         <span class="k">try</span><span class="p">:</span>
-            <span class="n">linked_cell</span> <span class="o">=</span> <span class="n">cell_json</span><span class="p">[</span><span class="s1">&#39;linkInFromCell&#39;</span><span class="p">]</span>
-        <span class="k">except</span> <span class="ne">KeyError</span><span class="p">:</span>
+            <span class="n">status</span> <span class="o">=</span> <span class="n">old_cell</span><span class="o">.</span><span class="n">link_in_from_cell</span><span class="o">.</span><span class="n">status</span>
+            <span class="k">return</span> <span class="nb">str</span><span class="p">(</span><span class="n">status</span><span class="p">)</span>
+        <span class="k">except</span> <span class="ne">AttributeError</span><span class="p">:</span>
             <span class="k">return</span> <span class="s2">&quot;Unlinked&quot;</span>
 
-        <span class="n">status</span> <span class="o">=</span> <span class="n">linked_cell</span><span class="p">[</span><span class="s1">&#39;status&#39;</span><span class="p">]</span>
-        <span class="k">return</span> <span class="n">status</span>
-        <span class="c1"># if status == &#39;OK&#39;:</span>
-        <span class="c1">#     return &quot;Linked&quot;</span>
-        <span class="c1"># elif status == &#39;BROKEN&#39;:</span>
-        <span class="c1">#     return &quot;Broken&quot;</span>
-    <span class="k">elif</span> <span class="n">direction</span> <span class="o">==</span> <span class="s2">&quot;Out&quot;</span><span class="p">:</span>
-        <span class="c1"># Always set to Linked if the value exists, unless it&#39;s invalid.</span>
+    <span class="k">if</span> <span class="n">direction</span> <span class="o">==</span> <span class="s2">&quot;Out&quot;</span> <span class="ow">and</span> <span class="ow">not</span> <span class="n">kwargs</span><span class="p">:</span>
         <span class="k">try</span><span class="p">:</span>
-            <span class="n">linked_cell</span> <span class="o">=</span> <span class="n">cell_json</span><span class="p">[</span><span class="s1">&#39;linksOutToCells&#39;</span><span class="p">]</span>
-            <span class="k">return</span> <span class="s2">&quot;Linked&quot;</span>
-        <span class="k">except</span> <span class="ne">KeyError</span><span class="p">:</span>
+            <span class="n">status</span> <span class="o">=</span> <span class="n">old_cell</span><span class="o">.</span><span class="n">links_out_to_cells</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">status</span>
+        <span class="k">except</span> <span class="ne">IndexError</span><span class="p">:</span>
             <span class="k">return</span> <span class="s2">&quot;Unlinked&quot;</span>
-    <span class="k">else</span><span class="p">:</span>
-        <span class="k">return</span> <span class="kc">None</span>
+        <span class="k">return</span> <span class="s2">&quot;Linked&quot;</span>
+
+    <span class="k">if</span> <span class="n">direction</span> <span class="o">==</span> <span class="s2">&quot;Out&quot;</span> <span class="ow">and</span> <span class="n">kwargs</span><span class="p">:</span>
+        <span class="k">def</span> <span class="nf">check_value_exist</span><span class="p">(</span><span class="n">test_dict</span><span class="p">,</span> <span class="o">*</span><span class="n">values</span><span class="p">):</span>
+            <span class="k">return</span> <span class="nb">all</span><span class="p">(</span><span class="n">v</span> <span class="ow">in</span> <span class="n">test_dict</span> <span class="k">for</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">values</span><span class="p">)</span>
+        <span class="n">result</span> <span class="o">=</span> <span class="n">check_value_exist</span><span class="p">(</span><span class="n">kwargs</span><span class="o">.</span><span class="n">keys</span><span class="p">(),</span>
+                                   <span class="s2">&quot;sheet_id&quot;</span><span class="p">,</span> <span class="s2">&quot;row_id&quot;</span><span class="p">,</span>
+                                   <span class="s2">&quot;col_id&quot;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">result</span><span class="p">:</span>
+            <span class="n">sheet_id</span> <span class="o">=</span> <span class="n">kwargs</span><span class="p">[</span><span class="s2">&quot;sheet_id&quot;</span><span class="p">]</span>
+            <span class="n">row_id</span> <span class="o">=</span> <span class="n">kwargs</span><span class="p">[</span><span class="s2">&quot;row_id&quot;</span><span class="p">]</span>
+            <span class="n">col_id</span> <span class="o">=</span> <span class="n">kwargs</span><span class="p">[</span><span class="s2">&quot;col_id&quot;</span><span class="p">]</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">has_cell_link</span><span class="p">(</span><span class="n">old_cell</span><span class="p">,</span> <span class="s2">&quot;Out&quot;</span><span class="p">)</span>
+        <span class="c1"># Always set to Linked if the value exists, unless it&#39;s invalid.</span>
+        <span class="k">for</span> <span class="n">link</span> <span class="ow">in</span> <span class="n">old_cell</span><span class="o">.</span><span class="n">links_out_to_cells</span><span class="p">:</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="n">sheet_id</span> <span class="o">==</span> <span class="n">link</span><span class="o">.</span><span class="n">sheet_id</span><span class="p">:</span>
+                <span class="k">continue</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="n">row_id</span> <span class="o">==</span> <span class="n">link</span><span class="o">.</span><span class="n">row_id</span><span class="p">:</span>
+                <span class="k">continue</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="n">col_id</span> <span class="o">==</span> <span class="n">link</span><span class="o">.</span><span class="n">column_id</span><span class="p">:</span>
+                <span class="k">continue</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="k">return</span> <span class="nb">str</span><span class="p">(</span><span class="n">link</span><span class="o">.</span><span class="n">status</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">return</span> <span class="s2">&quot;Unlinked&quot;</span>
+
 
 <span class="c1"># TODO: Replace with get_cell_data</span>
-
-
 <span class="k">def</span> <span class="nf">get_cell_value</span><span class="p">(</span><span class="n">row</span><span class="p">,</span> <span class="n">col_name</span><span class="p">,</span> <span class="n">col_map</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Get the value of the cell or return None</span>
@@ -542,12 +568,12 @@
 
         
             <span class="def">def</span>
-            <span class="name">has_cell_link</span><span class="signature">(old_cell, direction)</span>:
+            <span class="name">has_cell_link</span><span class="signature">(old_cell, direction, **kwargs)</span>:
     </div>
 
                 <details>
             <summary>View Source</summary>
-            <div class="codehilite"><pre><span></span><span class="k">def</span> <span class="nf">has_cell_link</span><span class="p">(</span><span class="n">old_cell</span><span class="p">,</span> <span class="n">direction</span><span class="p">):</span>
+            <div class="codehilite"><pre><span></span><span class="k">def</span> <span class="nf">has_cell_link</span><span class="p">(</span><span class="n">old_cell</span><span class="p">,</span> <span class="n">direction</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;Determine if an existing cell already has a cell link, which direction</span>
 <span class="sd">       and whether it needs to be repaired. Returning None currently disabled</span>
 <span class="sd">       because it caused the script to skip valid cells that should have been</span>
@@ -577,36 +603,64 @@
         <span class="n">msg</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="s2">&quot;Direction should type: str not type: </span><span class="si">{}</span><span class="s2">&quot;</span>
                   <span class="s2">&quot;&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="nb">type</span><span class="p">(</span><span class="n">direction</span><span class="p">))</span>
         <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">kwargs</span><span class="p">,</span> <span class="p">(</span><span class="nb">dict</span><span class="p">,</span> <span class="nb">type</span><span class="p">(</span><span class="kc">None</span><span class="p">))):</span>
+        <span class="n">msg</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="s2">&quot;Keyword Args should be type: dict or None not type: </span><span class="si">{}</span><span class="s2">&quot;</span>
+                  <span class="s2">&quot;&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="nb">type</span><span class="p">(</span><span class="n">kwargs</span><span class="p">))</span>
+        <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
+    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">kwargs</span><span class="p">,</span> <span class="nb">dict</span><span class="p">):</span>
+        <span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">k</span><span class="p">,</span> <span class="nb">str</span><span class="p">):</span>
+                <span class="n">msg</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="s2">&quot;Keyword Args key should be type: str not type: </span><span class="si">{}</span><span class="s2">&quot;</span>
+                          <span class="s2">&quot;&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="nb">type</span><span class="p">(</span><span class="n">k</span><span class="p">))</span>
+                <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">v</span><span class="p">,</span> <span class="nb">int</span><span class="p">):</span>
+                <span class="n">msg</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="s2">&quot;Keyword Args value should be type: int not type: </span><span class="si">{}</span><span class="s2">&quot;</span>
+                          <span class="s2">&quot;&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="nb">type</span><span class="p">(</span><span class="n">v</span><span class="p">))</span>
+                <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
     <span class="k">if</span> <span class="n">direction</span> <span class="ow">not</span> <span class="ow">in</span> <span class="p">(</span><span class="s2">&quot;In&quot;</span><span class="p">,</span> <span class="s2">&quot;Out&quot;</span><span class="p">):</span>
         <span class="n">msg</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="s2">&quot;Direction should be either &#39;In&#39; or &#39;Out&#39; not &#39;</span><span class="si">{}</span><span class="s2">&#39;&quot;</span>
                   <span class="s2">&quot;&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">direction</span><span class="p">)</span>
         <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
 
-    <span class="c1"># Load the cell values as a json object</span>
-    <span class="n">cell_json</span> <span class="o">=</span> <span class="n">json</span><span class="o">.</span><span class="n">loads</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">old_cell</span><span class="p">))</span>
-
     <span class="k">if</span> <span class="n">direction</span> <span class="o">==</span> <span class="s2">&quot;In&quot;</span><span class="p">:</span>
         <span class="c1"># Check the status of the link.</span>
         <span class="k">try</span><span class="p">:</span>
-            <span class="n">linked_cell</span> <span class="o">=</span> <span class="n">cell_json</span><span class="p">[</span><span class="s1">&#39;linkInFromCell&#39;</span><span class="p">]</span>
-        <span class="k">except</span> <span class="ne">KeyError</span><span class="p">:</span>
+            <span class="n">status</span> <span class="o">=</span> <span class="n">old_cell</span><span class="o">.</span><span class="n">link_in_from_cell</span><span class="o">.</span><span class="n">status</span>
+            <span class="k">return</span> <span class="nb">str</span><span class="p">(</span><span class="n">status</span><span class="p">)</span>
+        <span class="k">except</span> <span class="ne">AttributeError</span><span class="p">:</span>
             <span class="k">return</span> <span class="s2">&quot;Unlinked&quot;</span>
 
-        <span class="n">status</span> <span class="o">=</span> <span class="n">linked_cell</span><span class="p">[</span><span class="s1">&#39;status&#39;</span><span class="p">]</span>
-        <span class="k">return</span> <span class="n">status</span>
-        <span class="c1"># if status == &#39;OK&#39;:</span>
-        <span class="c1">#     return &quot;Linked&quot;</span>
-        <span class="c1"># elif status == &#39;BROKEN&#39;:</span>
-        <span class="c1">#     return &quot;Broken&quot;</span>
-    <span class="k">elif</span> <span class="n">direction</span> <span class="o">==</span> <span class="s2">&quot;Out&quot;</span><span class="p">:</span>
-        <span class="c1"># Always set to Linked if the value exists, unless it&#39;s invalid.</span>
+    <span class="k">if</span> <span class="n">direction</span> <span class="o">==</span> <span class="s2">&quot;Out&quot;</span> <span class="ow">and</span> <span class="ow">not</span> <span class="n">kwargs</span><span class="p">:</span>
         <span class="k">try</span><span class="p">:</span>
-            <span class="n">linked_cell</span> <span class="o">=</span> <span class="n">cell_json</span><span class="p">[</span><span class="s1">&#39;linksOutToCells&#39;</span><span class="p">]</span>
-            <span class="k">return</span> <span class="s2">&quot;Linked&quot;</span>
-        <span class="k">except</span> <span class="ne">KeyError</span><span class="p">:</span>
+            <span class="n">status</span> <span class="o">=</span> <span class="n">old_cell</span><span class="o">.</span><span class="n">links_out_to_cells</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">status</span>
+        <span class="k">except</span> <span class="ne">IndexError</span><span class="p">:</span>
             <span class="k">return</span> <span class="s2">&quot;Unlinked&quot;</span>
-    <span class="k">else</span><span class="p">:</span>
-        <span class="k">return</span> <span class="kc">None</span>
+        <span class="k">return</span> <span class="s2">&quot;Linked&quot;</span>
+
+    <span class="k">if</span> <span class="n">direction</span> <span class="o">==</span> <span class="s2">&quot;Out&quot;</span> <span class="ow">and</span> <span class="n">kwargs</span><span class="p">:</span>
+        <span class="k">def</span> <span class="nf">check_value_exist</span><span class="p">(</span><span class="n">test_dict</span><span class="p">,</span> <span class="o">*</span><span class="n">values</span><span class="p">):</span>
+            <span class="k">return</span> <span class="nb">all</span><span class="p">(</span><span class="n">v</span> <span class="ow">in</span> <span class="n">test_dict</span> <span class="k">for</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">values</span><span class="p">)</span>
+        <span class="n">result</span> <span class="o">=</span> <span class="n">check_value_exist</span><span class="p">(</span><span class="n">kwargs</span><span class="o">.</span><span class="n">keys</span><span class="p">(),</span>
+                                   <span class="s2">&quot;sheet_id&quot;</span><span class="p">,</span> <span class="s2">&quot;row_id&quot;</span><span class="p">,</span>
+                                   <span class="s2">&quot;col_id&quot;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">result</span><span class="p">:</span>
+            <span class="n">sheet_id</span> <span class="o">=</span> <span class="n">kwargs</span><span class="p">[</span><span class="s2">&quot;sheet_id&quot;</span><span class="p">]</span>
+            <span class="n">row_id</span> <span class="o">=</span> <span class="n">kwargs</span><span class="p">[</span><span class="s2">&quot;row_id&quot;</span><span class="p">]</span>
+            <span class="n">col_id</span> <span class="o">=</span> <span class="n">kwargs</span><span class="p">[</span><span class="s2">&quot;col_id&quot;</span><span class="p">]</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">has_cell_link</span><span class="p">(</span><span class="n">old_cell</span><span class="p">,</span> <span class="s2">&quot;Out&quot;</span><span class="p">)</span>
+        <span class="c1"># Always set to Linked if the value exists, unless it&#39;s invalid.</span>
+        <span class="k">for</span> <span class="n">link</span> <span class="ow">in</span> <span class="n">old_cell</span><span class="o">.</span><span class="n">links_out_to_cells</span><span class="p">:</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="n">sheet_id</span> <span class="o">==</span> <span class="n">link</span><span class="o">.</span><span class="n">sheet_id</span><span class="p">:</span>
+                <span class="k">continue</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="n">row_id</span> <span class="o">==</span> <span class="n">link</span><span class="o">.</span><span class="n">row_id</span><span class="p">:</span>
+                <span class="k">continue</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="n">col_id</span> <span class="o">==</span> <span class="n">link</span><span class="o">.</span><span class="n">column_id</span><span class="p">:</span>
+                <span class="k">continue</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="k">return</span> <span class="nb">str</span><span class="p">(</span><span class="n">link</span><span class="o">.</span><span class="n">status</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">return</span> <span class="s2">&quot;Unlinked&quot;</span>
 </pre></div>
 
         </details>

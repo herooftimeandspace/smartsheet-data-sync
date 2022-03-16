@@ -229,22 +229,23 @@
     <span class="n">new_row</span><span class="o">.</span><span class="n">id</span> <span class="o">=</span> <span class="n">row</span><span class="o">.</span><span class="n">id</span>
     <span class="k">for</span> <span class="n">col</span> <span class="ow">in</span> <span class="n">columns_to_link</span><span class="p">:</span>
         <span class="n">old_cell</span> <span class="o">=</span> <span class="n">helper</span><span class="o">.</span><span class="n">get_cell_data</span><span class="p">(</span><span class="n">row</span><span class="p">,</span> <span class="n">col</span><span class="p">,</span> <span class="n">dest_col_map</span><span class="p">)</span>
-        <span class="k">try</span><span class="p">:</span>
-            <span class="n">cell_check</span> <span class="o">=</span> <span class="n">helper</span><span class="o">.</span><span class="n">has_cell_link</span><span class="p">(</span><span class="n">old_cell</span><span class="p">,</span> <span class="s1">&#39;In&#39;</span><span class="p">)</span>
-        <span class="k">except</span> <span class="ne">KeyError</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
-            <span class="k">if</span> <span class="nb">str</span><span class="p">(</span><span class="n">e</span><span class="p">)</span> <span class="o">==</span> <span class="nb">str</span><span class="p">(</span><span class="s2">&quot;&#39;Unlinked&#39;&quot;</span><span class="p">):</span>
-                <span class="n">cell_check</span> <span class="o">=</span> <span class="s2">&quot;Unlinked&quot;</span>
-            <span class="k">else</span><span class="p">:</span>
-                <span class="k">raise</span> <span class="ne">KeyError</span>
+        <span class="n">cell_check</span> <span class="o">=</span> <span class="n">helper</span><span class="o">.</span><span class="n">has_cell_link</span><span class="p">(</span><span class="n">old_cell</span><span class="p">,</span> <span class="s1">&#39;In&#39;</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">cell_check</span><span class="p">:</span>
+            <span class="n">msg</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="s2">&quot;Cell is valid and unlinked, but is </span><span class="si">{}</span><span class="s2">. Continuing &quot;</span>
+                      <span class="s2">&quot;to the next cell.&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">cell_check</span><span class="p">)</span>
+            <span class="n">logging</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
+            <span class="k">continue</span>
 
         <span class="k">if</span> <span class="n">cell_check</span> <span class="ow">in</span> <span class="p">(</span><span class="s2">&quot;Linked&quot;</span><span class="p">,</span> <span class="s2">&quot;OK&quot;</span><span class="p">):</span>
             <span class="n">msg</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="s2">&quot;Valid cell link: RowID </span><span class="si">{}</span><span class="s2"> | Row Number </span><span class="si">{}</span><span class="s2"> | &quot;</span>
-                      <span class="s2">&quot;ColName </span><span class="si">{}</span><span class="s2"> | Cell Value </span><span class="si">{}</span><span class="s2">&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">row</span><span class="o">.</span><span class="n">id</span><span class="p">,</span>
-                                                           <span class="n">row</span><span class="o">.</span><span class="n">row_number</span><span class="p">,</span> <span class="n">col</span><span class="p">,</span>
-                                                           <span class="n">old_cell</span><span class="o">.</span>
-                                                           <span class="n">link_in_from_cell</span><span class="p">)</span>
+                      <span class="s2">&quot;ColName </span><span class="si">{}</span><span class="s2"> | Cell Value </span><span class="si">{}</span><span class="s2">&quot;</span>
+                      <span class="s2">&quot;&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">row</span><span class="o">.</span><span class="n">id</span><span class="p">,</span> <span class="n">row</span><span class="o">.</span><span class="n">row_number</span><span class="p">,</span> <span class="n">col</span><span class="p">,</span>
+                                 <span class="n">old_cell</span><span class="o">.</span><span class="n">link_in_from_cell</span><span class="p">)</span>
             <span class="n">logging</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
-        <span class="k">elif</span> <span class="n">cell_check</span> <span class="o">==</span> <span class="s2">&quot;Unlinked&quot;</span><span class="p">:</span>
+            <span class="k">continue</span>
+
+        <span class="k">if</span> <span class="n">cell_check</span> <span class="ow">in</span> <span class="p">(</span><span class="s2">&quot;Unlinked&quot;</span><span class="p">,</span> <span class="s2">&quot;INVALID&quot;</span><span class="p">):</span>
             <span class="n">link_cell</span> <span class="o">=</span> <span class="n">build_linked_cell</span><span class="p">(</span><span class="n">jira_index_sheet</span><span class="p">,</span>
                                           <span class="n">jira_index_col_map</span><span class="p">,</span>
                                           <span class="n">dest_col_map</span><span class="p">,</span>
@@ -255,23 +256,19 @@
                       <span class="s2">&quot;ColName </span><span class="si">{}</span><span class="s2"> | Cell link </span><span class="si">{}</span><span class="s2">&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>
                 <span class="n">row</span><span class="o">.</span><span class="n">id</span><span class="p">,</span> <span class="n">row</span><span class="o">.</span><span class="n">row_number</span><span class="p">,</span> <span class="n">col</span><span class="p">,</span> <span class="n">link_cell</span><span class="o">.</span><span class="n">link_in_from_cell</span><span class="p">)</span>
             <span class="n">logging</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
-        <span class="k">elif</span> <span class="n">cell_check</span> <span class="ow">in</span> <span class="p">(</span><span class="s2">&quot;Broken&quot;</span><span class="p">,</span> <span class="s2">&quot;BROKEN&quot;</span><span class="p">):</span>
+            <span class="k">continue</span>
+
+        <span class="k">if</span> <span class="n">cell_check</span> <span class="ow">in</span> <span class="p">(</span><span class="s2">&quot;Broken&quot;</span><span class="p">,</span> <span class="s2">&quot;BROKEN&quot;</span><span class="p">):</span>
             <span class="n">unlink_cell</span> <span class="o">=</span> <span class="n">smartsheet</span><span class="o">.</span><span class="n">models</span><span class="o">.</span><span class="n">Cell</span><span class="p">()</span>
             <span class="n">unlink_cell</span><span class="o">.</span><span class="n">id</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">dest_col_map</span><span class="p">[</span><span class="n">col</span><span class="p">])</span>
             <span class="n">unlink_cell</span><span class="o">.</span><span class="n">value</span> <span class="o">=</span> <span class="n">old_cell</span><span class="o">.</span><span class="n">value</span>
             <span class="n">new_row</span><span class="o">.</span><span class="n">cells</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">unlink_cell</span><span class="p">)</span>
-            <span class="n">msg</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="s2">&quot;Broken Cell Link: Row ID </span><span class="si">{}</span><span class="s2"> | Row Number </span><span class="si">{}</span><span class="s2"> | &quot;</span>
-                      <span class="s2">&quot;ColName </span><span class="si">{}</span><span class="s2"> | Cell link </span><span class="si">{}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">row</span><span class="o">.</span><span class="n">id</span><span class="p">,</span>
-                                                         <span class="n">row</span><span class="o">.</span><span class="n">row_number</span><span class="p">,</span> <span class="n">col</span><span class="p">,</span>
-                                                         <span class="n">unlink_cell</span><span class="o">.</span>
-                                                         <span class="n">link_in_from_cell</span><span class="p">))</span>
+            <span class="n">msg</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="s2">&quot;Unlinking Broken Cell Link: Row ID </span><span class="si">{}</span><span class="s2"> | &quot;</span>
+                      <span class="s2">&quot;Row Number </span><span class="si">{}</span><span class="s2"> | ColName </span><span class="si">{}</span><span class="s2"> | Cell link </span><span class="si">{}</span><span class="s2">&quot;</span>
+                      <span class="s2">&quot;&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">row</span><span class="o">.</span><span class="n">id</span><span class="p">,</span> <span class="n">row</span><span class="o">.</span><span class="n">row_number</span><span class="p">,</span> <span class="n">col</span><span class="p">,</span>
+                                 <span class="n">unlink_cell</span><span class="o">.</span><span class="n">link_in_from_cell</span><span class="p">)</span>
             <span class="n">logging</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
-        <span class="k">elif</span> <span class="n">cell_check</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
-            <span class="n">msg</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="s2">&quot;Cell is valid and unlinked, but is </span><span class="si">{}</span><span class="s2">. Continuing &quot;</span>
-                      <span class="s2">&quot;to the next cell.&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">cell_check</span><span class="p">)</span>
-            <span class="n">logging</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
-        <span class="k">else</span><span class="p">:</span>
-            <span class="n">logging</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="s2">&quot;Unknown state for cell links.&quot;</span><span class="p">)</span>
+            <span class="k">continue</span>
     <span class="k">if</span> <span class="n">new_row</span><span class="o">.</span><span class="n">cells</span><span class="p">:</span>
         <span class="k">return</span> <span class="n">new_row</span>
     <span class="k">else</span><span class="p">:</span>
@@ -552,22 +549,23 @@ get_all_row_data function.</li>
     <span class="n">new_row</span><span class="o">.</span><span class="n">id</span> <span class="o">=</span> <span class="n">row</span><span class="o">.</span><span class="n">id</span>
     <span class="k">for</span> <span class="n">col</span> <span class="ow">in</span> <span class="n">columns_to_link</span><span class="p">:</span>
         <span class="n">old_cell</span> <span class="o">=</span> <span class="n">helper</span><span class="o">.</span><span class="n">get_cell_data</span><span class="p">(</span><span class="n">row</span><span class="p">,</span> <span class="n">col</span><span class="p">,</span> <span class="n">dest_col_map</span><span class="p">)</span>
-        <span class="k">try</span><span class="p">:</span>
-            <span class="n">cell_check</span> <span class="o">=</span> <span class="n">helper</span><span class="o">.</span><span class="n">has_cell_link</span><span class="p">(</span><span class="n">old_cell</span><span class="p">,</span> <span class="s1">&#39;In&#39;</span><span class="p">)</span>
-        <span class="k">except</span> <span class="ne">KeyError</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
-            <span class="k">if</span> <span class="nb">str</span><span class="p">(</span><span class="n">e</span><span class="p">)</span> <span class="o">==</span> <span class="nb">str</span><span class="p">(</span><span class="s2">&quot;&#39;Unlinked&#39;&quot;</span><span class="p">):</span>
-                <span class="n">cell_check</span> <span class="o">=</span> <span class="s2">&quot;Unlinked&quot;</span>
-            <span class="k">else</span><span class="p">:</span>
-                <span class="k">raise</span> <span class="ne">KeyError</span>
+        <span class="n">cell_check</span> <span class="o">=</span> <span class="n">helper</span><span class="o">.</span><span class="n">has_cell_link</span><span class="p">(</span><span class="n">old_cell</span><span class="p">,</span> <span class="s1">&#39;In&#39;</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">cell_check</span><span class="p">:</span>
+            <span class="n">msg</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="s2">&quot;Cell is valid and unlinked, but is </span><span class="si">{}</span><span class="s2">. Continuing &quot;</span>
+                      <span class="s2">&quot;to the next cell.&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">cell_check</span><span class="p">)</span>
+            <span class="n">logging</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
+            <span class="k">continue</span>
 
         <span class="k">if</span> <span class="n">cell_check</span> <span class="ow">in</span> <span class="p">(</span><span class="s2">&quot;Linked&quot;</span><span class="p">,</span> <span class="s2">&quot;OK&quot;</span><span class="p">):</span>
             <span class="n">msg</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="s2">&quot;Valid cell link: RowID </span><span class="si">{}</span><span class="s2"> | Row Number </span><span class="si">{}</span><span class="s2"> | &quot;</span>
-                      <span class="s2">&quot;ColName </span><span class="si">{}</span><span class="s2"> | Cell Value </span><span class="si">{}</span><span class="s2">&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">row</span><span class="o">.</span><span class="n">id</span><span class="p">,</span>
-                                                           <span class="n">row</span><span class="o">.</span><span class="n">row_number</span><span class="p">,</span> <span class="n">col</span><span class="p">,</span>
-                                                           <span class="n">old_cell</span><span class="o">.</span>
-                                                           <span class="n">link_in_from_cell</span><span class="p">)</span>
+                      <span class="s2">&quot;ColName </span><span class="si">{}</span><span class="s2"> | Cell Value </span><span class="si">{}</span><span class="s2">&quot;</span>
+                      <span class="s2">&quot;&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">row</span><span class="o">.</span><span class="n">id</span><span class="p">,</span> <span class="n">row</span><span class="o">.</span><span class="n">row_number</span><span class="p">,</span> <span class="n">col</span><span class="p">,</span>
+                                 <span class="n">old_cell</span><span class="o">.</span><span class="n">link_in_from_cell</span><span class="p">)</span>
             <span class="n">logging</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
-        <span class="k">elif</span> <span class="n">cell_check</span> <span class="o">==</span> <span class="s2">&quot;Unlinked&quot;</span><span class="p">:</span>
+            <span class="k">continue</span>
+
+        <span class="k">if</span> <span class="n">cell_check</span> <span class="ow">in</span> <span class="p">(</span><span class="s2">&quot;Unlinked&quot;</span><span class="p">,</span> <span class="s2">&quot;INVALID&quot;</span><span class="p">):</span>
             <span class="n">link_cell</span> <span class="o">=</span> <span class="n">build_linked_cell</span><span class="p">(</span><span class="n">jira_index_sheet</span><span class="p">,</span>
                                           <span class="n">jira_index_col_map</span><span class="p">,</span>
                                           <span class="n">dest_col_map</span><span class="p">,</span>
@@ -578,23 +576,19 @@ get_all_row_data function.</li>
                       <span class="s2">&quot;ColName </span><span class="si">{}</span><span class="s2"> | Cell link </span><span class="si">{}</span><span class="s2">&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>
                 <span class="n">row</span><span class="o">.</span><span class="n">id</span><span class="p">,</span> <span class="n">row</span><span class="o">.</span><span class="n">row_number</span><span class="p">,</span> <span class="n">col</span><span class="p">,</span> <span class="n">link_cell</span><span class="o">.</span><span class="n">link_in_from_cell</span><span class="p">)</span>
             <span class="n">logging</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
-        <span class="k">elif</span> <span class="n">cell_check</span> <span class="ow">in</span> <span class="p">(</span><span class="s2">&quot;Broken&quot;</span><span class="p">,</span> <span class="s2">&quot;BROKEN&quot;</span><span class="p">):</span>
+            <span class="k">continue</span>
+
+        <span class="k">if</span> <span class="n">cell_check</span> <span class="ow">in</span> <span class="p">(</span><span class="s2">&quot;Broken&quot;</span><span class="p">,</span> <span class="s2">&quot;BROKEN&quot;</span><span class="p">):</span>
             <span class="n">unlink_cell</span> <span class="o">=</span> <span class="n">smartsheet</span><span class="o">.</span><span class="n">models</span><span class="o">.</span><span class="n">Cell</span><span class="p">()</span>
             <span class="n">unlink_cell</span><span class="o">.</span><span class="n">id</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">dest_col_map</span><span class="p">[</span><span class="n">col</span><span class="p">])</span>
             <span class="n">unlink_cell</span><span class="o">.</span><span class="n">value</span> <span class="o">=</span> <span class="n">old_cell</span><span class="o">.</span><span class="n">value</span>
             <span class="n">new_row</span><span class="o">.</span><span class="n">cells</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">unlink_cell</span><span class="p">)</span>
-            <span class="n">msg</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="s2">&quot;Broken Cell Link: Row ID </span><span class="si">{}</span><span class="s2"> | Row Number </span><span class="si">{}</span><span class="s2"> | &quot;</span>
-                      <span class="s2">&quot;ColName </span><span class="si">{}</span><span class="s2"> | Cell link </span><span class="si">{}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">row</span><span class="o">.</span><span class="n">id</span><span class="p">,</span>
-                                                         <span class="n">row</span><span class="o">.</span><span class="n">row_number</span><span class="p">,</span> <span class="n">col</span><span class="p">,</span>
-                                                         <span class="n">unlink_cell</span><span class="o">.</span>
-                                                         <span class="n">link_in_from_cell</span><span class="p">))</span>
+            <span class="n">msg</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="s2">&quot;Unlinking Broken Cell Link: Row ID </span><span class="si">{}</span><span class="s2"> | &quot;</span>
+                      <span class="s2">&quot;Row Number </span><span class="si">{}</span><span class="s2"> | ColName </span><span class="si">{}</span><span class="s2"> | Cell link </span><span class="si">{}</span><span class="s2">&quot;</span>
+                      <span class="s2">&quot;&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">row</span><span class="o">.</span><span class="n">id</span><span class="p">,</span> <span class="n">row</span><span class="o">.</span><span class="n">row_number</span><span class="p">,</span> <span class="n">col</span><span class="p">,</span>
+                                 <span class="n">unlink_cell</span><span class="o">.</span><span class="n">link_in_from_cell</span><span class="p">)</span>
             <span class="n">logging</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
-        <span class="k">elif</span> <span class="n">cell_check</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
-            <span class="n">msg</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="s2">&quot;Cell is valid and unlinked, but is </span><span class="si">{}</span><span class="s2">. Continuing &quot;</span>
-                      <span class="s2">&quot;to the next cell.&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">cell_check</span><span class="p">)</span>
-            <span class="n">logging</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
-        <span class="k">else</span><span class="p">:</span>
-            <span class="n">logging</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="s2">&quot;Unknown state for cell links.&quot;</span><span class="p">)</span>
+            <span class="k">continue</span>
     <span class="k">if</span> <span class="n">new_row</span><span class="o">.</span><span class="n">cells</span><span class="p">:</span>
         <span class="k">return</span> <span class="n">new_row</span>
     <span class="k">else</span><span class="p">:</span>
