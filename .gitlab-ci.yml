@@ -39,7 +39,7 @@ flake8:
 
 pytest_lite:
   stage: coverage
-  needs: flake8
+  needs: ["flake8"]
   tags:
   - copilot
   script:
@@ -61,7 +61,7 @@ pytest_lite:
 
 pytest_full:
   stage: coverage
-  needs: flake8
+  needs: ["flake8"]
   tags:
   - copilot
   script:
