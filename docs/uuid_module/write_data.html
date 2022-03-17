@@ -159,10 +159,24 @@
     <span class="k">if</span> <span class="ow">not</span> <span class="n">project_sub_index</span><span class="p">:</span>
         <span class="n">msg</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="s2">&quot;Project sub-index cannot be empty&quot;</span><span class="p">)</span>
         <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
+    <span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">project_sub_index</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">k</span><span class="p">,</span> <span class="p">(</span><span class="nb">str</span><span class="p">,</span> <span class="nb">type</span><span class="p">(</span><span class="kc">None</span><span class="p">))):</span>
+            <span class="n">msg</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="s2">&quot;Project sub-index key (UUID) must be a str or None&quot;</span>
+                      <span class="s2">&quot;not value: </span><span class="si">{}</span><span class="s2"> | type: </span><span class="si">{}</span><span class="s2">&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">k</span><span class="p">,</span> <span class="nb">type</span><span class="p">(</span><span class="n">k</span><span class="p">))</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">v</span><span class="p">,</span> <span class="nb">str</span><span class="p">):</span>
+            <span class="n">msg</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="s2">&quot;Project sub-index value (Jira Ticket) must be a string,&quot;</span>
+                      <span class="s2">&quot; not value: </span><span class="si">{}</span><span class="s2"> | type: </span><span class="si">{}</span><span class="s2"> | IndexDump </span><span class="si">{}</span><span class="s2">&quot;</span>
+                      <span class="s2">&quot;&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">v</span><span class="p">,</span> <span class="nb">type</span><span class="p">(</span><span class="n">v</span><span class="p">),</span> <span class="n">project_sub_index</span><span class="p">)</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
 
     <span class="c1"># Create a copy of the project_sub_index so that we don&#39;t alter any</span>
     <span class="c1"># other function&#39;s data set.</span>
+    <span class="c1"># Remove all None keys from the dict so we have only valid UUID:Ticket</span>
     <span class="n">project_data_copy</span> <span class="o">=</span> <span class="n">project_sub_index</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
+    <span class="k">for</span> <span class="n">k</span> <span class="ow">in</span> <span class="n">project_data_copy</span><span class="o">.</span><span class="n">keys</span><span class="p">():</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">k</span><span class="p">:</span>
+            <span class="n">project_data_copy</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s1">&#39;k&#39;</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
 
     <span class="c1"># Create a list of columns that will be cell linked.</span>
     <span class="n">columns_to_link</span> <span class="o">=</span> <span class="p">[</span><span class="n">app_vars</span><span class="o">.</span><span class="n">jira_col</span><span class="p">,</span> <span class="n">app_vars</span><span class="o">.</span><span class="n">status_col</span><span class="p">,</span>
@@ -176,8 +190,7 @@
     <span class="c1"># Iterate through each sheet ID in the smaller sheet index.</span>
     <span class="k">for</span> <span class="n">sheet_id</span> <span class="ow">in</span> <span class="n">dest_sheet_index</span><span class="o">.</span><span class="n">keys</span><span class="p">():</span>
         <span class="c1"># Get the sheet data for the ID.</span>
-        <span class="c1"># TODO: Write test to mock sheet_id not being an INT</span>
-        <span class="n">dest_sheet</span> <span class="o">=</span> <span class="n">smartsheet_api</span><span class="o">.</span><span class="n">get_sheet</span><span class="p">(</span><span class="nb">int</span><span class="p">(</span><span class="n">sheet_id</span><span class="p">),</span> <span class="n">minutes</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+        <span class="n">dest_sheet</span> <span class="o">=</span> <span class="n">smartsheet_api</span><span class="o">.</span><span class="n">get_sheet</span><span class="p">(</span><span class="n">sheet_id</span><span class="p">,</span> <span class="n">minutes</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
 
         <span class="c1"># Build a column map for easier column name to ID reference</span>
         <span class="n">dest_col_map</span> <span class="o">=</span> <span class="n">helper</span><span class="o">.</span><span class="n">get_column_map</span><span class="p">(</span><span class="n">dest_sheet</span><span class="p">)</span>
@@ -195,34 +208,33 @@
                 <span class="n">logging</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span>
                     <span class="s2">&quot;Jira Ticket not found in Dest Sheet row. Skipping&quot;</span><span class="p">)</span>
                 <span class="k">continue</span>
+
+            <span class="c1"># Set a friendly variable names, validate that the row ID is</span>
+            <span class="c1"># present in the sheet, and create a new row with the cell</span>
+            <span class="c1"># links.</span>
+            <span class="k">try</span><span class="p">:</span>
+                <span class="n">idx_row_id</span> <span class="o">=</span> <span class="n">jira_index_rows</span><span class="p">[</span><span class="n">jira_cell</span><span class="o">.</span><span class="n">value</span><span class="p">]</span>
+            <span class="k">except</span> <span class="ne">KeyError</span><span class="p">:</span>
+                <span class="n">logging</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span>
+                    <span class="s2">&quot;</span><span class="si">{}</span><span class="s2"> not found in Row Index. Skipping&quot;</span>
+                    <span class="s2">&quot;&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">jira_cell</span><span class="o">.</span><span class="n">value</span><span class="p">))</span>
+                <span class="k">continue</span>
+
+            <span class="n">new_row</span> <span class="o">=</span> <span class="n">build_data</span><span class="o">.</span><span class="n">build_row</span><span class="p">(</span><span class="n">row</span><span class="p">,</span> <span class="n">columns_to_link</span><span class="p">,</span>
+                                           <span class="n">dest_col_map</span><span class="p">,</span>
+                                           <span class="n">jira_index_sheet</span><span class="p">,</span>
+                                           <span class="n">jira_index_col_map</span><span class="p">,</span>
+                                           <span class="n">idx_row_id</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">new_row</span><span class="p">:</span>
+                <span class="n">cell_links_to_update</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">new_row</span><span class="p">)</span>
+                <span class="n">msg</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="s2">&quot;Writing </span><span class="si">{}</span><span class="s2"> cells to Row ID: </span><span class="si">{}</span><span class="s2"> | &quot;</span>
+                          <span class="s2">&quot;Sheet Name: </span><span class="si">{}</span><span class="s2">.&quot;</span>
+                          <span class="s2">&quot;&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">new_row</span><span class="o">.</span><span class="n">cells</span><span class="p">),</span>
+                                     <span class="n">new_row</span><span class="o">.</span><span class="n">id</span><span class="p">,</span>
+                                     <span class="n">dest_sheet</span><span class="o">.</span><span class="n">name</span><span class="p">)</span>
+                <span class="n">logging</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
             <span class="k">else</span><span class="p">:</span>
-                <span class="c1"># Set a friendly variable names, validate that the row ID is</span>
-                <span class="c1"># present in the sheet, and create a new row with the cell</span>
-                <span class="c1"># links.</span>
-                <span class="n">jira_value</span> <span class="o">=</span> <span class="n">jira_cell</span><span class="o">.</span><span class="n">value</span>
-                <span class="k">try</span><span class="p">:</span>
-                    <span class="n">idx_row_id</span> <span class="o">=</span> <span class="n">jira_index_rows</span><span class="p">[</span><span class="n">jira_value</span><span class="p">]</span>
-                <span class="k">except</span> <span class="ne">KeyError</span><span class="p">:</span>
-                    <span class="n">logging</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span>
-                        <span class="s2">&quot;</span><span class="si">{}</span><span class="s2"> not found in Row Index. Skipping&quot;</span>
-                        <span class="s2">&quot;&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">jira_value</span><span class="p">))</span>
-                    <span class="k">continue</span>
-                <span class="n">idx_row_id</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">idx_row_id</span><span class="p">)</span>
-                <span class="n">new_row</span> <span class="o">=</span> <span class="n">build_data</span><span class="o">.</span><span class="n">build_row</span><span class="p">(</span><span class="n">row</span><span class="p">,</span> <span class="n">columns_to_link</span><span class="p">,</span>
-                                               <span class="n">dest_col_map</span><span class="p">,</span>
-                                               <span class="n">jira_index_sheet</span><span class="p">,</span>
-                                               <span class="n">jira_index_col_map</span><span class="p">,</span>
-                                               <span class="n">idx_row_id</span><span class="p">)</span>
-                <span class="k">if</span> <span class="n">new_row</span><span class="p">:</span>
-                    <span class="n">cell_links_to_update</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">new_row</span><span class="p">)</span>
-                    <span class="n">msg</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="s2">&quot;Writing </span><span class="si">{}</span><span class="s2"> cells to Row ID: </span><span class="si">{}</span><span class="s2"> | &quot;</span>
-                              <span class="s2">&quot;Sheet Name: </span><span class="si">{}</span><span class="s2">.&quot;</span>
-                              <span class="s2">&quot;&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">new_row</span><span class="o">.</span><span class="n">cells</span><span class="p">),</span>
-                                         <span class="n">new_row</span><span class="o">.</span><span class="n">id</span><span class="p">,</span>
-                                         <span class="n">dest_sheet</span><span class="o">.</span><span class="n">name</span><span class="p">)</span>
-                    <span class="n">logging</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
-                <span class="k">else</span><span class="p">:</span>
-                    <span class="k">continue</span>
+                <span class="k">continue</span>
 
         <span class="c1"># Write back new cell links to the Sheet</span>
         <span class="k">if</span> <span class="n">cell_links_to_update</span><span class="p">:</span>
@@ -537,10 +549,24 @@ with the API</li>
     <span class="k">if</span> <span class="ow">not</span> <span class="n">project_sub_index</span><span class="p">:</span>
         <span class="n">msg</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="s2">&quot;Project sub-index cannot be empty&quot;</span><span class="p">)</span>
         <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
+    <span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">project_sub_index</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">k</span><span class="p">,</span> <span class="p">(</span><span class="nb">str</span><span class="p">,</span> <span class="nb">type</span><span class="p">(</span><span class="kc">None</span><span class="p">))):</span>
+            <span class="n">msg</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="s2">&quot;Project sub-index key (UUID) must be a str or None&quot;</span>
+                      <span class="s2">&quot;not value: </span><span class="si">{}</span><span class="s2"> | type: </span><span class="si">{}</span><span class="s2">&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">k</span><span class="p">,</span> <span class="nb">type</span><span class="p">(</span><span class="n">k</span><span class="p">))</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">v</span><span class="p">,</span> <span class="nb">str</span><span class="p">):</span>
+            <span class="n">msg</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="s2">&quot;Project sub-index value (Jira Ticket) must be a string,&quot;</span>
+                      <span class="s2">&quot; not value: </span><span class="si">{}</span><span class="s2"> | type: </span><span class="si">{}</span><span class="s2"> | IndexDump </span><span class="si">{}</span><span class="s2">&quot;</span>
+                      <span class="s2">&quot;&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">v</span><span class="p">,</span> <span class="nb">type</span><span class="p">(</span><span class="n">v</span><span class="p">),</span> <span class="n">project_sub_index</span><span class="p">)</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
 
     <span class="c1"># Create a copy of the project_sub_index so that we don&#39;t alter any</span>
     <span class="c1"># other function&#39;s data set.</span>
+    <span class="c1"># Remove all None keys from the dict so we have only valid UUID:Ticket</span>
     <span class="n">project_data_copy</span> <span class="o">=</span> <span class="n">project_sub_index</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
+    <span class="k">for</span> <span class="n">k</span> <span class="ow">in</span> <span class="n">project_data_copy</span><span class="o">.</span><span class="n">keys</span><span class="p">():</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">k</span><span class="p">:</span>
+            <span class="n">project_data_copy</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s1">&#39;k&#39;</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
 
     <span class="c1"># Create a list of columns that will be cell linked.</span>
     <span class="n">columns_to_link</span> <span class="o">=</span> <span class="p">[</span><span class="n">app_vars</span><span class="o">.</span><span class="n">jira_col</span><span class="p">,</span> <span class="n">app_vars</span><span class="o">.</span><span class="n">status_col</span><span class="p">,</span>
@@ -554,8 +580,7 @@ with the API</li>
     <span class="c1"># Iterate through each sheet ID in the smaller sheet index.</span>
     <span class="k">for</span> <span class="n">sheet_id</span> <span class="ow">in</span> <span class="n">dest_sheet_index</span><span class="o">.</span><span class="n">keys</span><span class="p">():</span>
         <span class="c1"># Get the sheet data for the ID.</span>
-        <span class="c1"># TODO: Write test to mock sheet_id not being an INT</span>
-        <span class="n">dest_sheet</span> <span class="o">=</span> <span class="n">smartsheet_api</span><span class="o">.</span><span class="n">get_sheet</span><span class="p">(</span><span class="nb">int</span><span class="p">(</span><span class="n">sheet_id</span><span class="p">),</span> <span class="n">minutes</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+        <span class="n">dest_sheet</span> <span class="o">=</span> <span class="n">smartsheet_api</span><span class="o">.</span><span class="n">get_sheet</span><span class="p">(</span><span class="n">sheet_id</span><span class="p">,</span> <span class="n">minutes</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
 
         <span class="c1"># Build a column map for easier column name to ID reference</span>
         <span class="n">dest_col_map</span> <span class="o">=</span> <span class="n">helper</span><span class="o">.</span><span class="n">get_column_map</span><span class="p">(</span><span class="n">dest_sheet</span><span class="p">)</span>
@@ -573,34 +598,33 @@ with the API</li>
                 <span class="n">logging</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span>
                     <span class="s2">&quot;Jira Ticket not found in Dest Sheet row. Skipping&quot;</span><span class="p">)</span>
                 <span class="k">continue</span>
+
+            <span class="c1"># Set a friendly variable names, validate that the row ID is</span>
+            <span class="c1"># present in the sheet, and create a new row with the cell</span>
+            <span class="c1"># links.</span>
+            <span class="k">try</span><span class="p">:</span>
+                <span class="n">idx_row_id</span> <span class="o">=</span> <span class="n">jira_index_rows</span><span class="p">[</span><span class="n">jira_cell</span><span class="o">.</span><span class="n">value</span><span class="p">]</span>
+            <span class="k">except</span> <span class="ne">KeyError</span><span class="p">:</span>
+                <span class="n">logging</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span>
+                    <span class="s2">&quot;</span><span class="si">{}</span><span class="s2"> not found in Row Index. Skipping&quot;</span>
+                    <span class="s2">&quot;&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">jira_cell</span><span class="o">.</span><span class="n">value</span><span class="p">))</span>
+                <span class="k">continue</span>
+
+            <span class="n">new_row</span> <span class="o">=</span> <span class="n">build_data</span><span class="o">.</span><span class="n">build_row</span><span class="p">(</span><span class="n">row</span><span class="p">,</span> <span class="n">columns_to_link</span><span class="p">,</span>
+                                           <span class="n">dest_col_map</span><span class="p">,</span>
+                                           <span class="n">jira_index_sheet</span><span class="p">,</span>
+                                           <span class="n">jira_index_col_map</span><span class="p">,</span>
+                                           <span class="n">idx_row_id</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">new_row</span><span class="p">:</span>
+                <span class="n">cell_links_to_update</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">new_row</span><span class="p">)</span>
+                <span class="n">msg</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="s2">&quot;Writing </span><span class="si">{}</span><span class="s2"> cells to Row ID: </span><span class="si">{}</span><span class="s2"> | &quot;</span>
+                          <span class="s2">&quot;Sheet Name: </span><span class="si">{}</span><span class="s2">.&quot;</span>
+                          <span class="s2">&quot;&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">new_row</span><span class="o">.</span><span class="n">cells</span><span class="p">),</span>
+                                     <span class="n">new_row</span><span class="o">.</span><span class="n">id</span><span class="p">,</span>
+                                     <span class="n">dest_sheet</span><span class="o">.</span><span class="n">name</span><span class="p">)</span>
+                <span class="n">logging</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
             <span class="k">else</span><span class="p">:</span>
-                <span class="c1"># Set a friendly variable names, validate that the row ID is</span>
-                <span class="c1"># present in the sheet, and create a new row with the cell</span>
-                <span class="c1"># links.</span>
-                <span class="n">jira_value</span> <span class="o">=</span> <span class="n">jira_cell</span><span class="o">.</span><span class="n">value</span>
-                <span class="k">try</span><span class="p">:</span>
-                    <span class="n">idx_row_id</span> <span class="o">=</span> <span class="n">jira_index_rows</span><span class="p">[</span><span class="n">jira_value</span><span class="p">]</span>
-                <span class="k">except</span> <span class="ne">KeyError</span><span class="p">:</span>
-                    <span class="n">logging</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span>
-                        <span class="s2">&quot;</span><span class="si">{}</span><span class="s2"> not found in Row Index. Skipping&quot;</span>
-                        <span class="s2">&quot;&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">jira_value</span><span class="p">))</span>
-                    <span class="k">continue</span>
-                <span class="n">idx_row_id</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">idx_row_id</span><span class="p">)</span>
-                <span class="n">new_row</span> <span class="o">=</span> <span class="n">build_data</span><span class="o">.</span><span class="n">build_row</span><span class="p">(</span><span class="n">row</span><span class="p">,</span> <span class="n">columns_to_link</span><span class="p">,</span>
-                                               <span class="n">dest_col_map</span><span class="p">,</span>
-                                               <span class="n">jira_index_sheet</span><span class="p">,</span>
-                                               <span class="n">jira_index_col_map</span><span class="p">,</span>
-                                               <span class="n">idx_row_id</span><span class="p">)</span>
-                <span class="k">if</span> <span class="n">new_row</span><span class="p">:</span>
-                    <span class="n">cell_links_to_update</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">new_row</span><span class="p">)</span>
-                    <span class="n">msg</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="s2">&quot;Writing </span><span class="si">{}</span><span class="s2"> cells to Row ID: </span><span class="si">{}</span><span class="s2"> | &quot;</span>
-                              <span class="s2">&quot;Sheet Name: </span><span class="si">{}</span><span class="s2">.&quot;</span>
-                              <span class="s2">&quot;&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">new_row</span><span class="o">.</span><span class="n">cells</span><span class="p">),</span>
-                                         <span class="n">new_row</span><span class="o">.</span><span class="n">id</span><span class="p">,</span>
-                                         <span class="n">dest_sheet</span><span class="o">.</span><span class="n">name</span><span class="p">)</span>
-                    <span class="n">logging</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
-                <span class="k">else</span><span class="p">:</span>
-                    <span class="k">continue</span>
+                <span class="k">continue</span>
 
         <span class="c1"># Write back new cell links to the Sheet</span>
         <span class="k">if</span> <span class="n">cell_links_to_update</span><span class="p">:</span>

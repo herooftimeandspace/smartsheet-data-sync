@@ -221,7 +221,7 @@
             <span class="n">col_id</span> <span class="o">=</span> <span class="n">kwargs</span><span class="p">[</span><span class="s2">&quot;col_id&quot;</span><span class="p">]</span>
         <span class="k">else</span><span class="p">:</span>
             <span class="n">has_cell_link</span><span class="p">(</span><span class="n">old_cell</span><span class="p">,</span> <span class="s2">&quot;Out&quot;</span><span class="p">)</span>
-        <span class="c1"># Always set to Linked if the value exists, unless it&#39;s invalid.</span>
+        <span class="c1"># Check to see if our IDs are in the link_out object</span>
         <span class="k">for</span> <span class="n">link</span> <span class="ow">in</span> <span class="n">old_cell</span><span class="o">.</span><span class="n">links_out_to_cells</span><span class="p">:</span>
             <span class="k">if</span> <span class="ow">not</span> <span class="n">sheet_id</span> <span class="o">==</span> <span class="n">link</span><span class="o">.</span><span class="n">sheet_id</span><span class="p">:</span>
                 <span class="k">continue</span>
@@ -649,7 +649,7 @@
             <span class="n">col_id</span> <span class="o">=</span> <span class="n">kwargs</span><span class="p">[</span><span class="s2">&quot;col_id&quot;</span><span class="p">]</span>
         <span class="k">else</span><span class="p">:</span>
             <span class="n">has_cell_link</span><span class="p">(</span><span class="n">old_cell</span><span class="p">,</span> <span class="s2">&quot;Out&quot;</span><span class="p">)</span>
-        <span class="c1"># Always set to Linked if the value exists, unless it&#39;s invalid.</span>
+        <span class="c1"># Check to see if our IDs are in the link_out object</span>
         <span class="k">for</span> <span class="n">link</span> <span class="ow">in</span> <span class="n">old_cell</span><span class="o">.</span><span class="n">links_out_to_cells</span><span class="p">:</span>
             <span class="k">if</span> <span class="ow">not</span> <span class="n">sheet_id</span> <span class="o">==</span> <span class="n">link</span><span class="o">.</span><span class="n">sheet_id</span><span class="p">:</span>
                 <span class="k">continue</span>

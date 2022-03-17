@@ -78,7 +78,7 @@
 <span class="sd">        jira_index_col_map (dict): The column name:id map for the</span>
 <span class="sd">                                   Jira Index sheet</span>
 <span class="sd">        dest_col_map (dict): The column name:id map for the destination sheet</span>
-<span class="sd">        idx_row_id (str): The row ID in the Jira Index sheet where the cell</span>
+<span class="sd">        idx_row_id (int): The row ID in the Jira Index sheet where the cell</span>
 <span class="sd">                          link will pull data</span>
 <span class="sd">        column (str): The name of the column to write to in both sheets</span>
 
@@ -106,16 +106,14 @@
                   <span class="s2">&quot; </span><span class="si">{}</span><span class="s2">&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="nb">type</span><span class="p">(</span><span class="n">jira_index_sheet</span><span class="p">))</span>
         <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
     <span class="c1"># TODO: Fix to int instead of str, or both</span>
-    <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">idx_row_id</span><span class="p">,</span> <span class="p">(</span><span class="nb">str</span><span class="p">,</span> <span class="nb">int</span><span class="p">)):</span>
-        <span class="n">msg</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="s2">&quot;Jira Index Row ID must be type: str or int, not&quot;</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">idx_row_id</span><span class="p">,</span> <span class="nb">int</span><span class="p">):</span>
+        <span class="n">msg</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="s2">&quot;Jira Index Row ID must be type: int, not&quot;</span>
                   <span class="s2">&quot; </span><span class="si">{}</span><span class="s2">&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="nb">type</span><span class="p">(</span><span class="n">idx_row_id</span><span class="p">))</span>
         <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
     <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">column</span><span class="p">,</span> <span class="nb">str</span><span class="p">):</span>
         <span class="n">msg</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="s2">&quot;Column must be type: str, not&quot;</span>
                   <span class="s2">&quot; </span><span class="si">{}</span><span class="s2">&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="nb">type</span><span class="p">(</span><span class="n">column</span><span class="p">))</span>
         <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
-    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">idx_row_id</span><span class="p">,</span> <span class="nb">str</span><span class="p">):</span>
-        <span class="n">idx_row_id</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">idx_row_id</span><span class="p">)</span>
 
     <span class="n">new_cell_link</span> <span class="o">=</span> <span class="n">smartsheet</span><span class="o">.</span><span class="n">models</span><span class="o">.</span><span class="n">CellLink</span><span class="p">()</span>
     <span class="n">new_cell_link</span><span class="o">.</span><span class="n">sheet_id</span> <span class="o">=</span> <span class="n">jira_index_sheet</span><span class="o">.</span><span class="n">id</span>
@@ -159,6 +157,8 @@
             <span class="k">continue</span>
         <span class="k">else</span><span class="p">:</span>
             <span class="n">dest_sheet_id</span> <span class="o">=</span> <span class="n">uuid</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s2">&quot;-&quot;</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
+            <span class="n">dest_sheet_id</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">dest_sheet_id</span><span class="p">)</span>
+            <span class="c1"># {Sheet ID (int): Jira Ticket (str)}</span>
             <span class="n">dest_sheet_index</span><span class="p">[</span><span class="n">dest_sheet_id</span><span class="p">]</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">ticket</span><span class="p">)</span>
     <span class="k">return</span> <span class="n">dest_sheet_index</span><span class="p">,</span>  <span class="c1"># dest_row_index</span>
 
@@ -179,7 +179,7 @@
 <span class="sd">        jira_index_col_map (dict): The column name:id map for the</span>
 <span class="sd">                                   Jira Index sheet</span>
 <span class="sd">        dest_col_map (dict): The column name:id map for the destination sheet</span>
-<span class="sd">        idx_row_id (str): The row ID in the Jira Index sheet where the cell</span>
+<span class="sd">        idx_row_id (int): The row ID in the Jira Index sheet where the cell</span>
 <span class="sd">                          link will pull data</span>
 
 <span class="sd">    Raises:</span>
@@ -190,7 +190,7 @@
 <span class="sd">        TypeError: Jira Index Sheet must be a Smartsheet Sheet object</span>
 <span class="sd">        TypeError: Jira Index Column Map must be a dict of</span>
 <span class="sd">                   Column Names: Column IDs</span>
-<span class="sd">        TypeError: Jira Index Row ID must be a string</span>
+<span class="sd">        TypeError: Jira Index Row ID must be an int</span>
 
 <span class="sd">    Returns:</span>
 <span class="sd">        Row: If cells were appended to the row, returns the new row, otherwise</span>
@@ -216,14 +216,10 @@
         <span class="n">msg</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="s2">&quot;Jira Index Column Map must be type: dict, not&quot;</span>
                   <span class="s2">&quot; </span><span class="si">{}</span><span class="s2">&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="nb">type</span><span class="p">(</span><span class="n">jira_index_col_map</span><span class="p">))</span>
         <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
-    <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">idx_row_id</span><span class="p">,</span> <span class="p">(</span><span class="nb">str</span><span class="p">,</span> <span class="nb">int</span><span class="p">)):</span>
-        <span class="n">msg</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="s2">&quot;Jira Index Row ID must be type: str or int, not&quot;</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">idx_row_id</span><span class="p">,</span> <span class="nb">int</span><span class="p">):</span>
+        <span class="n">msg</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="s2">&quot;Jira Index Row ID must be type: int, not&quot;</span>
                   <span class="s2">&quot; </span><span class="si">{}</span><span class="s2">&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="nb">type</span><span class="p">(</span><span class="n">idx_row_id</span><span class="p">))</span>
         <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
-    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">idx_row_id</span><span class="p">,</span> <span class="nb">int</span><span class="p">):</span>
-        <span class="c1"># Convert int to str.</span>
-        <span class="c1"># TODO: Refactor build_linked_cell to take int instead of str</span>
-        <span class="n">idx_row_id</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">idx_row_id</span><span class="p">)</span>
 
     <span class="n">new_row</span> <span class="o">=</span> <span class="n">smartsheet</span><span class="o">.</span><span class="n">models</span><span class="o">.</span><span class="n">Row</span><span class="p">()</span>
     <span class="n">new_row</span><span class="o">.</span><span class="n">id</span> <span class="o">=</span> <span class="n">row</span><span class="o">.</span><span class="n">id</span>
@@ -304,7 +300,7 @@
 <span class="sd">        jira_index_col_map (dict): The column name:id map for the</span>
 <span class="sd">                                   Jira Index sheet</span>
 <span class="sd">        dest_col_map (dict): The column name:id map for the destination sheet</span>
-<span class="sd">        idx_row_id (str): The row ID in the Jira Index sheet where the cell</span>
+<span class="sd">        idx_row_id (int): The row ID in the Jira Index sheet where the cell</span>
 <span class="sd">                          link will pull data</span>
 <span class="sd">        column (str): The name of the column to write to in both sheets</span>
 
@@ -332,16 +328,14 @@
                   <span class="s2">&quot; </span><span class="si">{}</span><span class="s2">&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="nb">type</span><span class="p">(</span><span class="n">jira_index_sheet</span><span class="p">))</span>
         <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
     <span class="c1"># TODO: Fix to int instead of str, or both</span>
-    <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">idx_row_id</span><span class="p">,</span> <span class="p">(</span><span class="nb">str</span><span class="p">,</span> <span class="nb">int</span><span class="p">)):</span>
-        <span class="n">msg</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="s2">&quot;Jira Index Row ID must be type: str or int, not&quot;</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">idx_row_id</span><span class="p">,</span> <span class="nb">int</span><span class="p">):</span>
+        <span class="n">msg</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="s2">&quot;Jira Index Row ID must be type: int, not&quot;</span>
                   <span class="s2">&quot; </span><span class="si">{}</span><span class="s2">&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="nb">type</span><span class="p">(</span><span class="n">idx_row_id</span><span class="p">))</span>
         <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
     <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">column</span><span class="p">,</span> <span class="nb">str</span><span class="p">):</span>
         <span class="n">msg</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="s2">&quot;Column must be type: str, not&quot;</span>
                   <span class="s2">&quot; </span><span class="si">{}</span><span class="s2">&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="nb">type</span><span class="p">(</span><span class="n">column</span><span class="p">))</span>
         <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
-    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">idx_row_id</span><span class="p">,</span> <span class="nb">str</span><span class="p">):</span>
-        <span class="n">idx_row_id</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">idx_row_id</span><span class="p">)</span>
 
     <span class="n">new_cell_link</span> <span class="o">=</span> <span class="n">smartsheet</span><span class="o">.</span><span class="n">models</span><span class="o">.</span><span class="n">CellLink</span><span class="p">()</span>
     <span class="n">new_cell_link</span><span class="o">.</span><span class="n">sheet_id</span> <span class="o">=</span> <span class="n">jira_index_sheet</span><span class="o">.</span><span class="n">id</span>
@@ -368,7 +362,7 @@ data is stored</li>
 <li><strong>jira_index_col_map (dict):</strong>  The column name:id map for the
 Jira Index sheet</li>
 <li><strong>dest_col_map (dict):</strong>  The column name:id map for the destination sheet</li>
-<li><strong>idx_row_id (str):</strong>  The row ID in the Jira Index sheet where the cell
+<li><strong>idx_row_id (int):</strong>  The row ID in the Jira Index sheet where the cell
 link will pull data</li>
 <li><strong>column (str):</strong>  The name of the column to write to in both sheets</li>
 </ul>
@@ -432,6 +426,8 @@ link will pull data</li>
             <span class="k">continue</span>
         <span class="k">else</span><span class="p">:</span>
             <span class="n">dest_sheet_id</span> <span class="o">=</span> <span class="n">uuid</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s2">&quot;-&quot;</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
+            <span class="n">dest_sheet_id</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">dest_sheet_id</span><span class="p">)</span>
+            <span class="c1"># {Sheet ID (int): Jira Ticket (str)}</span>
             <span class="n">dest_sheet_index</span><span class="p">[</span><span class="n">dest_sheet_id</span><span class="p">]</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">ticket</span><span class="p">)</span>
     <span class="k">return</span> <span class="n">dest_sheet_index</span><span class="p">,</span>  <span class="c1"># dest_row_index</span>
 </pre></div>
@@ -499,7 +495,7 @@ get_all_row_data function.</li>
 <span class="sd">        jira_index_col_map (dict): The column name:id map for the</span>
 <span class="sd">                                   Jira Index sheet</span>
 <span class="sd">        dest_col_map (dict): The column name:id map for the destination sheet</span>
-<span class="sd">        idx_row_id (str): The row ID in the Jira Index sheet where the cell</span>
+<span class="sd">        idx_row_id (int): The row ID in the Jira Index sheet where the cell</span>
 <span class="sd">                          link will pull data</span>
 
 <span class="sd">    Raises:</span>
@@ -510,7 +506,7 @@ get_all_row_data function.</li>
 <span class="sd">        TypeError: Jira Index Sheet must be a Smartsheet Sheet object</span>
 <span class="sd">        TypeError: Jira Index Column Map must be a dict of</span>
 <span class="sd">                   Column Names: Column IDs</span>
-<span class="sd">        TypeError: Jira Index Row ID must be a string</span>
+<span class="sd">        TypeError: Jira Index Row ID must be an int</span>
 
 <span class="sd">    Returns:</span>
 <span class="sd">        Row: If cells were appended to the row, returns the new row, otherwise</span>
@@ -536,14 +532,10 @@ get_all_row_data function.</li>
         <span class="n">msg</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="s2">&quot;Jira Index Column Map must be type: dict, not&quot;</span>
                   <span class="s2">&quot; </span><span class="si">{}</span><span class="s2">&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="nb">type</span><span class="p">(</span><span class="n">jira_index_col_map</span><span class="p">))</span>
         <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
-    <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">idx_row_id</span><span class="p">,</span> <span class="p">(</span><span class="nb">str</span><span class="p">,</span> <span class="nb">int</span><span class="p">)):</span>
-        <span class="n">msg</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="s2">&quot;Jira Index Row ID must be type: str or int, not&quot;</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">idx_row_id</span><span class="p">,</span> <span class="nb">int</span><span class="p">):</span>
+        <span class="n">msg</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="s2">&quot;Jira Index Row ID must be type: int, not&quot;</span>
                   <span class="s2">&quot; </span><span class="si">{}</span><span class="s2">&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="nb">type</span><span class="p">(</span><span class="n">idx_row_id</span><span class="p">))</span>
         <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
-    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">idx_row_id</span><span class="p">,</span> <span class="nb">int</span><span class="p">):</span>
-        <span class="c1"># Convert int to str.</span>
-        <span class="c1"># TODO: Refactor build_linked_cell to take int instead of str</span>
-        <span class="n">idx_row_id</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">idx_row_id</span><span class="p">)</span>
 
     <span class="n">new_row</span> <span class="o">=</span> <span class="n">smartsheet</span><span class="o">.</span><span class="n">models</span><span class="o">.</span><span class="n">Row</span><span class="p">()</span>
     <span class="n">new_row</span><span class="o">.</span><span class="n">id</span> <span class="o">=</span> <span class="n">row</span><span class="o">.</span><span class="n">id</span>
@@ -613,7 +605,7 @@ data is stored</li>
 <li><strong>jira_index_col_map (dict):</strong>  The column name:id map for the
 Jira Index sheet</li>
 <li><strong>dest_col_map (dict):</strong>  The column name:id map for the destination sheet</li>
-<li><strong>idx_row_id (str):</strong>  The row ID in the Jira Index sheet where the cell
+<li><strong>idx_row_id (int):</strong>  The row ID in the Jira Index sheet where the cell
 link will pull data</li>
 </ul>
 
@@ -627,7 +619,7 @@ Column Names: Column IDs</li>
 <li><strong>TypeError:</strong>  Jira Index Sheet must be a Smartsheet Sheet object</li>
 <li><strong>TypeError:</strong>  Jira Index Column Map must be a dict of
 Column Names: Column IDs</li>
-<li><strong>TypeError:</strong>  Jira Index Row ID must be a string</li>
+<li><strong>TypeError:</strong>  Jira Index Row ID must be an int</li>
 </ul>
 
 <h6 id="returns">Returns</h6>
