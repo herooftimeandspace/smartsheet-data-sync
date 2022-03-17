@@ -71,7 +71,7 @@ def env():
 
 
 # TODO: Validate returned data is not malformed
-def test_build_linked_cell(jira_index_fixture, sheet_fixture):
+def test_build_linked_cell_0(jira_index_fixture, sheet_fixture):
     import uuid_module.build_data as build_data
     jira_index_sheet, jira_index_col_map, jira_index_row = jira_index_fixture
     idx_row_id = jira_index_row.id
@@ -90,15 +90,34 @@ def test_build_linked_cell(jira_index_fixture, sheet_fixture):
                                      app_vars.jira_col)
     with pytest.raises(TypeError):
         build_data.build_linked_cell(jira_index_sheet, jira_index_col_map,
-                                     dest_col_map, [1337], app_vars.jira_col)
+                                     dest_col_map, [1337, 31337],
+                                     app_vars.jira_col)
     with pytest.raises(TypeError):
         build_data.build_linked_cell(jira_index_sheet, jira_index_col_map,
                                      dest_col_map, idx_row_id, 7)
+    with pytest.raises(TypeError):
+        build_data.build_linked_cell(jira_index_sheet, jira_index_col_map,
+                                     dest_col_map, "idx_row_id",
+                                     app_vars.jira_col)
 
+
+def test_build_linked_cell_1(jira_index_fixture, sheet_fixture):
+    import uuid_module.build_data as build_data
+    jira_index_sheet, jira_index_col_map, jira_index_row = jira_index_fixture
+    idx_row_id = jira_index_row.id
+    _, dest_col_map, _, _ = sheet_fixture
     link_cell = build_data.build_linked_cell(jira_index_sheet,
                                              jira_index_col_map, dest_col_map,
                                              idx_row_id, app_vars.jira_col)
     assert type(link_cell) == smartsheet.models.cell.Cell
+    assert link_cell.column_id == int(dest_col_map[app_vars.jira_col])
+    assert isinstance(link_cell.value, type(smartsheet.models.ExplicitNull()))
+    # link_in = helper.has_cell_link(link_cell, "In")
+    # assert link_in == "Linked"
+    assert link_cell.link_in_from_cell.sheet_id == jira_index_sheet.id
+    assert link_cell.link_in_from_cell.row_id == idx_row_id
+    assert link_cell.link_in_from_cell.column_id == \
+        jira_index_col_map[app_vars.jira_col]
 
 
 # TODO: Validate returned data is not malformed
@@ -119,8 +138,8 @@ def test_dest_indexes(sheet_fixture):
 
 
 # TODO: Valdate returned data is not malformed
-def test_build_row(row_fixture, columns_to_link, sheet_fixture,
-                   jira_index_fixture):
+def test_build_row_0(row_fixture, columns_to_link, sheet_fixture,
+                     jira_index_fixture):
     import uuid_module.build_data as build_data
     _, dest_col_map, _, _ = sheet_fixture
     jira_index_sheet, jira_index_col_map, jira_index_row = jira_index_fixture
@@ -146,12 +165,23 @@ def test_build_row(row_fixture, columns_to_link, sheet_fixture,
     with pytest.raises(TypeError):
         build_data.build_row(row, columns_to_link, dest_col_map,
                              jira_index_sheet, jira_index_col_map,
-                             ["thing 1", "thing 2"])
+                             "idx_row_id")
+
+
+# TODO: Valdate returned data is not malformed
+def test_build_row_1(row_fixture, columns_to_link, sheet_fixture,
+                     jira_index_fixture):
+    import uuid_module.build_data as build_data
+    _, dest_col_map, _, _ = sheet_fixture
+    jira_index_sheet, jira_index_col_map, jira_index_row = jira_index_fixture
+    idx_row_id = jira_index_row.id
+    _, row = row_fixture
 
     new_row = build_data.build_row(row, columns_to_link, dest_col_map,
                                    jira_index_sheet, jira_index_col_map,
                                    idx_row_id)
     assert type(new_row) == smartsheet.models.row.Row
+    assert new_row.id == row.id
 
 
 # TODO: Failing pynguin tests

@@ -99,10 +99,24 @@ def write_jira_index_cell_links(project_sub_index,
     if not project_sub_index:
         msg = str("Project sub-index cannot be empty")
         raise ValueError(msg)
+    for k, v in project_sub_index.items():
+        if not isinstance(k, (str, type(None))):
+            msg = str("Project sub-index key (UUID) must be a str or None"
+                      "not value: {} | type: {}").format(k, type(k))
+            raise ValueError(msg)
+        if not isinstance(v, str):
+            msg = str("Project sub-index value (Jira Ticket) must be a string,"
+                      " not value: {} | type: {} | IndexDump {}"
+                      "").format(v, type(v), project_sub_index)
+            raise ValueError(msg)
 
     # Create a copy of the project_sub_index so that we don't alter any
     # other function's data set.
+    # Remove all None keys from the dict so we have only valid UUID:Ticket
     project_data_copy = project_sub_index.copy()
+    for k in project_data_copy.keys():
+        if not k:
+            project_data_copy.pop('k', None)
 
     # Create a list of columns that will be cell linked.
     columns_to_link = [app_vars.jira_col, app_vars.status_col,
@@ -116,8 +130,7 @@ def write_jira_index_cell_links(project_sub_index,
     # Iterate through each sheet ID in the smaller sheet index.
     for sheet_id in dest_sheet_index.keys():
         # Get the sheet data for the ID.
-        # TODO: Write test to mock sheet_id not being an INT
-        dest_sheet = smartsheet_api.get_sheet(int(sheet_id), minutes=0)
+        dest_sheet = smartsheet_api.get_sheet(sheet_id, minutes=0)
 
         # Build a column map for easier column name to ID reference
         dest_col_map = helper.get_column_map(dest_sheet)
@@ -135,34 +148,33 @@ def write_jira_index_cell_links(project_sub_index,
                 logging.debug(
                     "Jira Ticket not found in Dest Sheet row. Skipping")
                 continue
+
+            # Set a friendly variable names, validate that the row ID is
+            # present in the sheet, and create a new row with the cell
+            # links.
+            try:
+                idx_row_id = jira_index_rows[jira_cell.value]
+            except KeyError:
+                logging.debug(
+                    "{} not found in Row Index. Skipping"
+                    "".format(jira_cell.value))
+                continue
+
+            new_row = build_data.build_row(row, columns_to_link,
+                                           dest_col_map,
+                                           jira_index_sheet,
+                                           jira_index_col_map,
+                                           idx_row_id)
+            if new_row:
+                cell_links_to_update.append(new_row)
+                msg = str("Writing {} cells to Row ID: {} | "
+                          "Sheet Name: {}."
+                          "").format(len(new_row.cells),
+                                     new_row.id,
+                                     dest_sheet.name)
+                logging.debug(msg)
             else:
-                # Set a friendly variable names, validate that the row ID is
-                # present in the sheet, and create a new row with the cell
-                # links.
-                jira_value = jira_cell.value
-                try:
-                    idx_row_id = jira_index_rows[jira_value]
-                except KeyError:
-                    logging.debug(
-                        "{} not found in Row Index. Skipping"
-                        "".format(jira_value))
-                    continue
-                idx_row_id = str(idx_row_id)
-                new_row = build_data.build_row(row, columns_to_link,
-                                               dest_col_map,
-                                               jira_index_sheet,
-                                               jira_index_col_map,
-                                               idx_row_id)
-                if new_row:
-                    cell_links_to_update.append(new_row)
-                    msg = str("Writing {} cells to Row ID: {} | "
-                              "Sheet Name: {}."
-                              "").format(len(new_row.cells),
-                                         new_row.id,
-                                         dest_sheet.name)
-                    logging.debug(msg)
-                else:
-                    continue
+                continue
 
         # Write back new cell links to the Sheet
         if cell_links_to_update:

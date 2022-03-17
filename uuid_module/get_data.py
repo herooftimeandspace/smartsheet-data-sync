@@ -319,7 +319,7 @@ def load_jira_index(index_sheet_id=app_vars.dev_jira_idx_sheet):
     jira_index_col_map = helper.get_column_map(jira_index_sheet)
 
     # Create a dict of rows where the values are lists.
-    jira_index_rows = defaultdict(list)
+    jira_index_rows = {}
 
     # Iterate through the rows on the Index sheet. If there's a Jira ticket
     # in the row, return it and its details.
@@ -333,8 +333,8 @@ def load_jira_index(index_sheet_id=app_vars.dev_jira_idx_sheet):
             logging.debug("Jira value doesn't exist. Skipping.")
             continue
         else:
-            jira_value = jira_cell.value
-            jira_index_rows[jira_value] = row.id
+            # {Jira Ticket (str): Row ID (int)}
+            jira_index_rows[jira_cell.value] = row.id
     return jira_index_sheet, jira_index_col_map, jira_index_rows
 
 

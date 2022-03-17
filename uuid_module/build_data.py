@@ -18,7 +18,7 @@ def build_linked_cell(jira_index_sheet, jira_index_col_map, dest_col_map,
         jira_index_col_map (dict): The column name:id map for the
                                    Jira Index sheet
         dest_col_map (dict): The column name:id map for the destination sheet
-        idx_row_id (str): The row ID in the Jira Index sheet where the cell
+        idx_row_id (int): The row ID in the Jira Index sheet where the cell
                           link will pull data
         column (str): The name of the column to write to in both sheets
 
@@ -46,16 +46,14 @@ def build_linked_cell(jira_index_sheet, jira_index_col_map, dest_col_map,
                   " {}").format(type(jira_index_sheet))
         raise TypeError(msg)
     # TODO: Fix to int instead of str, or both
-    if not isinstance(idx_row_id, (str, int)):
-        msg = str("Jira Index Row ID must be type: str or int, not"
+    if not isinstance(idx_row_id, int):
+        msg = str("Jira Index Row ID must be type: int, not"
                   " {}").format(type(idx_row_id))
         raise TypeError(msg)
     if not isinstance(column, str):
         msg = str("Column must be type: str, not"
                   " {}").format(type(column))
         raise TypeError(msg)
-    if isinstance(idx_row_id, str):
-        idx_row_id = int(idx_row_id)
 
     new_cell_link = smartsheet.models.CellLink()
     new_cell_link.sheet_id = jira_index_sheet.id
@@ -99,6 +97,8 @@ def dest_indexes(project_data):
             continue
         else:
             dest_sheet_id = uuid.split("-")[0]
+            dest_sheet_id = int(dest_sheet_id)
+            # {Sheet ID (int): Jira Ticket (str)}
             dest_sheet_index[dest_sheet_id].append(ticket)
     return dest_sheet_index,  # dest_row_index
 
@@ -119,7 +119,7 @@ def build_row(row, columns_to_link, dest_col_map, jira_index_sheet,
         jira_index_col_map (dict): The column name:id map for the
                                    Jira Index sheet
         dest_col_map (dict): The column name:id map for the destination sheet
-        idx_row_id (str): The row ID in the Jira Index sheet where the cell
+        idx_row_id (int): The row ID in the Jira Index sheet where the cell
                           link will pull data
 
     Raises:
@@ -130,7 +130,7 @@ def build_row(row, columns_to_link, dest_col_map, jira_index_sheet,
         TypeError: Jira Index Sheet must be a Smartsheet Sheet object
         TypeError: Jira Index Column Map must be a dict of
                    Column Names: Column IDs
-        TypeError: Jira Index Row ID must be a string
+        TypeError: Jira Index Row ID must be an int
 
     Returns:
         Row: If cells were appended to the row, returns the new row, otherwise
@@ -156,14 +156,10 @@ def build_row(row, columns_to_link, dest_col_map, jira_index_sheet,
         msg = str("Jira Index Column Map must be type: dict, not"
                   " {}").format(type(jira_index_col_map))
         raise TypeError(msg)
-    if not isinstance(idx_row_id, (str, int)):
-        msg = str("Jira Index Row ID must be type: str or int, not"
+    if not isinstance(idx_row_id, int):
+        msg = str("Jira Index Row ID must be type: int, not"
                   " {}").format(type(idx_row_id))
         raise TypeError(msg)
-    if isinstance(idx_row_id, int):
-        # Convert int to str.
-        # TODO: Refactor build_linked_cell to take int instead of str
-        idx_row_id = str(idx_row_id)
 
     new_row = smartsheet.models.Row()
     new_row.id = row.id

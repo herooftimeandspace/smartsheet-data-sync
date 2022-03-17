@@ -161,7 +161,45 @@ def test_write_jira_index_cell_links_0():
         write_data.write_jira_index_cell_links({})
 
 
-def test_write_jira_index_cell_links_1(project_indexes, index_fixture,
+def test_write_jira_index_cell_links_1(index_fixture,
+                                       sheet_fixture):
+
+    sheet, _, _, _ = sheet_fixture
+    jira_index_sheet, jira_index_col_map, jira_index_rows = index_fixture
+
+    @patch("uuid_module.smartsheet_api.write_rows_to_sheet",
+           return_value={"result": {"statusCode": 200}})
+    @patch("uuid_module.get_data.load_jira_index",
+           return_value=(jira_index_sheet, jira_index_col_map,
+                         jira_index_rows))
+    @patch("uuid_module.smartsheet_api.get_sheet", return_value=sheet)
+    def test_0(mock_0, mock_1, mock_2):
+        project_sub_index = {}
+        project_sub_index[31337] = "1337"
+        with pytest.raises(ValueError):
+            write_data.write_jira_index_cell_links(project_sub_index)
+        return True
+
+    @patch("uuid_module.smartsheet_api.write_rows_to_sheet",
+           return_value={"result": {"statusCode": 200}})
+    @patch("uuid_module.get_data.load_jira_index",
+           return_value=(jira_index_sheet, jira_index_col_map,
+                         jira_index_rows))
+    @patch("uuid_module.smartsheet_api.get_sheet", return_value=sheet)
+    def test_1(mock_0, mock_1, mock_2):
+        project_sub_index = {}
+        project_sub_index["31337"] = 1337
+        with pytest.raises(ValueError):
+            write_data.write_jira_index_cell_links(project_sub_index)
+        return True
+
+    result_0 = test_0()
+    result_1 = test_1()
+    assert result_0 is True
+    assert result_1 is True
+
+
+def test_write_jira_index_cell_links_2(project_indexes, index_fixture,
                                        sheet_fixture):
     _, project_sub_index = project_indexes
     sheet, _, _, _ = sheet_fixture
@@ -185,42 +223,26 @@ def test_write_jira_index_cell_links_1(project_indexes, index_fixture,
 
 # TODO: Build a version of the sheet we can use to link and get a successful
 # msg back.
-# def test_write_jira_index_cell_links_2(project_indexes, index_fixture,
+# def test_write_jira_index_cell_links_3(project_indexes, index_fixture,
 #                                        sheet_fixture, row_fixture):
-#     import uuid_module.variables as vars
-
 #     _, project_sub_index = project_indexes
 #     sheet, _, _, _ = sheet_fixture
 #     jira_index_sheet, jira_index_col_map, jira_index_rows = index_fixture
-#     _, unlinked_row = row_fixture
-#     sheet.add_rows(unlinked_row)
-
-#     def build_test_row():
-#         import uuid_module.build_data as build_data
-#         import uuid_module.helper as helper
-#         dest_col_map = helper.get_column_map(sheet)
-#         columns_to_link = [vars.jira_col, vars.status_col,
-#                            vars.task_col, vars.assignee_col]
-#         new_row = build_data.build_row(unlinked_row, columns_to_link,
-#                                        dest_col_map, jira_index_sheet,
-#                                        jira_index_col_map, 1514249694668676)
-#         return new_row
-
-#     new_row = build_test_row()
+#     row, _ = row_fixture
 
 #     @patch("uuid_module.smartsheet_api.write_rows_to_sheet",
 #            return_value={"result": {"statusCode": 200}})
+#     @patch("uuid_module.build_data.build_row", return_value=row)
 #     @patch("uuid_module.get_data.load_jira_index",
 #            return_value=(jira_index_sheet, jira_index_col_map,
 #                          jira_index_rows))
 #     @patch("uuid_module.smartsheet_api.get_sheet", return_value=sheet)
-#     @patch("uuid_module.build_data.build_row", return_value=new_row)
 #     def test_0(mock_0, mock_1, mock_2, mock_3):
 #         var_0 = write_data.write_jira_index_cell_links(project_sub_index)
 #         return var_0
 
 #     result_0 = test_0()
-#     result_1 = "cell link rows back to Sheet ID" in result_0
+#     result_1 = "Writing" in result_0
 #     assert isinstance(result_0, str)
 #     assert result_1 is True
 
