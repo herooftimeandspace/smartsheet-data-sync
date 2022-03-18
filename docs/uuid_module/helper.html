@@ -198,6 +198,17 @@
         <span class="c1"># Check the status of the link.</span>
         <span class="k">try</span><span class="p">:</span>
             <span class="n">status</span> <span class="o">=</span> <span class="n">old_cell</span><span class="o">.</span><span class="n">link_in_from_cell</span><span class="o">.</span><span class="n">status</span>
+            <span class="n">msg</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="s2">&quot;Cell Data: Value </span><span class="si">{}</span><span class="s2"> | Col ID </span><span class="si">{}</span><span class="s2"> | </span><span class="se">\n</span><span class="s2">&quot;</span>
+                      <span class="s2">&quot;Link In Status </span><span class="si">{}</span><span class="s2"> | Linked In Sheet ID </span><span class="si">{}</span><span class="s2"> | &quot;</span>
+                      <span class="s2">&quot;Linked In Row ID </span><span class="si">{}</span><span class="s2"> | Linked In Col ID </span><span class="si">{}</span><span class="s2"> | &quot;</span>
+                      <span class="s2">&quot;Linked In Sheet Name </span><span class="si">{}</span><span class="s2">&quot;</span>
+                      <span class="s2">&quot;&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">old_cell</span><span class="o">.</span><span class="n">value</span><span class="p">,</span> <span class="n">old_cell</span><span class="o">.</span><span class="n">column_id</span><span class="p">,</span>
+                                 <span class="n">old_cell</span><span class="o">.</span><span class="n">link_in_from_cell</span><span class="o">.</span><span class="n">status</span><span class="p">,</span>
+                                 <span class="n">old_cell</span><span class="o">.</span><span class="n">link_in_from_cell</span><span class="o">.</span><span class="n">sheet_id</span><span class="p">,</span>
+                                 <span class="n">old_cell</span><span class="o">.</span><span class="n">link_in_from_cell</span><span class="o">.</span><span class="n">row_id</span><span class="p">,</span>
+                                 <span class="n">old_cell</span><span class="o">.</span><span class="n">link_in_from_cell</span><span class="o">.</span><span class="n">column_id</span><span class="p">,</span>
+                                 <span class="n">old_cell</span><span class="o">.</span><span class="n">link_in_from_cell</span><span class="o">.</span><span class="n">sheet_name</span><span class="p">)</span>
+            <span class="n">logging</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
             <span class="k">return</span> <span class="nb">str</span><span class="p">(</span><span class="n">status</span><span class="p">)</span>
         <span class="k">except</span> <span class="ne">AttributeError</span><span class="p">:</span>
             <span class="k">return</span> <span class="s2">&quot;Unlinked&quot;</span>
@@ -205,34 +216,67 @@
     <span class="k">if</span> <span class="n">direction</span> <span class="o">==</span> <span class="s2">&quot;Out&quot;</span> <span class="ow">and</span> <span class="ow">not</span> <span class="n">kwargs</span><span class="p">:</span>
         <span class="k">try</span><span class="p">:</span>
             <span class="n">status</span> <span class="o">=</span> <span class="n">old_cell</span><span class="o">.</span><span class="n">links_out_to_cells</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">status</span>
+            <span class="n">msg</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="s2">&quot;Cell Data: Value </span><span class="si">{}</span><span class="s2"> | Col ID </span><span class="si">{}</span><span class="s2"> | </span><span class="se">\n</span><span class="s2">&quot;</span>
+                      <span class="s2">&quot;Link Out Status </span><span class="si">{}</span><span class="s2"> | Linked Out Sheet ID </span><span class="si">{}</span><span class="s2"> | &quot;</span>
+                      <span class="s2">&quot;Linked Out Row ID </span><span class="si">{}</span><span class="s2"> | Linked Out Col ID </span><span class="si">{}</span><span class="s2"> | &quot;</span>
+                      <span class="s2">&quot;Linked Out Sheet Name </span><span class="si">{}</span><span class="s2">&quot;</span>
+                      <span class="s2">&quot;&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">old_cell</span><span class="o">.</span><span class="n">value</span><span class="p">,</span> <span class="n">old_cell</span><span class="o">.</span><span class="n">column_id</span><span class="p">,</span>
+                                 <span class="n">old_cell</span><span class="o">.</span><span class="n">links_out_to_cells</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">status</span><span class="p">,</span>
+                                 <span class="n">old_cell</span><span class="o">.</span><span class="n">links_out_to_cells</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">sheet_id</span><span class="p">,</span>
+                                 <span class="n">old_cell</span><span class="o">.</span><span class="n">links_out_to_cells</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">row_id</span><span class="p">,</span>
+                                 <span class="n">old_cell</span><span class="o">.</span><span class="n">links_out_to_cells</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">column_id</span><span class="p">,</span>
+                                 <span class="n">old_cell</span><span class="o">.</span><span class="n">links_out_to_cells</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">sheet_name</span><span class="p">)</span>
+            <span class="n">logging</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
+            <span class="k">return</span> <span class="nb">str</span><span class="p">(</span><span class="n">status</span><span class="p">)</span>
         <span class="k">except</span> <span class="ne">IndexError</span><span class="p">:</span>
             <span class="k">return</span> <span class="s2">&quot;Unlinked&quot;</span>
-        <span class="k">return</span> <span class="s2">&quot;Linked&quot;</span>
 
     <span class="k">if</span> <span class="n">direction</span> <span class="o">==</span> <span class="s2">&quot;Out&quot;</span> <span class="ow">and</span> <span class="n">kwargs</span><span class="p">:</span>
+        <span class="c1"># Check to make sure only the sheet_id and row_id kwargs were passed.</span>
         <span class="k">def</span> <span class="nf">check_value_exist</span><span class="p">(</span><span class="n">test_dict</span><span class="p">,</span> <span class="o">*</span><span class="n">values</span><span class="p">):</span>
             <span class="k">return</span> <span class="nb">all</span><span class="p">(</span><span class="n">v</span> <span class="ow">in</span> <span class="n">test_dict</span> <span class="k">for</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">values</span><span class="p">)</span>
         <span class="n">result</span> <span class="o">=</span> <span class="n">check_value_exist</span><span class="p">(</span><span class="n">kwargs</span><span class="o">.</span><span class="n">keys</span><span class="p">(),</span>
-                                   <span class="s2">&quot;sheet_id&quot;</span><span class="p">,</span> <span class="s2">&quot;row_id&quot;</span><span class="p">,</span>
-                                   <span class="s2">&quot;col_id&quot;</span><span class="p">)</span>
+                                   <span class="s2">&quot;sheet_id&quot;</span><span class="p">,</span> <span class="s2">&quot;row_id&quot;</span><span class="p">)</span>
         <span class="k">if</span> <span class="n">result</span><span class="p">:</span>
             <span class="n">sheet_id</span> <span class="o">=</span> <span class="n">kwargs</span><span class="p">[</span><span class="s2">&quot;sheet_id&quot;</span><span class="p">]</span>
             <span class="n">row_id</span> <span class="o">=</span> <span class="n">kwargs</span><span class="p">[</span><span class="s2">&quot;row_id&quot;</span><span class="p">]</span>
-            <span class="n">col_id</span> <span class="o">=</span> <span class="n">kwargs</span><span class="p">[</span><span class="s2">&quot;col_id&quot;</span><span class="p">]</span>
         <span class="k">else</span><span class="p">:</span>
+            <span class="c1"># If the wrong kwargs were passed, re-run without kwargs</span>
             <span class="n">has_cell_link</span><span class="p">(</span><span class="n">old_cell</span><span class="p">,</span> <span class="s2">&quot;Out&quot;</span><span class="p">)</span>
         <span class="c1"># Check to see if our IDs are in the link_out object</span>
         <span class="k">for</span> <span class="n">link</span> <span class="ow">in</span> <span class="n">old_cell</span><span class="o">.</span><span class="n">links_out_to_cells</span><span class="p">:</span>
-            <span class="k">if</span> <span class="ow">not</span> <span class="n">sheet_id</span> <span class="o">==</span> <span class="n">link</span><span class="o">.</span><span class="n">sheet_id</span><span class="p">:</span>
-                <span class="k">continue</span>
-            <span class="k">if</span> <span class="ow">not</span> <span class="n">row_id</span> <span class="o">==</span> <span class="n">link</span><span class="o">.</span><span class="n">row_id</span><span class="p">:</span>
-                <span class="k">continue</span>
-            <span class="k">if</span> <span class="ow">not</span> <span class="n">col_id</span> <span class="o">==</span> <span class="n">link</span><span class="o">.</span><span class="n">column_id</span><span class="p">:</span>
-                <span class="k">continue</span>
+            <span class="n">msg</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="s2">&quot;Cell Data: Value </span><span class="si">{}</span><span class="s2"> | Col ID </span><span class="si">{}</span><span class="s2"> | </span><span class="se">\n</span><span class="s2">&quot;</span>
+                      <span class="s2">&quot;Link Out Status </span><span class="si">{}</span><span class="s2"> | Linked Out Sheet ID </span><span class="si">{}</span><span class="s2"> | &quot;</span>
+                      <span class="s2">&quot;Linked Out Row ID </span><span class="si">{}</span><span class="s2"> | Linked Out Col ID </span><span class="si">{}</span><span class="s2"> | &quot;</span>
+                      <span class="s2">&quot;Linked Out Sheet Name </span><span class="si">{}</span><span class="s2"> </span><span class="se">\n</span><span class="s2">&quot;</span>
+                      <span class="s2">&quot;Kwarg Sheet ID </span><span class="si">{}</span><span class="s2"> | Kwarg Row ID </span><span class="si">{}</span><span class="s2">&quot;</span>
+                      <span class="s2">&quot;&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">old_cell</span><span class="o">.</span><span class="n">value</span><span class="p">,</span>
+                                 <span class="n">old_cell</span><span class="o">.</span><span class="n">column_id</span><span class="p">,</span> <span class="n">link</span><span class="o">.</span><span class="n">status</span><span class="p">,</span>
+                                 <span class="n">link</span><span class="o">.</span><span class="n">sheet_id</span><span class="p">,</span> <span class="n">link</span><span class="o">.</span><span class="n">row_id</span><span class="p">,</span> <span class="n">link</span><span class="o">.</span><span class="n">column_id</span><span class="p">,</span>
+                                 <span class="n">link</span><span class="o">.</span><span class="n">sheet_name</span><span class="p">,</span> <span class="n">sheet_id</span><span class="p">,</span> <span class="n">row_id</span><span class="p">)</span>
+            <span class="n">logging</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">sheet_id</span> <span class="o">==</span> <span class="n">link</span><span class="o">.</span><span class="n">sheet_id</span><span class="p">:</span>
+                <span class="n">msg</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="s2">&quot;Expected Sheet ID </span><span class="si">{}</span><span class="s2"> | Linked Sheet ID </span><span class="si">{}</span><span class="s2">&quot;</span>
+                          <span class="s2">&quot;&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">sheet_id</span><span class="p">,</span> <span class="n">link</span><span class="o">.</span><span class="n">sheet_id</span><span class="p">)</span>
+                <span class="n">logging</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
+                <span class="n">sheet_match</span> <span class="o">=</span> <span class="kc">True</span>
+            <span class="k">if</span> <span class="n">row_id</span> <span class="o">==</span> <span class="n">link</span><span class="o">.</span><span class="n">row_id</span><span class="p">:</span>
+                <span class="n">msg</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="s2">&quot;Expected Row ID </span><span class="si">{}</span><span class="s2"> | Linked Row ID </span><span class="si">{}</span><span class="s2">&quot;</span>
+                          <span class="s2">&quot;&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">row_id</span><span class="p">,</span> <span class="n">link</span><span class="o">.</span><span class="n">row_id</span><span class="p">)</span>
+                <span class="n">logging</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
+                <span class="n">row_match</span> <span class="o">=</span> <span class="kc">True</span>
+
+            <span class="k">if</span> <span class="n">sheet_match</span> <span class="ow">and</span> <span class="n">row_match</span><span class="p">:</span>
+                <span class="n">status</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">link</span><span class="o">.</span><span class="n">status</span><span class="p">)</span>
+                <span class="n">msg</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="s2">&quot;Sheet ID and Row ID match Cell Link data, &quot;</span>
+                          <span class="s2">&quot;breaking loop and returning </span><span class="si">{}</span><span class="s2">&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">status</span><span class="p">)</span>
+                <span class="n">logging</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
+                <span class="k">break</span>
             <span class="k">else</span><span class="p">:</span>
-                <span class="k">return</span> <span class="nb">str</span><span class="p">(</span><span class="n">link</span><span class="o">.</span><span class="n">status</span><span class="p">)</span>
+                <span class="k">continue</span>
         <span class="k">else</span><span class="p">:</span>
             <span class="k">return</span> <span class="s2">&quot;Unlinked&quot;</span>
+        <span class="k">return</span> <span class="n">status</span>
 
 
 <span class="c1"># TODO: Replace with get_cell_data</span>
@@ -626,6 +670,17 @@
         <span class="c1"># Check the status of the link.</span>
         <span class="k">try</span><span class="p">:</span>
             <span class="n">status</span> <span class="o">=</span> <span class="n">old_cell</span><span class="o">.</span><span class="n">link_in_from_cell</span><span class="o">.</span><span class="n">status</span>
+            <span class="n">msg</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="s2">&quot;Cell Data: Value </span><span class="si">{}</span><span class="s2"> | Col ID </span><span class="si">{}</span><span class="s2"> | </span><span class="se">\n</span><span class="s2">&quot;</span>
+                      <span class="s2">&quot;Link In Status </span><span class="si">{}</span><span class="s2"> | Linked In Sheet ID </span><span class="si">{}</span><span class="s2"> | &quot;</span>
+                      <span class="s2">&quot;Linked In Row ID </span><span class="si">{}</span><span class="s2"> | Linked In Col ID </span><span class="si">{}</span><span class="s2"> | &quot;</span>
+                      <span class="s2">&quot;Linked In Sheet Name </span><span class="si">{}</span><span class="s2">&quot;</span>
+                      <span class="s2">&quot;&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">old_cell</span><span class="o">.</span><span class="n">value</span><span class="p">,</span> <span class="n">old_cell</span><span class="o">.</span><span class="n">column_id</span><span class="p">,</span>
+                                 <span class="n">old_cell</span><span class="o">.</span><span class="n">link_in_from_cell</span><span class="o">.</span><span class="n">status</span><span class="p">,</span>
+                                 <span class="n">old_cell</span><span class="o">.</span><span class="n">link_in_from_cell</span><span class="o">.</span><span class="n">sheet_id</span><span class="p">,</span>
+                                 <span class="n">old_cell</span><span class="o">.</span><span class="n">link_in_from_cell</span><span class="o">.</span><span class="n">row_id</span><span class="p">,</span>
+                                 <span class="n">old_cell</span><span class="o">.</span><span class="n">link_in_from_cell</span><span class="o">.</span><span class="n">column_id</span><span class="p">,</span>
+                                 <span class="n">old_cell</span><span class="o">.</span><span class="n">link_in_from_cell</span><span class="o">.</span><span class="n">sheet_name</span><span class="p">)</span>
+            <span class="n">logging</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
             <span class="k">return</span> <span class="nb">str</span><span class="p">(</span><span class="n">status</span><span class="p">)</span>
         <span class="k">except</span> <span class="ne">AttributeError</span><span class="p">:</span>
             <span class="k">return</span> <span class="s2">&quot;Unlinked&quot;</span>
@@ -633,34 +688,67 @@
     <span class="k">if</span> <span class="n">direction</span> <span class="o">==</span> <span class="s2">&quot;Out&quot;</span> <span class="ow">and</span> <span class="ow">not</span> <span class="n">kwargs</span><span class="p">:</span>
         <span class="k">try</span><span class="p">:</span>
             <span class="n">status</span> <span class="o">=</span> <span class="n">old_cell</span><span class="o">.</span><span class="n">links_out_to_cells</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">status</span>
+            <span class="n">msg</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="s2">&quot;Cell Data: Value </span><span class="si">{}</span><span class="s2"> | Col ID </span><span class="si">{}</span><span class="s2"> | </span><span class="se">\n</span><span class="s2">&quot;</span>
+                      <span class="s2">&quot;Link Out Status </span><span class="si">{}</span><span class="s2"> | Linked Out Sheet ID </span><span class="si">{}</span><span class="s2"> | &quot;</span>
+                      <span class="s2">&quot;Linked Out Row ID </span><span class="si">{}</span><span class="s2"> | Linked Out Col ID </span><span class="si">{}</span><span class="s2"> | &quot;</span>
+                      <span class="s2">&quot;Linked Out Sheet Name </span><span class="si">{}</span><span class="s2">&quot;</span>
+                      <span class="s2">&quot;&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">old_cell</span><span class="o">.</span><span class="n">value</span><span class="p">,</span> <span class="n">old_cell</span><span class="o">.</span><span class="n">column_id</span><span class="p">,</span>
+                                 <span class="n">old_cell</span><span class="o">.</span><span class="n">links_out_to_cells</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">status</span><span class="p">,</span>
+                                 <span class="n">old_cell</span><span class="o">.</span><span class="n">links_out_to_cells</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">sheet_id</span><span class="p">,</span>
+                                 <span class="n">old_cell</span><span class="o">.</span><span class="n">links_out_to_cells</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">row_id</span><span class="p">,</span>
+                                 <span class="n">old_cell</span><span class="o">.</span><span class="n">links_out_to_cells</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">column_id</span><span class="p">,</span>
+                                 <span class="n">old_cell</span><span class="o">.</span><span class="n">links_out_to_cells</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">sheet_name</span><span class="p">)</span>
+            <span class="n">logging</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
+            <span class="k">return</span> <span class="nb">str</span><span class="p">(</span><span class="n">status</span><span class="p">)</span>
         <span class="k">except</span> <span class="ne">IndexError</span><span class="p">:</span>
             <span class="k">return</span> <span class="s2">&quot;Unlinked&quot;</span>
-        <span class="k">return</span> <span class="s2">&quot;Linked&quot;</span>
 
     <span class="k">if</span> <span class="n">direction</span> <span class="o">==</span> <span class="s2">&quot;Out&quot;</span> <span class="ow">and</span> <span class="n">kwargs</span><span class="p">:</span>
+        <span class="c1"># Check to make sure only the sheet_id and row_id kwargs were passed.</span>
         <span class="k">def</span> <span class="nf">check_value_exist</span><span class="p">(</span><span class="n">test_dict</span><span class="p">,</span> <span class="o">*</span><span class="n">values</span><span class="p">):</span>
             <span class="k">return</span> <span class="nb">all</span><span class="p">(</span><span class="n">v</span> <span class="ow">in</span> <span class="n">test_dict</span> <span class="k">for</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">values</span><span class="p">)</span>
         <span class="n">result</span> <span class="o">=</span> <span class="n">check_value_exist</span><span class="p">(</span><span class="n">kwargs</span><span class="o">.</span><span class="n">keys</span><span class="p">(),</span>
-                                   <span class="s2">&quot;sheet_id&quot;</span><span class="p">,</span> <span class="s2">&quot;row_id&quot;</span><span class="p">,</span>
-                                   <span class="s2">&quot;col_id&quot;</span><span class="p">)</span>
+                                   <span class="s2">&quot;sheet_id&quot;</span><span class="p">,</span> <span class="s2">&quot;row_id&quot;</span><span class="p">)</span>
         <span class="k">if</span> <span class="n">result</span><span class="p">:</span>
             <span class="n">sheet_id</span> <span class="o">=</span> <span class="n">kwargs</span><span class="p">[</span><span class="s2">&quot;sheet_id&quot;</span><span class="p">]</span>
             <span class="n">row_id</span> <span class="o">=</span> <span class="n">kwargs</span><span class="p">[</span><span class="s2">&quot;row_id&quot;</span><span class="p">]</span>
-            <span class="n">col_id</span> <span class="o">=</span> <span class="n">kwargs</span><span class="p">[</span><span class="s2">&quot;col_id&quot;</span><span class="p">]</span>
         <span class="k">else</span><span class="p">:</span>
+            <span class="c1"># If the wrong kwargs were passed, re-run without kwargs</span>
             <span class="n">has_cell_link</span><span class="p">(</span><span class="n">old_cell</span><span class="p">,</span> <span class="s2">&quot;Out&quot;</span><span class="p">)</span>
         <span class="c1"># Check to see if our IDs are in the link_out object</span>
         <span class="k">for</span> <span class="n">link</span> <span class="ow">in</span> <span class="n">old_cell</span><span class="o">.</span><span class="n">links_out_to_cells</span><span class="p">:</span>
-            <span class="k">if</span> <span class="ow">not</span> <span class="n">sheet_id</span> <span class="o">==</span> <span class="n">link</span><span class="o">.</span><span class="n">sheet_id</span><span class="p">:</span>
-                <span class="k">continue</span>
-            <span class="k">if</span> <span class="ow">not</span> <span class="n">row_id</span> <span class="o">==</span> <span class="n">link</span><span class="o">.</span><span class="n">row_id</span><span class="p">:</span>
-                <span class="k">continue</span>
-            <span class="k">if</span> <span class="ow">not</span> <span class="n">col_id</span> <span class="o">==</span> <span class="n">link</span><span class="o">.</span><span class="n">column_id</span><span class="p">:</span>
-                <span class="k">continue</span>
+            <span class="n">msg</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="s2">&quot;Cell Data: Value </span><span class="si">{}</span><span class="s2"> | Col ID </span><span class="si">{}</span><span class="s2"> | </span><span class="se">\n</span><span class="s2">&quot;</span>
+                      <span class="s2">&quot;Link Out Status </span><span class="si">{}</span><span class="s2"> | Linked Out Sheet ID </span><span class="si">{}</span><span class="s2"> | &quot;</span>
+                      <span class="s2">&quot;Linked Out Row ID </span><span class="si">{}</span><span class="s2"> | Linked Out Col ID </span><span class="si">{}</span><span class="s2"> | &quot;</span>
+                      <span class="s2">&quot;Linked Out Sheet Name </span><span class="si">{}</span><span class="s2"> </span><span class="se">\n</span><span class="s2">&quot;</span>
+                      <span class="s2">&quot;Kwarg Sheet ID </span><span class="si">{}</span><span class="s2"> | Kwarg Row ID </span><span class="si">{}</span><span class="s2">&quot;</span>
+                      <span class="s2">&quot;&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">old_cell</span><span class="o">.</span><span class="n">value</span><span class="p">,</span>
+                                 <span class="n">old_cell</span><span class="o">.</span><span class="n">column_id</span><span class="p">,</span> <span class="n">link</span><span class="o">.</span><span class="n">status</span><span class="p">,</span>
+                                 <span class="n">link</span><span class="o">.</span><span class="n">sheet_id</span><span class="p">,</span> <span class="n">link</span><span class="o">.</span><span class="n">row_id</span><span class="p">,</span> <span class="n">link</span><span class="o">.</span><span class="n">column_id</span><span class="p">,</span>
+                                 <span class="n">link</span><span class="o">.</span><span class="n">sheet_name</span><span class="p">,</span> <span class="n">sheet_id</span><span class="p">,</span> <span class="n">row_id</span><span class="p">)</span>
+            <span class="n">logging</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">sheet_id</span> <span class="o">==</span> <span class="n">link</span><span class="o">.</span><span class="n">sheet_id</span><span class="p">:</span>
+                <span class="n">msg</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="s2">&quot;Expected Sheet ID </span><span class="si">{}</span><span class="s2"> | Linked Sheet ID </span><span class="si">{}</span><span class="s2">&quot;</span>
+                          <span class="s2">&quot;&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">sheet_id</span><span class="p">,</span> <span class="n">link</span><span class="o">.</span><span class="n">sheet_id</span><span class="p">)</span>
+                <span class="n">logging</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
+                <span class="n">sheet_match</span> <span class="o">=</span> <span class="kc">True</span>
+            <span class="k">if</span> <span class="n">row_id</span> <span class="o">==</span> <span class="n">link</span><span class="o">.</span><span class="n">row_id</span><span class="p">:</span>
+                <span class="n">msg</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="s2">&quot;Expected Row ID </span><span class="si">{}</span><span class="s2"> | Linked Row ID </span><span class="si">{}</span><span class="s2">&quot;</span>
+                          <span class="s2">&quot;&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">row_id</span><span class="p">,</span> <span class="n">link</span><span class="o">.</span><span class="n">row_id</span><span class="p">)</span>
+                <span class="n">logging</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
+                <span class="n">row_match</span> <span class="o">=</span> <span class="kc">True</span>
+
+            <span class="k">if</span> <span class="n">sheet_match</span> <span class="ow">and</span> <span class="n">row_match</span><span class="p">:</span>
+                <span class="n">status</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">link</span><span class="o">.</span><span class="n">status</span><span class="p">)</span>
+                <span class="n">msg</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="s2">&quot;Sheet ID and Row ID match Cell Link data, &quot;</span>
+                          <span class="s2">&quot;breaking loop and returning </span><span class="si">{}</span><span class="s2">&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">status</span><span class="p">)</span>
+                <span class="n">logging</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
+                <span class="k">break</span>
             <span class="k">else</span><span class="p">:</span>
-                <span class="k">return</span> <span class="nb">str</span><span class="p">(</span><span class="n">link</span><span class="o">.</span><span class="n">status</span><span class="p">)</span>
+                <span class="k">continue</span>
         <span class="k">else</span><span class="p">:</span>
             <span class="k">return</span> <span class="s2">&quot;Unlinked&quot;</span>
+        <span class="k">return</span> <span class="n">status</span>
 </pre></div>
 
         </details>

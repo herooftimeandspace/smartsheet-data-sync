@@ -45,6 +45,9 @@
             <li>
                     <a class="function" href="#get_row">get_row</a>
             </li>
+            <li>
+                    <a class="function" href="#get_columns">get_columns</a>
+            </li>
     </ul>
 
 
@@ -308,6 +311,28 @@
     <span class="n">row</span> <span class="o">=</span> <span class="n">smartsheet_client</span><span class="o">.</span><span class="n">Sheets</span><span class="o">.</span><span class="n">get_row</span><span class="p">(</span><span class="n">sheet_id</span><span class="p">,</span> <span class="n">row_id</span><span class="p">,</span>
                                            <span class="n">include</span><span class="o">=</span><span class="s1">&#39;objectValue&#39;</span><span class="p">)</span>
     <span class="k">return</span> <span class="n">row</span>
+
+
+<span class="k">def</span> <span class="nf">get_columns</span><span class="p">(</span><span class="n">sheet_id</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Gets columns from the given sheet and create a map of Column Name: ID</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        sheet_id (int): ID of the sheet to query</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">sheet_id</span><span class="p">,</span> <span class="nb">int</span><span class="p">):</span>
+        <span class="n">msg</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="s2">&quot;Sheet ID must be type: int &quot;</span>
+                  <span class="s2">&quot;not type: </span><span class="si">{}</span><span class="s2">&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="nb">type</span><span class="p">(</span><span class="n">sheet_id</span><span class="p">))</span>
+        <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">sheet_id</span><span class="p">:</span>
+        <span class="n">msg</span> <span class="o">=</span> <span class="s2">&quot;Sheet ID must not be empty.&quot;</span>
+        <span class="ne">ValueError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
+
+    <span class="n">columns</span> <span class="o">=</span> <span class="n">smartsheet_client</span><span class="o">.</span><span class="n">Sheets</span><span class="o">.</span><span class="n">get_columns</span><span class="p">(</span><span class="n">sheet_id</span><span class="p">,</span> <span class="n">include_all</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+    <span class="n">column_map</span> <span class="o">=</span> <span class="p">[]</span>
+
+    <span class="k">for</span> <span class="n">column</span> <span class="ow">in</span> <span class="n">columns</span><span class="p">:</span>
+        <span class="n">column_map</span><span class="p">[</span><span class="n">column</span><span class="o">.</span><span class="n">title</span><span class="p">]</span> <span class="o">=</span> <span class="n">column</span><span class="o">.</span><span class="n">id</span>
+    <span class="k">return</span> <span class="n">column_map</span>
 </pre></div>
 
         </details>
@@ -714,6 +739,51 @@ LoadAll = True to get objects from all nested folders in the Workspace.</p>
   <p>smartsheet.models.Row: Returns the row data in dict/json format
   for further manipulation</p>
 </blockquote>
+</div>
+
+
+                </section>
+                <section id="get_columns">
+                            <div class="attr function"><a class="headerlink" href="#get_columns">#&nbsp;&nbsp</a>
+
+        
+            <span class="def">def</span>
+            <span class="name">get_columns</span><span class="signature">(sheet_id)</span>:
+    </div>
+
+                <details>
+            <summary>View Source</summary>
+            <div class="codehilite"><pre><span></span><span class="k">def</span> <span class="nf">get_columns</span><span class="p">(</span><span class="n">sheet_id</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Gets columns from the given sheet and create a map of Column Name: ID</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        sheet_id (int): ID of the sheet to query</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">sheet_id</span><span class="p">,</span> <span class="nb">int</span><span class="p">):</span>
+        <span class="n">msg</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="s2">&quot;Sheet ID must be type: int &quot;</span>
+                  <span class="s2">&quot;not type: </span><span class="si">{}</span><span class="s2">&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="nb">type</span><span class="p">(</span><span class="n">sheet_id</span><span class="p">))</span>
+        <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">sheet_id</span><span class="p">:</span>
+        <span class="n">msg</span> <span class="o">=</span> <span class="s2">&quot;Sheet ID must not be empty.&quot;</span>
+        <span class="ne">ValueError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
+
+    <span class="n">columns</span> <span class="o">=</span> <span class="n">smartsheet_client</span><span class="o">.</span><span class="n">Sheets</span><span class="o">.</span><span class="n">get_columns</span><span class="p">(</span><span class="n">sheet_id</span><span class="p">,</span> <span class="n">include_all</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+    <span class="n">column_map</span> <span class="o">=</span> <span class="p">[]</span>
+
+    <span class="k">for</span> <span class="n">column</span> <span class="ow">in</span> <span class="n">columns</span><span class="p">:</span>
+        <span class="n">column_map</span><span class="p">[</span><span class="n">column</span><span class="o">.</span><span class="n">title</span><span class="p">]</span> <span class="o">=</span> <span class="n">column</span><span class="o">.</span><span class="n">id</span>
+    <span class="k">return</span> <span class="n">column_map</span>
+</pre></div>
+
+        </details>
+
+            <div class="docstring"><p>Gets columns from the given sheet and create a map of Column Name: ID</p>
+
+<h6 id="args">Args</h6>
+
+<ul>
+<li><strong>sheet_id (int):</strong>  ID of the sheet to query</li>
+</ul>
 </div>
 
 
