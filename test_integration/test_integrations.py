@@ -288,11 +288,11 @@ def test_get_row_0():
             assert response.row_number <= 10
 
 
-def test_get_columns_0(sheet_fixture):
-    sheet, col_map, _, _ = sheet_fixture
-    result_0 = smartsheet_api.get_columns(sheet.id)
+# def test_get_columns_0(sheet_fixture):
+#     sheet, col_map, _, _ = sheet_fixture
+#     result_0 = smartsheet_api.get_columns(sheet.id)
 
-    assert isinstance(result_0, dict)
-    for k, v in col_map.items():
-        assert k in result_0.keys()
-        assert v in result_0.values()
+#     assert isinstance(result_0, dict)
+#     for k, v in col_map.items():
+#         assert k in result_0.keys()
+#         assert v in result_0.values()
