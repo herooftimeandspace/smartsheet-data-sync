@@ -254,13 +254,10 @@ def get_columns(sheet_id):
         msg = str("Sheet ID must be type: int "
                   "not type: {}").format(type(sheet_id))
         raise TypeError(msg)
-    if not sheet_id:
-        msg = "Sheet ID must not be empty."
-        ValueError(msg)
 
     columns = smartsheet_client.Sheets.get_columns(sheet_id, include_all=True)
     column_map = []
 
-    for column in columns:
+    for column in columns.data:
         column_map[column.title] = column.id
     return column_map
