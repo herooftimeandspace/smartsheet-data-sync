@@ -120,6 +120,17 @@ def has_cell_link(old_cell, direction, **kwargs):
         # Check the status of the link.
         try:
             status = old_cell.link_in_from_cell.status
+            msg = str("Cell Data: Value {} | Col ID {} | \n"
+                      "Link In Status {} | Linked In Sheet ID {} | "
+                      "Linked In Row ID {} | Linked In Col ID {} | "
+                      "Linked In Sheet Name {}"
+                      "").format(old_cell.value, old_cell.column_id,
+                                 old_cell.link_in_from_cell.status,
+                                 old_cell.link_in_from_cell.sheet_id,
+                                 old_cell.link_in_from_cell.row_id,
+                                 old_cell.link_in_from_cell.column_id,
+                                 old_cell.link_in_from_cell.sheet_name)
+            logging.debug(msg)
             return str(status)
         except AttributeError:
             return "Unlinked"
@@ -127,34 +138,67 @@ def has_cell_link(old_cell, direction, **kwargs):
     if direction == "Out" and not kwargs:
         try:
             status = old_cell.links_out_to_cells[0].status
+            msg = str("Cell Data: Value {} | Col ID {} | \n"
+                      "Link Out Status {} | Linked Out Sheet ID {} | "
+                      "Linked Out Row ID {} | Linked Out Col ID {} | "
+                      "Linked Out Sheet Name {}"
+                      "").format(old_cell.value, old_cell.column_id,
+                                 old_cell.links_out_to_cells[0].status,
+                                 old_cell.links_out_to_cells[0].sheet_id,
+                                 old_cell.links_out_to_cells[0].row_id,
+                                 old_cell.links_out_to_cells[0].column_id,
+                                 old_cell.links_out_to_cells[0].sheet_name)
+            logging.debug(msg)
+            return str(status)
         except IndexError:
             return "Unlinked"
-        return "Linked"
 
     if direction == "Out" and kwargs:
+        # Check to make sure only the sheet_id and row_id kwargs were passed.
         def check_value_exist(test_dict, *values):
             return all(v in test_dict for v in values)
         result = check_value_exist(kwargs.keys(),
-                                   "sheet_id", "row_id",
-                                   "col_id")
+                                   "sheet_id", "row_id")
         if result:
             sheet_id = kwargs["sheet_id"]
             row_id = kwargs["row_id"]
-            col_id = kwargs["col_id"]
         else:
+            # If the wrong kwargs were passed, re-run without kwargs
             has_cell_link(old_cell, "Out")
         # Check to see if our IDs are in the link_out object
         for link in old_cell.links_out_to_cells:
-            if not sheet_id == link.sheet_id:
-                continue
-            if not row_id == link.row_id:
-                continue
-            if not col_id == link.column_id:
-                continue
+            msg = str("Cell Data: Value {} | Col ID {} | \n"
+                      "Link Out Status {} | Linked Out Sheet ID {} | "
+                      "Linked Out Row ID {} | Linked Out Col ID {} | "
+                      "Linked Out Sheet Name {} \n"
+                      "Kwarg Sheet ID {} | Kwarg Row ID {}"
+                      "").format(old_cell.value,
+                                 old_cell.column_id, link.status,
+                                 link.sheet_id, link.row_id, link.column_id,
+                                 link.sheet_name, sheet_id, row_id)
+            logging.debug(msg)
+            if sheet_id == link.sheet_id:
+                msg = str("Expected Sheet ID {} | Linked Sheet ID {}"
+                          "").format(sheet_id, link.sheet_id)
+                logging.debug(msg)
+                sheet_match = True
+            if row_id == link.row_id:
+                msg = str("Expected Row ID {} | Linked Row ID {}"
+                          "").format(row_id, link.row_id)
+                logging.debug(msg)
+                row_match = True
+
+            if sheet_match and row_match:
+                status = str(link.status)
+                msg = str("Sheet ID and Row ID match Cell Link data, "
+                          "breaking loop and returning {}").format(status)
+                logging.debug(msg)
+                break
             else:
-                return str(link.status)
+                continue
         else:
             return "Unlinked"
+        return status
 
 
 # TODO: Replace with get_cell_data
