@@ -200,15 +200,28 @@ def form_rows(row_dict, col_map):
                 'values': components
             }
         })
-        # Link issues together. If the parent is an epic, use Epic links,
-        # otherwise use issue links. If the issue is an epic, set Epic
-        # Name.
+        # If the issue type is an epic, set the Epic Name = Tasks column value
         if data['Issue Type'] == "Epic":
             epic_name = data['Tasks']
             new_row.cells.append({
                 'column_id': col_map['Epic Name'],
                 'object_value': epic_name
             })
+
+        # if the issue type is an epic and the parent is a project or epic
+        # use the 'implenets' issue link to connect the tickets because epics
+        # can't use the Epic Link field.
+        if data['Issue Type'] == "Epic":
+            if data['Parent Issue Type'] in ("Project", "Epic"):
+                ticket = data['Parent Ticket']
+                issue_link = str("implements {}").format(ticket)
+                new_row.cells.append({
+                    'column_id': col_map['Issue Links'],
+                    'object_value': issue_link
+                })
+
+        # If the issue type is a story, task or project, and the parent is
+        # an epic, set the Epic link instead of issue link
         if data['Issue Type'] in ("Story", "Task", "Project"):
             if data['Parent Issue Type'] == "Epic":
                 epic_link = data['Parent Ticket']
@@ -216,15 +229,16 @@ def form_rows(row_dict, col_map):
                     'column_id': col_map['Epic Link'],
                     'object_value': epic_link
                 })
-            elif data['Parent Issue Type'] != "Epic":
+
+            # But if the parent is also a story, task or project, use
+            # Issue links instead
+            if data['Parent Issue Type'] in ("Story", "Task", "Project"):
                 ticket = data['Parent Ticket']
                 issue_link = str("implements {}").format(ticket)
                 new_row.cells.append({
                     'column_id': col_map['Issue Links'],
                     'object_value': issue_link
                 })
-            else:
-                pass  # Do nothing with links
 
         rows_to_add.append(new_row)
     return rows_to_add
