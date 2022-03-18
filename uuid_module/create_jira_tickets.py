@@ -10,54 +10,95 @@ import uuid_module.smartsheet_api as smartsheet_api
 import uuid_module.variables as app_vars
 import uuid_module.get_data as get_data
 
-project_columns = ["Summary", "Tasks", "Issue Type", "Jira Ticket",
+project_columns = [app_vars.summary_col, app_vars.task_col, "Issue Type",
+                   app_vars.jira_col,
                    "Parent Ticket", "Program", "Initiative", "Team", "UUID",
-                   "Predecessors", "ParentUUID", "Project Key",
+                   app_vars.predecessor_col, "ParentUUID", "Project Key",
                    "Parent Issue Type", "Inject", "KTLO"]
-jira_index_columns = ["Tasks", "Issue Type", "Jira Ticket", "Issue Links",
+jira_index_columns = [app_vars.task_col, "Issue Type", app_vars.jira_col,
+                      "Issue Links",
                       "Project Key", "Components", "Labels", "Epic Link",
-                      "Epic Name", "Summary", "Inject", "KTLO", "UUID"]
+                      "Epic Name", app_vars.summary_col, "Inject", "KTLO",
+                      "UUID"]
 
 
-# def refresh_sheets(minutes=app_vars.dev_minutes):
-#     """Refreshes the list of sheets in all workspaces. Captures any sheet
-#        modified after 'minutes'
+def build_sub_indexes(sheet, col_map):
+    """Build sub_indexes of UUIDs and Jira Tickets. Evaluates every row.
+       Returns a dict and a list. The dict is all Jira Tickets that have
+       UUIDs associated with them on the sheet. The list is all UUIDs that
+       do not have a Jira Ticket.
 
-#     Args:
-#         minutes (int, optional): The number of minutes used to filter out
-#         sheets. Defaults to dev_minutes.
+    Args:
+        sheet (smartsheet.models.Sheet): The sheet to build the index from.
+        col_map (dict): The map of column names to column IDs
 
-#     Raises:
-#         TypeError: Minutes must be an int
-#         ValueError: Minutes must be a positive integer or 0
+    Raises:
+        TypeError: Index sheet must be dict or smartsheet Sheet object
+        TypeError: Index Column Map must be a dict
+        ValueError: Index Sheet should not be empty
+        ValueError: Index Column map should not be empt
 
-#     Returns:
-#         source_sheets (list): All sheets modified in the last N minutes
-#         index_sheet (smartsheet.Sheet): The Jira Index sheet
-#         index_col_map (dict): The column map of the Jira Index Sheet in the
-#                               form of Column Name: Column ID
-#     """
-#     import uuid_module.get_data as get_data
-#     if not isinstance(minutes, int):
-#         msg = str("Minutes should be type: int, not {}"
-#                   "").format(type(minutes))
-#         raise TypeError(msg)
-#     if minutes < 0:
-#         msg = str("Minutes should be >= 0, not {}").format(minutes)
-#         raise ValueError(msg)
+    Returns:
+        dict: The subindex of all Jira Tickets: UUIDs
+        list: The subindex of all UUIDs without Jira Tickets
+    """
+    if not isinstance(sheet, (dict, smartsheet.models.Sheet)):
+        msg = str("Index Sheet should be dict or smartsheet.Sheet, not {}"
+                  "").format(type(sheet))
+        raise TypeError(msg)
+    if not isinstance(col_map, dict):
+        msg = str("Index Column Map should be dict, not {}"
+                  "").format(type(col_map))
+        raise TypeError(msg)
+    if not sheet:
+        msg = str("Index Sheet should not be {}").format(sheet)
+        raise ValueError(msg)
+    if not col_map:
+        msg = str("Index Col Map should not be {}").format(sheet)
+        raise ValueError(msg)
+    # UUID: Jira Ticket
+    sub_index_dict = {}
+    sub_index_list = []
+    list_count = 0
+    dict_count = 0
+    for row in sheet.rows:
+        uuid_cell = helper.get_cell_data(row, app_vars.uuid_col, col_map)
+        jira_cell = helper.get_cell_data(row, app_vars.jira_col, col_map)
 
-#     sheet_ids = get_data.get_all_sheet_ids(minutes, config.workspace_id,
-#                                            config.index_sheet)
-#     msg = str("Sheet IDs object type {}, object values {}").format(
-#         type(sheet_ids), sheet_ids)
-#     logging.debug(msg)
-#     source_sheets = get_data.refresh_source_sheets(sheet_ids, minutes)
+        if not uuid_cell:
+            # Skip empty UUIDs
+            continue
 
-#     # TODO: Load index sheet and kick off 2 functions. 1: Create new tickets
-#     # 2: Copy created tickets to program sheets via UUID
-#     index_sheet = smartsheet_api.get_sheet(config.index_sheet)
-#     index_col_map = helper.get_column_map(index_sheet)
-#     return source_sheets, index_sheet, index_col_map
+        if str(uuid_cell.value) == "None":
+            # Skip None values returned as strings
+            continue
+
+        # Check if the UUID string matches our UUID pattern
+        if bool(re.match(r"\d+-\d+-\d+-\d+", uuid_cell.value)):
+            msg = str("Row Number: {} - UUID: {} type: {} - Jira Ticket: {} "
+                      "type: {}").format(row.row_number, uuid_cell.value,
+                                         type(uuid_cell.value),
+                                         jira_cell.value,
+                                         type(jira_cell.value))
+            logging.debug(msg)
+        else:
+            msg = str("UUID does not match the pattern. UUID value: {}"
+                      "").format(uuid_cell.value)
+            logging.debug(msg)
+            continue
+
+        if str(jira_cell.value) is None or jira_cell is None:
+            list_count += 1
+            sub_index_list.append(str(uuid_cell.value))
+        else:
+            dict_count += 1
+            sub_index_list.append(str(uuid_cell.value))
+            # Add the UUID (str): Jira Ticket (str)
+            sub_index_dict[str(uuid_cell.value)] = jira_cell.value
+    msg = str("Added {} UUIDS to the sub-index list and {} UUID:Jira pairs "
+              "to the sub-index dict.").format(list_count, dict_count)
+    logging.debug(msg)
+    return sub_index_dict, sub_index_list
 
 
 # TODO: Refactor for the full chain of issue types across multiple Jira
@@ -110,7 +151,7 @@ def form_rows(row_dict, col_map):
             if not value:
                 # Skip null value columns
                 continue
-            if col_name == "Jira Ticket" and value in ("Create", "create"):
+            if col_name == app_vars.jira_col and value in ("Create", "create"):
                 # Skip the Jira Ticket column we're trying to create
                 # when adding to the Index sheet
                 continue
@@ -196,13 +237,14 @@ def get_push_tickets_sheet():
     return push_ticket_sheet, push_tickets_col_map
 
 
-def link_jira_index_to_sheet(source_sheets, index_sheet, index_col_map):
+# TODO: Handle the same UUID connected to multiple Jira Tickets.
+def copy_jira_tickets_to_sheets(source_sheets, index_sheet, index_col_map):
     """Uses the UUID column to identify the row that originally pushed data
        into Jira. Copies the Jira Ticket back into the Program Plan
 
     Args:
-        sheet (smartsheet.Sheet): The Sheet to push the Jira Ticket into
-        # sheet_col_map (dict): The column map of the destination sheet
+        source_sheets (list): A list of Smartsheet Sheet objects push the
+                              Jira Tickets into
         index_sheet (smartsheet.Sheet): The Jira Index Sheet
         index_col_map (dict): The column map of the Jira Index Sheet
 
@@ -224,49 +266,100 @@ def link_jira_index_to_sheet(source_sheets, index_sheet, index_col_map):
                   "").format(type(index_col_map))
         raise TypeError(msg)
 
+    # Parse through the sheet's rows, see if the sheet's row.id is a
+    # match to the given row_id. If there's a match, get the Jira cell data
+    # or return None.
+    def get_jira_cell(row_id, sheet, col_map):
+        for row in sheet.rows:
+            if not row_id == row.id:
+                continue
+
+            jira_cell = helper.get_cell_data(
+                row, app_vars.jira_col, col_map)
+            return jira_cell
+        else:
+            return None
+
+    # Check to see if the sheet contains any UUIDs from the Jira Index
+    # Sheet. Return a subset of matches.
+    def contains_uuid(uuid_list, index_dict):
+        tiny_jira_index = {}
+        # For each UUID in the sheet UUID list, check to see if that UUID
+        # is in the index dict keys. If it is not, move on. If it is,
+        # add it to the tiny dict/list
+        for sheet_uuid in uuid_list:
+            if sheet_uuid not in index_dict.keys():
+                continue
+            else:
+                # Create new entry with Sheet UUID, index_dict Jira Ticket
+                tiny_jira_index[sheet_uuid] = index_dict[sheet_uuid]
+        return tiny_jira_index
+
     sheets_updated = 0
-    sub_index = build_sheet_sub_index(index_sheet, index_col_map)
-    if not sub_index:
+    # Build an index of UUID (str): Jira Ticket (str) from the Jira Index Sheet
+    # At this point we don't know if the tickets have been cell linked yet.
+    jira_sub_index, _ = build_sub_indexes(index_sheet, index_col_map)
+    if not jira_sub_index:
         msg = str("Sub-index of Jira Tickets to link is empty")
         logging.debug(msg)
         return sheets_updated
 
+    # We want to write all rows back to a single sheet at a time so that
+    # we don't spam the API
+    # For each Jira Ticket with a UUID in the index sheet, check to see if
+    # that ticket has been linked to the sheet and row in the UUID.
     for sheet in source_sheets:
         sheet_col_map = helper.get_column_map(sheet)
+
+        # Validate that the sheet we're checking has both UUID and Jira
+        # Ticket columns. If they don't exist, skip the sheet.
+        if app_vars.uuid_col not in sheet_col_map.keys():
+            continue
+        if app_vars.jira_col not in sheet_col_map.keys():
+            continue
+
+        # Build a list of UUIDs from the sheet.
+        _, sheet_uuid_list = build_sub_indexes(sheet, sheet_col_map)
         rows_to_update = []
 
-        for uuid_value, jira_ticket in sub_index.items():
-            try:
-                uuid_value = uuid_value.value
-                uuid_sheet_id = int(uuid_value.split("-")[0])
-            except AttributeError as error:
-                msg = str("{} raised. Dumping values. uuid_value: {}, "
-                          "jira_ticket: {}, sub_index: {}"
-                          "").format(error, uuid_value, jira_ticket,
-                                     sub_index)
-                logging.debug(msg)
-                continue
+        # These are all the UUIDs that matched the Jira Index Sheet, with
+        # the Jira Ticket from the Index Sheet.
+        tiny_index = contains_uuid(sheet_uuid_list, jira_sub_index)
+        if not tiny_index:
+            # The index is empty and we didn't actually match any UUIDs
+            continue
 
-            if not uuid_sheet_id == sheet.id:
-                msg = str("UUID does not match the Sheet ID. UUID value: {} | "
-                          "Sheet ID: {} | Sheet Name: {}"
-                          "").format(uuid_value, sheet.id, sheet.name)
-                logging.debug(msg)
-                continue
-            elif uuid_sheet_id == sheet.id:
-                msg = str("UUID and Sheet ID match")
-                logging.debug(msg)
-            else:
-                logging.error("Something went wrong pushing tickets back to "
-                              "plan sheets")
+        # Check the sheet and row for each UUID, validate that the ticket is
+        # not already present
 
-            new_row = smartsheet.models.Row()
-            new_row.id = int(uuid_value.split("-")[1])
-            new_row.cells.append({
-                'column_id': sheet_col_map['Jira Ticket'],
-                'object_value': jira_ticket
-            })
-            rows_to_update.append(new_row)
+        for uuid, ticket in tiny_index.items():
+            split = uuid.split("-")
+            # sheet_id = split[0]
+            row_id = int(split[1])
+            jira_cell = get_jira_cell(row_id, sheet, sheet_col_map)
+            if not jira_cell:
+                # Jira column and cell data should exist on this sheet but
+                # don't for some reason?
+                logging.warning("Jira Column not found")
+                continue
+            if jira_cell.value == ticket:
+                # Jira Ticket has already been copied to the sheet
+                continue
+            if jira_cell.value is None or jira_cell.value == "None":
+                # Jira Ticket cell isn't "Pending..." so it's not ready for
+                # a new Jira Ticket. Skip.
+                continue
+            if jira_cell.value == "Pending...":
+                # Jira Ticket column for this row is "Pending...", copy back
+                # the ticket from the Index sheet into the row.
+                new_row = smartsheet.models.Row()
+                new_row.id = row_id
+                new_row.cells.append({
+                    'column_id': sheet_col_map[app_vars.jira_col],
+                    'object_value': ticket
+                })
+                rows_to_update.append(new_row)
+
         if rows_to_update:
             msg = str("Updating {} rows with newly created Jira Tickets"
                       "").format(len(rows_to_update))
@@ -294,87 +387,32 @@ def link_jira_index_to_sheet(source_sheets, index_sheet, index_col_map):
 #     return parent
 
 
-def build_sheet_sub_index(index_sheet, index_col_map):
-    if not isinstance(index_sheet, (dict, smartsheet.models.Sheet)):
-        msg = str("Index Sheet should be dict or smartsheet.Sheet, not {}"
-                  "").format(type(index_sheet))
-        raise TypeError(msg)
-    if not isinstance(index_col_map, dict):
-        msg = str("Index Column Map should be dict, not {}"
-                  "").format(type(index_col_map))
-        raise TypeError(msg)
-    if not index_sheet:
-        msg = str("Index Sheet should not be {}").format(index_sheet)
-        raise ValueError(msg)
-    if not index_col_map:
-        msg = str("Index Col Map should not be {}").format(index_sheet)
-        raise ValueError(msg)
-    # UUID: Jira Ticket
-    sub_index = {}
-    for row in index_sheet.rows:
-
-        uuid_cell = helper.get_cell_data(row, 'UUID', index_col_map)
-        jira_cell = helper.get_cell_data(row, 'Jira Ticket', index_col_map)
-
-        if not uuid_cell or not jira_cell:
-            # Skip empty Jira Tickets or UUIDs
-            continue
-
-        uuid = str(uuid_cell.value)
-        jira_ticket = str(jira_cell.value)
-
-        if uuid == "None" or jira_ticket == "None":
-            # Skip None values returned as strings
-            continue
-
-        if bool(re.match(r"\d+-\d+-\d+-\d+", uuid)):
-            msg = str(
-                "UUID column has a value and matches the UUID pattern.")
-            logging.debug(msg)
-        else:
-            msg = str("UUID does not match the pattern. UUID value: {}"
-                      "").format(uuid)
-            logging.debug(msg)
-            continue
-
-        msg = str("Row Number: {} - UUID: {} type: {} - Jira Ticket: {} "
-                  "type: {}").format(row.row_number, uuid,
-                                     type(uuid), jira_ticket,
-                                     type(jira_ticket))
-        logging.debug(msg)
-        split = uuid.split("-")
-        sheet_id = int(split[0])
-        row_id = int(split[1])
-        col_id = int(split[2])
-        msg = str("Sheet ID: {} | Row ID: {}").format(sheet_id, row_id, col_id)
-        logging.debug(msg)
-        cell_link_status = helper.has_cell_link(jira_cell, "Out",
-                                                sheet_id=sheet_id,
-                                                row_id=row_id,
-                                                col_id=col_id)
-
-        if cell_link_status in ('Linked', 'OK'):
-            # Skip linked rows
-            msg = str("Jira Ticket: {} has already been pushed to "
-                      "Sheet ID: {} | Row ID: {}"
-                      "").format(jira_ticket, sheet_id, row_id)
-            logging.debug(msg)
-            continue
-        if cell_link_status in ("Unlinked", "INVALID"):
-            msg = str("Jira Ticket {} cell is {}, adding to index"
-                      "").format(jira_ticket, cell_link_status)
-            logging.debug(msg)
-            sub_index[uuid_cell] = jira_ticket
-    return sub_index
-
-
 def copy_uuid_to_index_sheet(index_sheet, index_col_map):
+    """Copy the UUID from the Push Data Sheet into the Jira Index Sheet after
+       the ticket is created in Jira and synced in to the Index Sheet so that
+       we can push the Jira Ticket back into the Program Plan that triggered
+       the ticket creation.
+
+    Args:
+        index_sheet (smartsheet.models.Sheet): The Jira Index Sheet
+        index_col_map (dict): The map of Column Names to Column IDs
+
+    Returns:
+        bool: True if UUIDs were copied, False if they were not.
+    """
     rows_to_write = []
     push_ticket_sheet, push_tickets_col_map = get_push_tickets_sheet()
-    sub_index = build_sheet_sub_index(push_ticket_sheet, push_tickets_col_map)
+    # Build an index of all rows on the Push Ticket Sheet that have UUIDs
+    # AND Jira tickets
+    sub_index, _ = build_sub_indexes(
+        push_ticket_sheet, push_tickets_col_map)
+    # For each row in the index sheet, get the cell data for the Jira Ticket
+    # cell and the UUID cell.
     for row in index_sheet.rows:
-        jira_ticket = helper.get_cell_data(row, 'Jira Ticket', index_col_map)
-        uuid_value = helper.get_cell_data(row, 'UUID', index_col_map)
+        jira_ticket = helper.get_cell_data(
+            row, app_vars.jira_col, index_col_map)
+        uuid_value = helper.get_cell_data(
+            row, app_vars.uuid_col, index_col_map)
         if uuid_value.value:
             # Skip rows with UUIDs.
             continue
@@ -387,8 +425,8 @@ def copy_uuid_to_index_sheet(index_sheet, index_col_map):
                 new_row = smartsheet.models.Row()
                 new_row.id = row.id
                 new_row.cells.append({
-                    'column_id': index_col_map['UUID'],
-                    'object_value': uuid.value
+                    'column_id': index_col_map[app_vars.uuid_col],
+                    'object_value': uuid
                 })
                 rows_to_write.append(new_row)
     if rows_to_write:
@@ -481,12 +519,9 @@ def create_ticket_index(source_sheets, index_sheet, index_col_map):
         msg = str("Loaded {} rows from Sheet ID: {} | Sheet Name: {}"
                   "").format(len(sheet.rows), sheet.id, sheet.name)
         logging.info(msg)
-        try:
-            _ = col_map[app_vars.uuid_col]
-        except KeyError:
+        if app_vars.uuid_col not in col_map.keys():
             msg = str("Sheet ID {} | Sheet Name {} doesn't have UUID column. "
-                      "Skipping sheet. (KeyError)").format(sheet.id,
-                                                           sheet.name)
+                      "Skipping sheet.").format(sheet.id, sheet.name)
             logging.debug(msg)
             continue
 
@@ -496,7 +531,7 @@ def create_ticket_index(source_sheets, index_sheet, index_col_map):
             logging.debug("New Row")
             logging.debug("------------------------")
             row_data = build_row_data(row, col_map)
-            if row_data["Summary"] == "True":
+            if row_data[app_vars.summary_col] == "True":
                 # Skip summary rows
                 msg = str("Row {} skipped because Summary column was true"
                           "").format(row_data["row_num"])
@@ -510,7 +545,7 @@ def create_ticket_index(source_sheets, index_sheet, index_col_map):
                 logging.debug(msg)
                 logging.debug(row_data)
                 continue
-            if row_data["UUID"] is None:
+            if row_data[app_vars.uuid_col] is None:
                 # No UUID means we can't push the created ticket IDs back
                 # into the program sheets. Skip.
                 msg = str("Row {} skipped because UUID column was empty."
@@ -532,25 +567,25 @@ def create_ticket_index(source_sheets, index_sheet, index_col_map):
                                      row_data["Parent Issue Type"])
                 logging.debug(msg)
                 continue
-            if row_data["Parent Ticket"] is None and row_data["Jira Ticket"]\
-                    in ("Create", "create"):
-                tickets_to_create[row_data['UUID']] = row_data
+            if row_data["Parent Ticket"] is None and \
+                    row_data[app_vars.jira_col] in ("Create", "create"):
+                tickets_to_create[row_data[app_vars.uuid_col]] = row_data
                 # Set these rows to "Pending..."
                 new_row = smartsheet.models.Row()
                 new_row.id = row.id
                 new_row.cells.append({
-                    'column_id': col_map['Jira Ticket'],
+                    'column_id': col_map[app_vars.jira_col],
                     'object_value': "Pending..."
                 })
                 sheet_rows_to_update.append(new_row)
                 msg = str("Appended row UUID: {} and associated data to the "
                           "list of rows to update and set the Jira Ticket "
                           "column in Sheet Name: {} to Pending..."
-                          "").format(row_data['UUID'], sheet.name)
+                          "").format(row_data[app_vars.uuid_col], sheet.name)
                 logging.debug(msg)
                 logging.debug(row_data)
                 continue
-            if row_data["Jira Ticket"] == "Pending...":
+            if row_data[app_vars.jira_col] == "Pending...":
                 # Skip any row that's already in process
                 msg = str("Skipped because Jira Ticket or Parent Ticket "
                           "column was set to Pending...")
@@ -568,15 +603,15 @@ def create_ticket_index(source_sheets, index_sheet, index_col_map):
                 continue
             if row_data['Parent Ticket'] not in ('Create', 'create',
                                                  'Pending...', None):
-                if row_data['Jira Ticket'] in ('Create', 'create'):
+                if row_data[app_vars.jira_col] in ('Create', 'create'):
                     # Add row data to create tickets.
-                    tickets_to_create[row_data['UUID']] = row_data
+                    tickets_to_create[row_data[app_vars.uuid_col]] = row_data
 
                     # Set these rows to "Pending..." in the Plan sheet.
                     new_row = smartsheet.models.Row()
                     new_row.id = row.id
                     new_row.cells.append({
-                        'column_id': col_map['Jira Ticket'],
+                        'column_id': col_map[app_vars.jira_col],
                         'object_value': "Pending..."
                     })
                     sheet_rows_to_update.append(new_row)
@@ -590,7 +625,6 @@ def create_ticket_index(source_sheets, index_sheet, index_col_map):
                     logging.debug(msg)
                     logging.debug(row_data)
                     continue
-            logging.debug("Made it past all IFs without triggering")
             logging.debug(row_data)
 
         # Validate that there are rows to write.
@@ -640,7 +674,6 @@ def create_tickets(minutes=app_vars.dev_minutes):
         msg = str("Minutes should be >= 0, not {}").format(minutes)
         raise ValueError(msg)
     start = time.time()
-    # source_sheets, index_sheet, index_col_map = refresh_sheets(minutes)
 
     sheet_ids = get_data.get_all_sheet_ids(minutes, config.workspace_id,
                                            config.index_sheet)
@@ -655,14 +688,18 @@ def create_tickets(minutes=app_vars.dev_minutes):
     index_col_map = helper.get_column_map(index_sheet)
 
     # Copy UUIDs from Push sheet to Index Sheet
+    logging.info("Starting to copy UUIDs from the Push Sheet to the "
+                 "Index Sheet.")
     result = copy_uuid_to_index_sheet(index_sheet, index_col_map)
     # Refresh the index sheet since we just wrote data
     if result:
         index_sheet = smartsheet_api.get_sheet(config.index_sheet,
                                                config.minutes)
 
-    # Link back created tickets first
-    sheets_updated = link_jira_index_to_sheet(
+    logging.info("Starting to copy Jira Tickets from the Index Sheet to the "
+                 "Program Plans.")
+    # Copy Jira Tickets from the index sheet back to the source sheets
+    sheets_updated = copy_jira_tickets_to_sheets(
         source_sheets, index_sheet, index_col_map)
     msg = str("Updated {} Plan sheets with newly created Jira tickets."
               "").format(sheets_updated)
@@ -701,7 +738,10 @@ def create_tickets(minutes=app_vars.dev_minutes):
         logging.info("Create new tickets from Program Plan line items "
                      "took: {} seconds.".format(elapsed))
         if elapsed > 120:
-            msg = str("Create Jira Tickets took longer than the interval")
+            elapsed_warning = elapsed - 120
+            elapsed_warning = helper.truncate(elapsed, 2)
+            msg = str("Create Jira Tickets took {} seconds longer than "
+                      "the interval").format(elapsed_warning)
             logging.warning(msg)
         return False
     else:
