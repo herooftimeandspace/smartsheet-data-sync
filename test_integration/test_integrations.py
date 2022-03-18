@@ -269,7 +269,7 @@ def test_get_workspace_1(workspace_fixture):
             assert res.id == ws.id
 
 
-def test_get_sheet(sheet_fixture):
+def test_get_sheet_0(sheet_fixture):
     sheet, col_map, _, _ = sheet_fixture
     response_0 = smartsheet_api.get_sheet(sheet.id)
     assert isinstance(response_0, smartsheet.models.Sheet)
@@ -286,3 +286,13 @@ def test_get_row_0():
             response = smartsheet_api.get_row(response_0.id, row.id)
             assert isinstance(response, smartsheet.models.Row)
             assert response.row_number <= 10
+
+
+def test_get_columns_0(sheet_fixture):
+    sheet, col_map, _, _ = sheet_fixture
+    result_0 = smartsheet_api.get_columns(sheet.id)
+
+    assert isinstance(result_0, dict)
+    for k, v in col_map.items():
+        assert k in result_0.keys()
+        assert v in result_0.values()

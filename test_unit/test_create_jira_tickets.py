@@ -1,6 +1,7 @@
 import json
 import logging
 from unittest.mock import patch
+from venv import create
 
 import pytest
 import smartsheet
@@ -144,8 +145,8 @@ def test_link_jira_index_to_sheet_1(index_sheet_fixture,
     sheet, _, _, _, = sheet_fixture
     source_sheets = [sheet]
 
-    @patch("uuid_module.create_jira_tickets.build_sheet_sub_index",
-           return_value={})
+    @patch("uuid_module.create_jira_tickets.build_sub_indexes",
+           return_value=({}, []))
     def test(mock_0):
         sheets_updated = create_jira_tickets.copy_jira_tickets_to_sheets(
             source_sheets, index_sheet, index_col_map)
@@ -154,19 +155,29 @@ def test_link_jira_index_to_sheet_1(index_sheet_fixture,
     assert sheets_updated == 0
 
 
-def test_build_sheet_sub_index_0(index_sheet_fixture):
+def test_build_sub_indexes_0(index_sheet_fixture):
 
     index_sheet, index_col_map = index_sheet_fixture
     with pytest.raises(TypeError):
-        create_jira_tickets.build_sheet_sub_index(
+        create_jira_tickets.build_sub_indexes(
             "index_sheet", index_col_map)
     with pytest.raises(TypeError):
-        create_jira_tickets.build_sheet_sub_index(
+        create_jira_tickets.build_sub_indexes(
             index_sheet, "index_col_map")
     with pytest.raises(TypeError):
-        create_jira_tickets.build_sheet_sub_index(None, index_col_map)
+        create_jira_tickets.build_sub_indexes(None, index_col_map)
     with pytest.raises(TypeError):
-        create_jira_tickets.build_sheet_sub_index(index_sheet, None)
+        create_jira_tickets.build_sub_indexes(index_sheet, None)
+
+
+def test_build_sub_indexes_1(index_sheet_fixture):
+    index_sheet, index_col_map = index_sheet_fixture
+    sub_index_dict, sub_index_list = \
+        create_jira_tickets.build_sub_indexes(index_sheet, index_col_map)
+    assert isinstance(sub_index_dict, dict)
+    assert isinstance(sub_index_list, list)
+    assert sub_index_dict is not None
+    assert sub_index_list is not None
 
 
 def test_push_jira_tickets_to_sheet_0(sheet_fixture, index_sheet_fixture):
