@@ -242,3 +242,25 @@ def get_row(sheet_id, row_id):
     row = smartsheet_client.Sheets.get_row(sheet_id, row_id,
                                            include='objectValue')
     return row
+
+
+def get_columns(sheet_id):
+    """Gets columns from the given sheet and create a map of Column Name: ID
+
+    Args:
+        sheet_id (int): ID of the sheet to query
+    """
+    if not isinstance(sheet_id, int):
+        msg = str("Sheet ID must be type: int "
+                  "not type: {}").format(type(sheet_id))
+        raise TypeError(msg)
+    if not sheet_id:
+        msg = "Sheet ID must not be empty."
+        ValueError(msg)
+
+    columns = smartsheet_client.Sheets.get_columns(sheet_id, include_all=True)
+    column_map = []
+
+    for column in columns:
+        column_map[column.title] = column.id
+    return column_map
