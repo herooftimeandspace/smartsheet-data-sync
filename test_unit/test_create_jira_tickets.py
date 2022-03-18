@@ -127,13 +127,13 @@ def test_link_jira_index_to_sheet_0(index_sheet_fixture, sheet_fixture):
     source_sheets = [sheet]
     index_sheet, index_col_map = index_sheet_fixture
     with pytest.raises(TypeError):
-        create_jira_tickets.link_jira_index_to_sheet(
+        create_jira_tickets.copy_jira_tickets_to_sheets(
             "source_sheets", index_sheet, index_col_map)
     with pytest.raises(TypeError):
-        create_jira_tickets.link_jira_index_to_sheet(
+        create_jira_tickets.copy_jira_tickets_to_sheets(
             source_sheets, "index_sheet", index_col_map)
     with pytest.raises(TypeError):
-        create_jira_tickets.link_jira_index_to_sheet(
+        create_jira_tickets.copy_jira_tickets_to_sheets(
             source_sheets, index_sheet, "index_col_map")
 
 
@@ -147,7 +147,7 @@ def test_link_jira_index_to_sheet_1(index_sheet_fixture,
     @patch("uuid_module.create_jira_tickets.build_sheet_sub_index",
            return_value={})
     def test(mock_0):
-        sheets_updated = create_jira_tickets.link_jira_index_to_sheet(
+        sheets_updated = create_jira_tickets.copy_jira_tickets_to_sheets(
             source_sheets, index_sheet, index_col_map)
         return sheets_updated
     sheets_updated = test()
@@ -175,16 +175,16 @@ def test_push_jira_tickets_to_sheet_0(sheet_fixture, index_sheet_fixture):
     _, index_col_map = index_sheet_fixture
 
     with pytest.raises(TypeError):
-        create_jira_tickets.link_jira_index_to_sheet(
+        create_jira_tickets.copy_jira_tickets_to_sheets(
             "sheet", sheet_col_map, index_sheet_fixture, index_col_map)
     with pytest.raises(TypeError):
-        create_jira_tickets.link_jira_index_to_sheet(
+        create_jira_tickets.copy_jira_tickets_to_sheets(
             sheet, "sheet_col_map", index_sheet_fixture, index_col_map)
     with pytest.raises(TypeError):
-        create_jira_tickets.link_jira_index_to_sheet(
+        create_jira_tickets.copy_jira_tickets_to_sheets(
             sheet, sheet_col_map, "index_sheet_fixture", index_col_map)
     with pytest.raises(TypeError):
-        create_jira_tickets.link_jira_index_to_sheet(
+        create_jira_tickets.copy_jira_tickets_to_sheets(
             sheet, sheet_col_map, index_sheet_fixture, "index_col_map")
 
 
@@ -212,13 +212,13 @@ def test_create_ticket_index_0(sheet_fixture, index_sheet_fixture):
     source_sheets = [sheet1, sheet1, sheet1, sheet1]
     _, index_col_map = index_sheet_fixture
     with pytest.raises(TypeError):
-        create_jira_tickets.link_jira_index_to_sheet(
+        create_jira_tickets.copy_jira_tickets_to_sheets(
             "source_sheets", index_sheet_fixture, index_col_map)
     with pytest.raises(TypeError):
-        create_jira_tickets.link_jira_index_to_sheet(
+        create_jira_tickets.copy_jira_tickets_to_sheets(
             source_sheets, "index_sheet_fixture", index_col_map)
     with pytest.raises(TypeError):
-        create_jira_tickets.link_jira_index_to_sheet(
+        create_jira_tickets.copy_jira_tickets_to_sheets(
             source_sheets, index_sheet_fixture, "index_col_map")
 
 
