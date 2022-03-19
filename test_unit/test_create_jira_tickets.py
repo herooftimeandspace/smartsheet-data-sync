@@ -1,7 +1,6 @@
 import json
 import logging
 from unittest.mock import patch
-from venv import create
 
 import pytest
 import smartsheet

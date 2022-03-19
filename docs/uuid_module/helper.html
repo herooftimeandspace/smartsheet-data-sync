@@ -40,9 +40,6 @@
                     <a class="function" href="#has_cell_link">has_cell_link</a>
             </li>
             <li>
-                    <a class="function" href="#get_cell_value">get_cell_value</a>
-            </li>
-            <li>
                     <a class="function" href="#json_extract">json_extract</a>
             </li>
             <li>
@@ -99,6 +96,11 @@
 <span class="sd">        TypeError: Validates row is a Smartsheet Row object</span>
 <span class="sd">        TypeError: Validates column_name is a string</span>
 <span class="sd">        TypeError: Validates column_map is a dict</span>
+<span class="sd">        ValueError: Column map must not be empty</span>
+<span class="sd">        TypeError: Column map keys must be type str</span>
+<span class="sd">        TypeError: Column map values must be type int</span>
+<span class="sd">        ValueError: Column map values must be positive integers</span>
+<span class="sd">        KeyError: Column Name must exist in the column map</span>
 
 <span class="sd">    Returns:</span>
 <span class="sd">        cell (Cell): A Cell object or None if the column is not found in the</span>
@@ -106,20 +108,25 @@
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">row</span><span class="p">,</span> <span class="n">smartsheet</span><span class="o">.</span><span class="n">models</span><span class="o">.</span><span class="n">row</span><span class="o">.</span><span class="n">Row</span><span class="p">):</span>
         <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s2">&quot;Row is not a Smartsheet Row type object&quot;</span><span class="p">)</span>
-    <span class="k">elif</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">column_name</span><span class="p">,</span> <span class="nb">str</span><span class="p">):</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">column_name</span><span class="p">,</span> <span class="nb">str</span><span class="p">):</span>
         <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s2">&quot;Column name must be a string&quot;</span><span class="p">)</span>
-    <span class="k">elif</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">column_map</span><span class="p">,</span> <span class="nb">dict</span><span class="p">):</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">column_map</span><span class="p">,</span> <span class="nb">dict</span><span class="p">):</span>
         <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s2">&quot;Column Map must be a dict of ColNames:ColIDs&quot;</span><span class="p">)</span>
-
-    <span class="k">try</span><span class="p">:</span>
-        <span class="n">column_id</span> <span class="o">=</span> <span class="n">column_map</span><span class="p">[</span><span class="n">column_name</span><span class="p">]</span>
-    <span class="k">except</span> <span class="ne">KeyError</span><span class="p">:</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">column_map</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Column Map must not be empty.&quot;</span><span class="p">)</span>
+    <span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">column_map</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">k</span><span class="p">,</span> <span class="nb">str</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s2">&quot;Column map keys must be type: str&quot;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">v</span><span class="p">,</span> <span class="nb">int</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s2">&quot;Column IDs must be type: int&quot;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">v</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Column IDs must be a positive integer&quot;</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">column_name</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">column_map</span><span class="o">.</span><span class="n">keys</span><span class="p">():</span>
         <span class="n">msg</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="s2">&quot;Column not found: </span><span class="si">{}</span><span class="s2">&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">column_name</span><span class="p">)</span>
-        <span class="n">logging</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
         <span class="k">raise</span> <span class="ne">KeyError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
-        <span class="c1"># return None</span>
-    <span class="k">else</span><span class="p">:</span>
-        <span class="k">return</span> <span class="n">row</span><span class="o">.</span><span class="n">get_column</span><span class="p">(</span><span class="n">column_id</span><span class="p">)</span>
+
+    <span class="n">column_id</span> <span class="o">=</span> <span class="n">column_map</span><span class="p">[</span><span class="n">column_name</span><span class="p">]</span>
+    <span class="k">return</span> <span class="n">row</span><span class="o">.</span><span class="n">get_column</span><span class="p">(</span><span class="n">column_id</span><span class="p">)</span>
 
 
 <span class="k">def</span> <span class="nf">get_column_map</span><span class="p">(</span><span class="n">sheet</span><span class="p">):</span>
@@ -135,9 +142,9 @@
 <span class="sd">        dict: A map of Column Name: Column ID</span>
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">sheet</span><span class="p">,</span> <span class="n">smartsheet</span><span class="o">.</span><span class="n">models</span><span class="o">.</span><span class="n">sheet</span><span class="o">.</span><span class="n">Sheet</span><span class="p">):</span>
-        <span class="n">err</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="s2">&quot;Sheet must be a Smartsheet Sheet object,&quot;</span>
+        <span class="n">msg</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="s2">&quot;Sheet must be a Smartsheet Sheet object,&quot;</span>
                   <span class="s2">&quot;not </span><span class="si">{}</span><span class="s2">&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="nb">type</span><span class="p">(</span><span class="n">sheet</span><span class="p">))</span>
-        <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="n">err</span><span class="p">)</span>
+        <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
 
     <span class="n">column_map</span> <span class="o">=</span> <span class="p">{}</span>
     <span class="k">for</span> <span class="n">column</span> <span class="ow">in</span> <span class="n">sheet</span><span class="o">.</span><span class="n">columns</span><span class="p">:</span>
@@ -147,25 +154,28 @@
 
 <span class="k">def</span> <span class="nf">has_cell_link</span><span class="p">(</span><span class="n">old_cell</span><span class="p">,</span> <span class="n">direction</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;Determine if an existing cell already has a cell link, which direction</span>
-<span class="sd">       and whether it needs to be repaired. Returning None currently disabled</span>
-<span class="sd">       because it caused the script to skip valid cells that should have been</span>
-<span class="sd">       linked.</span>
+<span class="sd">       and whether it needs to be repaired. If kwargs are passed when</span>
+<span class="sd">       direction is set to &#39;Out&#39;, validates that the sheet_id and row_id passed</span>
+<span class="sd">       in kwargs match a sheet.id and row.id in the links_out_to_cells</span>
+<span class="sd">       object_value. If kwargs are invalid, re-runs the function without</span>
+<span class="sd">       the kwargs.</span>
 
 <span class="sd">    Args:</span>
 <span class="sd">        old_cell (Cell): The Cell object to check.</span>
 <span class="sd">        direction (str): Whether to check incoming or outgoing cell links.</span>
 
 <span class="sd">    Raises:</span>
-<span class="sd">        TypeError: Validates old_cell is a Smartsheet cell object</span>
-<span class="sd">        TypeError: Validates direction is a string</span>
-<span class="sd">        ValueError: Validates direction is either &#39;In&#39; or &#39;Out&#39;</span>
-<span class="sd">        KeyError: If the old_cell doesn&#39;t have the extended attributes for</span>
-<span class="sd">                  cell links raises as &#39;Unlinked&#39;</span>
+<span class="sd">        TypeError: old_cell must be a Smartsheet cell object</span>
+<span class="sd">        TypeError: Direction must be a str</span>
+<span class="sd">        ValueError: Direction must be either &#39;In&#39; or &#39;Out&#39;, case-sensitive</span>
+<span class="sd">        TypeError: Kwargs passed must be dict or None</span>
+<span class="sd">        TypeError: Kwarg names must be str</span>
+<span class="sd">        TypeError: Kwarg values must be int</span>
 
 <span class="sd">    Returns:</span>
-<span class="sd">        str: &quot;Linked&quot; if status is &quot;OK&quot;, &quot;Broken&quot; if staus is &quot;BROKEN&quot;,</span>
-<span class="sd">             &quot;Unlinked&quot; if the cell doesn&#39;t have a cell link property. If the</span>
-<span class="sd">             cell link type is &#39;linksOutToCells&#39;, always return &quot;Linked&quot;.</span>
+<span class="sd">        str: Returns the status of the cell link if the value exists. Returns</span>
+<span class="sd">             &quot;Unlinked&quot; if the link_in_to_cell or links_out_to_cells properties</span>
+<span class="sd">             return AttributeError or IndexError</span>
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">old_cell</span><span class="p">,</span> <span class="n">smartsheet</span><span class="o">.</span><span class="n">models</span><span class="o">.</span><span class="n">cell</span><span class="o">.</span><span class="n">Cell</span><span class="p">):</span>
         <span class="n">msg</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="s2">&quot;Old Cell should be type: Cell not type: </span><span class="si">{}</span><span class="s2">&quot;</span>
@@ -279,57 +289,18 @@
         <span class="k">return</span> <span class="n">status</span>
 
 
-<span class="c1"># TODO: Replace with get_cell_data</span>
-<span class="k">def</span> <span class="nf">get_cell_value</span><span class="p">(</span><span class="n">row</span><span class="p">,</span> <span class="n">col_name</span><span class="p">,</span> <span class="n">col_map</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">    Get the value of the cell or return None</span>
-
-<span class="sd">    Args:</span>
-<span class="sd">        row (Row): The row of data that contains the IDs</span>
-<span class="sd">        col_name (str): The name of the referenced column</span>
-<span class="sd">        col_map (dict): The map of Column Name: Column ID</span>
-
-<span class="sd">    Raises:</span>
-<span class="sd">        TypeError: Validates row is a Smartsheet Row object</span>
-<span class="sd">        TypeError: Validates col_name is a string</span>
-<span class="sd">        TypeError: Validates col_map is a dict</span>
-
-<span class="sd">    Returns:</span>
-<span class="sd">        str: The value of the cell.</span>
-<span class="sd">        none: If the cell doesn&#39;t exist or has a null value.</span>
-<span class="sd">    &quot;&quot;&quot;</span>
-
-    <span class="c1"># Validate data types.</span>
-    <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">row</span><span class="p">,</span> <span class="n">smartsheet</span><span class="o">.</span><span class="n">models</span><span class="o">.</span><span class="n">row</span><span class="o">.</span><span class="n">Row</span><span class="p">):</span>
-        <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s2">&quot;Row is not a Smartsheet Row type object&quot;</span><span class="p">)</span>
-    <span class="k">elif</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">col_name</span><span class="p">,</span> <span class="nb">str</span><span class="p">):</span>
-        <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s2">&quot;Column name must be a string&quot;</span><span class="p">)</span>
-    <span class="k">elif</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">col_map</span><span class="p">,</span> <span class="nb">dict</span><span class="p">):</span>
-        <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s2">&quot;Column Map must be a dict of ColNames:ColIDs&quot;</span><span class="p">)</span>
-
-    <span class="k">try</span><span class="p">:</span>
-        <span class="n">cell</span> <span class="o">=</span> <span class="n">get_cell_data</span><span class="p">(</span><span class="n">row</span><span class="p">,</span> <span class="n">col_name</span><span class="p">,</span> <span class="n">col_map</span><span class="p">)</span>
-    <span class="k">except</span> <span class="ne">KeyError</span><span class="p">:</span>
-        <span class="n">cell</span> <span class="o">=</span> <span class="kc">None</span>
-    <span class="k">if</span> <span class="n">cell</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">or</span> <span class="n">cell</span><span class="o">.</span><span class="n">value</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
-        <span class="n">msg</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="s2">&quot;Cell is &#39;None&#39; or cell value is &#39;None&#39;. &quot;</span>
-                  <span class="s2">&quot;Returning &#39;None&#39;&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">format</span><span class="p">()</span>
-        <span class="n">logging</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
-        <span class="k">return</span> <span class="kc">None</span>
-    <span class="k">else</span><span class="p">:</span>
-        <span class="k">return</span> <span class="nb">str</span><span class="p">(</span><span class="n">cell</span><span class="o">.</span><span class="n">value</span><span class="p">)</span>
-
-
 <span class="k">def</span> <span class="nf">json_extract</span><span class="p">(</span><span class="n">obj</span><span class="p">,</span> <span class="n">key</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;Recursively fetch values from nested JSON.</span>
 
 <span class="sd">    Args:</span>
-<span class="sd">        obj (json): The JSON object to pars through</span>
+<span class="sd">        obj (dict): The JSON object to pars through</span>
 <span class="sd">        key (str): The key to search for</span>
 
 <span class="sd">    Raises:</span>
-<span class="sd">        TypeError: If the objects passed in aren&#39;t a dict or string,</span>
-<span class="sd">                   respectively.</span>
+<span class="sd">        TypeError: Obj must be a json dict</span>
+<span class="sd">        TypeError: Key must be a str</span>
+<span class="sd">        ValueError: Obj must not be empty</span>
+<span class="sd">        ValueError: Key must not be empty</span>
 
 <span class="sd">    Returns:</span>
 <span class="sd">        str: The value if a key matches inside the obj JSON</span>
@@ -340,6 +311,10 @@
         <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s2">&quot;Obj must be a dict (json).&quot;</span><span class="p">)</span>
     <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">key</span><span class="p">,</span> <span class="nb">str</span><span class="p">):</span>
         <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s2">&quot;Key must be a string.&quot;</span><span class="p">)</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">obj</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;&#39;Obj&#39; must not be empty&quot;</span><span class="p">)</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">key</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;&#39;Key&#39; must not be empty&quot;</span><span class="p">)</span>
 
     <span class="c1"># Create an empty list as an &#39;array&#39;</span>
     <span class="n">arr</span> <span class="o">=</span> <span class="p">[]</span>
@@ -370,7 +345,8 @@
 <span class="sd">                                  Defaults to 0.</span>
 
 <span class="sd">    Raises:</span>
-<span class="sd">        TypeError: Validates the number is actually a number.</span>
+<span class="sd">        TypeError: Number must be a float</span>
+<span class="sd">        TypeError: Decimals must be an int</span>
 <span class="sd">        ValueError: Validates that the decimal is 0 or more.</span>
 
 <span class="sd">    Returns:</span>
@@ -445,11 +421,7 @@
         <span class="n">msg</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="s2">&quot;Second argument must be type: int, not </span><span class="si">{}</span><span class="s2">&quot;</span>
                   <span class="s2">&quot;&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="nb">type</span><span class="p">(</span><span class="n">n</span><span class="p">))</span>
         <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
-    <span class="k">if</span> <span class="n">n</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
-        <span class="n">msg</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="s2">&quot;Second argument must be non-zero, not </span><span class="si">{}</span><span class="s2">&quot;</span>
-                  <span class="s2">&quot;&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="nb">type</span><span class="p">(</span><span class="n">n</span><span class="p">))</span>
-        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
-    <span class="k">if</span> <span class="n">n</span> <span class="o">&lt;</span> <span class="mi">0</span><span class="p">:</span>
+    <span class="k">if</span> <span class="n">n</span> <span class="o">&lt;=</span> <span class="mi">0</span><span class="p">:</span>
         <span class="n">msg</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="s2">&quot;Second argument must be greater than zero, not </span><span class="si">{}</span><span class="s2">&quot;</span>
                   <span class="s2">&quot;&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="nb">type</span><span class="p">(</span><span class="n">n</span><span class="p">))</span>
         <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
@@ -463,9 +435,16 @@
 
 
 <span class="k">def</span> <span class="nf">get_local_paths</span><span class="p">():</span>
+    <span class="sd">&quot;&quot;&quot;Get the local path for the project so that we can redirect logging</span>
+<span class="sd">    and test fixtures to the correct directories</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        str: The root directory of the project</span>
+<span class="sd">        str: THe directory where test fixtures are located in the project</span>
+<span class="sd">    &quot;&quot;&quot;</span>
     <span class="n">cwd</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">dirname</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">abspath</span><span class="p">(</span><span class="vm">__file__</span><span class="p">))</span>
     <span class="n">p</span> <span class="o">=</span> <span class="n">Path</span><span class="p">(</span><span class="n">cwd</span><span class="p">)</span>
-    <span class="n">root</span> <span class="o">=</span> <span class="n">p</span><span class="o">.</span><span class="n">parent</span>
+    <span class="n">root</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">p</span><span class="o">.</span><span class="n">parent</span><span class="p">)</span>
     <span class="n">fixtures_dir</span> <span class="o">=</span> <span class="n">p</span><span class="o">.</span><span class="n">parent</span>
     <span class="n">fixtures_dir</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">fixtures_dir</span><span class="p">)</span> <span class="o">+</span> <span class="s2">&quot;/test_fixtures&quot;</span><span class="p">)</span>
     <span class="k">return</span> <span class="n">root</span><span class="p">,</span> <span class="n">fixtures_dir</span>
@@ -496,6 +475,11 @@
 <span class="sd">        TypeError: Validates row is a Smartsheet Row object</span>
 <span class="sd">        TypeError: Validates column_name is a string</span>
 <span class="sd">        TypeError: Validates column_map is a dict</span>
+<span class="sd">        ValueError: Column map must not be empty</span>
+<span class="sd">        TypeError: Column map keys must be type str</span>
+<span class="sd">        TypeError: Column map values must be type int</span>
+<span class="sd">        ValueError: Column map values must be positive integers</span>
+<span class="sd">        KeyError: Column Name must exist in the column map</span>
 
 <span class="sd">    Returns:</span>
 <span class="sd">        cell (Cell): A Cell object or None if the column is not found in the</span>
@@ -503,20 +487,25 @@
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">row</span><span class="p">,</span> <span class="n">smartsheet</span><span class="o">.</span><span class="n">models</span><span class="o">.</span><span class="n">row</span><span class="o">.</span><span class="n">Row</span><span class="p">):</span>
         <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s2">&quot;Row is not a Smartsheet Row type object&quot;</span><span class="p">)</span>
-    <span class="k">elif</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">column_name</span><span class="p">,</span> <span class="nb">str</span><span class="p">):</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">column_name</span><span class="p">,</span> <span class="nb">str</span><span class="p">):</span>
         <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s2">&quot;Column name must be a string&quot;</span><span class="p">)</span>
-    <span class="k">elif</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">column_map</span><span class="p">,</span> <span class="nb">dict</span><span class="p">):</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">column_map</span><span class="p">,</span> <span class="nb">dict</span><span class="p">):</span>
         <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s2">&quot;Column Map must be a dict of ColNames:ColIDs&quot;</span><span class="p">)</span>
-
-    <span class="k">try</span><span class="p">:</span>
-        <span class="n">column_id</span> <span class="o">=</span> <span class="n">column_map</span><span class="p">[</span><span class="n">column_name</span><span class="p">]</span>
-    <span class="k">except</span> <span class="ne">KeyError</span><span class="p">:</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">column_map</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Column Map must not be empty.&quot;</span><span class="p">)</span>
+    <span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">column_map</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">k</span><span class="p">,</span> <span class="nb">str</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s2">&quot;Column map keys must be type: str&quot;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">v</span><span class="p">,</span> <span class="nb">int</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s2">&quot;Column IDs must be type: int&quot;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">v</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Column IDs must be a positive integer&quot;</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">column_name</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">column_map</span><span class="o">.</span><span class="n">keys</span><span class="p">():</span>
         <span class="n">msg</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="s2">&quot;Column not found: </span><span class="si">{}</span><span class="s2">&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">column_name</span><span class="p">)</span>
-        <span class="n">logging</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
         <span class="k">raise</span> <span class="ne">KeyError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
-        <span class="c1"># return None</span>
-    <span class="k">else</span><span class="p">:</span>
-        <span class="k">return</span> <span class="n">row</span><span class="o">.</span><span class="n">get_column</span><span class="p">(</span><span class="n">column_id</span><span class="p">)</span>
+
+    <span class="n">column_id</span> <span class="o">=</span> <span class="n">column_map</span><span class="p">[</span><span class="n">column_name</span><span class="p">]</span>
+    <span class="k">return</span> <span class="n">row</span><span class="o">.</span><span class="n">get_column</span><span class="p">(</span><span class="n">column_id</span><span class="p">)</span>
 </pre></div>
 
         </details>
@@ -537,6 +526,11 @@
 <li><strong>TypeError:</strong>  Validates row is a Smartsheet Row object</li>
 <li><strong>TypeError:</strong>  Validates column_name is a string</li>
 <li><strong>TypeError:</strong>  Validates column_map is a dict</li>
+<li><strong>ValueError:</strong>  Column map must not be empty</li>
+<li><strong>TypeError:</strong>  Column map keys must be type str</li>
+<li><strong>TypeError:</strong>  Column map values must be type int</li>
+<li><strong>ValueError:</strong>  Column map values must be positive integers</li>
+<li><strong>KeyError:</strong>  Column Name must exist in the column map</li>
 </ul>
 
 <h6 id="returns">Returns</h6>
@@ -572,9 +566,9 @@
 <span class="sd">        dict: A map of Column Name: Column ID</span>
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">sheet</span><span class="p">,</span> <span class="n">smartsheet</span><span class="o">.</span><span class="n">models</span><span class="o">.</span><span class="n">sheet</span><span class="o">.</span><span class="n">Sheet</span><span class="p">):</span>
-        <span class="n">err</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="s2">&quot;Sheet must be a Smartsheet Sheet object,&quot;</span>
+        <span class="n">msg</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="s2">&quot;Sheet must be a Smartsheet Sheet object,&quot;</span>
                   <span class="s2">&quot;not </span><span class="si">{}</span><span class="s2">&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="nb">type</span><span class="p">(</span><span class="n">sheet</span><span class="p">))</span>
-        <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="n">err</span><span class="p">)</span>
+        <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
 
     <span class="n">column_map</span> <span class="o">=</span> <span class="p">{}</span>
     <span class="k">for</span> <span class="n">column</span> <span class="ow">in</span> <span class="n">sheet</span><span class="o">.</span><span class="n">columns</span><span class="p">:</span>
@@ -619,25 +613,28 @@
             <summary>View Source</summary>
             <div class="codehilite"><pre><span></span><span class="k">def</span> <span class="nf">has_cell_link</span><span class="p">(</span><span class="n">old_cell</span><span class="p">,</span> <span class="n">direction</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;Determine if an existing cell already has a cell link, which direction</span>
-<span class="sd">       and whether it needs to be repaired. Returning None currently disabled</span>
-<span class="sd">       because it caused the script to skip valid cells that should have been</span>
-<span class="sd">       linked.</span>
+<span class="sd">       and whether it needs to be repaired. If kwargs are passed when</span>
+<span class="sd">       direction is set to &#39;Out&#39;, validates that the sheet_id and row_id passed</span>
+<span class="sd">       in kwargs match a sheet.id and row.id in the links_out_to_cells</span>
+<span class="sd">       object_value. If kwargs are invalid, re-runs the function without</span>
+<span class="sd">       the kwargs.</span>
 
 <span class="sd">    Args:</span>
 <span class="sd">        old_cell (Cell): The Cell object to check.</span>
 <span class="sd">        direction (str): Whether to check incoming or outgoing cell links.</span>
 
 <span class="sd">    Raises:</span>
-<span class="sd">        TypeError: Validates old_cell is a Smartsheet cell object</span>
-<span class="sd">        TypeError: Validates direction is a string</span>
-<span class="sd">        ValueError: Validates direction is either &#39;In&#39; or &#39;Out&#39;</span>
-<span class="sd">        KeyError: If the old_cell doesn&#39;t have the extended attributes for</span>
-<span class="sd">                  cell links raises as &#39;Unlinked&#39;</span>
+<span class="sd">        TypeError: old_cell must be a Smartsheet cell object</span>
+<span class="sd">        TypeError: Direction must be a str</span>
+<span class="sd">        ValueError: Direction must be either &#39;In&#39; or &#39;Out&#39;, case-sensitive</span>
+<span class="sd">        TypeError: Kwargs passed must be dict or None</span>
+<span class="sd">        TypeError: Kwarg names must be str</span>
+<span class="sd">        TypeError: Kwarg values must be int</span>
 
 <span class="sd">    Returns:</span>
-<span class="sd">        str: &quot;Linked&quot; if status is &quot;OK&quot;, &quot;Broken&quot; if staus is &quot;BROKEN&quot;,</span>
-<span class="sd">             &quot;Unlinked&quot; if the cell doesn&#39;t have a cell link property. If the</span>
-<span class="sd">             cell link type is &#39;linksOutToCells&#39;, always return &quot;Linked&quot;.</span>
+<span class="sd">        str: Returns the status of the cell link if the value exists. Returns</span>
+<span class="sd">             &quot;Unlinked&quot; if the link_in_to_cell or links_out_to_cells properties</span>
+<span class="sd">             return AttributeError or IndexError</span>
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">old_cell</span><span class="p">,</span> <span class="n">smartsheet</span><span class="o">.</span><span class="n">models</span><span class="o">.</span><span class="n">cell</span><span class="o">.</span><span class="n">Cell</span><span class="p">):</span>
         <span class="n">msg</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="s2">&quot;Old Cell should be type: Cell not type: </span><span class="si">{}</span><span class="s2">&quot;</span>
@@ -754,9 +751,11 @@
         </details>
 
             <div class="docstring"><p>Determine if an existing cell already has a cell link, which direction
-   and whether it needs to be repaired. Returning None currently disabled
-   because it caused the script to skip valid cells that should have been
-   linked.</p>
+   and whether it needs to be repaired. If kwargs are passed when
+   direction is set to 'Out', validates that the sheet_id and row_id passed
+   in kwargs match a sheet.id and row.id in the links_out_to_cells
+   object_value. If kwargs are invalid, re-runs the function without
+   the kwargs.</p>
 
 <h6 id="args">Args</h6>
 
@@ -768,99 +767,20 @@
 <h6 id="raises">Raises</h6>
 
 <ul>
-<li><strong>TypeError:</strong>  Validates old_cell is a Smartsheet cell object</li>
-<li><strong>TypeError:</strong>  Validates direction is a string</li>
-<li><strong>ValueError:</strong>  Validates direction is either 'In' or 'Out'</li>
-<li><strong>KeyError:</strong>  If the old_cell doesn't have the extended attributes for
-cell links raises as 'Unlinked'</li>
+<li><strong>TypeError:</strong>  old_cell must be a Smartsheet cell object</li>
+<li><strong>TypeError:</strong>  Direction must be a str</li>
+<li><strong>ValueError:</strong>  Direction must be either 'In' or 'Out', case-sensitive</li>
+<li><strong>TypeError:</strong>  Kwargs passed must be dict or None</li>
+<li><strong>TypeError:</strong>  Kwarg names must be str</li>
+<li><strong>TypeError:</strong>  Kwarg values must be int</li>
 </ul>
 
 <h6 id="returns">Returns</h6>
 
 <blockquote>
-  <p>str: "Linked" if status is "OK", "Broken" if staus is "BROKEN",
-       "Unlinked" if the cell doesn't have a cell link property. If the
-       cell link type is 'linksOutToCells', always return "Linked".</p>
-</blockquote>
-</div>
-
-
-                </section>
-                <section id="get_cell_value">
-                            <div class="attr function"><a class="headerlink" href="#get_cell_value">#&nbsp;&nbsp</a>
-
-        
-            <span class="def">def</span>
-            <span class="name">get_cell_value</span><span class="signature">(row, col_name, col_map)</span>:
-    </div>
-
-                <details>
-            <summary>View Source</summary>
-            <div class="codehilite"><pre><span></span><span class="k">def</span> <span class="nf">get_cell_value</span><span class="p">(</span><span class="n">row</span><span class="p">,</span> <span class="n">col_name</span><span class="p">,</span> <span class="n">col_map</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">    Get the value of the cell or return None</span>
-
-<span class="sd">    Args:</span>
-<span class="sd">        row (Row): The row of data that contains the IDs</span>
-<span class="sd">        col_name (str): The name of the referenced column</span>
-<span class="sd">        col_map (dict): The map of Column Name: Column ID</span>
-
-<span class="sd">    Raises:</span>
-<span class="sd">        TypeError: Validates row is a Smartsheet Row object</span>
-<span class="sd">        TypeError: Validates col_name is a string</span>
-<span class="sd">        TypeError: Validates col_map is a dict</span>
-
-<span class="sd">    Returns:</span>
-<span class="sd">        str: The value of the cell.</span>
-<span class="sd">        none: If the cell doesn&#39;t exist or has a null value.</span>
-<span class="sd">    &quot;&quot;&quot;</span>
-
-    <span class="c1"># Validate data types.</span>
-    <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">row</span><span class="p">,</span> <span class="n">smartsheet</span><span class="o">.</span><span class="n">models</span><span class="o">.</span><span class="n">row</span><span class="o">.</span><span class="n">Row</span><span class="p">):</span>
-        <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s2">&quot;Row is not a Smartsheet Row type object&quot;</span><span class="p">)</span>
-    <span class="k">elif</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">col_name</span><span class="p">,</span> <span class="nb">str</span><span class="p">):</span>
-        <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s2">&quot;Column name must be a string&quot;</span><span class="p">)</span>
-    <span class="k">elif</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">col_map</span><span class="p">,</span> <span class="nb">dict</span><span class="p">):</span>
-        <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s2">&quot;Column Map must be a dict of ColNames:ColIDs&quot;</span><span class="p">)</span>
-
-    <span class="k">try</span><span class="p">:</span>
-        <span class="n">cell</span> <span class="o">=</span> <span class="n">get_cell_data</span><span class="p">(</span><span class="n">row</span><span class="p">,</span> <span class="n">col_name</span><span class="p">,</span> <span class="n">col_map</span><span class="p">)</span>
-    <span class="k">except</span> <span class="ne">KeyError</span><span class="p">:</span>
-        <span class="n">cell</span> <span class="o">=</span> <span class="kc">None</span>
-    <span class="k">if</span> <span class="n">cell</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">or</span> <span class="n">cell</span><span class="o">.</span><span class="n">value</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
-        <span class="n">msg</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="s2">&quot;Cell is &#39;None&#39; or cell value is &#39;None&#39;. &quot;</span>
-                  <span class="s2">&quot;Returning &#39;None&#39;&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">format</span><span class="p">()</span>
-        <span class="n">logging</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
-        <span class="k">return</span> <span class="kc">None</span>
-    <span class="k">else</span><span class="p">:</span>
-        <span class="k">return</span> <span class="nb">str</span><span class="p">(</span><span class="n">cell</span><span class="o">.</span><span class="n">value</span><span class="p">)</span>
-</pre></div>
-
-        </details>
-
-            <div class="docstring"><p>Get the value of the cell or return None</p>
-
-<h6 id="args">Args</h6>
-
-<ul>
-<li><strong>row (Row):</strong>  The row of data that contains the IDs</li>
-<li><strong>col_name (str):</strong>  The name of the referenced column</li>
-<li><strong>col_map (dict):</strong>  The map of Column Name: Column ID</li>
-</ul>
-
-<h6 id="raises">Raises</h6>
-
-<ul>
-<li><strong>TypeError:</strong>  Validates row is a Smartsheet Row object</li>
-<li><strong>TypeError:</strong>  Validates col_name is a string</li>
-<li><strong>TypeError:</strong>  Validates col_map is a dict</li>
-</ul>
-
-<h6 id="returns">Returns</h6>
-
-<blockquote>
-  <p>str: The value of the cell.
-  none: If the cell doesn't exist or has a null value.</p>
+  <p>str: Returns the status of the cell link if the value exists. Returns
+       "Unlinked" if the link_in_to_cell or links_out_to_cells properties
+       return AttributeError or IndexError</p>
 </blockquote>
 </div>
 
@@ -880,12 +800,14 @@ cell links raises as 'Unlinked'</li>
     <span class="sd">&quot;&quot;&quot;Recursively fetch values from nested JSON.</span>
 
 <span class="sd">    Args:</span>
-<span class="sd">        obj (json): The JSON object to pars through</span>
+<span class="sd">        obj (dict): The JSON object to pars through</span>
 <span class="sd">        key (str): The key to search for</span>
 
 <span class="sd">    Raises:</span>
-<span class="sd">        TypeError: If the objects passed in aren&#39;t a dict or string,</span>
-<span class="sd">                   respectively.</span>
+<span class="sd">        TypeError: Obj must be a json dict</span>
+<span class="sd">        TypeError: Key must be a str</span>
+<span class="sd">        ValueError: Obj must not be empty</span>
+<span class="sd">        ValueError: Key must not be empty</span>
 
 <span class="sd">    Returns:</span>
 <span class="sd">        str: The value if a key matches inside the obj JSON</span>
@@ -896,6 +818,10 @@ cell links raises as 'Unlinked'</li>
         <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s2">&quot;Obj must be a dict (json).&quot;</span><span class="p">)</span>
     <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">key</span><span class="p">,</span> <span class="nb">str</span><span class="p">):</span>
         <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s2">&quot;Key must be a string.&quot;</span><span class="p">)</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">obj</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;&#39;Obj&#39; must not be empty&quot;</span><span class="p">)</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">key</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;&#39;Key&#39; must not be empty&quot;</span><span class="p">)</span>
 
     <span class="c1"># Create an empty list as an &#39;array&#39;</span>
     <span class="n">arr</span> <span class="o">=</span> <span class="p">[]</span>
@@ -924,15 +850,17 @@ cell links raises as 'Unlinked'</li>
 <h6 id="args">Args</h6>
 
 <ul>
-<li><strong>obj (json):</strong>  The JSON object to pars through</li>
+<li><strong>obj (dict):</strong>  The JSON object to pars through</li>
 <li><strong>key (str):</strong>  The key to search for</li>
 </ul>
 
 <h6 id="raises">Raises</h6>
 
 <ul>
-<li><strong>TypeError:</strong>  If the objects passed in aren't a dict or string,
-respectively.</li>
+<li><strong>TypeError:</strong>  Obj must be a json dict</li>
+<li><strong>TypeError:</strong>  Key must be a str</li>
+<li><strong>ValueError:</strong>  Obj must not be empty</li>
+<li><strong>ValueError:</strong>  Key must not be empty</li>
 </ul>
 
 <h6 id="returns">Returns</h6>
@@ -963,7 +891,8 @@ respectively.</li>
 <span class="sd">                                  Defaults to 0.</span>
 
 <span class="sd">    Raises:</span>
-<span class="sd">        TypeError: Validates the number is actually a number.</span>
+<span class="sd">        TypeError: Number must be a float</span>
+<span class="sd">        TypeError: Decimals must be an int</span>
 <span class="sd">        ValueError: Validates that the decimal is 0 or more.</span>
 
 <span class="sd">    Returns:</span>
@@ -1001,7 +930,8 @@ Defaults to 0.</li>
 <h6 id="raises">Raises</h6>
 
 <ul>
-<li><strong>TypeError:</strong>  Validates the number is actually a number.</li>
+<li><strong>TypeError:</strong>  Number must be a float</li>
+<li><strong>TypeError:</strong>  Decimals must be an int</li>
 <li><strong>ValueError:</strong>  Validates that the decimal is 0 or more.</li>
 </ul>
 
@@ -1113,11 +1043,7 @@ Defaults to 0.</li>
         <span class="n">msg</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="s2">&quot;Second argument must be type: int, not </span><span class="si">{}</span><span class="s2">&quot;</span>
                   <span class="s2">&quot;&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="nb">type</span><span class="p">(</span><span class="n">n</span><span class="p">))</span>
         <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
-    <span class="k">if</span> <span class="n">n</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
-        <span class="n">msg</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="s2">&quot;Second argument must be non-zero, not </span><span class="si">{}</span><span class="s2">&quot;</span>
-                  <span class="s2">&quot;&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="nb">type</span><span class="p">(</span><span class="n">n</span><span class="p">))</span>
-        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
-    <span class="k">if</span> <span class="n">n</span> <span class="o">&lt;</span> <span class="mi">0</span><span class="p">:</span>
+    <span class="k">if</span> <span class="n">n</span> <span class="o">&lt;=</span> <span class="mi">0</span><span class="p">:</span>
         <span class="n">msg</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="s2">&quot;Second argument must be greater than zero, not </span><span class="si">{}</span><span class="s2">&quot;</span>
                   <span class="s2">&quot;&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="nb">type</span><span class="p">(</span><span class="n">n</span><span class="p">))</span>
         <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
@@ -1171,9 +1097,16 @@ Defaults to 0.</li>
                 <details>
             <summary>View Source</summary>
             <div class="codehilite"><pre><span></span><span class="k">def</span> <span class="nf">get_local_paths</span><span class="p">():</span>
+    <span class="sd">&quot;&quot;&quot;Get the local path for the project so that we can redirect logging</span>
+<span class="sd">    and test fixtures to the correct directories</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        str: The root directory of the project</span>
+<span class="sd">        str: THe directory where test fixtures are located in the project</span>
+<span class="sd">    &quot;&quot;&quot;</span>
     <span class="n">cwd</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">dirname</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">abspath</span><span class="p">(</span><span class="vm">__file__</span><span class="p">))</span>
     <span class="n">p</span> <span class="o">=</span> <span class="n">Path</span><span class="p">(</span><span class="n">cwd</span><span class="p">)</span>
-    <span class="n">root</span> <span class="o">=</span> <span class="n">p</span><span class="o">.</span><span class="n">parent</span>
+    <span class="n">root</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">p</span><span class="o">.</span><span class="n">parent</span><span class="p">)</span>
     <span class="n">fixtures_dir</span> <span class="o">=</span> <span class="n">p</span><span class="o">.</span><span class="n">parent</span>
     <span class="n">fixtures_dir</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">fixtures_dir</span><span class="p">)</span> <span class="o">+</span> <span class="s2">&quot;/test_fixtures&quot;</span><span class="p">)</span>
     <span class="k">return</span> <span class="n">root</span><span class="p">,</span> <span class="n">fixtures_dir</span>
@@ -1181,7 +1114,17 @@ Defaults to 0.</li>
 
         </details>
 
-    
+            <div class="docstring"><p>Get the local path for the project so that we can redirect logging
+and test fixtures to the correct directories</p>
+
+<h6 id="returns">Returns</h6>
+
+<blockquote>
+  <p>str: The root directory of the project
+  str: THe directory where test fixtures are located in the project</p>
+</blockquote>
+</div>
+
 
                 </section>
     </main>

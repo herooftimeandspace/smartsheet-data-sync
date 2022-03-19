@@ -64,6 +64,8 @@ def test_write_rows_to_sheet_0(row, sheet_fixture):
                                            write_method="Add")
     with pytest.raises(ValueError):
         smartsheet_api.write_rows_to_sheet([], sheet)
+    with pytest.raises(TypeError):
+        smartsheet_api.write_rows_to_sheet([row, "not_row"], sheet)
 
 
 def test_write_rows_to_sheet_1(row, sheet_fixture):
@@ -149,6 +151,12 @@ def test_get_workspace_0():
         smartsheet_api.get_workspace("workspace_id")
     with pytest.raises(ValueError):
         smartsheet_api.get_workspace([])
+    with pytest.raises(ValueError):
+        smartsheet_api.get_workspace(-1337)
+    with pytest.raises(ValueError):
+        smartsheet_api.get_workspace([-1337, 123456789])
+    with pytest.raises(TypeError):
+        smartsheet_api.get_workspace([123456789, "123456789"])
 
 
 def test_get_workspace_1(workspace_fixture):
@@ -183,6 +191,8 @@ def test_get_sheet_0(sheet_fixture):
         smartsheet_api.get_sheet("sheet_id", app_vars.dev_minutes)
     with pytest.raises(TypeError):
         smartsheet_api.get_sheet(sheet.id, "app_vars.dev_minutes")
+    with pytest.raises(ValueError):
+        smartsheet_api.get_sheet(sheet.id, -1337)
 
 
 def test_get_sheet_1(sheet_fixture):
@@ -226,6 +236,10 @@ def test_get_row_0(sheet_fixture, row):
         smartsheet_api.get_row("sheet_id", row.id)
     with pytest.raises(TypeError):
         smartsheet_api.get_row(sheet.id, "row_id")
+    with pytest.raises(ValueError):
+        smartsheet_api.get_row(-1337, row.id)
+    with pytest.raises(ValueError):
+        smartsheet_api.get_row(sheet.id, -1337)
 
 
 def test_get_row_1(sheet_fixture, row):
@@ -237,25 +251,3 @@ def test_get_row_1(sheet_fixture, row):
         return response
     response = test_0()
     assert response == row
-
-
-def test_get_columns_0(sheet_fixture):
-    sheet, _, _, _ = sheet_fixture
-    with pytest.raises(TypeError):
-        smartsheet_api.get_columns("sheet.id")
-
-
-def test_get_columns_1(sheet_fixture):
-    sheet, col_map, _, _ = sheet_fixture
-
-    @patch("uuid_module.smartsheet_api.get_columns",
-           return_value=col_map)
-    def test_0(mock_0):
-        result = smartsheet_api.get_columns(sheet.id)
-        return result
-    result_0 = test_0()
-
-    assert isinstance(result_0, dict)
-    for k, v in col_map.items():
-        assert k in result_0.keys()
-        assert v in result_0.values()

@@ -131,12 +131,18 @@ def set_env_vars(env):
     """Sets certain variables based on the flag passed in at the command line.
     Defaults to the development / debug environment variables if not specified
 
+    Args:
+        env (str): The environment variable to set
+
+    Raises:
+        TypeError: The environment variable must be a str
+
     Returns:
         dict: All the environment variables as a config.
     """
     if not isinstance(env, str):
         msg = str("Env should be a string, not {}.").format(env)
-        raise TypeError
+        raise TypeError(str)
 
     global workspace_id
     global index_sheet

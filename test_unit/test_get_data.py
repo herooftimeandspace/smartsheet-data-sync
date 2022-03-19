@@ -112,6 +112,10 @@ def test_refresh_source_sheets_0(sheet_ids, sheet_fixture):
         get_data.refresh_source_sheets(["One", "Two", "Three"], config.minutes)
     with pytest.raises(ValueError):
         get_data.refresh_source_sheets(sheet_ids, -1)
+    with pytest.raises(ValueError):
+        get_data.refresh_source_sheets([-1337, 123, 456], config.minutes)
+    # with pytest.raises(ValueError):
+    #     get_data.refresh_source_sheets([], config.minutes)
 
 
 @freeze_time("2021-11-18 21:23:54")
@@ -148,7 +152,13 @@ def test_get_all_row_data_0(sheet_fixture):
         get_data.get_all_row_data([sheet], app_vars.sheet_columns,
                                   "config.minutes")
     with pytest.raises(ValueError):
-        get_data.get_all_row_data([sheet], app_vars.sheet_columns, -1)
+        get_data.get_all_row_data([sheet], app_vars.sheet_columns, -1337)
+    with pytest.raises(ValueError):
+        get_data.get_all_row_data([sheet, "sheet"],
+                                  app_vars.sheet_columns, config.minutes)
+    with pytest.raises(ValueError):
+        get_data.get_all_row_data([sheet],
+                                  ["Column One", 1337], config.minutes)
 
 
 @freeze_time("2021-11-18 21:23:54")
@@ -169,7 +179,7 @@ def test_get_all_row_data_1(sheet_fixture):
     # TODO: Handle rows without UUID (Program Plan row 77)
     all_row_data = prep_0()
     result_1 = test_0()
-    for k, v in result_1.items():
+    for k in result_1.keys():
         if k is None:
             continue
         else:
@@ -222,7 +232,7 @@ def test_get_all_row_data_5(sheet_fixture):
     import app.config as config
     sheet, _, _, _ = sheet_fixture
 
-    @patch("uuid_module.helper.get_cell_value", return_value=None)
+    @patch("uuid_module.helper.get_cell_data", return_value=None)
     def test_0(mock_0):
         result = get_data.get_all_row_data(
             [sheet], app_vars.sheet_columns, config.minutes)
@@ -317,8 +327,8 @@ def test_load_jira_index_1(jira_index_sheet_fixture):
 def test_get_sub_indexes_0():
     with pytest.raises(TypeError):
         get_data.get_sub_indexes("project_data")
-    # with pytest.raises(ValueError):
-    #     get_data.get_sub_indexes({})
+    with pytest.raises(ValueError):
+        get_data.get_sub_indexes({})
 
 
 # TODO: Static return and check for actual values
@@ -336,10 +346,9 @@ def test_get_sub_indexes_1(sheet_fixture):
 
 
 # TODO: Static return and check for actual values
-def test_get_all_sheet_ids(workspace_fixture):
+def test_get_all_sheet_ids_0():
     import app.config as config
     set_init_fixture()
-    workspace, ws_ids = workspace_fixture
     with pytest.raises(TypeError):
         get_data.get_all_sheet_ids("config.minutes",
                                    config.workspace_id, config.index_sheet)
@@ -352,13 +361,29 @@ def test_get_all_sheet_ids(workspace_fixture):
     with pytest.raises(ValueError):
         get_data.get_all_sheet_ids(-1337, config.workspace_id,
                                    config.index_sheet)
-    with patch('uuid_module.smartsheet_api.get_workspace') as func_mock:
-        func_mock.return_value = workspace
+    with pytest.raises(ValueError):
+        get_data.get_all_sheet_ids(config.minutes, [1337,
+                                                    "config.workspace_id"],
+                                   config.index_sheet)
+    with pytest.raises(ValueError):
+        get_data.get_all_sheet_ids(config.minutes, [1337, -1337],
+                                   config.index_sheet)
+
+
+def test_get_all_sheet_ids_1(workspace_fixture):
+    import app.config as config
+    set_init_fixture()
+    workspace, ws_ids = workspace_fixture
+
+    @patch('uuid_module.smartsheet_api.get_workspace', return_value=workspace)
+    def test_0(mock_0):
         sheet_ids = get_data.get_all_sheet_ids(
             config.minutes, config.workspace_id, config.index_sheet)
-        for id in sheet_ids:
-            assert id in ws_ids
-        assert 5786250381682564 not in ws_ids
+        return sheet_ids
+    result_0 = test_0()
+    for id in result_0:
+        assert id in ws_ids
+    assert 5786250381682564 not in ws_ids
 
 
 # TODO: Failing pynguin test

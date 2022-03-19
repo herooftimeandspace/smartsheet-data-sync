@@ -248,12 +248,12 @@ def write_predecessor_dates(src_data, project_data_index):
     # Get the start date of the row's predecessor. Verify that they are
     # different.
     # TODO: Replace with get_cell_data
-    pred_start_value = helper.get_cell_value(
+    pred_start_cell = helper.get_cell_data(
         dest_row, app_vars.start_col, dest_col_map)
-    if pred_start_value == start_date:
+    if pred_start_cell.value == start_date:
         msg = str("Start date {} matches the start date {} in the "
                   "predecessor row. No update needed"
-                  "").format(start_date, pred_start_value)
+                  "").format(start_date, pred_start_cell.value)
         logging.debug(msg)
         return True
 
@@ -275,13 +275,13 @@ def write_predecessor_dates(src_data, project_data_index):
                                          app_vars.predecessor_col,
                                          dest_col_map)
         # TODO: Replace with get_cell_data
-        pred_start_value = helper.get_cell_value(
+        pred_start_cell = helper.get_cell_data(
             dest_row, app_vars.start_col, dest_col_map)
 
-        if pred_start_value == start_date:
+        if pred_start_cell.value == start_date:
             msg = str("Start date {} matches the start date {} in the "
                       "predecessor row. No update needed."
-                      "").format(start_date, pred_start_value)
+                      "").format(start_date, pred_start_cell.value)
             logging.debug(msg)
             return True
         elif pred_cell.object_value is None:

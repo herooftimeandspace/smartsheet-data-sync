@@ -88,6 +88,9 @@
 <span class="sd">        TypeError: Destination Column Map must be a dict</span>
 <span class="sd">        TypeError: Index Row ID must be a string</span>
 <span class="sd">        TypeError: Column must be a string</span>
+<span class="sd">        ValueError: Index column map must not be empty</span>
+<span class="sd">        ValueError: Destination column map must not be empty</span>
+<span class="sd">        ValueError: Index Row ID must be a positive integer</span>
 
 <span class="sd">    Returns:</span>
 <span class="sd">        Cell: The cell object to be written back to the destination, with</span>
@@ -114,6 +117,18 @@
         <span class="n">msg</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="s2">&quot;Column must be type: str, not&quot;</span>
                   <span class="s2">&quot; </span><span class="si">{}</span><span class="s2">&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="nb">type</span><span class="p">(</span><span class="n">column</span><span class="p">))</span>
         <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">jira_index_col_map</span><span class="p">:</span>
+        <span class="n">msg</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="s2">&quot;Jira Index column map must not be empty.&quot;</span>
+                  <span class="s2">&quot;&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">format</span><span class="p">()</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">dest_col_map</span><span class="p">:</span>
+        <span class="n">msg</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="s2">&quot;Destination Sheet column map must not be empty.&quot;</span>
+                  <span class="s2">&quot;&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">format</span><span class="p">()</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">idx_row_id</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+        <span class="n">msg</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="s2">&quot;Jira Index row ID must not be zero or negative.&quot;</span>
+                  <span class="s2">&quot;&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">format</span><span class="p">()</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
 
     <span class="n">new_cell_link</span> <span class="o">=</span> <span class="n">smartsheet</span><span class="o">.</span><span class="n">models</span><span class="o">.</span><span class="n">CellLink</span><span class="p">()</span>
     <span class="n">new_cell_link</span><span class="o">.</span><span class="n">sheet_id</span> <span class="o">=</span> <span class="n">jira_index_sheet</span><span class="o">.</span><span class="n">id</span>
@@ -310,6 +325,9 @@
 <span class="sd">        TypeError: Destination Column Map must be a dict</span>
 <span class="sd">        TypeError: Index Row ID must be a string</span>
 <span class="sd">        TypeError: Column must be a string</span>
+<span class="sd">        ValueError: Index column map must not be empty</span>
+<span class="sd">        ValueError: Destination column map must not be empty</span>
+<span class="sd">        ValueError: Index Row ID must be a positive integer</span>
 
 <span class="sd">    Returns:</span>
 <span class="sd">        Cell: The cell object to be written back to the destination, with</span>
@@ -336,6 +354,18 @@
         <span class="n">msg</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="s2">&quot;Column must be type: str, not&quot;</span>
                   <span class="s2">&quot; </span><span class="si">{}</span><span class="s2">&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="nb">type</span><span class="p">(</span><span class="n">column</span><span class="p">))</span>
         <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">jira_index_col_map</span><span class="p">:</span>
+        <span class="n">msg</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="s2">&quot;Jira Index column map must not be empty.&quot;</span>
+                  <span class="s2">&quot;&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">format</span><span class="p">()</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">dest_col_map</span><span class="p">:</span>
+        <span class="n">msg</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="s2">&quot;Destination Sheet column map must not be empty.&quot;</span>
+                  <span class="s2">&quot;&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">format</span><span class="p">()</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">idx_row_id</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+        <span class="n">msg</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="s2">&quot;Jira Index row ID must not be zero or negative.&quot;</span>
+                  <span class="s2">&quot;&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">format</span><span class="p">()</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
 
     <span class="n">new_cell_link</span> <span class="o">=</span> <span class="n">smartsheet</span><span class="o">.</span><span class="n">models</span><span class="o">.</span><span class="n">CellLink</span><span class="p">()</span>
     <span class="n">new_cell_link</span><span class="o">.</span><span class="n">sheet_id</span> <span class="o">=</span> <span class="n">jira_index_sheet</span><span class="o">.</span><span class="n">id</span>
@@ -375,6 +405,9 @@ link will pull data</li>
 <li><strong>TypeError:</strong>  Destination Column Map must be a dict</li>
 <li><strong>TypeError:</strong>  Index Row ID must be a string</li>
 <li><strong>TypeError:</strong>  Column must be a string</li>
+<li><strong>ValueError:</strong>  Index column map must not be empty</li>
+<li><strong>ValueError:</strong>  Destination column map must not be empty</li>
+<li><strong>ValueError:</strong>  Index Row ID must be a positive integer</li>
 </ul>
 
 <h6 id="returns">Returns</h6>

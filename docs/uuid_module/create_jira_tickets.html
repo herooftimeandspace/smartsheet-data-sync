@@ -111,11 +111,11 @@
 <span class="sd">        TypeError: Index sheet must be dict or smartsheet Sheet object</span>
 <span class="sd">        TypeError: Index Column Map must be a dict</span>
 <span class="sd">        ValueError: Index Sheet should not be empty</span>
-<span class="sd">        ValueError: Index Column map should not be empt</span>
+<span class="sd">        ValueError: Index Column map should not be empty</span>
 
 <span class="sd">    Returns:</span>
-<span class="sd">        dict: The subindex of all Jira Tickets: UUIDs</span>
-<span class="sd">        list: The subindex of all UUIDs without Jira Tickets</span>
+<span class="sd">        dict: A subindex of all Jira Tickets: UUIDs</span>
+<span class="sd">        list: A subindex of all UUIDs without Jira Tickets</span>
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">sheet</span><span class="p">,</span> <span class="p">(</span><span class="nb">dict</span><span class="p">,</span> <span class="n">smartsheet</span><span class="o">.</span><span class="n">models</span><span class="o">.</span><span class="n">Sheet</span><span class="p">)):</span>
         <span class="n">msg</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="s2">&quot;Index Sheet should be dict or smartsheet.Sheet, not </span><span class="si">{}</span><span class="s2">&quot;</span>
@@ -275,15 +275,28 @@
                 <span class="s1">&#39;values&#39;</span><span class="p">:</span> <span class="n">components</span>
             <span class="p">}</span>
         <span class="p">})</span>
-        <span class="c1"># Link issues together. If the parent is an epic, use Epic links,</span>
-        <span class="c1"># otherwise use issue links. If the issue is an epic, set Epic</span>
-        <span class="c1"># Name.</span>
+        <span class="c1"># If the issue type is an epic, set the Epic Name = Tasks column value</span>
         <span class="k">if</span> <span class="n">data</span><span class="p">[</span><span class="s1">&#39;Issue Type&#39;</span><span class="p">]</span> <span class="o">==</span> <span class="s2">&quot;Epic&quot;</span><span class="p">:</span>
             <span class="n">epic_name</span> <span class="o">=</span> <span class="n">data</span><span class="p">[</span><span class="s1">&#39;Tasks&#39;</span><span class="p">]</span>
             <span class="n">new_row</span><span class="o">.</span><span class="n">cells</span><span class="o">.</span><span class="n">append</span><span class="p">({</span>
                 <span class="s1">&#39;column_id&#39;</span><span class="p">:</span> <span class="n">col_map</span><span class="p">[</span><span class="s1">&#39;Epic Name&#39;</span><span class="p">],</span>
                 <span class="s1">&#39;object_value&#39;</span><span class="p">:</span> <span class="n">epic_name</span>
             <span class="p">})</span>
+
+        <span class="c1"># if the issue type is an epic and the parent is a project or epic</span>
+        <span class="c1"># use the &#39;implenets&#39; issue link to connect the tickets because epics</span>
+        <span class="c1"># can&#39;t use the Epic Link field.</span>
+        <span class="k">if</span> <span class="n">data</span><span class="p">[</span><span class="s1">&#39;Issue Type&#39;</span><span class="p">]</span> <span class="o">==</span> <span class="s2">&quot;Epic&quot;</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">data</span><span class="p">[</span><span class="s1">&#39;Parent Issue Type&#39;</span><span class="p">]</span> <span class="ow">in</span> <span class="p">(</span><span class="s2">&quot;Project&quot;</span><span class="p">,</span> <span class="s2">&quot;Epic&quot;</span><span class="p">):</span>
+                <span class="n">ticket</span> <span class="o">=</span> <span class="n">data</span><span class="p">[</span><span class="s1">&#39;Parent Ticket&#39;</span><span class="p">]</span>
+                <span class="n">issue_link</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="s2">&quot;implements </span><span class="si">{}</span><span class="s2">&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">ticket</span><span class="p">)</span>
+                <span class="n">new_row</span><span class="o">.</span><span class="n">cells</span><span class="o">.</span><span class="n">append</span><span class="p">({</span>
+                    <span class="s1">&#39;column_id&#39;</span><span class="p">:</span> <span class="n">col_map</span><span class="p">[</span><span class="s1">&#39;Issue Links&#39;</span><span class="p">],</span>
+                    <span class="s1">&#39;object_value&#39;</span><span class="p">:</span> <span class="n">issue_link</span>
+                <span class="p">})</span>
+
+        <span class="c1"># If the issue type is a story, task or project, and the parent is</span>
+        <span class="c1"># an epic, set the Epic link instead of issue link</span>
         <span class="k">if</span> <span class="n">data</span><span class="p">[</span><span class="s1">&#39;Issue Type&#39;</span><span class="p">]</span> <span class="ow">in</span> <span class="p">(</span><span class="s2">&quot;Story&quot;</span><span class="p">,</span> <span class="s2">&quot;Task&quot;</span><span class="p">,</span> <span class="s2">&quot;Project&quot;</span><span class="p">):</span>
             <span class="k">if</span> <span class="n">data</span><span class="p">[</span><span class="s1">&#39;Parent Issue Type&#39;</span><span class="p">]</span> <span class="o">==</span> <span class="s2">&quot;Epic&quot;</span><span class="p">:</span>
                 <span class="n">epic_link</span> <span class="o">=</span> <span class="n">data</span><span class="p">[</span><span class="s1">&#39;Parent Ticket&#39;</span><span class="p">]</span>
@@ -291,21 +304,29 @@
                     <span class="s1">&#39;column_id&#39;</span><span class="p">:</span> <span class="n">col_map</span><span class="p">[</span><span class="s1">&#39;Epic Link&#39;</span><span class="p">],</span>
                     <span class="s1">&#39;object_value&#39;</span><span class="p">:</span> <span class="n">epic_link</span>
                 <span class="p">})</span>
-            <span class="k">elif</span> <span class="n">data</span><span class="p">[</span><span class="s1">&#39;Parent Issue Type&#39;</span><span class="p">]</span> <span class="o">!=</span> <span class="s2">&quot;Epic&quot;</span><span class="p">:</span>
+
+            <span class="c1"># But if the parent is also a story, task or project, use</span>
+            <span class="c1"># Issue links instead</span>
+            <span class="k">if</span> <span class="n">data</span><span class="p">[</span><span class="s1">&#39;Parent Issue Type&#39;</span><span class="p">]</span> <span class="ow">in</span> <span class="p">(</span><span class="s2">&quot;Story&quot;</span><span class="p">,</span> <span class="s2">&quot;Task&quot;</span><span class="p">,</span> <span class="s2">&quot;Project&quot;</span><span class="p">):</span>
                 <span class="n">ticket</span> <span class="o">=</span> <span class="n">data</span><span class="p">[</span><span class="s1">&#39;Parent Ticket&#39;</span><span class="p">]</span>
                 <span class="n">issue_link</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="s2">&quot;implements </span><span class="si">{}</span><span class="s2">&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">ticket</span><span class="p">)</span>
                 <span class="n">new_row</span><span class="o">.</span><span class="n">cells</span><span class="o">.</span><span class="n">append</span><span class="p">({</span>
                     <span class="s1">&#39;column_id&#39;</span><span class="p">:</span> <span class="n">col_map</span><span class="p">[</span><span class="s1">&#39;Issue Links&#39;</span><span class="p">],</span>
                     <span class="s1">&#39;object_value&#39;</span><span class="p">:</span> <span class="n">issue_link</span>
                 <span class="p">})</span>
-            <span class="k">else</span><span class="p">:</span>
-                <span class="k">pass</span>  <span class="c1"># Do nothing with links</span>
 
         <span class="n">rows_to_add</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">new_row</span><span class="p">)</span>
     <span class="k">return</span> <span class="n">rows_to_add</span>
 
 
 <span class="k">def</span> <span class="nf">get_push_tickets_sheet</span><span class="p">():</span>
+    <span class="sd">&quot;&quot;&quot;Helper function to get the Push Jira Tickets sheet and build the column</span>
+<span class="sd">       map</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        smartsheet.models.Sheet: The sheet object</span>
+<span class="sd">        dict: The column map of Column Names: Column IDs</span>
+<span class="sd">    &quot;&quot;&quot;</span>
     <span class="n">push_ticket_sheet</span> <span class="o">=</span> <span class="n">smartsheet_api</span><span class="o">.</span><span class="n">get_sheet</span><span class="p">(</span>
         <span class="n">config</span><span class="o">.</span><span class="n">push_tickets_sheet</span><span class="p">,</span> <span class="n">config</span><span class="o">.</span><span class="n">minutes</span><span class="p">)</span>
     <span class="n">push_tickets_col_map</span> <span class="o">=</span> <span class="n">helper</span><span class="o">.</span><span class="n">get_column_map</span><span class="p">(</span><span class="n">push_ticket_sheet</span><span class="p">)</span>
@@ -320,8 +341,11 @@
 <span class="sd">    Args:</span>
 <span class="sd">        source_sheets (list): A list of Smartsheet Sheet objects push the</span>
 <span class="sd">                              Jira Tickets into</span>
-<span class="sd">        index_sheet (smartsheet.Sheet): The Jira Index Sheet</span>
-<span class="sd">        index_col_map (dict): The column map of the Jira Index Sheet</span>
+<span class="sd">        index_sheet (smartsheet.models.Sheet): The Jira Index Sheet that</span>
+<span class="sd">           contains the UUID of the originating row and the Jira Ticket</span>
+<span class="sd">           that we want to copy to the source sheet.</span>
+<span class="sd">        index_col_map (dict): The column map of Column Names: Column IDs</span>
+<span class="sd">           for the Jira Index Sheet</span>
 
 <span class="sd">    Raises:</span>
 <span class="sd">        TypeError: Sheet must be a list of sheets</span>
@@ -340,11 +364,26 @@
         <span class="n">msg</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="s2">&quot;Index Column Map should be dict, not </span><span class="si">{}</span><span class="s2">&quot;</span>
                   <span class="s2">&quot;&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="nb">type</span><span class="p">(</span><span class="n">index_col_map</span><span class="p">))</span>
         <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">index_col_map</span><span class="p">:</span>
+        <span class="n">msg</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="s2">&quot;Index Column Map must not be empty.&quot;</span>
+                  <span class="s2">&quot;&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">format</span><span class="p">()</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
 
-    <span class="c1"># Parse through the sheet&#39;s rows, see if the sheet&#39;s row.id is a</span>
-    <span class="c1"># match to the given row_id. If there&#39;s a match, get the Jira cell data</span>
-    <span class="c1"># or return None.</span>
     <span class="k">def</span> <span class="nf">get_jira_cell</span><span class="p">(</span><span class="n">row_id</span><span class="p">,</span> <span class="n">sheet</span><span class="p">,</span> <span class="n">col_map</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Parse through the sheet&#39;s rows, see if the sheet&#39;s row.id is a</span>
+<span class="sd">           match to the given row_id. If there&#39;s a match, get the Jira cell</span>
+<span class="sd">           data. Return None if the row ID was not found.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            row_id (int): The row ID that we want to copy data to</span>
+<span class="sd">            sheet (smartsheet.models.Sheet): The sheet that may contain the</span>
+<span class="sd">               row_id to copy data to</span>
+<span class="sd">            col_map (dict): _description_</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            smartsheet.models.Cell: A cell object containing the Jira Ticket</span>
+<span class="sd">            None: No matching row_id was found in the sheet.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">for</span> <span class="n">row</span> <span class="ow">in</span> <span class="n">sheet</span><span class="o">.</span><span class="n">rows</span><span class="p">:</span>
             <span class="k">if</span> <span class="ow">not</span> <span class="n">row_id</span> <span class="o">==</span> <span class="n">row</span><span class="o">.</span><span class="n">id</span><span class="p">:</span>
                 <span class="k">continue</span>
@@ -355,13 +394,22 @@
         <span class="k">else</span><span class="p">:</span>
             <span class="k">return</span> <span class="kc">None</span>
 
-    <span class="c1"># Check to see if the sheet contains any UUIDs from the Jira Index</span>
-    <span class="c1"># Sheet. Return a subset of matches.</span>
     <span class="k">def</span> <span class="nf">contains_uuid</span><span class="p">(</span><span class="n">uuid_list</span><span class="p">,</span> <span class="n">index_dict</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Check to see if the sheet contains any UUIDs from the Jira Index</span>
+<span class="sd">           Sheet. Return a subset of matches.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            uuid_list (list): A list of UUIDs (str) from the source sheet</span>
+<span class="sd">            index_dict (dict): A dict of UUIDs (str): Jira Ticket (str) from</span>
+<span class="sd">               the Jira Index Sheet</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            dict: A dict of UUIDs: Jira Tickets</span>
+<span class="sd">        &quot;&quot;&quot;</span>
         <span class="n">tiny_jira_index</span> <span class="o">=</span> <span class="p">{}</span>
         <span class="c1"># For each UUID in the sheet UUID list, check to see if that UUID</span>
         <span class="c1"># is in the index dict keys. If it is not, move on. If it is,</span>
-        <span class="c1"># add it to the tiny dict/list</span>
+        <span class="c1"># add it to the tiny dict.</span>
         <span class="k">for</span> <span class="n">sheet_uuid</span> <span class="ow">in</span> <span class="n">uuid_list</span><span class="p">:</span>
             <span class="k">if</span> <span class="n">sheet_uuid</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">index_dict</span><span class="o">.</span><span class="n">keys</span><span class="p">():</span>
                 <span class="k">continue</span>
@@ -371,6 +419,7 @@
         <span class="k">return</span> <span class="n">tiny_jira_index</span>
 
     <span class="n">sheets_updated</span> <span class="o">=</span> <span class="mi">0</span>
+
     <span class="c1"># Build an index of UUID (str): Jira Ticket (str) from the Jira Index Sheet</span>
     <span class="c1"># At this point we don&#39;t know if the tickets have been cell linked yet.</span>
     <span class="n">jira_sub_index</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="n">build_sub_indexes</span><span class="p">(</span><span class="n">index_sheet</span><span class="p">,</span> <span class="n">index_col_map</span><span class="p">)</span>
@@ -379,12 +428,11 @@
         <span class="n">logging</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
         <span class="k">return</span> <span class="n">sheets_updated</span>
 
-    <span class="c1"># We want to write all rows back to a single sheet at a time so that</span>
-    <span class="c1"># we don&#39;t spam the API</span>
     <span class="c1"># For each Jira Ticket with a UUID in the index sheet, check to see if</span>
     <span class="c1"># that ticket has been linked to the sheet and row in the UUID.</span>
     <span class="k">for</span> <span class="n">sheet</span> <span class="ow">in</span> <span class="n">source_sheets</span><span class="p">:</span>
         <span class="n">sheet_col_map</span> <span class="o">=</span> <span class="n">helper</span><span class="o">.</span><span class="n">get_column_map</span><span class="p">(</span><span class="n">sheet</span><span class="p">)</span>
+        <span class="n">rows_to_update</span> <span class="o">=</span> <span class="p">[]</span>
 
         <span class="c1"># Validate that the sheet we&#39;re checking has both UUID and Jira</span>
         <span class="c1"># Ticket columns. If they don&#39;t exist, skip the sheet.</span>
@@ -395,10 +443,9 @@
 
         <span class="c1"># Build a list of UUIDs from the sheet.</span>
         <span class="n">_</span><span class="p">,</span> <span class="n">sheet_uuid_list</span> <span class="o">=</span> <span class="n">build_sub_indexes</span><span class="p">(</span><span class="n">sheet</span><span class="p">,</span> <span class="n">sheet_col_map</span><span class="p">)</span>
-        <span class="n">rows_to_update</span> <span class="o">=</span> <span class="p">[]</span>
 
-        <span class="c1"># These are all the UUIDs that matched the Jira Index Sheet, with</span>
-        <span class="c1"># the Jira Ticket from the Index Sheet.</span>
+        <span class="c1"># These are all the UUIDs that had a match in the Jira Index Sheet,</span>
+        <span class="c1"># with the associated Jira Ticket from the Index Sheet.</span>
         <span class="n">tiny_index</span> <span class="o">=</span> <span class="n">contains_uuid</span><span class="p">(</span><span class="n">sheet_uuid_list</span><span class="p">,</span> <span class="n">jira_sub_index</span><span class="p">)</span>
         <span class="k">if</span> <span class="ow">not</span> <span class="n">tiny_index</span><span class="p">:</span>
             <span class="c1"># The index is empty and we didn&#39;t actually match any UUIDs</span>
@@ -406,16 +453,18 @@
 
         <span class="c1"># Check the sheet and row for each UUID, validate that the ticket is</span>
         <span class="c1"># not already present</span>
-
         <span class="k">for</span> <span class="n">uuid</span><span class="p">,</span> <span class="n">ticket</span> <span class="ow">in</span> <span class="n">tiny_index</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
             <span class="n">split</span> <span class="o">=</span> <span class="n">uuid</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s2">&quot;-&quot;</span><span class="p">)</span>
-            <span class="c1"># sheet_id = split[0]</span>
             <span class="n">row_id</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">split</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span>
             <span class="n">jira_cell</span> <span class="o">=</span> <span class="n">get_jira_cell</span><span class="p">(</span><span class="n">row_id</span><span class="p">,</span> <span class="n">sheet</span><span class="p">,</span> <span class="n">sheet_col_map</span><span class="p">)</span>
+
             <span class="k">if</span> <span class="ow">not</span> <span class="n">jira_cell</span><span class="p">:</span>
                 <span class="c1"># Jira column and cell data should exist on this sheet but</span>
                 <span class="c1"># don&#39;t for some reason?</span>
-                <span class="n">logging</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="s2">&quot;Jira Column not found&quot;</span><span class="p">)</span>
+                <span class="n">msg</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="s2">&quot;Jira Cell not found on Sheet Name </span><span class="si">{}</span><span class="s2"> | &quot;</span>
+                          <span class="s2">&quot;Sheet ID </span><span class="si">{}</span><span class="s2"> | Row ID </span><span class="si">{}</span><span class="s2">&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">sheet</span><span class="o">.</span><span class="n">name</span><span class="p">,</span>
+                                                            <span class="n">sheet</span><span class="o">.</span><span class="n">id</span><span class="p">,</span> <span class="n">row_id</span><span class="p">)</span>
+                <span class="n">logging</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
                 <span class="k">continue</span>
             <span class="k">if</span> <span class="n">jira_cell</span><span class="o">.</span><span class="n">value</span> <span class="o">==</span> <span class="n">ticket</span><span class="p">:</span>
                 <span class="c1"># Jira Ticket has already been copied to the sheet</span>
@@ -436,16 +485,17 @@
                 <span class="n">rows_to_update</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">new_row</span><span class="p">)</span>
 
         <span class="k">if</span> <span class="n">rows_to_update</span><span class="p">:</span>
-            <span class="n">msg</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="s2">&quot;Updating </span><span class="si">{}</span><span class="s2"> rows with newly created Jira Tickets&quot;</span>
-                      <span class="s2">&quot;&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">rows_to_update</span><span class="p">))</span>
+            <span class="n">msg</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="s2">&quot;Updating Sheet Name: </span><span class="si">{}</span><span class="s2"> | Sheet ID </span><span class="si">{}</span><span class="s2"> with </span><span class="si">{}</span><span class="s2"> rows of &quot;</span>
+                      <span class="s2">&quot;newly created Jira Tickets.&quot;</span>
+                      <span class="s2">&quot;&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">sheet</span><span class="o">.</span><span class="n">name</span><span class="p">,</span> <span class="n">sheet</span><span class="o">.</span><span class="n">id</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="n">rows_to_update</span><span class="p">))</span>
             <span class="n">logging</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
             <span class="n">smartsheet_api</span><span class="o">.</span><span class="n">write_rows_to_sheet</span><span class="p">(</span><span class="n">rows_to_update</span><span class="p">,</span> <span class="n">sheet</span><span class="p">,</span>
                                                <span class="n">write_method</span><span class="o">=</span><span class="s2">&quot;update&quot;</span><span class="p">)</span>
             <span class="n">sheets_updated</span> <span class="o">+=</span> <span class="mi">1</span>
         <span class="k">else</span><span class="p">:</span>
-            <span class="n">msg</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="s2">&quot;All Jira Tickets have pre-existing links to &quot;</span>
-                      <span class="s2">&quot;Sheet ID: </span><span class="si">{}</span><span class="s2"> | Sheet Name: </span><span class="si">{}</span><span class="s2">&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">sheet</span><span class="o">.</span><span class="n">id</span><span class="p">,</span>
-                                                              <span class="n">sheet</span><span class="o">.</span><span class="n">name</span><span class="p">)</span>
+            <span class="n">msg</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="s2">&quot;No new Jira Tickets are ready for copy to&quot;</span>
+                      <span class="s2">&quot;Sheet Name: </span><span class="si">{}</span><span class="s2"> | Sheet ID: </span><span class="si">{}</span><span class="s2">&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">sheet</span><span class="o">.</span><span class="n">name</span><span class="p">,</span>
+                                                              <span class="n">sheet</span><span class="o">.</span><span class="n">id</span><span class="p">)</span>
             <span class="n">logging</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
     <span class="k">return</span> <span class="n">sheets_updated</span>
 
@@ -475,12 +525,26 @@
 <span class="sd">    Returns:</span>
 <span class="sd">        bool: True if UUIDs were copied, False if they were not.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">index_sheet</span><span class="p">,</span> <span class="p">(</span><span class="nb">dict</span><span class="p">,</span> <span class="n">smartsheet</span><span class="o">.</span><span class="n">models</span><span class="o">.</span><span class="n">Sheet</span><span class="p">)):</span>
+        <span class="n">msg</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="s2">&quot;Index Sheet should be dict or smartsheet.Sheet, not </span><span class="si">{}</span><span class="s2">&quot;</span>
+                  <span class="s2">&quot;&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="nb">type</span><span class="p">(</span><span class="n">index_sheet</span><span class="p">))</span>
+        <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">index_col_map</span><span class="p">,</span> <span class="nb">dict</span><span class="p">):</span>
+        <span class="n">msg</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="s2">&quot;Index Column Map should be dict, not </span><span class="si">{}</span><span class="s2">&quot;</span>
+                  <span class="s2">&quot;&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="nb">type</span><span class="p">(</span><span class="n">index_col_map</span><span class="p">))</span>
+        <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">index_col_map</span><span class="p">:</span>
+        <span class="n">msg</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="s2">&quot;Index Column Map must not be empty.&quot;</span>
+                  <span class="s2">&quot;&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">format</span><span class="p">()</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
+
     <span class="n">rows_to_write</span> <span class="o">=</span> <span class="p">[]</span>
     <span class="n">push_ticket_sheet</span><span class="p">,</span> <span class="n">push_tickets_col_map</span> <span class="o">=</span> <span class="n">get_push_tickets_sheet</span><span class="p">()</span>
     <span class="c1"># Build an index of all rows on the Push Ticket Sheet that have UUIDs</span>
     <span class="c1"># AND Jira tickets</span>
     <span class="n">sub_index</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="n">build_sub_indexes</span><span class="p">(</span>
         <span class="n">push_ticket_sheet</span><span class="p">,</span> <span class="n">push_tickets_col_map</span><span class="p">)</span>
+
     <span class="c1"># For each row in the index sheet, get the cell data for the Jira Ticket</span>
     <span class="c1"># cell and the UUID cell.</span>
     <span class="k">for</span> <span class="n">row</span> <span class="ow">in</span> <span class="n">index_sheet</span><span class="o">.</span><span class="n">rows</span><span class="p">:</span>
@@ -521,12 +585,14 @@
 <span class="sd">       Jira Ticket Sheet</span>
 
 <span class="sd">    Args:</span>
-<span class="sd">        row (smartsheet.Row): The Row to parse</span>
+<span class="sd">        row (smartsheet.models.Row): The row to parse</span>
 <span class="sd">        col_map (dict): The column map of Column Name: Column ID</span>
 
 <span class="sd">    Raises:</span>
 <span class="sd">        TypeError: Row must be a dict or smartsheet.models.Row</span>
 <span class="sd">        TypeError: Column map must be a dict</span>
+<span class="sd">        ValueError: Row must not be empty</span>
+<span class="sd">        ValueError: Column map must not be empty</span>
 
 <span class="sd">    Returns:</span>
 <span class="sd">        dict: A dictionary of the subest of row data to upload to Smartsheet</span>
@@ -539,13 +605,20 @@
         <span class="n">msg</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="s2">&quot;Sheet Column Map should be dict, not </span><span class="si">{}</span><span class="s2">&quot;</span>
                   <span class="s2">&quot;&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="nb">type</span><span class="p">(</span><span class="n">col_map</span><span class="p">))</span>
         <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">row</span><span class="p">:</span>
+        <span class="n">msg</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="s2">&quot;Row must not be empty.&quot;</span>
+                  <span class="s2">&quot;&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">format</span><span class="p">()</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">col_map</span><span class="p">:</span>
+        <span class="n">msg</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="s2">&quot;Column Map must not be empty.&quot;</span>
+                  <span class="s2">&quot;&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">format</span><span class="p">()</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
 
     <span class="n">row_data</span> <span class="o">=</span> <span class="p">{}</span>
     <span class="k">for</span> <span class="n">col</span> <span class="ow">in</span> <span class="n">project_columns</span><span class="p">:</span>
         <span class="k">try</span><span class="p">:</span>
-            <span class="c1"># TODO: Replace with get_cell_data</span>
-            <span class="n">cell_value</span> <span class="o">=</span> <span class="n">helper</span><span class="o">.</span><span class="n">get_cell_value</span><span class="p">(</span><span class="n">row</span><span class="p">,</span> <span class="n">col</span><span class="p">,</span> <span class="n">col_map</span><span class="p">)</span>
-            <span class="n">row_data</span><span class="p">[</span><span class="n">col</span><span class="p">]</span> <span class="o">=</span> <span class="n">cell_value</span>
+            <span class="n">cell</span> <span class="o">=</span> <span class="n">helper</span><span class="o">.</span><span class="n">get_cell_data</span><span class="p">(</span><span class="n">row</span><span class="p">,</span> <span class="n">col</span><span class="p">,</span> <span class="n">col_map</span><span class="p">)</span>
+            <span class="n">row_data</span><span class="p">[</span><span class="n">col</span><span class="p">]</span> <span class="o">=</span> <span class="n">cell</span><span class="o">.</span><span class="n">value</span>
         <span class="k">except</span> <span class="ne">KeyError</span><span class="p">:</span>
             <span class="k">continue</span>
     <span class="n">row_data</span><span class="p">[</span><span class="s2">&quot;row_num&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">row</span><span class="o">.</span><span class="n">row_number</span>
@@ -567,6 +640,7 @@
 <span class="sd">        TypeError: Source Sheets must be a list of sheets</span>
 <span class="sd">        TypeError: Index Sheet must be a dict or Smartsheet Sheet object</span>
 <span class="sd">        TypeError: Index Column Map must be a dict</span>
+<span class="sd">        ValueError: Column map must not be empty</span>
 
 <span class="sd">    Returns:</span>
 <span class="sd">        dict: A dictionary of all tickets that should be created across all</span>
@@ -584,6 +658,10 @@
         <span class="n">msg</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="s2">&quot;Index Column Map should be dict, not </span><span class="si">{}</span><span class="s2">&quot;</span>
                   <span class="s2">&quot;&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="nb">type</span><span class="p">(</span><span class="n">index_col_map</span><span class="p">))</span>
         <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">index_col_map</span><span class="p">:</span>
+        <span class="n">msg</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="s2">&quot;Column Map must not be empty.&quot;</span>
+                  <span class="s2">&quot;&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">format</span><span class="p">()</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
 
     <span class="n">tickets_to_create</span> <span class="o">=</span> <span class="p">{}</span>
     <span class="n">pending_count</span> <span class="o">=</span> <span class="mi">0</span>
@@ -614,7 +692,7 @@
                 <span class="n">logging</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="n">row_data</span><span class="p">)</span>
                 <span class="k">continue</span>
             <span class="k">if</span> <span class="n">row_data</span><span class="p">[</span><span class="s2">&quot;Team&quot;</span><span class="p">]</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
-                <span class="c1"># Need team defined (so we can get project key). Skip</span>
+                <span class="c1"># Need team defined (so we can get project key). Skip.</span>
                 <span class="n">msg</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="s2">&quot;Row </span><span class="si">{}</span><span class="s2"> skipped because Team column was empty.&quot;</span>
                           <span class="s2">&quot;&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">row_data</span><span class="p">[</span><span class="s2">&quot;row_num&quot;</span><span class="p">])</span>
                 <span class="n">logging</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
@@ -731,7 +809,8 @@
 <span class="c1"># Jira Ticket field on the Index sheet</span>
 <span class="k">def</span> <span class="nf">create_tickets</span><span class="p">(</span><span class="n">minutes</span><span class="o">=</span><span class="n">app_vars</span><span class="o">.</span><span class="n">dev_minutes</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;Main function passed to the scheduler to parse and upload data to</span>
-<span class="sd">       Smartsheet so that new Jira Tickets can be created.</span>
+<span class="sd">       Smartsheet so that new Jira Tickets can be created. Logs a warning</span>
+<span class="sd">       if the process takes longer than the interval.</span>
 
 <span class="sd">    Args:</span>
 <span class="sd">        minutes (int, optional): Number of minutes in the past used to filter</span>
@@ -757,23 +836,23 @@
     <span class="n">logging</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
     <span class="n">source_sheets</span> <span class="o">=</span> <span class="n">get_data</span><span class="o">.</span><span class="n">refresh_source_sheets</span><span class="p">(</span><span class="n">sheet_ids</span><span class="p">,</span> <span class="n">minutes</span><span class="p">)</span>
 
-    <span class="c1"># TODO: Load index sheet and kick off 2 functions. 1: Create new tickets</span>
-    <span class="c1"># 2: Copy created tickets to program sheets via UUID</span>
-    <span class="n">index_sheet</span> <span class="o">=</span> <span class="n">smartsheet_api</span><span class="o">.</span><span class="n">get_sheet</span><span class="p">(</span><span class="n">config</span><span class="o">.</span><span class="n">index_sheet</span><span class="p">)</span>
+    <span class="c1"># Load the index sheet and create a column map.</span>
+    <span class="n">index_sheet</span> <span class="o">=</span> <span class="n">smartsheet_api</span><span class="o">.</span><span class="n">get_sheet</span><span class="p">(</span><span class="n">config</span><span class="o">.</span><span class="n">index_sheet</span><span class="p">,</span> <span class="n">minutes</span><span class="p">)</span>
     <span class="n">index_col_map</span> <span class="o">=</span> <span class="n">helper</span><span class="o">.</span><span class="n">get_column_map</span><span class="p">(</span><span class="n">index_sheet</span><span class="p">)</span>
 
     <span class="c1"># Copy UUIDs from Push sheet to Index Sheet</span>
     <span class="n">logging</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;Starting to copy UUIDs from the Push Sheet to the &quot;</span>
                  <span class="s2">&quot;Index Sheet.&quot;</span><span class="p">)</span>
     <span class="n">result</span> <span class="o">=</span> <span class="n">copy_uuid_to_index_sheet</span><span class="p">(</span><span class="n">index_sheet</span><span class="p">,</span> <span class="n">index_col_map</span><span class="p">)</span>
+
     <span class="c1"># Refresh the index sheet since we just wrote data</span>
     <span class="k">if</span> <span class="n">result</span><span class="p">:</span>
         <span class="n">index_sheet</span> <span class="o">=</span> <span class="n">smartsheet_api</span><span class="o">.</span><span class="n">get_sheet</span><span class="p">(</span><span class="n">config</span><span class="o">.</span><span class="n">index_sheet</span><span class="p">,</span>
                                                <span class="n">config</span><span class="o">.</span><span class="n">minutes</span><span class="p">)</span>
 
+    <span class="c1"># Copy Jira Tickets from the index sheet back to the source sheets</span>
     <span class="n">logging</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;Starting to copy Jira Tickets from the Index Sheet to the &quot;</span>
                  <span class="s2">&quot;Program Plans.&quot;</span><span class="p">)</span>
-    <span class="c1"># Copy Jira Tickets from the index sheet back to the source sheets</span>
     <span class="n">sheets_updated</span> <span class="o">=</span> <span class="n">copy_jira_tickets_to_sheets</span><span class="p">(</span>
         <span class="n">source_sheets</span><span class="p">,</span> <span class="n">index_sheet</span><span class="p">,</span> <span class="n">index_col_map</span><span class="p">)</span>
     <span class="n">msg</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="s2">&quot;Updated </span><span class="si">{}</span><span class="s2"> Plan sheets with newly created Jira tickets.&quot;</span>
@@ -788,8 +867,10 @@
     <span class="n">logging</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="n">tickets_to_create</span><span class="p">)</span>
     <span class="n">msg</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="s2">&quot;Parent Length: </span><span class="si">{}</span><span class="s2">&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">tickets_to_create</span><span class="p">))</span>
     <span class="n">logging</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
+
+    <span class="c1"># If there are rows that need tickets, write the rows to the Push Ticket</span>
+    <span class="c1"># Sheet. Return true once the rows have been written.</span>
     <span class="k">if</span> <span class="n">tickets_to_create</span><span class="p">:</span>
-        <span class="c1"># Write parent rows</span>
         <span class="n">_</span><span class="p">,</span> <span class="n">push_tickets_col_map</span> <span class="o">=</span> <span class="n">get_push_tickets_sheet</span><span class="p">()</span>
         <span class="n">rows_to_write</span> <span class="o">=</span> <span class="n">form_rows</span><span class="p">(</span><span class="n">tickets_to_create</span><span class="p">,</span> <span class="n">push_tickets_col_map</span><span class="p">)</span>
         <span class="n">smartsheet_api</span><span class="o">.</span><span class="n">write_rows_to_sheet</span><span class="p">(</span><span class="n">rows_to_write</span><span class="p">,</span>
@@ -800,7 +881,9 @@
         <span class="n">logging</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;Create new tickets from Program Plan line items &quot;</span>
                      <span class="s2">&quot;took: </span><span class="si">{}</span><span class="s2"> seconds.&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">elapsed</span><span class="p">))</span>
         <span class="k">if</span> <span class="n">elapsed</span> <span class="o">&gt;</span> <span class="mi">120</span><span class="p">:</span>
-            <span class="n">msg</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="s2">&quot;Create Jira Tickets took longer than the interval&quot;</span><span class="p">)</span>
+            <span class="n">elapsed_warning</span> <span class="o">=</span> <span class="n">helper</span><span class="o">.</span><span class="n">truncate</span><span class="p">(</span><span class="n">elapsed</span><span class="p">,</span> <span class="mi">2</span><span class="p">)</span>
+            <span class="n">msg</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="s2">&quot;Create Jira Tickets took </span><span class="si">{}</span><span class="s2"> seconds longer than &quot;</span>
+                      <span class="s2">&quot;the interval&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">elapsed_warning</span><span class="p">)</span>
             <span class="n">logging</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
         <span class="k">return</span> <span class="kc">True</span>
     <span class="k">elif</span> <span class="ow">not</span> <span class="n">tickets_to_create</span><span class="p">:</span>
@@ -853,11 +936,11 @@
 <span class="sd">        TypeError: Index sheet must be dict or smartsheet Sheet object</span>
 <span class="sd">        TypeError: Index Column Map must be a dict</span>
 <span class="sd">        ValueError: Index Sheet should not be empty</span>
-<span class="sd">        ValueError: Index Column map should not be empt</span>
+<span class="sd">        ValueError: Index Column map should not be empty</span>
 
 <span class="sd">    Returns:</span>
-<span class="sd">        dict: The subindex of all Jira Tickets: UUIDs</span>
-<span class="sd">        list: The subindex of all UUIDs without Jira Tickets</span>
+<span class="sd">        dict: A subindex of all Jira Tickets: UUIDs</span>
+<span class="sd">        list: A subindex of all UUIDs without Jira Tickets</span>
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">sheet</span><span class="p">,</span> <span class="p">(</span><span class="nb">dict</span><span class="p">,</span> <span class="n">smartsheet</span><span class="o">.</span><span class="n">models</span><span class="o">.</span><span class="n">Sheet</span><span class="p">)):</span>
         <span class="n">msg</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="s2">&quot;Index Sheet should be dict or smartsheet.Sheet, not </span><span class="si">{}</span><span class="s2">&quot;</span>
@@ -938,14 +1021,14 @@
 <li><strong>TypeError:</strong>  Index sheet must be dict or smartsheet Sheet object</li>
 <li><strong>TypeError:</strong>  Index Column Map must be a dict</li>
 <li><strong>ValueError:</strong>  Index Sheet should not be empty</li>
-<li><strong>ValueError:</strong>  Index Column map should not be empt</li>
+<li><strong>ValueError:</strong>  Index Column map should not be empty</li>
 </ul>
 
 <h6 id="returns">Returns</h6>
 
 <blockquote>
-  <p>dict: The subindex of all Jira Tickets: UUIDs
-  list: The subindex of all UUIDs without Jira Tickets</p>
+  <p>dict: A subindex of all Jira Tickets: UUIDs
+  list: A subindex of all UUIDs without Jira Tickets</p>
 </blockquote>
 </div>
 
@@ -1054,15 +1137,28 @@
                 <span class="s1">&#39;values&#39;</span><span class="p">:</span> <span class="n">components</span>
             <span class="p">}</span>
         <span class="p">})</span>
-        <span class="c1"># Link issues together. If the parent is an epic, use Epic links,</span>
-        <span class="c1"># otherwise use issue links. If the issue is an epic, set Epic</span>
-        <span class="c1"># Name.</span>
+        <span class="c1"># If the issue type is an epic, set the Epic Name = Tasks column value</span>
         <span class="k">if</span> <span class="n">data</span><span class="p">[</span><span class="s1">&#39;Issue Type&#39;</span><span class="p">]</span> <span class="o">==</span> <span class="s2">&quot;Epic&quot;</span><span class="p">:</span>
             <span class="n">epic_name</span> <span class="o">=</span> <span class="n">data</span><span class="p">[</span><span class="s1">&#39;Tasks&#39;</span><span class="p">]</span>
             <span class="n">new_row</span><span class="o">.</span><span class="n">cells</span><span class="o">.</span><span class="n">append</span><span class="p">({</span>
                 <span class="s1">&#39;column_id&#39;</span><span class="p">:</span> <span class="n">col_map</span><span class="p">[</span><span class="s1">&#39;Epic Name&#39;</span><span class="p">],</span>
                 <span class="s1">&#39;object_value&#39;</span><span class="p">:</span> <span class="n">epic_name</span>
             <span class="p">})</span>
+
+        <span class="c1"># if the issue type is an epic and the parent is a project or epic</span>
+        <span class="c1"># use the &#39;implenets&#39; issue link to connect the tickets because epics</span>
+        <span class="c1"># can&#39;t use the Epic Link field.</span>
+        <span class="k">if</span> <span class="n">data</span><span class="p">[</span><span class="s1">&#39;Issue Type&#39;</span><span class="p">]</span> <span class="o">==</span> <span class="s2">&quot;Epic&quot;</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">data</span><span class="p">[</span><span class="s1">&#39;Parent Issue Type&#39;</span><span class="p">]</span> <span class="ow">in</span> <span class="p">(</span><span class="s2">&quot;Project&quot;</span><span class="p">,</span> <span class="s2">&quot;Epic&quot;</span><span class="p">):</span>
+                <span class="n">ticket</span> <span class="o">=</span> <span class="n">data</span><span class="p">[</span><span class="s1">&#39;Parent Ticket&#39;</span><span class="p">]</span>
+                <span class="n">issue_link</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="s2">&quot;implements </span><span class="si">{}</span><span class="s2">&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">ticket</span><span class="p">)</span>
+                <span class="n">new_row</span><span class="o">.</span><span class="n">cells</span><span class="o">.</span><span class="n">append</span><span class="p">({</span>
+                    <span class="s1">&#39;column_id&#39;</span><span class="p">:</span> <span class="n">col_map</span><span class="p">[</span><span class="s1">&#39;Issue Links&#39;</span><span class="p">],</span>
+                    <span class="s1">&#39;object_value&#39;</span><span class="p">:</span> <span class="n">issue_link</span>
+                <span class="p">})</span>
+
+        <span class="c1"># If the issue type is a story, task or project, and the parent is</span>
+        <span class="c1"># an epic, set the Epic link instead of issue link</span>
         <span class="k">if</span> <span class="n">data</span><span class="p">[</span><span class="s1">&#39;Issue Type&#39;</span><span class="p">]</span> <span class="ow">in</span> <span class="p">(</span><span class="s2">&quot;Story&quot;</span><span class="p">,</span> <span class="s2">&quot;Task&quot;</span><span class="p">,</span> <span class="s2">&quot;Project&quot;</span><span class="p">):</span>
             <span class="k">if</span> <span class="n">data</span><span class="p">[</span><span class="s1">&#39;Parent Issue Type&#39;</span><span class="p">]</span> <span class="o">==</span> <span class="s2">&quot;Epic&quot;</span><span class="p">:</span>
                 <span class="n">epic_link</span> <span class="o">=</span> <span class="n">data</span><span class="p">[</span><span class="s1">&#39;Parent Ticket&#39;</span><span class="p">]</span>
@@ -1070,15 +1166,16 @@
                     <span class="s1">&#39;column_id&#39;</span><span class="p">:</span> <span class="n">col_map</span><span class="p">[</span><span class="s1">&#39;Epic Link&#39;</span><span class="p">],</span>
                     <span class="s1">&#39;object_value&#39;</span><span class="p">:</span> <span class="n">epic_link</span>
                 <span class="p">})</span>
-            <span class="k">elif</span> <span class="n">data</span><span class="p">[</span><span class="s1">&#39;Parent Issue Type&#39;</span><span class="p">]</span> <span class="o">!=</span> <span class="s2">&quot;Epic&quot;</span><span class="p">:</span>
+
+            <span class="c1"># But if the parent is also a story, task or project, use</span>
+            <span class="c1"># Issue links instead</span>
+            <span class="k">if</span> <span class="n">data</span><span class="p">[</span><span class="s1">&#39;Parent Issue Type&#39;</span><span class="p">]</span> <span class="ow">in</span> <span class="p">(</span><span class="s2">&quot;Story&quot;</span><span class="p">,</span> <span class="s2">&quot;Task&quot;</span><span class="p">,</span> <span class="s2">&quot;Project&quot;</span><span class="p">):</span>
                 <span class="n">ticket</span> <span class="o">=</span> <span class="n">data</span><span class="p">[</span><span class="s1">&#39;Parent Ticket&#39;</span><span class="p">]</span>
                 <span class="n">issue_link</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="s2">&quot;implements </span><span class="si">{}</span><span class="s2">&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">ticket</span><span class="p">)</span>
                 <span class="n">new_row</span><span class="o">.</span><span class="n">cells</span><span class="o">.</span><span class="n">append</span><span class="p">({</span>
                     <span class="s1">&#39;column_id&#39;</span><span class="p">:</span> <span class="n">col_map</span><span class="p">[</span><span class="s1">&#39;Issue Links&#39;</span><span class="p">],</span>
                     <span class="s1">&#39;object_value&#39;</span><span class="p">:</span> <span class="n">issue_link</span>
                 <span class="p">})</span>
-            <span class="k">else</span><span class="p">:</span>
-                <span class="k">pass</span>  <span class="c1"># Do nothing with links</span>
 
         <span class="n">rows_to_add</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">new_row</span><span class="p">)</span>
     <span class="k">return</span> <span class="n">rows_to_add</span>
@@ -1126,6 +1223,13 @@ form of Column Name: Column ID</li>
                 <details>
             <summary>View Source</summary>
             <div class="codehilite"><pre><span></span><span class="k">def</span> <span class="nf">get_push_tickets_sheet</span><span class="p">():</span>
+    <span class="sd">&quot;&quot;&quot;Helper function to get the Push Jira Tickets sheet and build the column</span>
+<span class="sd">       map</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        smartsheet.models.Sheet: The sheet object</span>
+<span class="sd">        dict: The column map of Column Names: Column IDs</span>
+<span class="sd">    &quot;&quot;&quot;</span>
     <span class="n">push_ticket_sheet</span> <span class="o">=</span> <span class="n">smartsheet_api</span><span class="o">.</span><span class="n">get_sheet</span><span class="p">(</span>
         <span class="n">config</span><span class="o">.</span><span class="n">push_tickets_sheet</span><span class="p">,</span> <span class="n">config</span><span class="o">.</span><span class="n">minutes</span><span class="p">)</span>
     <span class="n">push_tickets_col_map</span> <span class="o">=</span> <span class="n">helper</span><span class="o">.</span><span class="n">get_column_map</span><span class="p">(</span><span class="n">push_ticket_sheet</span><span class="p">)</span>
@@ -1134,7 +1238,17 @@ form of Column Name: Column ID</li>
 
         </details>
 
-    
+            <div class="docstring"><p>Helper function to get the Push Jira Tickets sheet and build the column
+   map</p>
+
+<h6 id="returns">Returns</h6>
+
+<blockquote>
+  <p>smartsheet.models.Sheet: The sheet object
+  dict: The column map of Column Names: Column IDs</p>
+</blockquote>
+</div>
+
 
                 </section>
                 <section id="copy_jira_tickets_to_sheets">
@@ -1154,8 +1268,11 @@ form of Column Name: Column ID</li>
 <span class="sd">    Args:</span>
 <span class="sd">        source_sheets (list): A list of Smartsheet Sheet objects push the</span>
 <span class="sd">                              Jira Tickets into</span>
-<span class="sd">        index_sheet (smartsheet.Sheet): The Jira Index Sheet</span>
-<span class="sd">        index_col_map (dict): The column map of the Jira Index Sheet</span>
+<span class="sd">        index_sheet (smartsheet.models.Sheet): The Jira Index Sheet that</span>
+<span class="sd">           contains the UUID of the originating row and the Jira Ticket</span>
+<span class="sd">           that we want to copy to the source sheet.</span>
+<span class="sd">        index_col_map (dict): The column map of Column Names: Column IDs</span>
+<span class="sd">           for the Jira Index Sheet</span>
 
 <span class="sd">    Raises:</span>
 <span class="sd">        TypeError: Sheet must be a list of sheets</span>
@@ -1174,11 +1291,26 @@ form of Column Name: Column ID</li>
         <span class="n">msg</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="s2">&quot;Index Column Map should be dict, not </span><span class="si">{}</span><span class="s2">&quot;</span>
                   <span class="s2">&quot;&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="nb">type</span><span class="p">(</span><span class="n">index_col_map</span><span class="p">))</span>
         <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">index_col_map</span><span class="p">:</span>
+        <span class="n">msg</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="s2">&quot;Index Column Map must not be empty.&quot;</span>
+                  <span class="s2">&quot;&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">format</span><span class="p">()</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
 
-    <span class="c1"># Parse through the sheet&#39;s rows, see if the sheet&#39;s row.id is a</span>
-    <span class="c1"># match to the given row_id. If there&#39;s a match, get the Jira cell data</span>
-    <span class="c1"># or return None.</span>
     <span class="k">def</span> <span class="nf">get_jira_cell</span><span class="p">(</span><span class="n">row_id</span><span class="p">,</span> <span class="n">sheet</span><span class="p">,</span> <span class="n">col_map</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Parse through the sheet&#39;s rows, see if the sheet&#39;s row.id is a</span>
+<span class="sd">           match to the given row_id. If there&#39;s a match, get the Jira cell</span>
+<span class="sd">           data. Return None if the row ID was not found.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            row_id (int): The row ID that we want to copy data to</span>
+<span class="sd">            sheet (smartsheet.models.Sheet): The sheet that may contain the</span>
+<span class="sd">               row_id to copy data to</span>
+<span class="sd">            col_map (dict): _description_</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            smartsheet.models.Cell: A cell object containing the Jira Ticket</span>
+<span class="sd">            None: No matching row_id was found in the sheet.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">for</span> <span class="n">row</span> <span class="ow">in</span> <span class="n">sheet</span><span class="o">.</span><span class="n">rows</span><span class="p">:</span>
             <span class="k">if</span> <span class="ow">not</span> <span class="n">row_id</span> <span class="o">==</span> <span class="n">row</span><span class="o">.</span><span class="n">id</span><span class="p">:</span>
                 <span class="k">continue</span>
@@ -1189,13 +1321,22 @@ form of Column Name: Column ID</li>
         <span class="k">else</span><span class="p">:</span>
             <span class="k">return</span> <span class="kc">None</span>
 
-    <span class="c1"># Check to see if the sheet contains any UUIDs from the Jira Index</span>
-    <span class="c1"># Sheet. Return a subset of matches.</span>
     <span class="k">def</span> <span class="nf">contains_uuid</span><span class="p">(</span><span class="n">uuid_list</span><span class="p">,</span> <span class="n">index_dict</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Check to see if the sheet contains any UUIDs from the Jira Index</span>
+<span class="sd">           Sheet. Return a subset of matches.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            uuid_list (list): A list of UUIDs (str) from the source sheet</span>
+<span class="sd">            index_dict (dict): A dict of UUIDs (str): Jira Ticket (str) from</span>
+<span class="sd">               the Jira Index Sheet</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            dict: A dict of UUIDs: Jira Tickets</span>
+<span class="sd">        &quot;&quot;&quot;</span>
         <span class="n">tiny_jira_index</span> <span class="o">=</span> <span class="p">{}</span>
         <span class="c1"># For each UUID in the sheet UUID list, check to see if that UUID</span>
         <span class="c1"># is in the index dict keys. If it is not, move on. If it is,</span>
-        <span class="c1"># add it to the tiny dict/list</span>
+        <span class="c1"># add it to the tiny dict.</span>
         <span class="k">for</span> <span class="n">sheet_uuid</span> <span class="ow">in</span> <span class="n">uuid_list</span><span class="p">:</span>
             <span class="k">if</span> <span class="n">sheet_uuid</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">index_dict</span><span class="o">.</span><span class="n">keys</span><span class="p">():</span>
                 <span class="k">continue</span>
@@ -1205,6 +1346,7 @@ form of Column Name: Column ID</li>
         <span class="k">return</span> <span class="n">tiny_jira_index</span>
 
     <span class="n">sheets_updated</span> <span class="o">=</span> <span class="mi">0</span>
+
     <span class="c1"># Build an index of UUID (str): Jira Ticket (str) from the Jira Index Sheet</span>
     <span class="c1"># At this point we don&#39;t know if the tickets have been cell linked yet.</span>
     <span class="n">jira_sub_index</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="n">build_sub_indexes</span><span class="p">(</span><span class="n">index_sheet</span><span class="p">,</span> <span class="n">index_col_map</span><span class="p">)</span>
@@ -1213,12 +1355,11 @@ form of Column Name: Column ID</li>
         <span class="n">logging</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
         <span class="k">return</span> <span class="n">sheets_updated</span>
 
-    <span class="c1"># We want to write all rows back to a single sheet at a time so that</span>
-    <span class="c1"># we don&#39;t spam the API</span>
     <span class="c1"># For each Jira Ticket with a UUID in the index sheet, check to see if</span>
     <span class="c1"># that ticket has been linked to the sheet and row in the UUID.</span>
     <span class="k">for</span> <span class="n">sheet</span> <span class="ow">in</span> <span class="n">source_sheets</span><span class="p">:</span>
         <span class="n">sheet_col_map</span> <span class="o">=</span> <span class="n">helper</span><span class="o">.</span><span class="n">get_column_map</span><span class="p">(</span><span class="n">sheet</span><span class="p">)</span>
+        <span class="n">rows_to_update</span> <span class="o">=</span> <span class="p">[]</span>
 
         <span class="c1"># Validate that the sheet we&#39;re checking has both UUID and Jira</span>
         <span class="c1"># Ticket columns. If they don&#39;t exist, skip the sheet.</span>
@@ -1229,10 +1370,9 @@ form of Column Name: Column ID</li>
 
         <span class="c1"># Build a list of UUIDs from the sheet.</span>
         <span class="n">_</span><span class="p">,</span> <span class="n">sheet_uuid_list</span> <span class="o">=</span> <span class="n">build_sub_indexes</span><span class="p">(</span><span class="n">sheet</span><span class="p">,</span> <span class="n">sheet_col_map</span><span class="p">)</span>
-        <span class="n">rows_to_update</span> <span class="o">=</span> <span class="p">[]</span>
 
-        <span class="c1"># These are all the UUIDs that matched the Jira Index Sheet, with</span>
-        <span class="c1"># the Jira Ticket from the Index Sheet.</span>
+        <span class="c1"># These are all the UUIDs that had a match in the Jira Index Sheet,</span>
+        <span class="c1"># with the associated Jira Ticket from the Index Sheet.</span>
         <span class="n">tiny_index</span> <span class="o">=</span> <span class="n">contains_uuid</span><span class="p">(</span><span class="n">sheet_uuid_list</span><span class="p">,</span> <span class="n">jira_sub_index</span><span class="p">)</span>
         <span class="k">if</span> <span class="ow">not</span> <span class="n">tiny_index</span><span class="p">:</span>
             <span class="c1"># The index is empty and we didn&#39;t actually match any UUIDs</span>
@@ -1240,16 +1380,18 @@ form of Column Name: Column ID</li>
 
         <span class="c1"># Check the sheet and row for each UUID, validate that the ticket is</span>
         <span class="c1"># not already present</span>
-
         <span class="k">for</span> <span class="n">uuid</span><span class="p">,</span> <span class="n">ticket</span> <span class="ow">in</span> <span class="n">tiny_index</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
             <span class="n">split</span> <span class="o">=</span> <span class="n">uuid</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s2">&quot;-&quot;</span><span class="p">)</span>
-            <span class="c1"># sheet_id = split[0]</span>
             <span class="n">row_id</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">split</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span>
             <span class="n">jira_cell</span> <span class="o">=</span> <span class="n">get_jira_cell</span><span class="p">(</span><span class="n">row_id</span><span class="p">,</span> <span class="n">sheet</span><span class="p">,</span> <span class="n">sheet_col_map</span><span class="p">)</span>
+
             <span class="k">if</span> <span class="ow">not</span> <span class="n">jira_cell</span><span class="p">:</span>
                 <span class="c1"># Jira column and cell data should exist on this sheet but</span>
                 <span class="c1"># don&#39;t for some reason?</span>
-                <span class="n">logging</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="s2">&quot;Jira Column not found&quot;</span><span class="p">)</span>
+                <span class="n">msg</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="s2">&quot;Jira Cell not found on Sheet Name </span><span class="si">{}</span><span class="s2"> | &quot;</span>
+                          <span class="s2">&quot;Sheet ID </span><span class="si">{}</span><span class="s2"> | Row ID </span><span class="si">{}</span><span class="s2">&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">sheet</span><span class="o">.</span><span class="n">name</span><span class="p">,</span>
+                                                            <span class="n">sheet</span><span class="o">.</span><span class="n">id</span><span class="p">,</span> <span class="n">row_id</span><span class="p">)</span>
+                <span class="n">logging</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
                 <span class="k">continue</span>
             <span class="k">if</span> <span class="n">jira_cell</span><span class="o">.</span><span class="n">value</span> <span class="o">==</span> <span class="n">ticket</span><span class="p">:</span>
                 <span class="c1"># Jira Ticket has already been copied to the sheet</span>
@@ -1270,16 +1412,17 @@ form of Column Name: Column ID</li>
                 <span class="n">rows_to_update</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">new_row</span><span class="p">)</span>
 
         <span class="k">if</span> <span class="n">rows_to_update</span><span class="p">:</span>
-            <span class="n">msg</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="s2">&quot;Updating </span><span class="si">{}</span><span class="s2"> rows with newly created Jira Tickets&quot;</span>
-                      <span class="s2">&quot;&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">rows_to_update</span><span class="p">))</span>
+            <span class="n">msg</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="s2">&quot;Updating Sheet Name: </span><span class="si">{}</span><span class="s2"> | Sheet ID </span><span class="si">{}</span><span class="s2"> with </span><span class="si">{}</span><span class="s2"> rows of &quot;</span>
+                      <span class="s2">&quot;newly created Jira Tickets.&quot;</span>
+                      <span class="s2">&quot;&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">sheet</span><span class="o">.</span><span class="n">name</span><span class="p">,</span> <span class="n">sheet</span><span class="o">.</span><span class="n">id</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="n">rows_to_update</span><span class="p">))</span>
             <span class="n">logging</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
             <span class="n">smartsheet_api</span><span class="o">.</span><span class="n">write_rows_to_sheet</span><span class="p">(</span><span class="n">rows_to_update</span><span class="p">,</span> <span class="n">sheet</span><span class="p">,</span>
                                                <span class="n">write_method</span><span class="o">=</span><span class="s2">&quot;update&quot;</span><span class="p">)</span>
             <span class="n">sheets_updated</span> <span class="o">+=</span> <span class="mi">1</span>
         <span class="k">else</span><span class="p">:</span>
-            <span class="n">msg</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="s2">&quot;All Jira Tickets have pre-existing links to &quot;</span>
-                      <span class="s2">&quot;Sheet ID: </span><span class="si">{}</span><span class="s2"> | Sheet Name: </span><span class="si">{}</span><span class="s2">&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">sheet</span><span class="o">.</span><span class="n">id</span><span class="p">,</span>
-                                                              <span class="n">sheet</span><span class="o">.</span><span class="n">name</span><span class="p">)</span>
+            <span class="n">msg</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="s2">&quot;No new Jira Tickets are ready for copy to&quot;</span>
+                      <span class="s2">&quot;Sheet Name: </span><span class="si">{}</span><span class="s2"> | Sheet ID: </span><span class="si">{}</span><span class="s2">&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">sheet</span><span class="o">.</span><span class="n">name</span><span class="p">,</span>
+                                                              <span class="n">sheet</span><span class="o">.</span><span class="n">id</span><span class="p">)</span>
             <span class="n">logging</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
     <span class="k">return</span> <span class="n">sheets_updated</span>
 </pre></div>
@@ -1294,8 +1437,11 @@ form of Column Name: Column ID</li>
 <ul>
 <li><strong>source_sheets (list):</strong>  A list of Smartsheet Sheet objects push the
 Jira Tickets into</li>
-<li><strong>index_sheet (smartsheet.Sheet):</strong>  The Jira Index Sheet</li>
-<li><strong>index_col_map (dict):</strong>  The column map of the Jira Index Sheet</li>
+<li><strong>index_sheet (smartsheet.models.Sheet):</strong>  The Jira Index Sheet that
+contains the UUID of the originating row and the Jira Ticket
+that we want to copy to the source sheet.</li>
+<li><strong>index_col_map (dict):</strong>  The column map of Column Names: Column IDs
+for the Jira Index Sheet</li>
 </ul>
 
 <h6 id="raises">Raises</h6>
@@ -1332,12 +1478,26 @@ Jira Tickets into</li>
 <span class="sd">    Returns:</span>
 <span class="sd">        bool: True if UUIDs were copied, False if they were not.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">index_sheet</span><span class="p">,</span> <span class="p">(</span><span class="nb">dict</span><span class="p">,</span> <span class="n">smartsheet</span><span class="o">.</span><span class="n">models</span><span class="o">.</span><span class="n">Sheet</span><span class="p">)):</span>
+        <span class="n">msg</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="s2">&quot;Index Sheet should be dict or smartsheet.Sheet, not </span><span class="si">{}</span><span class="s2">&quot;</span>
+                  <span class="s2">&quot;&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="nb">type</span><span class="p">(</span><span class="n">index_sheet</span><span class="p">))</span>
+        <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">index_col_map</span><span class="p">,</span> <span class="nb">dict</span><span class="p">):</span>
+        <span class="n">msg</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="s2">&quot;Index Column Map should be dict, not </span><span class="si">{}</span><span class="s2">&quot;</span>
+                  <span class="s2">&quot;&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="nb">type</span><span class="p">(</span><span class="n">index_col_map</span><span class="p">))</span>
+        <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">index_col_map</span><span class="p">:</span>
+        <span class="n">msg</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="s2">&quot;Index Column Map must not be empty.&quot;</span>
+                  <span class="s2">&quot;&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">format</span><span class="p">()</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
+
     <span class="n">rows_to_write</span> <span class="o">=</span> <span class="p">[]</span>
     <span class="n">push_ticket_sheet</span><span class="p">,</span> <span class="n">push_tickets_col_map</span> <span class="o">=</span> <span class="n">get_push_tickets_sheet</span><span class="p">()</span>
     <span class="c1"># Build an index of all rows on the Push Ticket Sheet that have UUIDs</span>
     <span class="c1"># AND Jira tickets</span>
     <span class="n">sub_index</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="n">build_sub_indexes</span><span class="p">(</span>
         <span class="n">push_ticket_sheet</span><span class="p">,</span> <span class="n">push_tickets_col_map</span><span class="p">)</span>
+
     <span class="c1"># For each row in the index sheet, get the cell data for the Jira Ticket</span>
     <span class="c1"># cell and the UUID cell.</span>
     <span class="k">for</span> <span class="n">row</span> <span class="ow">in</span> <span class="n">index_sheet</span><span class="o">.</span><span class="n">rows</span><span class="p">:</span>
@@ -1411,12 +1571,14 @@ Jira Tickets into</li>
 <span class="sd">       Jira Ticket Sheet</span>
 
 <span class="sd">    Args:</span>
-<span class="sd">        row (smartsheet.Row): The Row to parse</span>
+<span class="sd">        row (smartsheet.models.Row): The row to parse</span>
 <span class="sd">        col_map (dict): The column map of Column Name: Column ID</span>
 
 <span class="sd">    Raises:</span>
 <span class="sd">        TypeError: Row must be a dict or smartsheet.models.Row</span>
 <span class="sd">        TypeError: Column map must be a dict</span>
+<span class="sd">        ValueError: Row must not be empty</span>
+<span class="sd">        ValueError: Column map must not be empty</span>
 
 <span class="sd">    Returns:</span>
 <span class="sd">        dict: A dictionary of the subest of row data to upload to Smartsheet</span>
@@ -1429,13 +1591,20 @@ Jira Tickets into</li>
         <span class="n">msg</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="s2">&quot;Sheet Column Map should be dict, not </span><span class="si">{}</span><span class="s2">&quot;</span>
                   <span class="s2">&quot;&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="nb">type</span><span class="p">(</span><span class="n">col_map</span><span class="p">))</span>
         <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">row</span><span class="p">:</span>
+        <span class="n">msg</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="s2">&quot;Row must not be empty.&quot;</span>
+                  <span class="s2">&quot;&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">format</span><span class="p">()</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">col_map</span><span class="p">:</span>
+        <span class="n">msg</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="s2">&quot;Column Map must not be empty.&quot;</span>
+                  <span class="s2">&quot;&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">format</span><span class="p">()</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
 
     <span class="n">row_data</span> <span class="o">=</span> <span class="p">{}</span>
     <span class="k">for</span> <span class="n">col</span> <span class="ow">in</span> <span class="n">project_columns</span><span class="p">:</span>
         <span class="k">try</span><span class="p">:</span>
-            <span class="c1"># TODO: Replace with get_cell_data</span>
-            <span class="n">cell_value</span> <span class="o">=</span> <span class="n">helper</span><span class="o">.</span><span class="n">get_cell_value</span><span class="p">(</span><span class="n">row</span><span class="p">,</span> <span class="n">col</span><span class="p">,</span> <span class="n">col_map</span><span class="p">)</span>
-            <span class="n">row_data</span><span class="p">[</span><span class="n">col</span><span class="p">]</span> <span class="o">=</span> <span class="n">cell_value</span>
+            <span class="n">cell</span> <span class="o">=</span> <span class="n">helper</span><span class="o">.</span><span class="n">get_cell_data</span><span class="p">(</span><span class="n">row</span><span class="p">,</span> <span class="n">col</span><span class="p">,</span> <span class="n">col_map</span><span class="p">)</span>
+            <span class="n">row_data</span><span class="p">[</span><span class="n">col</span><span class="p">]</span> <span class="o">=</span> <span class="n">cell</span><span class="o">.</span><span class="n">value</span>
         <span class="k">except</span> <span class="ne">KeyError</span><span class="p">:</span>
             <span class="k">continue</span>
     <span class="n">row_data</span><span class="p">[</span><span class="s2">&quot;row_num&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">row</span><span class="o">.</span><span class="n">row_number</span>
@@ -1451,7 +1620,7 @@ Jira Tickets into</li>
 <h6 id="args">Args</h6>
 
 <ul>
-<li><strong>row (smartsheet.Row):</strong>  The Row to parse</li>
+<li><strong>row (smartsheet.models.Row):</strong>  The row to parse</li>
 <li><strong>col_map (dict):</strong>  The column map of Column Name: Column ID</li>
 </ul>
 
@@ -1460,6 +1629,8 @@ Jira Tickets into</li>
 <ul>
 <li><strong>TypeError:</strong>  Row must be a dict or smartsheet.models.Row</li>
 <li><strong>TypeError:</strong>  Column map must be a dict</li>
+<li><strong>ValueError:</strong>  Row must not be empty</li>
+<li><strong>ValueError:</strong>  Column map must not be empty</li>
 </ul>
 
 <h6 id="returns">Returns</h6>
@@ -1496,6 +1667,7 @@ Jira Tickets into</li>
 <span class="sd">        TypeError: Source Sheets must be a list of sheets</span>
 <span class="sd">        TypeError: Index Sheet must be a dict or Smartsheet Sheet object</span>
 <span class="sd">        TypeError: Index Column Map must be a dict</span>
+<span class="sd">        ValueError: Column map must not be empty</span>
 
 <span class="sd">    Returns:</span>
 <span class="sd">        dict: A dictionary of all tickets that should be created across all</span>
@@ -1513,6 +1685,10 @@ Jira Tickets into</li>
         <span class="n">msg</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="s2">&quot;Index Column Map should be dict, not </span><span class="si">{}</span><span class="s2">&quot;</span>
                   <span class="s2">&quot;&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="nb">type</span><span class="p">(</span><span class="n">index_col_map</span><span class="p">))</span>
         <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">index_col_map</span><span class="p">:</span>
+        <span class="n">msg</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="s2">&quot;Column Map must not be empty.&quot;</span>
+                  <span class="s2">&quot;&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">format</span><span class="p">()</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
 
     <span class="n">tickets_to_create</span> <span class="o">=</span> <span class="p">{}</span>
     <span class="n">pending_count</span> <span class="o">=</span> <span class="mi">0</span>
@@ -1543,7 +1719,7 @@ Jira Tickets into</li>
                 <span class="n">logging</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="n">row_data</span><span class="p">)</span>
                 <span class="k">continue</span>
             <span class="k">if</span> <span class="n">row_data</span><span class="p">[</span><span class="s2">&quot;Team&quot;</span><span class="p">]</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
-                <span class="c1"># Need team defined (so we can get project key). Skip</span>
+                <span class="c1"># Need team defined (so we can get project key). Skip.</span>
                 <span class="n">msg</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="s2">&quot;Row </span><span class="si">{}</span><span class="s2"> skipped because Team column was empty.&quot;</span>
                           <span class="s2">&quot;&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">row_data</span><span class="p">[</span><span class="s2">&quot;row_num&quot;</span><span class="p">])</span>
                 <span class="n">logging</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
@@ -1676,6 +1852,7 @@ Column Name: Column ID</li>
 <li><strong>TypeError:</strong>  Source Sheets must be a list of sheets</li>
 <li><strong>TypeError:</strong>  Index Sheet must be a dict or Smartsheet Sheet object</li>
 <li><strong>TypeError:</strong>  Index Column Map must be a dict</li>
+<li><strong>ValueError:</strong>  Column map must not be empty</li>
 </ul>
 
 <h6 id="returns">Returns</h6>
@@ -1700,7 +1877,8 @@ Column Name: Column ID</li>
             <summary>View Source</summary>
             <div class="codehilite"><pre><span></span><span class="k">def</span> <span class="nf">create_tickets</span><span class="p">(</span><span class="n">minutes</span><span class="o">=</span><span class="n">app_vars</span><span class="o">.</span><span class="n">dev_minutes</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;Main function passed to the scheduler to parse and upload data to</span>
-<span class="sd">       Smartsheet so that new Jira Tickets can be created.</span>
+<span class="sd">       Smartsheet so that new Jira Tickets can be created. Logs a warning</span>
+<span class="sd">       if the process takes longer than the interval.</span>
 
 <span class="sd">    Args:</span>
 <span class="sd">        minutes (int, optional): Number of minutes in the past used to filter</span>
@@ -1726,23 +1904,23 @@ Column Name: Column ID</li>
     <span class="n">logging</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
     <span class="n">source_sheets</span> <span class="o">=</span> <span class="n">get_data</span><span class="o">.</span><span class="n">refresh_source_sheets</span><span class="p">(</span><span class="n">sheet_ids</span><span class="p">,</span> <span class="n">minutes</span><span class="p">)</span>
 
-    <span class="c1"># TODO: Load index sheet and kick off 2 functions. 1: Create new tickets</span>
-    <span class="c1"># 2: Copy created tickets to program sheets via UUID</span>
-    <span class="n">index_sheet</span> <span class="o">=</span> <span class="n">smartsheet_api</span><span class="o">.</span><span class="n">get_sheet</span><span class="p">(</span><span class="n">config</span><span class="o">.</span><span class="n">index_sheet</span><span class="p">)</span>
+    <span class="c1"># Load the index sheet and create a column map.</span>
+    <span class="n">index_sheet</span> <span class="o">=</span> <span class="n">smartsheet_api</span><span class="o">.</span><span class="n">get_sheet</span><span class="p">(</span><span class="n">config</span><span class="o">.</span><span class="n">index_sheet</span><span class="p">,</span> <span class="n">minutes</span><span class="p">)</span>
     <span class="n">index_col_map</span> <span class="o">=</span> <span class="n">helper</span><span class="o">.</span><span class="n">get_column_map</span><span class="p">(</span><span class="n">index_sheet</span><span class="p">)</span>
 
     <span class="c1"># Copy UUIDs from Push sheet to Index Sheet</span>
     <span class="n">logging</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;Starting to copy UUIDs from the Push Sheet to the &quot;</span>
                  <span class="s2">&quot;Index Sheet.&quot;</span><span class="p">)</span>
     <span class="n">result</span> <span class="o">=</span> <span class="n">copy_uuid_to_index_sheet</span><span class="p">(</span><span class="n">index_sheet</span><span class="p">,</span> <span class="n">index_col_map</span><span class="p">)</span>
+
     <span class="c1"># Refresh the index sheet since we just wrote data</span>
     <span class="k">if</span> <span class="n">result</span><span class="p">:</span>
         <span class="n">index_sheet</span> <span class="o">=</span> <span class="n">smartsheet_api</span><span class="o">.</span><span class="n">get_sheet</span><span class="p">(</span><span class="n">config</span><span class="o">.</span><span class="n">index_sheet</span><span class="p">,</span>
                                                <span class="n">config</span><span class="o">.</span><span class="n">minutes</span><span class="p">)</span>
 
+    <span class="c1"># Copy Jira Tickets from the index sheet back to the source sheets</span>
     <span class="n">logging</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;Starting to copy Jira Tickets from the Index Sheet to the &quot;</span>
                  <span class="s2">&quot;Program Plans.&quot;</span><span class="p">)</span>
-    <span class="c1"># Copy Jira Tickets from the index sheet back to the source sheets</span>
     <span class="n">sheets_updated</span> <span class="o">=</span> <span class="n">copy_jira_tickets_to_sheets</span><span class="p">(</span>
         <span class="n">source_sheets</span><span class="p">,</span> <span class="n">index_sheet</span><span class="p">,</span> <span class="n">index_col_map</span><span class="p">)</span>
     <span class="n">msg</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="s2">&quot;Updated </span><span class="si">{}</span><span class="s2"> Plan sheets with newly created Jira tickets.&quot;</span>
@@ -1757,8 +1935,10 @@ Column Name: Column ID</li>
     <span class="n">logging</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="n">tickets_to_create</span><span class="p">)</span>
     <span class="n">msg</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="s2">&quot;Parent Length: </span><span class="si">{}</span><span class="s2">&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">tickets_to_create</span><span class="p">))</span>
     <span class="n">logging</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
+
+    <span class="c1"># If there are rows that need tickets, write the rows to the Push Ticket</span>
+    <span class="c1"># Sheet. Return true once the rows have been written.</span>
     <span class="k">if</span> <span class="n">tickets_to_create</span><span class="p">:</span>
-        <span class="c1"># Write parent rows</span>
         <span class="n">_</span><span class="p">,</span> <span class="n">push_tickets_col_map</span> <span class="o">=</span> <span class="n">get_push_tickets_sheet</span><span class="p">()</span>
         <span class="n">rows_to_write</span> <span class="o">=</span> <span class="n">form_rows</span><span class="p">(</span><span class="n">tickets_to_create</span><span class="p">,</span> <span class="n">push_tickets_col_map</span><span class="p">)</span>
         <span class="n">smartsheet_api</span><span class="o">.</span><span class="n">write_rows_to_sheet</span><span class="p">(</span><span class="n">rows_to_write</span><span class="p">,</span>
@@ -1769,7 +1949,9 @@ Column Name: Column ID</li>
         <span class="n">logging</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;Create new tickets from Program Plan line items &quot;</span>
                      <span class="s2">&quot;took: </span><span class="si">{}</span><span class="s2"> seconds.&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">elapsed</span><span class="p">))</span>
         <span class="k">if</span> <span class="n">elapsed</span> <span class="o">&gt;</span> <span class="mi">120</span><span class="p">:</span>
-            <span class="n">msg</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="s2">&quot;Create Jira Tickets took longer than the interval&quot;</span><span class="p">)</span>
+            <span class="n">elapsed_warning</span> <span class="o">=</span> <span class="n">helper</span><span class="o">.</span><span class="n">truncate</span><span class="p">(</span><span class="n">elapsed</span><span class="p">,</span> <span class="mi">2</span><span class="p">)</span>
+            <span class="n">msg</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="s2">&quot;Create Jira Tickets took </span><span class="si">{}</span><span class="s2"> seconds longer than &quot;</span>
+                      <span class="s2">&quot;the interval&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">elapsed_warning</span><span class="p">)</span>
             <span class="n">logging</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
         <span class="k">return</span> <span class="kc">True</span>
     <span class="k">elif</span> <span class="ow">not</span> <span class="n">tickets_to_create</span><span class="p">:</span>
@@ -1798,7 +1980,8 @@ Column Name: Column ID</li>
         </details>
 
             <div class="docstring"><p>Main function passed to the scheduler to parse and upload data to
-   Smartsheet so that new Jira Tickets can be created.</p>
+   Smartsheet so that new Jira Tickets can be created. Logs a warning
+   if the process takes longer than the interval.</p>
 
 <h6 id="args">Args</h6>
 

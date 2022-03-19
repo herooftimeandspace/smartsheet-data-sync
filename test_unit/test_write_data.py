@@ -300,11 +300,15 @@ def test_write_predecessor_dates_1(src_data, project_indexes,
     #     "Summary": "False"  # Type: str
     # }
 
+    with open(cwd + '/dev_cell_basic.json') as f:
+        cell = json.load(f)
+    pred_cell = smartsheet.models.Cell(cell)
+
     @patch("uuid_module.smartsheet_api.get_sheet", return_value=sheet)
     @patch("uuid_module.helper.get_column_map", return_value=col_map)
     @patch("uuid_module.smartsheet_api.get_row", return_value=unlinked_row)
-    @patch("uuid_module.helper.get_cell_value",
-           return_value="2021-12-18T21:23:54Z")
+    @patch("uuid_module.helper.get_cell_data",
+           return_value=pred_cell)
     @patch("uuid_module.smartsheet_api.write_rows_to_sheet",
            return_value={"result": {"statusCode": 200}})
     def test_0(mock_0, mock_1, mock_2, mock_3, mock_4):

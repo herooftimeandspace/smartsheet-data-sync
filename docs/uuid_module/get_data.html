@@ -96,6 +96,14 @@
 <span class="sd">                                 should pull sheet and row data, if greater</span>
 <span class="sd">                                 than 0. Defaults to 0.</span>
 
+<span class="sd">    Raises:</span>
+<span class="sd">        TypeError: Sheet IDs must be a list</span>
+<span class="sd">        ValueError: Sheet IDs must not be an empty list</span>
+<span class="sd">        ValueError: IDs in Sheet IDs must be an int</span>
+<span class="sd">        ValueError: IDs in Sheet IDs must be positive integers</span>
+<span class="sd">        TypeError: Minutes must be an int</span>
+<span class="sd">        ValueError: Minutes must be greater than or equal to zero</span>
+
 <span class="sd">    Returns:</span>
 <span class="sd">        source_sheets (list): The list of sheets, including row data for rows</span>
 <span class="sd">                              modified since the minutes value, if greater</span>
@@ -103,8 +111,12 @@
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">sheet_ids</span><span class="p">,</span> <span class="nb">list</span><span class="p">):</span>
         <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s2">&quot;Sheet IDs must be a list of IDs&quot;</span><span class="p">)</span>
+    <span class="c1"># if not sheet_ids:</span>
+    <span class="c1">#     raise ValueError(&quot;Sheet IDs list must not be empty&quot;)</span>
     <span class="k">if</span> <span class="ow">not</span> <span class="nb">all</span><span class="p">(</span><span class="nb">isinstance</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="nb">int</span><span class="p">)</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">sheet_ids</span><span class="p">):</span>
         <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;One or more values in the list are not type: int&quot;</span><span class="p">)</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="nb">all</span><span class="p">(</span><span class="n">x</span> <span class="o">&gt;</span> <span class="mi">0</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">sheet_ids</span><span class="p">):</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;IDs in sheet_ids must be positive integers&quot;</span><span class="p">)</span>
     <span class="k">if</span> <span class="n">minutes</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">minutes</span><span class="p">,</span> <span class="nb">int</span><span class="p">):</span>
         <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s2">&quot;Minutes must be type: int&quot;</span><span class="p">)</span>
     <span class="k">if</span> <span class="n">minutes</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="n">minutes</span> <span class="o">&lt;</span> <span class="mi">0</span><span class="p">:</span>
@@ -130,26 +142,16 @@
 <span class="sd">        minutes (int): The number of minutes to look back when collecting</span>
 <span class="sd">                       row data.</span>
 
+<span class="sd">    Raises:</span>
+<span class="sd">        TypeError: Source sheets must be a list</span>
+<span class="sd">        TypeError: Columns must be a list</span>
+<span class="sd">        TypeError: Minutes must be an int</span>
+<span class="sd">        ValueError: Minutes must be greater than or equal to zero</span>
+
 <span class="sd">    Returns:</span>
 <span class="sd">        dict: Returns a dict of UUIDs and the row values</span>
-<span class="sd">        none: There is no row data in any source sheet.</span>
+<span class="sd">        None: There is no row data in any source sheet.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
-    <span class="c1"># TODO: Write a test to validated the dictionary structure</span>
-    <span class="c1"># 7208979009955716-3683235938232196-7010994181433220-202105112138550000,</span>
-    <span class="c1"># {</span>
-    <span class="c1">#   &quot;UUID&quot;: &quot;7208979009955716-3683235938232196-7010994181433220-</span>
-    <span class="c1">#            202105112138550000&quot;,  # type: str</span>
-    <span class="c1">#   &quot;Tasks&quot;: &quot;Retrospective&quot;, # type: str</span>
-    <span class="c1">#   &quot;Description&quot;: None, # type: str</span>
-    <span class="c1">#   &quot;Status&quot;: None, # type: str</span>
-    <span class="c1">#   &quot;Assigned To&quot;: None, # type: str</span>
-    <span class="c1">#   &quot;Jira Ticket&quot;: None, # type: str</span>
-    <span class="c1">#   &quot;Duration&quot;: None, # type: str</span>
-    <span class="c1">#   &quot;Start&quot;: None, # type: str</span>
-    <span class="c1">#   &quot;Finish&quot;: None, # type: str</span>
-    <span class="c1">#   &quot;Predecessors&quot;: &quot;38FS +1w&quot;, # type: str</span>
-    <span class="c1">#   &quot;Summary&quot;: &quot;False&quot; # type: str</span>
-    <span class="c1">#       }</span>
     <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">source_sheets</span><span class="p">,</span> <span class="nb">list</span><span class="p">):</span>
         <span class="n">msg</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="s2">&quot;Source sheets should be type: list, not </span><span class="si">{}</span><span class="s2">&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>
             <span class="nb">type</span><span class="p">(</span><span class="n">source_sheets</span><span class="p">))</span>
@@ -160,9 +162,14 @@
     <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">minutes</span><span class="p">,</span> <span class="nb">int</span><span class="p">):</span>
         <span class="n">msg</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="s2">&quot;Minutes should be type: int, not </span><span class="si">{}</span><span class="s2">&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="nb">type</span><span class="p">(</span><span class="n">minutes</span><span class="p">))</span>
         <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
-    <span class="k">if</span> <span class="n">minutes</span> <span class="o">&lt;</span> <span class="mi">0</span><span class="p">:</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">minutes</span> <span class="o">&gt;=</span> <span class="mi">0</span><span class="p">:</span>
         <span class="n">msg</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="s2">&quot;Minutes should be &gt;= 0, not </span><span class="si">{}</span><span class="s2">&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">minutes</span><span class="p">)</span>
         <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="nb">all</span><span class="p">(</span><span class="nb">isinstance</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">smartsheet</span><span class="o">.</span><span class="n">models</span><span class="o">.</span><span class="n">Sheet</span><span class="p">)</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">source_sheets</span><span class="p">):</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;One or more values in the Source Sheets are not &quot;</span>
+                         <span class="s2">&quot;type: smartsheet.models.Sheet&quot;</span><span class="p">)</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="nb">all</span><span class="p">(</span><span class="nb">isinstance</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="nb">str</span><span class="p">)</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">columns</span><span class="p">):</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;One or more values in Columns are not type: str&quot;</span><span class="p">)</span>
 
     <span class="c1"># Create the empty dict we&#39;ll pass back</span>
     <span class="n">all_row_data</span> <span class="o">=</span> <span class="p">{}</span>
@@ -174,30 +181,38 @@
     <span class="k">for</span> <span class="n">sheet</span> <span class="ow">in</span> <span class="n">source_sheets</span><span class="p">:</span>
         <span class="c1"># Iterate through the columns and map the column ID to the column name</span>
         <span class="n">col_map</span> <span class="o">=</span> <span class="n">helper</span><span class="o">.</span><span class="n">get_column_map</span><span class="p">(</span><span class="n">sheet</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">app_vars</span><span class="o">.</span><span class="n">uuid_col</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">col_map</span><span class="o">.</span><span class="n">keys</span><span class="p">():</span>
+            <span class="n">msg</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="s2">&quot;Sheet ID </span><span class="si">{}</span><span class="s2"> | Sheet Name </span><span class="si">{}</span><span class="s2"> &quot;</span>
+                      <span class="s2">&quot;doesn&#39;t have UUID column. &quot;</span>
+                      <span class="s2">&quot;Skipping sheet.&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">sheet</span><span class="o">.</span><span class="n">id</span><span class="p">,</span> <span class="n">sheet</span><span class="o">.</span><span class="n">name</span><span class="p">)</span>
+            <span class="n">logging</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
+            <span class="k">continue</span>
 
         <span class="k">for</span> <span class="n">row</span> <span class="ow">in</span> <span class="n">sheet</span><span class="o">.</span><span class="n">rows</span><span class="p">:</span>
-            <span class="c1"># TODO: Replace with get_cell_data</span>
-            <span class="n">summary_cell</span> <span class="o">=</span> <span class="n">helper</span><span class="o">.</span><span class="n">get_cell_value</span><span class="p">(</span>
+            <span class="n">summary_cell</span> <span class="o">=</span> <span class="n">helper</span><span class="o">.</span><span class="n">get_cell_data</span><span class="p">(</span>
                 <span class="n">row</span><span class="p">,</span> <span class="n">app_vars</span><span class="o">.</span><span class="n">summary_col</span><span class="p">,</span> <span class="n">col_map</span><span class="p">)</span>
-            <span class="k">try</span><span class="p">:</span>
-                <span class="n">uuid_cell</span> <span class="o">=</span> <span class="n">helper</span><span class="o">.</span><span class="n">get_cell_data</span><span class="p">(</span>
-                    <span class="n">row</span><span class="p">,</span> <span class="n">app_vars</span><span class="o">.</span><span class="n">uuid_col</span><span class="p">,</span> <span class="n">col_map</span><span class="p">)</span>
-            <span class="k">except</span> <span class="ne">KeyError</span><span class="p">:</span>
-                <span class="n">logging</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">&quot;Sheet ID </span><span class="si">{}</span><span class="s2"> | Sheet Name </span><span class="si">{}</span><span class="s2"> &quot;</span>
-                              <span class="s2">&quot;doesn&#39;t have UUID column. &quot;</span>
-                              <span class="s2">&quot;Skipping sheet.&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">sheet</span><span class="o">.</span><span class="n">id</span><span class="p">,</span> <span class="n">sheet</span><span class="o">.</span><span class="n">name</span><span class="p">))</span>
-                <span class="k">break</span>
+            <span class="n">uuid_cell</span> <span class="o">=</span> <span class="n">helper</span><span class="o">.</span><span class="n">get_cell_data</span><span class="p">(</span><span class="n">row</span><span class="p">,</span> <span class="n">app_vars</span><span class="o">.</span><span class="n">uuid_col</span><span class="p">,</span> <span class="n">col_map</span><span class="p">)</span>
 
-            <span class="k">if</span> <span class="n">summary_cell</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="c1"># Get Cell Data returned None, skip this row.</span>
+            <span class="c1"># TODO: Break on this sheet. None results mean there&#39;s no</span>
+            <span class="c1"># Summary column.</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="n">summary_cell</span><span class="p">:</span>
                 <span class="n">logging</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">&quot;Summary row is </span><span class="si">{}</span><span class="s2">. Continuing to next &quot;</span>
                               <span class="s2">&quot;row.&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">summary_cell</span><span class="p">))</span>
                 <span class="k">continue</span>
-            <span class="k">elif</span> <span class="n">summary_cell</span> <span class="o">==</span> <span class="s2">&quot;True&quot;</span><span class="p">:</span>
+            <span class="c1"># Get Cell Data returned a cell, and the value is str True or</span>
+            <span class="c1"># bool True. Skip summary rows.</span>
+            <span class="k">if</span> <span class="n">summary_cell</span><span class="o">.</span><span class="n">value</span> <span class="o">==</span> <span class="s2">&quot;True&quot;</span> <span class="ow">or</span> <span class="n">summary_cell</span><span class="o">.</span><span class="n">value</span><span class="p">:</span>
                 <span class="n">logging</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">&quot;Summary row is </span><span class="si">{}</span><span class="s2">. Continuing to next &quot;</span>
-                              <span class="s2">&quot;row.&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">summary_cell</span><span class="p">))</span>
+                              <span class="s2">&quot;row.&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">summary_cell</span><span class="o">.</span><span class="n">value</span><span class="p">))</span>
                 <span class="k">continue</span>
 
-            <span class="n">row_modified</span> <span class="o">=</span> <span class="n">row</span><span class="o">.</span><span class="n">modified_at</span>
+            <span class="c1"># Get cell data returned a cell, and the value is either str None</span>
+            <span class="c1"># or bool False. Use this row.</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="n">summary_cell</span><span class="o">.</span><span class="n">value</span> <span class="ow">or</span> <span class="n">summary_cell</span><span class="o">.</span><span class="n">value</span> <span class="o">==</span> <span class="s2">&quot;None&quot;</span><span class="p">:</span>
+                <span class="n">logging</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">&quot;Summary row is </span><span class="si">{}</span><span class="s2">. Using this row. &quot;</span>
+                              <span class="s2">&quot;&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">summary_cell</span><span class="o">.</span><span class="n">value</span><span class="p">))</span>
+                <span class="n">row_modified</span> <span class="o">=</span> <span class="n">row</span><span class="o">.</span><span class="n">modified_at</span>
 
             <span class="c1"># If the row was modified in the last N minutes, add</span>
             <span class="c1"># it to the index. Otherwise, skip it.</span>
@@ -219,29 +234,26 @@
 
             <span class="c1"># Iterate through each column passed in.</span>
             <span class="k">for</span> <span class="n">col_name</span> <span class="ow">in</span> <span class="n">columns</span><span class="p">:</span>
-                <span class="k">if</span> <span class="n">col_name</span> <span class="ow">in</span> <span class="n">col_map</span><span class="o">.</span><span class="n">keys</span><span class="p">():</span>
-                    <span class="n">msg</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span>
-                        <span class="s2">&quot;</span><span class="si">{}</span><span class="s2"> found in Column Map keys&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">col_name</span><span class="p">))</span>
-                    <span class="n">logging</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
-
-                    <span class="c1"># Check if the cell exists, using the row ID and the</span>
-                    <span class="c1"># column name. If the cell exists, append its value</span>
-                    <span class="c1"># to the row_data list.</span>
-                    <span class="c1"># TODO: Replace with get_cell_data</span>
-                    <span class="n">cell</span> <span class="o">=</span> <span class="n">helper</span><span class="o">.</span><span class="n">get_cell_value</span><span class="p">(</span><span class="n">row</span><span class="p">,</span> <span class="n">col_name</span><span class="p">,</span> <span class="n">col_map</span><span class="p">)</span>
-                    <span class="n">row_data</span><span class="p">[</span><span class="n">col_name</span><span class="p">]</span> <span class="o">=</span> <span class="n">cell</span>
-
-                    <span class="n">msg</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="s2">&quot;Appending </span><span class="si">{}</span><span class="s2">: </span><span class="si">{}</span><span class="s2"> to dict&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>
-                        <span class="n">col_name</span><span class="p">,</span> <span class="n">cell</span><span class="p">)</span>
-                    <span class="n">logging</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
-
-                <span class="k">else</span><span class="p">:</span>
-                    <span class="c1"># Otherwise, log an error. There&#39;s a mismatch between</span>
-                    <span class="c1"># the column names.</span>
+                <span class="k">if</span> <span class="n">col_name</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">col_map</span><span class="o">.</span><span class="n">keys</span><span class="p">():</span>
                     <span class="n">msg</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="s2">&quot;Error. Sheet </span><span class="si">{}</span><span class="s2"> doesn&#39;t have a </span><span class="si">{}</span><span class="s2"> column. &quot;</span>
                               <span class="s2">&quot;Check column names to verify they match&quot;</span>
                               <span class="s2">&quot;&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">sheet</span><span class="o">.</span><span class="n">name</span><span class="p">,</span> <span class="n">col_name</span><span class="p">)</span>
-                    <span class="n">logging</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
+                    <span class="n">logging</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
+                    <span class="k">continue</span>
+
+                <span class="c1"># Check if the cell exists, using the row ID and the</span>
+                <span class="c1"># column name. If the cell exists, append its value</span>
+                <span class="c1"># to the row_data list.</span>
+                <span class="n">cell</span> <span class="o">=</span> <span class="n">helper</span><span class="o">.</span><span class="n">get_cell_data</span><span class="p">(</span><span class="n">row</span><span class="p">,</span> <span class="n">col_name</span><span class="p">,</span> <span class="n">col_map</span><span class="p">)</span>
+                <span class="k">if</span> <span class="ow">not</span> <span class="n">cell</span><span class="p">:</span>
+                    <span class="k">continue</span>
+
+                <span class="n">row_data</span><span class="p">[</span><span class="n">col_name</span><span class="p">]</span> <span class="o">=</span> <span class="n">cell</span><span class="o">.</span><span class="n">value</span>
+
+                <span class="n">msg</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="s2">&quot;Appending </span><span class="si">{}</span><span class="s2">: </span><span class="si">{}</span><span class="s2"> to row_data dict&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>
+                    <span class="n">col_name</span><span class="p">,</span> <span class="n">cell</span><span class="o">.</span><span class="n">value</span><span class="p">)</span>
+                <span class="n">logging</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
+
             <span class="k">if</span> <span class="n">row_data</span><span class="p">:</span>
                 <span class="n">all_row_data</span><span class="p">[</span><span class="n">uuid_cell</span><span class="o">.</span><span class="n">value</span><span class="p">]</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">row_data</span><span class="p">)</span>
     <span class="k">if</span> <span class="n">all_row_data</span><span class="p">:</span>
@@ -258,6 +270,10 @@
 <span class="sd">    Args:</span>
 <span class="sd">        source_sheets (list): A list of Sheet objects</span>
 
+<span class="sd">    Raises:</span>
+<span class="sd">        TypeError: Source sheets must be a list</span>
+<span class="sd">        ValueError: Sheets in the list must be a smartsheet.models.Sheet object</span>
+
 <span class="sd">    Returns:</span>
 <span class="sd">        dict: A nested set of dictionaries</span>
 <span class="sd">        None: There are no sheets to update.</span>
@@ -270,8 +286,8 @@
         <span class="n">msg</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="s2">&quot;Source Sheets list is empty.&quot;</span><span class="p">)</span>
         <span class="n">logging</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
         <span class="k">return</span> <span class="kc">None</span>
-    <span class="k">for</span> <span class="nb">id</span> <span class="ow">in</span> <span class="n">source_sheets</span><span class="p">:</span>
-        <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="nb">id</span><span class="p">,</span> <span class="n">smartsheet</span><span class="o">.</span><span class="n">models</span><span class="o">.</span><span class="n">Sheet</span><span class="p">):</span>
+    <span class="k">for</span> <span class="n">sheet</span> <span class="ow">in</span> <span class="n">source_sheets</span><span class="p">:</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">sheet</span><span class="p">,</span> <span class="n">smartsheet</span><span class="o">.</span><span class="n">models</span><span class="o">.</span><span class="n">Sheet</span><span class="p">):</span>
             <span class="n">msg</span> <span class="o">=</span> <span class="s2">&quot;Sheets in Source Sheets must be Smartsheet Sheet objects&quot;</span>
             <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
 
@@ -298,8 +314,7 @@
         <span class="k">for</span> <span class="n">row</span> <span class="ow">in</span> <span class="n">sheet</span><span class="o">.</span><span class="n">rows</span><span class="p">:</span>
             <span class="c1"># Get the existing UUID value and the timestamp when the row was</span>
             <span class="c1"># created.</span>
-            <span class="c1"># TODO: Replace with get_cell_data</span>
-            <span class="n">uuid_value</span> <span class="o">=</span> <span class="n">helper</span><span class="o">.</span><span class="n">get_cell_value</span><span class="p">(</span><span class="n">row</span><span class="p">,</span> <span class="n">app_vars</span><span class="o">.</span><span class="n">uuid_col</span><span class="p">,</span> <span class="n">col_map</span><span class="p">)</span>
+            <span class="n">uuid_cell</span> <span class="o">=</span> <span class="n">helper</span><span class="o">.</span><span class="n">get_cell_data</span><span class="p">(</span><span class="n">row</span><span class="p">,</span> <span class="n">app_vars</span><span class="o">.</span><span class="n">uuid_col</span><span class="p">,</span> <span class="n">col_map</span><span class="p">)</span>
             <span class="n">created_at</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">row</span><span class="o">.</span><span class="n">created_at</span><span class="p">)</span>
 
             <span class="c1"># Strip out all characters except the numbers in the timestamp.</span>
@@ -313,20 +328,20 @@
 
             <span class="c1"># Check if the UUID already exists. If there&#39;s a match, skip</span>
             <span class="c1"># updating the cell / row.</span>
-            <span class="k">if</span> <span class="n">uuid_value</span> <span class="o">==</span> <span class="n">uuid</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">uuid_cell</span><span class="o">.</span><span class="n">value</span> <span class="o">==</span> <span class="n">uuid</span><span class="p">:</span>
                 <span class="n">msg</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="s2">&quot;Cell at Column Name: </span><span class="si">{}</span><span class="s2"> | Row ID: </span><span class="si">{}</span><span class="s2"> | &quot;</span>
                           <span class="s2">&quot;Row Number: </span><span class="si">{}</span><span class="s2">, </span><span class="si">{}</span><span class="s2"> matches existing UUID. &quot;</span>
                           <span class="s2">&quot;Cell skipped.&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">app_vars</span><span class="o">.</span><span class="n">uuid_col</span><span class="p">,</span> <span class="n">row</span><span class="o">.</span><span class="n">id</span><span class="p">,</span>
                                                   <span class="n">row</span><span class="o">.</span><span class="n">row_number</span><span class="p">,</span> <span class="n">uuid</span><span class="p">)</span>
                 <span class="n">logging</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
                 <span class="k">continue</span>
-            <span class="k">elif</span> <span class="n">uuid_value</span> <span class="o">!=</span> <span class="n">uuid</span><span class="p">:</span>
+            <span class="k">elif</span> <span class="n">uuid_cell</span><span class="o">.</span><span class="n">value</span> <span class="o">!=</span> <span class="n">uuid</span><span class="p">:</span>
                 <span class="n">msg</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="s2">&quot;Cell at Column Name: </span><span class="si">{}</span><span class="s2"> | Row ID: </span><span class="si">{}</span><span class="s2"> | &quot;</span>
                           <span class="s2">&quot;Row Number: </span><span class="si">{}</span><span class="s2"> has an existing value of </span><span class="si">{}</span><span class="s2">. &quot;</span>
                           <span class="s2">&quot;Tagging for update. &quot;</span>
                           <span class="s2">&quot;</span><span class="si">{}</span><span class="s2">.&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">app_vars</span><span class="o">.</span><span class="n">uuid_col</span><span class="p">,</span> <span class="n">row</span><span class="o">.</span><span class="n">id</span><span class="p">,</span>
                                         <span class="n">row</span><span class="o">.</span><span class="n">row_number</span><span class="p">,</span>
-                                        <span class="n">uuid_value</span><span class="p">,</span> <span class="n">uuid</span><span class="p">)</span>
+                                        <span class="n">uuid_cell</span><span class="o">.</span><span class="n">value</span><span class="p">,</span> <span class="n">uuid</span><span class="p">)</span>
                 <span class="n">logging</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
                 <span class="n">rows_to_update</span><span class="p">[</span><span class="n">row</span><span class="o">.</span><span class="n">id</span><span class="p">]</span> <span class="o">=</span> <span class="p">{</span>
                     <span class="s2">&quot;column_id&quot;</span><span class="p">:</span> <span class="n">col_map</span><span class="p">[</span><span class="n">app_vars</span><span class="o">.</span><span class="n">uuid_col</span><span class="p">],</span> <span class="s2">&quot;uuid&quot;</span><span class="p">:</span> <span class="n">uuid</span><span class="p">}</span>
@@ -359,6 +374,8 @@
 
 <span class="sd">    Raises:</span>
 <span class="sd">        TypeError: Index Sheet must be an int.</span>
+<span class="sd">        ValueError: Index Sheet ID should be one of the sheet IDs defined in</span>
+<span class="sd">            the variables.py file</span>
 
 <span class="sd">    Returns:</span>
 <span class="sd">        sheet: A Smartsheet Sheet object that includes all data for the Jira</span>
@@ -415,6 +432,10 @@
 <span class="sd">        project_data (dict): The full set of UUIDs:Column data</span>
 <span class="sd">                             pulled from the API.</span>
 
+<span class="sd">    Raises:</span>
+<span class="sd">        TypeError: Project data must be a dictionary</span>
+<span class="sd">        ValueError: Project data must not be empty</span>
+
 <span class="sd">    Returns:</span>
 <span class="sd">        dict: jira_sub_index in the form of Jira Ticket: [UUID(s)] (list)</span>
 <span class="sd">        dict: project_sub_index in the form of UUID: Jira Ticket (str)</span>
@@ -423,7 +444,7 @@
         <span class="n">msg</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="s2">&quot;Project data must be type: dict not type: </span><span class="si">{}</span><span class="s2">.&quot;</span>
                   <span class="s2">&quot;&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="nb">type</span><span class="p">(</span><span class="n">project_data</span><span class="p">))</span>
         <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
-    <span class="k">if</span> <span class="n">project_data</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">project_data</span><span class="p">:</span>
         <span class="n">msg</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="s2">&quot;Project data cannot be empty&quot;</span><span class="p">)</span>
         <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
 
@@ -459,6 +480,7 @@
 <span class="sd">        TypeError: Workspace ID must be an Int or list of Ints</span>
 <span class="sd">        TypeError: Index Sheet must be an Int</span>
 <span class="sd">        ValueError: Minutes must be a positive integer or 0</span>
+<span class="sd">        ValueError: IDs in the Workspace IDs list must be ints</span>
 
 <span class="sd">    Returns:</span>
 <span class="sd">        list: A list of Sheet IDs (Int) across every workspace</span>
@@ -481,6 +503,10 @@
     <span class="k">for</span> <span class="nb">id</span> <span class="ow">in</span> <span class="n">workspace_id</span><span class="p">:</span>
         <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="nb">id</span><span class="p">,</span> <span class="nb">int</span><span class="p">):</span>
             <span class="n">msg</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="s2">&quot;Workspace ID in list should be type: int, not </span><span class="si">{}</span><span class="s2">&quot;</span>
+                      <span class="s2">&quot;&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="nb">type</span><span class="p">(</span><span class="nb">id</span><span class="p">))</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="nb">id</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="n">msg</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="s2">&quot;Workspace ID in list should be a positive integer&quot;</span>
                       <span class="s2">&quot;&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="nb">type</span><span class="p">(</span><span class="nb">id</span><span class="p">))</span>
             <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
 
@@ -568,6 +594,14 @@
 <span class="sd">                                 should pull sheet and row data, if greater</span>
 <span class="sd">                                 than 0. Defaults to 0.</span>
 
+<span class="sd">    Raises:</span>
+<span class="sd">        TypeError: Sheet IDs must be a list</span>
+<span class="sd">        ValueError: Sheet IDs must not be an empty list</span>
+<span class="sd">        ValueError: IDs in Sheet IDs must be an int</span>
+<span class="sd">        ValueError: IDs in Sheet IDs must be positive integers</span>
+<span class="sd">        TypeError: Minutes must be an int</span>
+<span class="sd">        ValueError: Minutes must be greater than or equal to zero</span>
+
 <span class="sd">    Returns:</span>
 <span class="sd">        source_sheets (list): The list of sheets, including row data for rows</span>
 <span class="sd">                              modified since the minutes value, if greater</span>
@@ -575,8 +609,12 @@
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">sheet_ids</span><span class="p">,</span> <span class="nb">list</span><span class="p">):</span>
         <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s2">&quot;Sheet IDs must be a list of IDs&quot;</span><span class="p">)</span>
+    <span class="c1"># if not sheet_ids:</span>
+    <span class="c1">#     raise ValueError(&quot;Sheet IDs list must not be empty&quot;)</span>
     <span class="k">if</span> <span class="ow">not</span> <span class="nb">all</span><span class="p">(</span><span class="nb">isinstance</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="nb">int</span><span class="p">)</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">sheet_ids</span><span class="p">):</span>
         <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;One or more values in the list are not type: int&quot;</span><span class="p">)</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="nb">all</span><span class="p">(</span><span class="n">x</span> <span class="o">&gt;</span> <span class="mi">0</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">sheet_ids</span><span class="p">):</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;IDs in sheet_ids must be positive integers&quot;</span><span class="p">)</span>
     <span class="k">if</span> <span class="n">minutes</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">minutes</span><span class="p">,</span> <span class="nb">int</span><span class="p">):</span>
         <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s2">&quot;Minutes must be type: int&quot;</span><span class="p">)</span>
     <span class="k">if</span> <span class="n">minutes</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="n">minutes</span> <span class="o">&lt;</span> <span class="mi">0</span><span class="p">:</span>
@@ -605,6 +643,17 @@
 <li><strong>minutes (int, optional):</strong>  Number of minutes into the past that the API
 should pull sheet and row data, if greater
 than 0. Defaults to 0.</li>
+</ul>
+
+<h6 id="raises">Raises</h6>
+
+<ul>
+<li><strong>TypeError:</strong>  Sheet IDs must be a list</li>
+<li><strong>ValueError:</strong>  Sheet IDs must not be an empty list</li>
+<li><strong>ValueError:</strong>  IDs in Sheet IDs must be an int</li>
+<li><strong>ValueError:</strong>  IDs in Sheet IDs must be positive integers</li>
+<li><strong>TypeError:</strong>  Minutes must be an int</li>
+<li><strong>ValueError:</strong>  Minutes must be greater than or equal to zero</li>
 </ul>
 
 <h6 id="returns">Returns</h6>
@@ -638,26 +687,16 @@ than 0. Defaults to 0.</li>
 <span class="sd">        minutes (int): The number of minutes to look back when collecting</span>
 <span class="sd">                       row data.</span>
 
+<span class="sd">    Raises:</span>
+<span class="sd">        TypeError: Source sheets must be a list</span>
+<span class="sd">        TypeError: Columns must be a list</span>
+<span class="sd">        TypeError: Minutes must be an int</span>
+<span class="sd">        ValueError: Minutes must be greater than or equal to zero</span>
+
 <span class="sd">    Returns:</span>
 <span class="sd">        dict: Returns a dict of UUIDs and the row values</span>
-<span class="sd">        none: There is no row data in any source sheet.</span>
+<span class="sd">        None: There is no row data in any source sheet.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
-    <span class="c1"># TODO: Write a test to validated the dictionary structure</span>
-    <span class="c1"># 7208979009955716-3683235938232196-7010994181433220-202105112138550000,</span>
-    <span class="c1"># {</span>
-    <span class="c1">#   &quot;UUID&quot;: &quot;7208979009955716-3683235938232196-7010994181433220-</span>
-    <span class="c1">#            202105112138550000&quot;,  # type: str</span>
-    <span class="c1">#   &quot;Tasks&quot;: &quot;Retrospective&quot;, # type: str</span>
-    <span class="c1">#   &quot;Description&quot;: None, # type: str</span>
-    <span class="c1">#   &quot;Status&quot;: None, # type: str</span>
-    <span class="c1">#   &quot;Assigned To&quot;: None, # type: str</span>
-    <span class="c1">#   &quot;Jira Ticket&quot;: None, # type: str</span>
-    <span class="c1">#   &quot;Duration&quot;: None, # type: str</span>
-    <span class="c1">#   &quot;Start&quot;: None, # type: str</span>
-    <span class="c1">#   &quot;Finish&quot;: None, # type: str</span>
-    <span class="c1">#   &quot;Predecessors&quot;: &quot;38FS +1w&quot;, # type: str</span>
-    <span class="c1">#   &quot;Summary&quot;: &quot;False&quot; # type: str</span>
-    <span class="c1">#       }</span>
     <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">source_sheets</span><span class="p">,</span> <span class="nb">list</span><span class="p">):</span>
         <span class="n">msg</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="s2">&quot;Source sheets should be type: list, not </span><span class="si">{}</span><span class="s2">&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>
             <span class="nb">type</span><span class="p">(</span><span class="n">source_sheets</span><span class="p">))</span>
@@ -668,9 +707,14 @@ than 0. Defaults to 0.</li>
     <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">minutes</span><span class="p">,</span> <span class="nb">int</span><span class="p">):</span>
         <span class="n">msg</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="s2">&quot;Minutes should be type: int, not </span><span class="si">{}</span><span class="s2">&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="nb">type</span><span class="p">(</span><span class="n">minutes</span><span class="p">))</span>
         <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
-    <span class="k">if</span> <span class="n">minutes</span> <span class="o">&lt;</span> <span class="mi">0</span><span class="p">:</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">minutes</span> <span class="o">&gt;=</span> <span class="mi">0</span><span class="p">:</span>
         <span class="n">msg</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="s2">&quot;Minutes should be &gt;= 0, not </span><span class="si">{}</span><span class="s2">&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">minutes</span><span class="p">)</span>
         <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="nb">all</span><span class="p">(</span><span class="nb">isinstance</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">smartsheet</span><span class="o">.</span><span class="n">models</span><span class="o">.</span><span class="n">Sheet</span><span class="p">)</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">source_sheets</span><span class="p">):</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;One or more values in the Source Sheets are not &quot;</span>
+                         <span class="s2">&quot;type: smartsheet.models.Sheet&quot;</span><span class="p">)</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="nb">all</span><span class="p">(</span><span class="nb">isinstance</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="nb">str</span><span class="p">)</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">columns</span><span class="p">):</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;One or more values in Columns are not type: str&quot;</span><span class="p">)</span>
 
     <span class="c1"># Create the empty dict we&#39;ll pass back</span>
     <span class="n">all_row_data</span> <span class="o">=</span> <span class="p">{}</span>
@@ -682,30 +726,38 @@ than 0. Defaults to 0.</li>
     <span class="k">for</span> <span class="n">sheet</span> <span class="ow">in</span> <span class="n">source_sheets</span><span class="p">:</span>
         <span class="c1"># Iterate through the columns and map the column ID to the column name</span>
         <span class="n">col_map</span> <span class="o">=</span> <span class="n">helper</span><span class="o">.</span><span class="n">get_column_map</span><span class="p">(</span><span class="n">sheet</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">app_vars</span><span class="o">.</span><span class="n">uuid_col</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">col_map</span><span class="o">.</span><span class="n">keys</span><span class="p">():</span>
+            <span class="n">msg</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="s2">&quot;Sheet ID </span><span class="si">{}</span><span class="s2"> | Sheet Name </span><span class="si">{}</span><span class="s2"> &quot;</span>
+                      <span class="s2">&quot;doesn&#39;t have UUID column. &quot;</span>
+                      <span class="s2">&quot;Skipping sheet.&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">sheet</span><span class="o">.</span><span class="n">id</span><span class="p">,</span> <span class="n">sheet</span><span class="o">.</span><span class="n">name</span><span class="p">)</span>
+            <span class="n">logging</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
+            <span class="k">continue</span>
 
         <span class="k">for</span> <span class="n">row</span> <span class="ow">in</span> <span class="n">sheet</span><span class="o">.</span><span class="n">rows</span><span class="p">:</span>
-            <span class="c1"># TODO: Replace with get_cell_data</span>
-            <span class="n">summary_cell</span> <span class="o">=</span> <span class="n">helper</span><span class="o">.</span><span class="n">get_cell_value</span><span class="p">(</span>
+            <span class="n">summary_cell</span> <span class="o">=</span> <span class="n">helper</span><span class="o">.</span><span class="n">get_cell_data</span><span class="p">(</span>
                 <span class="n">row</span><span class="p">,</span> <span class="n">app_vars</span><span class="o">.</span><span class="n">summary_col</span><span class="p">,</span> <span class="n">col_map</span><span class="p">)</span>
-            <span class="k">try</span><span class="p">:</span>
-                <span class="n">uuid_cell</span> <span class="o">=</span> <span class="n">helper</span><span class="o">.</span><span class="n">get_cell_data</span><span class="p">(</span>
-                    <span class="n">row</span><span class="p">,</span> <span class="n">app_vars</span><span class="o">.</span><span class="n">uuid_col</span><span class="p">,</span> <span class="n">col_map</span><span class="p">)</span>
-            <span class="k">except</span> <span class="ne">KeyError</span><span class="p">:</span>
-                <span class="n">logging</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">&quot;Sheet ID </span><span class="si">{}</span><span class="s2"> | Sheet Name </span><span class="si">{}</span><span class="s2"> &quot;</span>
-                              <span class="s2">&quot;doesn&#39;t have UUID column. &quot;</span>
-                              <span class="s2">&quot;Skipping sheet.&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">sheet</span><span class="o">.</span><span class="n">id</span><span class="p">,</span> <span class="n">sheet</span><span class="o">.</span><span class="n">name</span><span class="p">))</span>
-                <span class="k">break</span>
+            <span class="n">uuid_cell</span> <span class="o">=</span> <span class="n">helper</span><span class="o">.</span><span class="n">get_cell_data</span><span class="p">(</span><span class="n">row</span><span class="p">,</span> <span class="n">app_vars</span><span class="o">.</span><span class="n">uuid_col</span><span class="p">,</span> <span class="n">col_map</span><span class="p">)</span>
 
-            <span class="k">if</span> <span class="n">summary_cell</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="c1"># Get Cell Data returned None, skip this row.</span>
+            <span class="c1"># TODO: Break on this sheet. None results mean there&#39;s no</span>
+            <span class="c1"># Summary column.</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="n">summary_cell</span><span class="p">:</span>
                 <span class="n">logging</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">&quot;Summary row is </span><span class="si">{}</span><span class="s2">. Continuing to next &quot;</span>
                               <span class="s2">&quot;row.&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">summary_cell</span><span class="p">))</span>
                 <span class="k">continue</span>
-            <span class="k">elif</span> <span class="n">summary_cell</span> <span class="o">==</span> <span class="s2">&quot;True&quot;</span><span class="p">:</span>
+            <span class="c1"># Get Cell Data returned a cell, and the value is str True or</span>
+            <span class="c1"># bool True. Skip summary rows.</span>
+            <span class="k">if</span> <span class="n">summary_cell</span><span class="o">.</span><span class="n">value</span> <span class="o">==</span> <span class="s2">&quot;True&quot;</span> <span class="ow">or</span> <span class="n">summary_cell</span><span class="o">.</span><span class="n">value</span><span class="p">:</span>
                 <span class="n">logging</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">&quot;Summary row is </span><span class="si">{}</span><span class="s2">. Continuing to next &quot;</span>
-                              <span class="s2">&quot;row.&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">summary_cell</span><span class="p">))</span>
+                              <span class="s2">&quot;row.&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">summary_cell</span><span class="o">.</span><span class="n">value</span><span class="p">))</span>
                 <span class="k">continue</span>
 
-            <span class="n">row_modified</span> <span class="o">=</span> <span class="n">row</span><span class="o">.</span><span class="n">modified_at</span>
+            <span class="c1"># Get cell data returned a cell, and the value is either str None</span>
+            <span class="c1"># or bool False. Use this row.</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="n">summary_cell</span><span class="o">.</span><span class="n">value</span> <span class="ow">or</span> <span class="n">summary_cell</span><span class="o">.</span><span class="n">value</span> <span class="o">==</span> <span class="s2">&quot;None&quot;</span><span class="p">:</span>
+                <span class="n">logging</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">&quot;Summary row is </span><span class="si">{}</span><span class="s2">. Using this row. &quot;</span>
+                              <span class="s2">&quot;&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">summary_cell</span><span class="o">.</span><span class="n">value</span><span class="p">))</span>
+                <span class="n">row_modified</span> <span class="o">=</span> <span class="n">row</span><span class="o">.</span><span class="n">modified_at</span>
 
             <span class="c1"># If the row was modified in the last N minutes, add</span>
             <span class="c1"># it to the index. Otherwise, skip it.</span>
@@ -727,29 +779,26 @@ than 0. Defaults to 0.</li>
 
             <span class="c1"># Iterate through each column passed in.</span>
             <span class="k">for</span> <span class="n">col_name</span> <span class="ow">in</span> <span class="n">columns</span><span class="p">:</span>
-                <span class="k">if</span> <span class="n">col_name</span> <span class="ow">in</span> <span class="n">col_map</span><span class="o">.</span><span class="n">keys</span><span class="p">():</span>
-                    <span class="n">msg</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span>
-                        <span class="s2">&quot;</span><span class="si">{}</span><span class="s2"> found in Column Map keys&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">col_name</span><span class="p">))</span>
-                    <span class="n">logging</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
-
-                    <span class="c1"># Check if the cell exists, using the row ID and the</span>
-                    <span class="c1"># column name. If the cell exists, append its value</span>
-                    <span class="c1"># to the row_data list.</span>
-                    <span class="c1"># TODO: Replace with get_cell_data</span>
-                    <span class="n">cell</span> <span class="o">=</span> <span class="n">helper</span><span class="o">.</span><span class="n">get_cell_value</span><span class="p">(</span><span class="n">row</span><span class="p">,</span> <span class="n">col_name</span><span class="p">,</span> <span class="n">col_map</span><span class="p">)</span>
-                    <span class="n">row_data</span><span class="p">[</span><span class="n">col_name</span><span class="p">]</span> <span class="o">=</span> <span class="n">cell</span>
-
-                    <span class="n">msg</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="s2">&quot;Appending </span><span class="si">{}</span><span class="s2">: </span><span class="si">{}</span><span class="s2"> to dict&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>
-                        <span class="n">col_name</span><span class="p">,</span> <span class="n">cell</span><span class="p">)</span>
-                    <span class="n">logging</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
-
-                <span class="k">else</span><span class="p">:</span>
-                    <span class="c1"># Otherwise, log an error. There&#39;s a mismatch between</span>
-                    <span class="c1"># the column names.</span>
+                <span class="k">if</span> <span class="n">col_name</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">col_map</span><span class="o">.</span><span class="n">keys</span><span class="p">():</span>
                     <span class="n">msg</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="s2">&quot;Error. Sheet </span><span class="si">{}</span><span class="s2"> doesn&#39;t have a </span><span class="si">{}</span><span class="s2"> column. &quot;</span>
                               <span class="s2">&quot;Check column names to verify they match&quot;</span>
                               <span class="s2">&quot;&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">sheet</span><span class="o">.</span><span class="n">name</span><span class="p">,</span> <span class="n">col_name</span><span class="p">)</span>
-                    <span class="n">logging</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
+                    <span class="n">logging</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
+                    <span class="k">continue</span>
+
+                <span class="c1"># Check if the cell exists, using the row ID and the</span>
+                <span class="c1"># column name. If the cell exists, append its value</span>
+                <span class="c1"># to the row_data list.</span>
+                <span class="n">cell</span> <span class="o">=</span> <span class="n">helper</span><span class="o">.</span><span class="n">get_cell_data</span><span class="p">(</span><span class="n">row</span><span class="p">,</span> <span class="n">col_name</span><span class="p">,</span> <span class="n">col_map</span><span class="p">)</span>
+                <span class="k">if</span> <span class="ow">not</span> <span class="n">cell</span><span class="p">:</span>
+                    <span class="k">continue</span>
+
+                <span class="n">row_data</span><span class="p">[</span><span class="n">col_name</span><span class="p">]</span> <span class="o">=</span> <span class="n">cell</span><span class="o">.</span><span class="n">value</span>
+
+                <span class="n">msg</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="s2">&quot;Appending </span><span class="si">{}</span><span class="s2">: </span><span class="si">{}</span><span class="s2"> to row_data dict&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>
+                    <span class="n">col_name</span><span class="p">,</span> <span class="n">cell</span><span class="o">.</span><span class="n">value</span><span class="p">)</span>
+                <span class="n">logging</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
+
             <span class="k">if</span> <span class="n">row_data</span><span class="p">:</span>
                 <span class="n">all_row_data</span><span class="p">[</span><span class="n">uuid_cell</span><span class="o">.</span><span class="n">value</span><span class="p">]</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">row_data</span><span class="p">)</span>
     <span class="k">if</span> <span class="n">all_row_data</span><span class="p">:</span>
@@ -773,11 +822,20 @@ than 0. Defaults to 0.</li>
 row data.</li>
 </ul>
 
+<h6 id="raises">Raises</h6>
+
+<ul>
+<li><strong>TypeError:</strong>  Source sheets must be a list</li>
+<li><strong>TypeError:</strong>  Columns must be a list</li>
+<li><strong>TypeError:</strong>  Minutes must be an int</li>
+<li><strong>ValueError:</strong>  Minutes must be greater than or equal to zero</li>
+</ul>
+
 <h6 id="returns">Returns</h6>
 
 <blockquote>
   <p>dict: Returns a dict of UUIDs and the row values
-  none: There is no row data in any source sheet.</p>
+  None: There is no row data in any source sheet.</p>
 </blockquote>
 </div>
 
@@ -800,6 +858,10 @@ row data.</li>
 <span class="sd">    Args:</span>
 <span class="sd">        source_sheets (list): A list of Sheet objects</span>
 
+<span class="sd">    Raises:</span>
+<span class="sd">        TypeError: Source sheets must be a list</span>
+<span class="sd">        ValueError: Sheets in the list must be a smartsheet.models.Sheet object</span>
+
 <span class="sd">    Returns:</span>
 <span class="sd">        dict: A nested set of dictionaries</span>
 <span class="sd">        None: There are no sheets to update.</span>
@@ -812,8 +874,8 @@ row data.</li>
         <span class="n">msg</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="s2">&quot;Source Sheets list is empty.&quot;</span><span class="p">)</span>
         <span class="n">logging</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
         <span class="k">return</span> <span class="kc">None</span>
-    <span class="k">for</span> <span class="nb">id</span> <span class="ow">in</span> <span class="n">source_sheets</span><span class="p">:</span>
-        <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="nb">id</span><span class="p">,</span> <span class="n">smartsheet</span><span class="o">.</span><span class="n">models</span><span class="o">.</span><span class="n">Sheet</span><span class="p">):</span>
+    <span class="k">for</span> <span class="n">sheet</span> <span class="ow">in</span> <span class="n">source_sheets</span><span class="p">:</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">sheet</span><span class="p">,</span> <span class="n">smartsheet</span><span class="o">.</span><span class="n">models</span><span class="o">.</span><span class="n">Sheet</span><span class="p">):</span>
             <span class="n">msg</span> <span class="o">=</span> <span class="s2">&quot;Sheets in Source Sheets must be Smartsheet Sheet objects&quot;</span>
             <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
 
@@ -840,8 +902,7 @@ row data.</li>
         <span class="k">for</span> <span class="n">row</span> <span class="ow">in</span> <span class="n">sheet</span><span class="o">.</span><span class="n">rows</span><span class="p">:</span>
             <span class="c1"># Get the existing UUID value and the timestamp when the row was</span>
             <span class="c1"># created.</span>
-            <span class="c1"># TODO: Replace with get_cell_data</span>
-            <span class="n">uuid_value</span> <span class="o">=</span> <span class="n">helper</span><span class="o">.</span><span class="n">get_cell_value</span><span class="p">(</span><span class="n">row</span><span class="p">,</span> <span class="n">app_vars</span><span class="o">.</span><span class="n">uuid_col</span><span class="p">,</span> <span class="n">col_map</span><span class="p">)</span>
+            <span class="n">uuid_cell</span> <span class="o">=</span> <span class="n">helper</span><span class="o">.</span><span class="n">get_cell_data</span><span class="p">(</span><span class="n">row</span><span class="p">,</span> <span class="n">app_vars</span><span class="o">.</span><span class="n">uuid_col</span><span class="p">,</span> <span class="n">col_map</span><span class="p">)</span>
             <span class="n">created_at</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">row</span><span class="o">.</span><span class="n">created_at</span><span class="p">)</span>
 
             <span class="c1"># Strip out all characters except the numbers in the timestamp.</span>
@@ -855,20 +916,20 @@ row data.</li>
 
             <span class="c1"># Check if the UUID already exists. If there&#39;s a match, skip</span>
             <span class="c1"># updating the cell / row.</span>
-            <span class="k">if</span> <span class="n">uuid_value</span> <span class="o">==</span> <span class="n">uuid</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">uuid_cell</span><span class="o">.</span><span class="n">value</span> <span class="o">==</span> <span class="n">uuid</span><span class="p">:</span>
                 <span class="n">msg</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="s2">&quot;Cell at Column Name: </span><span class="si">{}</span><span class="s2"> | Row ID: </span><span class="si">{}</span><span class="s2"> | &quot;</span>
                           <span class="s2">&quot;Row Number: </span><span class="si">{}</span><span class="s2">, </span><span class="si">{}</span><span class="s2"> matches existing UUID. &quot;</span>
                           <span class="s2">&quot;Cell skipped.&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">app_vars</span><span class="o">.</span><span class="n">uuid_col</span><span class="p">,</span> <span class="n">row</span><span class="o">.</span><span class="n">id</span><span class="p">,</span>
                                                   <span class="n">row</span><span class="o">.</span><span class="n">row_number</span><span class="p">,</span> <span class="n">uuid</span><span class="p">)</span>
                 <span class="n">logging</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
                 <span class="k">continue</span>
-            <span class="k">elif</span> <span class="n">uuid_value</span> <span class="o">!=</span> <span class="n">uuid</span><span class="p">:</span>
+            <span class="k">elif</span> <span class="n">uuid_cell</span><span class="o">.</span><span class="n">value</span> <span class="o">!=</span> <span class="n">uuid</span><span class="p">:</span>
                 <span class="n">msg</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="s2">&quot;Cell at Column Name: </span><span class="si">{}</span><span class="s2"> | Row ID: </span><span class="si">{}</span><span class="s2"> | &quot;</span>
                           <span class="s2">&quot;Row Number: </span><span class="si">{}</span><span class="s2"> has an existing value of </span><span class="si">{}</span><span class="s2">. &quot;</span>
                           <span class="s2">&quot;Tagging for update. &quot;</span>
                           <span class="s2">&quot;</span><span class="si">{}</span><span class="s2">.&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">app_vars</span><span class="o">.</span><span class="n">uuid_col</span><span class="p">,</span> <span class="n">row</span><span class="o">.</span><span class="n">id</span><span class="p">,</span>
                                         <span class="n">row</span><span class="o">.</span><span class="n">row_number</span><span class="p">,</span>
-                                        <span class="n">uuid_value</span><span class="p">,</span> <span class="n">uuid</span><span class="p">)</span>
+                                        <span class="n">uuid_cell</span><span class="o">.</span><span class="n">value</span><span class="p">,</span> <span class="n">uuid</span><span class="p">)</span>
                 <span class="n">logging</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
                 <span class="n">rows_to_update</span><span class="p">[</span><span class="n">row</span><span class="o">.</span><span class="n">id</span><span class="p">]</span> <span class="o">=</span> <span class="p">{</span>
                     <span class="s2">&quot;column_id&quot;</span><span class="p">:</span> <span class="n">col_map</span><span class="p">[</span><span class="n">app_vars</span><span class="o">.</span><span class="n">uuid_col</span><span class="p">],</span> <span class="s2">&quot;uuid&quot;</span><span class="p">:</span> <span class="n">uuid</span><span class="p">}</span>
@@ -903,6 +964,13 @@ row data.</li>
 <li><strong>source_sheets (list):</strong>  A list of Sheet objects</li>
 </ul>
 
+<h6 id="raises">Raises</h6>
+
+<ul>
+<li><strong>TypeError:</strong>  Source sheets must be a list</li>
+<li><strong>ValueError:</strong>  Sheets in the list must be a smartsheet.models.Sheet object</li>
+</ul>
+
 <h6 id="returns">Returns</h6>
 
 <blockquote>
@@ -932,6 +1000,8 @@ row data.</li>
 
 <span class="sd">    Raises:</span>
 <span class="sd">        TypeError: Index Sheet must be an int.</span>
+<span class="sd">        ValueError: Index Sheet ID should be one of the sheet IDs defined in</span>
+<span class="sd">            the variables.py file</span>
 
 <span class="sd">    Returns:</span>
 <span class="sd">        sheet: A Smartsheet Sheet object that includes all data for the Jira</span>
@@ -995,6 +1065,8 @@ row data.</li>
 
 <ul>
 <li><strong>TypeError:</strong>  Index Sheet must be an int.</li>
+<li><strong>ValueError:</strong>  Index Sheet ID should be one of the sheet IDs defined in
+the variables.py file</li>
 </ul>
 
 <h6 id="returns">Returns</h6>
@@ -1028,6 +1100,10 @@ row data.</li>
 <span class="sd">        project_data (dict): The full set of UUIDs:Column data</span>
 <span class="sd">                             pulled from the API.</span>
 
+<span class="sd">    Raises:</span>
+<span class="sd">        TypeError: Project data must be a dictionary</span>
+<span class="sd">        ValueError: Project data must not be empty</span>
+
 <span class="sd">    Returns:</span>
 <span class="sd">        dict: jira_sub_index in the form of Jira Ticket: [UUID(s)] (list)</span>
 <span class="sd">        dict: project_sub_index in the form of UUID: Jira Ticket (str)</span>
@@ -1036,7 +1112,7 @@ row data.</li>
         <span class="n">msg</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="s2">&quot;Project data must be type: dict not type: </span><span class="si">{}</span><span class="s2">.&quot;</span>
                   <span class="s2">&quot;&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="nb">type</span><span class="p">(</span><span class="n">project_data</span><span class="p">))</span>
         <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
-    <span class="k">if</span> <span class="n">project_data</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">project_data</span><span class="p">:</span>
         <span class="n">msg</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="s2">&quot;Project data cannot be empty&quot;</span><span class="p">)</span>
         <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
 
@@ -1064,6 +1140,13 @@ row data.</li>
 <ul>
 <li><strong>project_data (dict):</strong>  The full set of UUIDs:Column data
 pulled from the API.</li>
+</ul>
+
+<h6 id="raises">Raises</h6>
+
+<ul>
+<li><strong>TypeError:</strong>  Project data must be a dictionary</li>
+<li><strong>ValueError:</strong>  Project data must not be empty</li>
 </ul>
 
 <h6 id="returns">Returns</h6>
@@ -1108,6 +1191,7 @@ pulled from the API.</li>
 <span class="sd">        TypeError: Workspace ID must be an Int or list of Ints</span>
 <span class="sd">        TypeError: Index Sheet must be an Int</span>
 <span class="sd">        ValueError: Minutes must be a positive integer or 0</span>
+<span class="sd">        ValueError: IDs in the Workspace IDs list must be ints</span>
 
 <span class="sd">    Returns:</span>
 <span class="sd">        list: A list of Sheet IDs (Int) across every workspace</span>
@@ -1130,6 +1214,10 @@ pulled from the API.</li>
     <span class="k">for</span> <span class="nb">id</span> <span class="ow">in</span> <span class="n">workspace_id</span><span class="p">:</span>
         <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="nb">id</span><span class="p">,</span> <span class="nb">int</span><span class="p">):</span>
             <span class="n">msg</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="s2">&quot;Workspace ID in list should be type: int, not </span><span class="si">{}</span><span class="s2">&quot;</span>
+                      <span class="s2">&quot;&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="nb">type</span><span class="p">(</span><span class="nb">id</span><span class="p">))</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="nb">id</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="n">msg</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="s2">&quot;Workspace ID in list should be a positive integer&quot;</span>
                       <span class="s2">&quot;&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="nb">type</span><span class="p">(</span><span class="nb">id</span><span class="p">))</span>
             <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
 
@@ -1215,6 +1303,7 @@ Defaults to Dev</li>
 <li><strong>TypeError:</strong>  Workspace ID must be an Int or list of Ints</li>
 <li><strong>TypeError:</strong>  Index Sheet must be an Int</li>
 <li><strong>ValueError:</strong>  Minutes must be a positive integer or 0</li>
+<li><strong>ValueError:</strong>  IDs in the Workspace IDs list must be ints</li>
 </ul>
 
 <h6 id="returns">Returns</h6>

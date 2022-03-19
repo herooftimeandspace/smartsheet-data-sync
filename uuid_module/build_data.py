@@ -28,6 +28,9 @@ def build_linked_cell(jira_index_sheet, jira_index_col_map, dest_col_map,
         TypeError: Destination Column Map must be a dict
         TypeError: Index Row ID must be a string
         TypeError: Column must be a string
+        ValueError: Index column map must not be empty
+        ValueError: Destination column map must not be empty
+        ValueError: Index Row ID must be a positive integer
 
     Returns:
         Cell: The cell object to be written back to the destination, with
@@ -54,6 +57,18 @@ def build_linked_cell(jira_index_sheet, jira_index_col_map, dest_col_map,
         msg = str("Column must be type: str, not"
                   " {}").format(type(column))
         raise TypeError(msg)
+    if not jira_index_col_map:
+        msg = str("Jira Index column map must not be empty."
+                  "").format()
+        raise ValueError(msg)
+    if not dest_col_map:
+        msg = str("Destination Sheet column map must not be empty."
+                  "").format()
+        raise ValueError(msg)
+    if not idx_row_id > 0:
+        msg = str("Jira Index row ID must not be zero or negative."
+                  "").format()
+        raise ValueError(msg)
 
     new_cell_link = smartsheet.models.CellLink()
     new_cell_link.sheet_id = jira_index_sheet.id

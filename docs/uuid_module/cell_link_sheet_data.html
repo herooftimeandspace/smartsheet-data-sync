@@ -282,9 +282,9 @@
                 <span class="n">logging</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="n">dest_row</span><span class="p">)</span>
                 <span class="k">if</span> <span class="n">dest_row</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
                     <span class="c1"># TODO: Replace with get_cell_data</span>
-                    <span class="n">desc_cell</span> <span class="o">=</span> <span class="n">helper</span><span class="o">.</span><span class="n">get_cell_value</span><span class="p">(</span>
+                    <span class="n">desc_cell</span> <span class="o">=</span> <span class="n">helper</span><span class="o">.</span><span class="n">get_cell_data</span><span class="p">(</span>
                         <span class="n">dest_row</span><span class="p">,</span> <span class="n">app_vars</span><span class="o">.</span><span class="n">description_col</span><span class="p">,</span> <span class="n">dest_col_map</span><span class="p">)</span>
-                    <span class="n">logging</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="n">desc_cell</span><span class="p">)</span>
+                    <span class="n">logging</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="n">desc_cell</span><span class="o">.</span><span class="n">value</span><span class="p">)</span>
 
             <span class="k">for</span> <span class="n">col</span> <span class="ow">in</span> <span class="n">sync_columns</span><span class="p">:</span>
                 <span class="k">if</span> <span class="n">dest_row</span><span class="p">:</span>
@@ -631,9 +631,9 @@
                 <span class="n">logging</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="n">dest_row</span><span class="p">)</span>
                 <span class="k">if</span> <span class="n">dest_row</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
                     <span class="c1"># TODO: Replace with get_cell_data</span>
-                    <span class="n">desc_cell</span> <span class="o">=</span> <span class="n">helper</span><span class="o">.</span><span class="n">get_cell_value</span><span class="p">(</span>
+                    <span class="n">desc_cell</span> <span class="o">=</span> <span class="n">helper</span><span class="o">.</span><span class="n">get_cell_data</span><span class="p">(</span>
                         <span class="n">dest_row</span><span class="p">,</span> <span class="n">app_vars</span><span class="o">.</span><span class="n">description_col</span><span class="p">,</span> <span class="n">dest_col_map</span><span class="p">)</span>
-                    <span class="n">logging</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="n">desc_cell</span><span class="p">)</span>
+                    <span class="n">logging</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="n">desc_cell</span><span class="o">.</span><span class="n">value</span><span class="p">)</span>
 
             <span class="k">for</span> <span class="n">col</span> <span class="ow">in</span> <span class="n">sync_columns</span><span class="p">:</span>
                 <span class="k">if</span> <span class="n">dest_row</span><span class="p">:</span>

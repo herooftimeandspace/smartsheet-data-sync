@@ -99,6 +99,18 @@ def test_build_linked_cell_0(jira_index_fixture, sheet_fixture):
         build_data.build_linked_cell(jira_index_sheet, jira_index_col_map,
                                      dest_col_map, "idx_row_id",
                                      app_vars.jira_col)
+    with pytest.raises(ValueError):
+        build_data.build_linked_cell(jira_index_sheet, {},
+                                     dest_col_map, idx_row_id,
+                                     app_vars.jira_col)
+    with pytest.raises(ValueError):
+        build_data.build_linked_cell(jira_index_sheet, jira_index_col_map,
+                                     {}, idx_row_id,
+                                     app_vars.jira_col)
+    with pytest.raises(ValueError):
+        build_data.build_linked_cell(jira_index_sheet, jira_index_col_map,
+                                     dest_col_map, -1337,
+                                     app_vars.jira_col)
 
 
 def test_build_linked_cell_1(jira_index_fixture, sheet_fixture):

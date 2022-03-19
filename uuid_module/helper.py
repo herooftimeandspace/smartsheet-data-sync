@@ -21,6 +21,11 @@ def get_cell_data(row, column_name, column_map):
         TypeError: Validates row is a Smartsheet Row object
         TypeError: Validates column_name is a string
         TypeError: Validates column_map is a dict
+        ValueError: Column map must not be empty
+        TypeError: Column map keys must be type str
+        TypeError: Column map values must be type int
+        ValueError: Column map values must be positive integers
+        KeyError: Column Name must exist in the column map
 
     Returns:
         cell (Cell): A Cell object or None if the column is not found in the
@@ -28,20 +33,25 @@ def get_cell_data(row, column_name, column_map):
     """
     if not isinstance(row, smartsheet.models.row.Row):
         raise TypeError("Row is not a Smartsheet Row type object")
-    elif not isinstance(column_name, str):
+    if not isinstance(column_name, str):
         raise TypeError("Column name must be a string")
-    elif not isinstance(column_map, dict):
+    if not isinstance(column_map, dict):
         raise TypeError("Column Map must be a dict of ColNames:ColIDs")
-
-    try:
-        column_id = column_map[column_name]
-    except KeyError:
+    if not column_map:
+        raise ValueError("Column Map must not be empty.")
+    for k, v in column_map.items():
+        if not isinstance(k, str):
+            raise TypeError("Column map keys must be type: str")
+        if not isinstance(v, int):
+            raise TypeError("Column IDs must be type: int")
+        if not v > 0:
+            raise ValueError("Column IDs must be a positive integer")
+    if column_name not in column_map.keys():
         msg = str("Column not found: {}").format(column_name)
-        logging.debug(msg)
         raise KeyError(msg)
-        # return None
-    else:
-        return row.get_column(column_id)
+
+    column_id = column_map[column_name]
+    return row.get_column(column_id)
 
 
 def get_column_map(sheet):
@@ -57,9 +67,9 @@ def get_column_map(sheet):
         dict: A map of Column Name: Column ID
     """
     if not isinstance(sheet, smartsheet.models.sheet.Sheet):
-        err = str("Sheet must be a Smartsheet Sheet object,"
+        msg = str("Sheet must be a Smartsheet Sheet object,"
                   "not {}").format(type(sheet))
-        raise TypeError(err)
+        raise TypeError(msg)
 
     column_map = {}
     for column in sheet.columns:
@@ -69,25 +79,28 @@ def get_column_map(sheet):
 
 def has_cell_link(old_cell, direction, **kwargs):
     """Determine if an existing cell already has a cell link, which direction
-       and whether it needs to be repaired. Returning None currently disabled
-       because it caused the script to skip valid cells that should have been
-       linked.
+       and whether it needs to be repaired. If kwargs are passed when
+       direction is set to 'Out', validates that the sheet_id and row_id passed
+       in kwargs match a sheet.id and row.id in the links_out_to_cells
+       object_value. If kwargs are invalid, re-runs the function without
+       the kwargs.
 
     Args:
         old_cell (Cell): The Cell object to check.
         direction (str): Whether to check incoming or outgoing cell links.
 
     Raises:
-        TypeError: Validates old_cell is a Smartsheet cell object
-        TypeError: Validates direction is a string
-        ValueError: Validates direction is either 'In' or 'Out'
-        KeyError: If the old_cell doesn't have the extended attributes for
-                  cell links raises as 'Unlinked'
+        TypeError: old_cell must be a Smartsheet cell object
+        TypeError: Direction must be a str
+        ValueError: Direction must be either 'In' or 'Out', case-sensitive
+        TypeError: Kwargs passed must be dict or None
+        TypeError: Kwarg names must be str
+        TypeError: Kwarg values must be int
 
     Returns:
-        str: "Linked" if status is "OK", "Broken" if staus is "BROKEN",
-             "Unlinked" if the cell doesn't have a cell link property. If the
-             cell link type is 'linksOutToCells', always return "Linked".
+        str: Returns the status of the cell link if the value exists. Returns
+             "Unlinked" if the link_in_to_cell or links_out_to_cells properties
+             return AttributeError or IndexError
     """
     if not isinstance(old_cell, smartsheet.models.cell.Cell):
         msg = str("Old Cell should be type: Cell not type: {}"
@@ -201,57 +214,18 @@ def has_cell_link(old_cell, direction, **kwargs):
         return status
 
 
-# TODO: Replace with get_cell_data
-def get_cell_value(row, col_name, col_map):
-    """
-    Get the value of the cell or return None
-
-    Args:
-        row (Row): The row of data that contains the IDs
-        col_name (str): The name of the referenced column
-        col_map (dict): The map of Column Name: Column ID
-
-    Raises:
-        TypeError: Validates row is a Smartsheet Row object
-        TypeError: Validates col_name is a string
-        TypeError: Validates col_map is a dict
-
-    Returns:
-        str: The value of the cell.
-        none: If the cell doesn't exist or has a null value.
-    """
-
-    # Validate data types.
-    if not isinstance(row, smartsheet.models.row.Row):
-        raise TypeError("Row is not a Smartsheet Row type object")
-    elif not isinstance(col_name, str):
-        raise TypeError("Column name must be a string")
-    elif not isinstance(col_map, dict):
-        raise TypeError("Column Map must be a dict of ColNames:ColIDs")
-
-    try:
-        cell = get_cell_data(row, col_name, col_map)
-    except KeyError:
-        cell = None
-    if cell is None or cell.value is None:
-        msg = str("Cell is 'None' or cell value is 'None'. "
-                  "Returning 'None'").format()
-        logging.debug(msg)
-        return None
-    else:
-        return str(cell.value)
-
-
 def json_extract(obj, key):
     """Recursively fetch values from nested JSON.
 
     Args:
-        obj (json): The JSON object to pars through
+        obj (dict): The JSON object to pars through
         key (str): The key to search for
 
     Raises:
-        TypeError: If the objects passed in aren't a dict or string,
-                   respectively.
+        TypeError: Obj must be a json dict
+        TypeError: Key must be a str
+        ValueError: Obj must not be empty
+        ValueError: Key must not be empty
 
     Returns:
         str: The value if a key matches inside the obj JSON
@@ -262,6 +236,10 @@ def json_extract(obj, key):
         raise TypeError("Obj must be a dict (json).")
     if not isinstance(key, str):
         raise TypeError("Key must be a string.")
+    if not obj:
+        raise ValueError("'Obj' must not be empty")
+    if not key:
+        raise ValueError("'Key' must not be empty")
 
     # Create an empty list as an 'array'
     arr = []
@@ -292,7 +270,8 @@ def truncate(number, decimals=0):
                                   Defaults to 0.
 
     Raises:
-        TypeError: Validates the number is actually a number.
+        TypeError: Number must be a float
+        TypeError: Decimals must be an int
         ValueError: Validates that the decimal is 0 or more.
 
     Returns:
@@ -367,11 +346,7 @@ def chunks(source, n):
         msg = str("Second argument must be type: int, not {}"
                   "").format(type(n))
         raise TypeError(msg)
-    if n == 0:
-        msg = str("Second argument must be non-zero, not {}"
-                  "").format(type(n))
-        raise ValueError(msg)
-    if n < 0:
+    if n <= 0:
         msg = str("Second argument must be greater than zero, not {}"
                   "").format(type(n))
         raise ValueError(msg)
@@ -385,9 +360,16 @@ def chunks(source, n):
 
 
 def get_local_paths():
+    """Get the local path for the project so that we can redirect logging
+    and test fixtures to the correct directories
+
+    Returns:
+        str: The root directory of the project
+        str: THe directory where test fixtures are located in the project
+    """
     cwd = os.path.dirname(os.path.abspath(__file__))
     p = Path(cwd)
-    root = p.parent
+    root = str(p.parent)
     fixtures_dir = p.parent
     fixtures_dir = str(str(fixtures_dir) + "/test_fixtures")
     return root, fixtures_dir

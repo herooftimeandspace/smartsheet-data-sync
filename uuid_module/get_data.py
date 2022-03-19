@@ -27,6 +27,14 @@ def refresh_source_sheets(sheet_ids, minutes=0):
                                  should pull sheet and row data, if greater
                                  than 0. Defaults to 0.
 
+    Raises:
+        TypeError: Sheet IDs must be a list
+        ValueError: Sheet IDs must not be an empty list
+        ValueError: IDs in Sheet IDs must be an int
+        ValueError: IDs in Sheet IDs must be positive integers
+        TypeError: Minutes must be an int
+        ValueError: Minutes must be greater than or equal to zero
+
     Returns:
         source_sheets (list): The list of sheets, including row data for rows
                               modified since the minutes value, if greater
@@ -34,8 +42,12 @@ def refresh_source_sheets(sheet_ids, minutes=0):
     """
     if not isinstance(sheet_ids, list):
         raise TypeError("Sheet IDs must be a list of IDs")
+    # if not sheet_ids:
+    #     raise ValueError("Sheet IDs list must not be empty")
     if not all(isinstance(x, int) for x in sheet_ids):
         raise ValueError("One or more values in the list are not type: int")
+    if not all(x > 0 for x in sheet_ids):
+        raise ValueError("IDs in sheet_ids must be positive integers")
     if minutes is not None and not isinstance(minutes, int):
         raise TypeError("Minutes must be type: int")
     if minutes is not None and minutes < 0:
@@ -61,26 +73,16 @@ def get_all_row_data(source_sheets, columns, minutes):
         minutes (int): The number of minutes to look back when collecting
                        row data.
 
+    Raises:
+        TypeError: Source sheets must be a list
+        TypeError: Columns must be a list
+        TypeError: Minutes must be an int
+        ValueError: Minutes must be greater than or equal to zero
+
     Returns:
         dict: Returns a dict of UUIDs and the row values
-        none: There is no row data in any source sheet.
+        None: There is no row data in any source sheet.
     """
-    # TODO: Write a test to validated the dictionary structure
-    # 7208979009955716-3683235938232196-7010994181433220-202105112138550000,
-    # {
-    #   "UUID": "7208979009955716-3683235938232196-7010994181433220-
-    #            202105112138550000",  # type: str
-    #   "Tasks": "Retrospective", # type: str
-    #   "Description": None, # type: str
-    #   "Status": None, # type: str
-    #   "Assigned To": None, # type: str
-    #   "Jira Ticket": None, # type: str
-    #   "Duration": None, # type: str
-    #   "Start": None, # type: str
-    #   "Finish": None, # type: str
-    #   "Predecessors": "38FS +1w", # type: str
-    #   "Summary": "False" # type: str
-    #       }
     if not isinstance(source_sheets, list):
         msg = str("Source sheets should be type: list, not {}").format(
             type(source_sheets))
@@ -91,9 +93,14 @@ def get_all_row_data(source_sheets, columns, minutes):
     if not isinstance(minutes, int):
         msg = str("Minutes should be type: int, not {}").format(type(minutes))
         raise TypeError(msg)
-    if minutes < 0:
+    if not minutes >= 0:
         msg = str("Minutes should be >= 0, not {}").format(minutes)
         raise ValueError(msg)
+    if not all(isinstance(x, smartsheet.models.Sheet) for x in source_sheets):
+        raise ValueError("One or more values in the Source Sheets are not "
+                         "type: smartsheet.models.Sheet")
+    if not all(isinstance(x, str) for x in columns):
+        raise ValueError("One or more values in Columns are not type: str")
 
     # Create the empty dict we'll pass back
     all_row_data = {}
@@ -105,30 +112,38 @@ def get_all_row_data(source_sheets, columns, minutes):
     for sheet in source_sheets:
         # Iterate through the columns and map the column ID to the column name
         col_map = helper.get_column_map(sheet)
+        if app_vars.uuid_col not in col_map.keys():
+            msg = str("Sheet ID {} | Sheet Name {} "
+                      "doesn't have UUID column. "
+                      "Skipping sheet.").format(sheet.id, sheet.name)
+            logging.debug(msg)
+            continue
 
         for row in sheet.rows:
-            # TODO: Replace with get_cell_data
-            summary_cell = helper.get_cell_value(
+            summary_cell = helper.get_cell_data(
                 row, app_vars.summary_col, col_map)
-            try:
-                uuid_cell = helper.get_cell_data(
-                    row, app_vars.uuid_col, col_map)
-            except KeyError:
-                logging.debug("Sheet ID {} | Sheet Name {} "
-                              "doesn't have UUID column. "
-                              "Skipping sheet.".format(sheet.id, sheet.name))
-                break
+            uuid_cell = helper.get_cell_data(row, app_vars.uuid_col, col_map)
 
-            if summary_cell is None:
+            # Get Cell Data returned None, skip this row.
+            # TODO: Break on this sheet. None results mean there's no
+            # Summary column.
+            if not summary_cell:
                 logging.debug("Summary row is {}. Continuing to next "
                               "row.".format(summary_cell))
                 continue
-            elif summary_cell == "True":
+            # Get Cell Data returned a cell, and the value is str True or
+            # bool True. Skip summary rows.
+            if summary_cell.value == "True" or summary_cell.value:
                 logging.debug("Summary row is {}. Continuing to next "
-                              "row.".format(summary_cell))
+                              "row.".format(summary_cell.value))
                 continue
 
-            row_modified = row.modified_at
+            # Get cell data returned a cell, and the value is either str None
+            # or bool False. Use this row.
+            if not summary_cell.value or summary_cell.value == "None":
+                logging.debug("Summary row is {}. Using this row. "
+                              "".format(summary_cell.value))
+                row_modified = row.modified_at
 
             # If the row was modified in the last N minutes, add
             # it to the index. Otherwise, skip it.
@@ -150,29 +165,26 @@ def get_all_row_data(source_sheets, columns, minutes):
 
             # Iterate through each column passed in.
             for col_name in columns:
-                if col_name in col_map.keys():
-                    msg = str(
-                        "{} found in Column Map keys".format(col_name))
-                    logging.debug(msg)
-
-                    # Check if the cell exists, using the row ID and the
-                    # column name. If the cell exists, append its value
-                    # to the row_data list.
-                    # TODO: Replace with get_cell_data
-                    cell = helper.get_cell_value(row, col_name, col_map)
-                    row_data[col_name] = cell
-
-                    msg = str("Appending {}: {} to dict").format(
-                        col_name, cell)
-                    logging.debug(msg)
-
-                else:
-                    # Otherwise, log an error. There's a mismatch between
-                    # the column names.
+                if col_name not in col_map.keys():
                     msg = str("Error. Sheet {} doesn't have a {} column. "
                               "Check column names to verify they match"
                               "").format(sheet.name, col_name)
-                    logging.info(msg)
+                    logging.debug(msg)
+                    continue
+
+                # Check if the cell exists, using the row ID and the
+                # column name. If the cell exists, append its value
+                # to the row_data list.
+                cell = helper.get_cell_data(row, col_name, col_map)
+                if not cell:
+                    continue
+
+                row_data[col_name] = cell.value
+
+                msg = str("Appending {}: {} to row_data dict").format(
+                    col_name, cell.value)
+                logging.debug(msg)
+
             if row_data:
                 all_row_data[uuid_cell.value].update(row_data)
     if all_row_data:
@@ -189,6 +201,10 @@ def get_blank_uuids(source_sheets):
     Args:
         source_sheets (list): A list of Sheet objects
 
+    Raises:
+        TypeError: Source sheets must be a list
+        ValueError: Sheets in the list must be a smartsheet.models.Sheet object
+
     Returns:
         dict: A nested set of dictionaries
         None: There are no sheets to update.
@@ -201,8 +217,8 @@ def get_blank_uuids(source_sheets):
         msg = str("Source Sheets list is empty.")
         logging.info(msg)
         return None
-    for id in source_sheets:
-        if not isinstance(id, smartsheet.models.Sheet):
+    for sheet in source_sheets:
+        if not isinstance(sheet, smartsheet.models.Sheet):
             msg = "Sheets in Source Sheets must be Smartsheet Sheet objects"
             raise ValueError(msg)
 
@@ -229,8 +245,7 @@ def get_blank_uuids(source_sheets):
         for row in sheet.rows:
             # Get the existing UUID value and the timestamp when the row was
             # created.
-            # TODO: Replace with get_cell_data
-            uuid_value = helper.get_cell_value(row, app_vars.uuid_col, col_map)
+            uuid_cell = helper.get_cell_data(row, app_vars.uuid_col, col_map)
             created_at = str(row.created_at)
 
             # Strip out all characters except the numbers in the timestamp.
@@ -244,20 +259,20 @@ def get_blank_uuids(source_sheets):
 
             # Check if the UUID already exists. If there's a match, skip
             # updating the cell / row.
-            if uuid_value == uuid:
+            if uuid_cell.value == uuid:
                 msg = str("Cell at Column Name: {} | Row ID: {} | "
                           "Row Number: {}, {} matches existing UUID. "
                           "Cell skipped.").format(app_vars.uuid_col, row.id,
                                                   row.row_number, uuid)
                 logging.debug(msg)
                 continue
-            elif uuid_value != uuid:
+            elif uuid_cell.value != uuid:
                 msg = str("Cell at Column Name: {} | Row ID: {} | "
                           "Row Number: {} has an existing value of {}. "
                           "Tagging for update. "
                           "{}.").format(app_vars.uuid_col, row.id,
                                         row.row_number,
-                                        uuid_value, uuid)
+                                        uuid_cell.value, uuid)
                 logging.debug(msg)
                 rows_to_update[row.id] = {
                     "column_id": col_map[app_vars.uuid_col], "uuid": uuid}
@@ -290,6 +305,8 @@ def load_jira_index(index_sheet_id=app_vars.dev_jira_idx_sheet):
 
     Raises:
         TypeError: Index Sheet must be an int.
+        ValueError: Index Sheet ID should be one of the sheet IDs defined in
+            the variables.py file
 
     Returns:
         sheet: A Smartsheet Sheet object that includes all data for the Jira
@@ -346,6 +363,10 @@ def get_sub_indexes(project_data):
         project_data (dict): The full set of UUIDs:Column data
                              pulled from the API.
 
+    Raises:
+        TypeError: Project data must be a dictionary
+        ValueError: Project data must not be empty
+
     Returns:
         dict: jira_sub_index in the form of Jira Ticket: [UUID(s)] (list)
         dict: project_sub_index in the form of UUID: Jira Ticket (str)
@@ -354,7 +375,7 @@ def get_sub_indexes(project_data):
         msg = str("Project data must be type: dict not type: {}."
                   "").format(type(project_data))
         raise TypeError(msg)
-    if project_data is None:
+    if not project_data:
         msg = str("Project data cannot be empty")
         raise ValueError(msg)
 
@@ -390,6 +411,7 @@ def get_all_sheet_ids(minutes=app_vars.dev_minutes,
         TypeError: Workspace ID must be an Int or list of Ints
         TypeError: Index Sheet must be an Int
         ValueError: Minutes must be a positive integer or 0
+        ValueError: IDs in the Workspace IDs list must be ints
 
     Returns:
         list: A list of Sheet IDs (Int) across every workspace
@@ -412,6 +434,10 @@ def get_all_sheet_ids(minutes=app_vars.dev_minutes,
     for id in workspace_id:
         if not isinstance(id, int):
             msg = str("Workspace ID in list should be type: int, not {}"
+                      "").format(type(id))
+            raise ValueError(msg)
+        if not id > 0:
+            msg = str("Workspace ID in list should be a positive integer"
                       "").format(type(id))
             raise ValueError(msg)
 

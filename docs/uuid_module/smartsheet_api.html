@@ -45,9 +45,6 @@
             <li>
                     <a class="function" href="#get_row">get_row</a>
             </li>
-            <li>
-                    <a class="function" href="#get_columns">get_columns</a>
-            </li>
     </ul>
 
 
@@ -76,15 +73,15 @@
 
 
 <span class="k">def</span> <span class="nf">set_smartsheet_client</span><span class="p">():</span>
-    <span class="c1"># Set the SMARTSHEET_ACCESS_TOKEN by pulling from the AWS Secrets API,</span>
-    <span class="c1"># based on the environment variable passed in.</span>
-    <span class="c1"># Defer importing the token and secrets until all modules are loaded.</span>
+    <span class="sd">&quot;&quot;&quot;Set the SMARTSHEET_ACCESS_TOKEN by pulling from the AWS Secrets API,</span>
+<span class="sd">       based on the environment variable passed in.</span>
+<span class="sd">       Defer importing the token and secrets until all modules are loaded.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
     <span class="k">global</span> <span class="n">smartsheet_client</span>
     <span class="kn">import</span> <span class="nn">app.config</span> <span class="k">as</span> <span class="nn">config</span>
     <span class="n">smartsheet_client</span> <span class="o">=</span> <span class="n">config</span><span class="o">.</span><span class="n">smartsheet_client</span>
 
 
-<span class="c1"># TODO: Handle passing in smartsheet.Sheet objects</span>
 <span class="k">def</span> <span class="nf">write_rows_to_sheet</span><span class="p">(</span><span class="n">rows_to_write</span><span class="p">,</span> <span class="n">sheet</span><span class="p">,</span> <span class="n">write_method</span><span class="o">=</span><span class="s2">&quot;add&quot;</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Args:</span>
@@ -97,9 +94,12 @@
 
 <span class="sd">    Raises:</span>
 <span class="sd">        TypeError: Rows to Write must be a list of row data</span>
+<span class="sd">        TypeError: Row in Rows to Write must be a smartsheet.model.Row</span>
 <span class="sd">        TypeError: Sheet must be either a sheet object (dict) or a sheet ID</span>
 <span class="sd">            (int)</span>
 <span class="sd">        TypeError: Write method should be a str, or none if not passed</span>
+<span class="sd">        ValueError: Write method must be either &#39;add&#39; or &#39;update&#39;. Method is</span>
+<span class="sd">            case sensitive</span>
 <span class="sd">        ValueError: Rows to write must not be an empty list</span>
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">rows_to_write</span><span class="p">,</span> <span class="nb">list</span><span class="p">):</span>
@@ -107,35 +107,40 @@
                   <span class="s2">&quot;&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="nb">type</span><span class="p">(</span><span class="n">rows_to_write</span><span class="p">))</span>
         <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
     <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">sheet</span><span class="p">,</span> <span class="p">(</span><span class="nb">dict</span><span class="p">,</span> <span class="nb">int</span><span class="p">,</span> <span class="n">smartsheet</span><span class="o">.</span><span class="n">models</span><span class="o">.</span><span class="n">sheet</span><span class="o">.</span><span class="n">Sheet</span><span class="p">)):</span>
-        <span class="n">msg</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="s2">&quot;Sheet must be type: dict or int not type </span><span class="si">{}</span><span class="s2">&quot;</span>
-                  <span class="s2">&quot;&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="nb">type</span><span class="p">(</span><span class="n">sheet</span><span class="p">))</span>
+        <span class="n">msg</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="s2">&quot;Sheet must be type: smartsheet.models.Sheet, dict or int, &quot;</span>
+                  <span class="s2">&quot;not type </span><span class="si">{}</span><span class="s2">&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="nb">type</span><span class="p">(</span><span class="n">sheet</span><span class="p">))</span>
         <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
-    <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">write_method</span><span class="p">,</span> <span class="p">(</span><span class="nb">str</span><span class="p">,</span> <span class="kc">None</span><span class="p">)):</span>
-        <span class="n">msg</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="s2">&quot;Write method must be type: str not type </span><span class="si">{}</span><span class="s2">&quot;</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">write_method</span><span class="p">,</span> <span class="p">(</span><span class="nb">str</span><span class="p">,</span> <span class="nb">type</span><span class="p">(</span><span class="kc">None</span><span class="p">))):</span>
+        <span class="n">msg</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="s2">&quot;Write method must be type: str or None, not type </span><span class="si">{}</span><span class="s2">&quot;</span>
                   <span class="s2">&quot;&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="nb">type</span><span class="p">(</span><span class="n">write_method</span><span class="p">))</span>
         <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
     <span class="k">if</span> <span class="n">write_method</span> <span class="ow">not</span> <span class="ow">in</span> <span class="p">[</span><span class="s2">&quot;add&quot;</span><span class="p">,</span> <span class="s2">&quot;update&quot;</span><span class="p">]:</span>
-        <span class="n">msg</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="s2">&quot;Write method must be &#39;add&#39; or &#39;update&#39;, not </span><span class="si">{}</span><span class="s2">&quot;</span>
-                  <span class="s2">&quot;&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">write_method</span><span class="p">)</span>
+        <span class="n">msg</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="s2">&quot;Write method must be &#39;add&#39; or &#39;update&#39;, not </span><span class="si">{}</span><span class="s2">. &quot;</span>
+                  <span class="s2">&quot;Write method is case-sensitive&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">write_method</span><span class="p">)</span>
         <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
-    <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">rows_to_write</span><span class="p">)</span> <span class="o">&lt;=</span> <span class="mi">0</span><span class="p">:</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">rows_to_write</span><span class="p">:</span>
         <span class="n">msg</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="s2">&quot;Rows to write must have 1 or more rows in the list, &quot;</span>
                   <span class="s2">&quot;not </span><span class="si">{}</span><span class="s2">&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">rows_to_write</span><span class="p">))</span>
         <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
+    <span class="k">for</span> <span class="n">row</span> <span class="ow">in</span> <span class="n">rows_to_write</span><span class="p">:</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">row</span><span class="p">,</span> <span class="n">smartsheet</span><span class="o">.</span><span class="n">models</span><span class="o">.</span><span class="n">Row</span><span class="p">):</span>
+            <span class="n">msg</span> <span class="o">=</span> <span class="s2">&quot;Rows must be a smartsheet.models.Row object&quot;</span>
+            <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
 
+    <span class="c1"># Set friendly names and correct types</span>
     <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">sheet</span><span class="p">,</span> <span class="p">(</span><span class="nb">dict</span><span class="p">,</span> <span class="n">smartsheet</span><span class="o">.</span><span class="n">models</span><span class="o">.</span><span class="n">Sheet</span><span class="p">)):</span>
         <span class="n">sheet_id</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">sheet</span><span class="o">.</span><span class="n">id</span><span class="p">)</span>
         <span class="n">sheet_name</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">sheet</span><span class="o">.</span><span class="n">name</span><span class="p">)</span>
     <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">sheet</span><span class="p">,</span> <span class="nb">int</span><span class="p">):</span>
         <span class="n">sheet_id</span> <span class="o">=</span> <span class="n">sheet</span>
-        <span class="n">sheet_name</span> <span class="o">=</span> <span class="s2">&quot;Sheet Name not provided&quot;</span>
+        <span class="n">sheet_name</span> <span class="o">=</span> <span class="s2">&quot;Sheet Name not provided.&quot;</span>
 
     <span class="k">if</span> <span class="n">rows_to_write</span><span class="p">:</span>
         <span class="n">msg</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="s2">&quot;Writing </span><span class="si">{}</span><span class="s2"> rows back to Sheet ID: </span><span class="si">{}</span><span class="s2"> &quot;</span>
                   <span class="s2">&quot;| Sheet Name: </span><span class="si">{}</span><span class="s2">&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">rows_to_write</span><span class="p">),</span>
                                              <span class="n">sheet_id</span><span class="p">,</span> <span class="n">sheet_name</span><span class="p">)</span>
         <span class="n">logging</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
-
+        <span class="c1"># TODO: Handle results better (get HTTP codes, messages)</span>
         <span class="k">if</span> <span class="n">rows_to_write</span> <span class="ow">and</span> <span class="n">write_method</span> <span class="o">==</span> <span class="s2">&quot;add&quot;</span><span class="p">:</span>
             <span class="c1"># If over 125 rows need to be written to a single sheet, chunk</span>
             <span class="c1"># the rows into segments of 125. Anything over 125 will cause</span>
@@ -170,6 +175,9 @@
                     <span class="k">return</span> <span class="n">result</span>
         <span class="c1"># TODO: Handle results better (get HTTP codes, messages)</span>
         <span class="k">elif</span> <span class="n">rows_to_write</span> <span class="ow">and</span> <span class="n">write_method</span> <span class="o">==</span> <span class="s2">&quot;update&quot;</span><span class="p">:</span>
+            <span class="c1"># If over 125 rows need to be written to a single sheet, chunk</span>
+            <span class="c1"># the rows into segments of 125. Anything over 125 will cause</span>
+            <span class="c1"># the API to fail.</span>
             <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">rows_to_write</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">125</span><span class="p">:</span>
                 <span class="n">chunked_cells</span> <span class="o">=</span> <span class="n">helper</span><span class="o">.</span><span class="n">chunks</span><span class="p">(</span><span class="n">rows_to_write</span><span class="p">,</span> <span class="mi">125</span><span class="p">)</span>
                 <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">chunked_cells</span><span class="p">:</span>
@@ -215,6 +223,8 @@
 
 <span class="sd">    Raises:</span>
 <span class="sd">        TypeError: Workspace ID must be an INT to query the API correctly</span>
+<span class="sd">        ValueError: Workspace ID must not be an empty list.</span>
+<span class="sd">        ValueError: Workspace ID must be a positive integer</span>
 
 <span class="sd">    Returns:</span>
 <span class="sd">        smartsheet.models.Workspace: An application/json object of all objects</span>
@@ -227,6 +237,20 @@
     <span class="k">if</span> <span class="ow">not</span> <span class="n">workspace_id</span><span class="p">:</span>
         <span class="n">msg</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="s2">&quot;Workspace ID must not be an empty list.&quot;</span><span class="p">)</span>
         <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
+    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">workspace_id</span><span class="p">,</span> <span class="nb">int</span><span class="p">):</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">workspace_id</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="n">msg</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="s2">&quot;Workspace ID must be a positive integer.&quot;</span><span class="p">)</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
+    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">workspace_id</span><span class="p">,</span> <span class="nb">list</span><span class="p">):</span>
+        <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">workspace_id</span><span class="p">:</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">i</span><span class="p">,</span> <span class="nb">int</span><span class="p">):</span>
+                <span class="n">msg</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="s2">&quot;Workspace ID must be type: int &quot;</span>
+                          <span class="s2">&quot;not type: </span><span class="si">{}</span><span class="s2">&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="nb">type</span><span class="p">(</span><span class="n">workspace_id</span><span class="p">))</span>
+                <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="n">i</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+                <span class="n">msg</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="s2">&quot;Workspace ID must be a positive integer.&quot;</span><span class="p">)</span>
+                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
+
     <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">workspace_id</span><span class="p">,</span> <span class="nb">int</span><span class="p">):</span>
         <span class="n">workspace</span> <span class="o">=</span> <span class="n">smartsheet_client</span><span class="o">.</span><span class="n">Workspaces</span><span class="o">.</span><span class="n">get_workspace</span><span class="p">(</span>
             <span class="n">workspace_id</span><span class="p">,</span> <span class="n">load_all</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
@@ -266,18 +290,28 @@
         <span class="n">msg</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="s2">&quot;Minutes must be type: int &quot;</span>
                   <span class="s2">&quot;not type: </span><span class="si">{}</span><span class="s2">&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="nb">type</span><span class="p">(</span><span class="n">minutes</span><span class="p">))</span>
         <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">minutes</span> <span class="o">&lt;</span> <span class="mi">0</span><span class="p">:</span>
+        <span class="n">msg</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="s2">&quot;Time travel to the future not supported. Minutes must be &quot;</span>
+                  <span class="s2">&quot;greater than or equal to zero.&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="nb">type</span><span class="p">(</span><span class="n">minutes</span><span class="p">))</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
 
+    <span class="c1"># If minutes is greater than zero, calculate n minutes into the past and</span>
+    <span class="c1"># return the datetime. Pass that to the API to only get rows modified</span>
+    <span class="c1"># since the datetime.</span>
     <span class="k">if</span> <span class="n">minutes</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
         <span class="n">_</span><span class="p">,</span> <span class="n">modified_since</span> <span class="o">=</span> <span class="n">helper</span><span class="o">.</span><span class="n">get_timestamp</span><span class="p">(</span><span class="n">minutes</span><span class="p">)</span>
 
         <span class="n">sheet</span> <span class="o">=</span> <span class="n">smartsheet_client</span><span class="o">.</span><span class="n">Sheets</span><span class="o">.</span><span class="n">get_sheet</span><span class="p">(</span>
             <span class="n">sheet_id</span><span class="p">,</span> <span class="n">include</span><span class="o">=</span><span class="s1">&#39;object_value&#39;</span><span class="p">,</span> <span class="n">level</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span>
             <span class="n">rows_modified_since</span><span class="o">=</span><span class="n">modified_since</span><span class="p">)</span>
+    <span class="c1"># If minutes is zero, get all rows regardless of modified date</span>
     <span class="k">elif</span> <span class="n">minutes</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
         <span class="n">sheet</span> <span class="o">=</span> <span class="n">smartsheet_client</span><span class="o">.</span><span class="n">Sheets</span><span class="o">.</span><span class="n">get_sheet</span><span class="p">(</span>
             <span class="n">sheet_id</span><span class="p">,</span> <span class="n">include</span><span class="o">=</span><span class="s1">&#39;object_value&#39;</span><span class="p">,</span> <span class="n">level</span><span class="o">=</span><span class="mi">2</span><span class="p">)</span>
+    <span class="c1"># If somehow minutes is less than zero but doesn&#39;t raise a ValueError,</span>
+    <span class="c1"># default to dev_minutes and return the sheet.</span>
     <span class="k">else</span><span class="p">:</span>
-        <span class="n">modified_since</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="n">helper</span><span class="o">.</span><span class="n">get_timestamp</span><span class="p">(</span><span class="n">minutes</span><span class="p">)</span>
+        <span class="n">modified_since</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="n">helper</span><span class="o">.</span><span class="n">get_timestamp</span><span class="p">(</span><span class="n">app_vars</span><span class="o">.</span><span class="n">dev_minutes</span><span class="p">)</span>
         <span class="n">sheet</span> <span class="o">=</span> <span class="n">smartsheet_client</span><span class="o">.</span><span class="n">Sheets</span><span class="o">.</span><span class="n">get_sheet</span><span class="p">(</span>
             <span class="n">sheet_id</span><span class="p">,</span> <span class="n">include</span><span class="o">=</span><span class="s1">&#39;object_value&#39;</span><span class="p">,</span> <span class="n">level</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span>
             <span class="n">rows_modified_since</span><span class="o">=</span><span class="n">modified_since</span><span class="p">)</span>
@@ -294,6 +328,8 @@
 <span class="sd">    Raises:</span>
 <span class="sd">        TypeError: Sheet ID must be an INT to query the API correctly</span>
 <span class="sd">        TypeError: Row ID must be an INT to query the API correctly</span>
+<span class="sd">        ValueError: Sheet ID must be a positive integer</span>
+<span class="sd">        ValueError: Row ID must be a positive integer</span>
 
 <span class="sd">    Returns:</span>
 <span class="sd">        smartsheet.models.Row: Returns the row data in dict/json format</span>
@@ -307,32 +343,18 @@
         <span class="n">msg</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="s2">&quot;Row ID must be type: int &quot;</span>
                   <span class="s2">&quot;not type: </span><span class="si">{}</span><span class="s2">&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="nb">type</span><span class="p">(</span><span class="n">row_id</span><span class="p">))</span>
         <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">sheet_id</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+        <span class="n">msg</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="s2">&quot;Jira Index row ID must not be zero or negative.&quot;</span>
+                  <span class="s2">&quot;&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">format</span><span class="p">()</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">row_id</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+        <span class="n">msg</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="s2">&quot;Jira Index row ID must not be zero or negative.&quot;</span>
+                  <span class="s2">&quot;&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">format</span><span class="p">()</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
 
     <span class="n">row</span> <span class="o">=</span> <span class="n">smartsheet_client</span><span class="o">.</span><span class="n">Sheets</span><span class="o">.</span><span class="n">get_row</span><span class="p">(</span><span class="n">sheet_id</span><span class="p">,</span> <span class="n">row_id</span><span class="p">,</span>
                                            <span class="n">include</span><span class="o">=</span><span class="s1">&#39;objectValue&#39;</span><span class="p">)</span>
     <span class="k">return</span> <span class="n">row</span>
-
-
-<span class="k">def</span> <span class="nf">get_columns</span><span class="p">(</span><span class="n">sheet_id</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;Gets columns from the given sheet and create a map of Column Name: ID</span>
-
-<span class="sd">    Args:</span>
-<span class="sd">        sheet_id (int): ID of the sheet to query</span>
-<span class="sd">    &quot;&quot;&quot;</span>
-    <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">sheet_id</span><span class="p">,</span> <span class="nb">int</span><span class="p">):</span>
-        <span class="n">msg</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="s2">&quot;Sheet ID must be type: int &quot;</span>
-                  <span class="s2">&quot;not type: </span><span class="si">{}</span><span class="s2">&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="nb">type</span><span class="p">(</span><span class="n">sheet_id</span><span class="p">))</span>
-        <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
-    <span class="k">if</span> <span class="ow">not</span> <span class="n">sheet_id</span><span class="p">:</span>
-        <span class="n">msg</span> <span class="o">=</span> <span class="s2">&quot;Sheet ID must not be empty.&quot;</span>
-        <span class="ne">ValueError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
-
-    <span class="n">columns</span> <span class="o">=</span> <span class="n">smartsheet_client</span><span class="o">.</span><span class="n">Sheets</span><span class="o">.</span><span class="n">get_columns</span><span class="p">(</span><span class="n">sheet_id</span><span class="p">,</span> <span class="n">include_all</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
-    <span class="n">column_map</span> <span class="o">=</span> <span class="p">[]</span>
-
-    <span class="k">for</span> <span class="n">column</span> <span class="ow">in</span> <span class="n">columns</span><span class="p">:</span>
-        <span class="n">column_map</span><span class="p">[</span><span class="n">column</span><span class="o">.</span><span class="n">title</span><span class="p">]</span> <span class="o">=</span> <span class="n">column</span><span class="o">.</span><span class="n">id</span>
-    <span class="k">return</span> <span class="n">column_map</span>
 </pre></div>
 
         </details>
@@ -349,9 +371,10 @@
                 <details>
             <summary>View Source</summary>
             <div class="codehilite"><pre><span></span><span class="k">def</span> <span class="nf">set_smartsheet_client</span><span class="p">():</span>
-    <span class="c1"># Set the SMARTSHEET_ACCESS_TOKEN by pulling from the AWS Secrets API,</span>
-    <span class="c1"># based on the environment variable passed in.</span>
-    <span class="c1"># Defer importing the token and secrets until all modules are loaded.</span>
+    <span class="sd">&quot;&quot;&quot;Set the SMARTSHEET_ACCESS_TOKEN by pulling from the AWS Secrets API,</span>
+<span class="sd">       based on the environment variable passed in.</span>
+<span class="sd">       Defer importing the token and secrets until all modules are loaded.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
     <span class="k">global</span> <span class="n">smartsheet_client</span>
     <span class="kn">import</span> <span class="nn">app.config</span> <span class="k">as</span> <span class="nn">config</span>
     <span class="n">smartsheet_client</span> <span class="o">=</span> <span class="n">config</span><span class="o">.</span><span class="n">smartsheet_client</span>
@@ -359,7 +382,11 @@
 
         </details>
 
-    
+            <div class="docstring"><p>Set the SMARTSHEET_ACCESS_TOKEN by pulling from the AWS Secrets API,
+based on the environment variable passed in.
+Defer importing the token and secrets until all modules are loaded.</p>
+</div>
+
 
                 </section>
                 <section id="write_rows_to_sheet">
@@ -384,9 +411,12 @@
 
 <span class="sd">    Raises:</span>
 <span class="sd">        TypeError: Rows to Write must be a list of row data</span>
+<span class="sd">        TypeError: Row in Rows to Write must be a smartsheet.model.Row</span>
 <span class="sd">        TypeError: Sheet must be either a sheet object (dict) or a sheet ID</span>
 <span class="sd">            (int)</span>
 <span class="sd">        TypeError: Write method should be a str, or none if not passed</span>
+<span class="sd">        ValueError: Write method must be either &#39;add&#39; or &#39;update&#39;. Method is</span>
+<span class="sd">            case sensitive</span>
 <span class="sd">        ValueError: Rows to write must not be an empty list</span>
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">rows_to_write</span><span class="p">,</span> <span class="nb">list</span><span class="p">):</span>
@@ -394,35 +424,40 @@
                   <span class="s2">&quot;&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="nb">type</span><span class="p">(</span><span class="n">rows_to_write</span><span class="p">))</span>
         <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
     <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">sheet</span><span class="p">,</span> <span class="p">(</span><span class="nb">dict</span><span class="p">,</span> <span class="nb">int</span><span class="p">,</span> <span class="n">smartsheet</span><span class="o">.</span><span class="n">models</span><span class="o">.</span><span class="n">sheet</span><span class="o">.</span><span class="n">Sheet</span><span class="p">)):</span>
-        <span class="n">msg</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="s2">&quot;Sheet must be type: dict or int not type </span><span class="si">{}</span><span class="s2">&quot;</span>
-                  <span class="s2">&quot;&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="nb">type</span><span class="p">(</span><span class="n">sheet</span><span class="p">))</span>
+        <span class="n">msg</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="s2">&quot;Sheet must be type: smartsheet.models.Sheet, dict or int, &quot;</span>
+                  <span class="s2">&quot;not type </span><span class="si">{}</span><span class="s2">&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="nb">type</span><span class="p">(</span><span class="n">sheet</span><span class="p">))</span>
         <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
-    <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">write_method</span><span class="p">,</span> <span class="p">(</span><span class="nb">str</span><span class="p">,</span> <span class="kc">None</span><span class="p">)):</span>
-        <span class="n">msg</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="s2">&quot;Write method must be type: str not type </span><span class="si">{}</span><span class="s2">&quot;</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">write_method</span><span class="p">,</span> <span class="p">(</span><span class="nb">str</span><span class="p">,</span> <span class="nb">type</span><span class="p">(</span><span class="kc">None</span><span class="p">))):</span>
+        <span class="n">msg</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="s2">&quot;Write method must be type: str or None, not type </span><span class="si">{}</span><span class="s2">&quot;</span>
                   <span class="s2">&quot;&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="nb">type</span><span class="p">(</span><span class="n">write_method</span><span class="p">))</span>
         <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
     <span class="k">if</span> <span class="n">write_method</span> <span class="ow">not</span> <span class="ow">in</span> <span class="p">[</span><span class="s2">&quot;add&quot;</span><span class="p">,</span> <span class="s2">&quot;update&quot;</span><span class="p">]:</span>
-        <span class="n">msg</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="s2">&quot;Write method must be &#39;add&#39; or &#39;update&#39;, not </span><span class="si">{}</span><span class="s2">&quot;</span>
-                  <span class="s2">&quot;&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">write_method</span><span class="p">)</span>
+        <span class="n">msg</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="s2">&quot;Write method must be &#39;add&#39; or &#39;update&#39;, not </span><span class="si">{}</span><span class="s2">. &quot;</span>
+                  <span class="s2">&quot;Write method is case-sensitive&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">write_method</span><span class="p">)</span>
         <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
-    <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">rows_to_write</span><span class="p">)</span> <span class="o">&lt;=</span> <span class="mi">0</span><span class="p">:</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">rows_to_write</span><span class="p">:</span>
         <span class="n">msg</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="s2">&quot;Rows to write must have 1 or more rows in the list, &quot;</span>
                   <span class="s2">&quot;not </span><span class="si">{}</span><span class="s2">&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">rows_to_write</span><span class="p">))</span>
         <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
+    <span class="k">for</span> <span class="n">row</span> <span class="ow">in</span> <span class="n">rows_to_write</span><span class="p">:</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">row</span><span class="p">,</span> <span class="n">smartsheet</span><span class="o">.</span><span class="n">models</span><span class="o">.</span><span class="n">Row</span><span class="p">):</span>
+            <span class="n">msg</span> <span class="o">=</span> <span class="s2">&quot;Rows must be a smartsheet.models.Row object&quot;</span>
+            <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
 
+    <span class="c1"># Set friendly names and correct types</span>
     <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">sheet</span><span class="p">,</span> <span class="p">(</span><span class="nb">dict</span><span class="p">,</span> <span class="n">smartsheet</span><span class="o">.</span><span class="n">models</span><span class="o">.</span><span class="n">Sheet</span><span class="p">)):</span>
         <span class="n">sheet_id</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">sheet</span><span class="o">.</span><span class="n">id</span><span class="p">)</span>
         <span class="n">sheet_name</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">sheet</span><span class="o">.</span><span class="n">name</span><span class="p">)</span>
     <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">sheet</span><span class="p">,</span> <span class="nb">int</span><span class="p">):</span>
         <span class="n">sheet_id</span> <span class="o">=</span> <span class="n">sheet</span>
-        <span class="n">sheet_name</span> <span class="o">=</span> <span class="s2">&quot;Sheet Name not provided&quot;</span>
+        <span class="n">sheet_name</span> <span class="o">=</span> <span class="s2">&quot;Sheet Name not provided.&quot;</span>
 
     <span class="k">if</span> <span class="n">rows_to_write</span><span class="p">:</span>
         <span class="n">msg</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="s2">&quot;Writing </span><span class="si">{}</span><span class="s2"> rows back to Sheet ID: </span><span class="si">{}</span><span class="s2"> &quot;</span>
                   <span class="s2">&quot;| Sheet Name: </span><span class="si">{}</span><span class="s2">&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">rows_to_write</span><span class="p">),</span>
                                              <span class="n">sheet_id</span><span class="p">,</span> <span class="n">sheet_name</span><span class="p">)</span>
         <span class="n">logging</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
-
+        <span class="c1"># TODO: Handle results better (get HTTP codes, messages)</span>
         <span class="k">if</span> <span class="n">rows_to_write</span> <span class="ow">and</span> <span class="n">write_method</span> <span class="o">==</span> <span class="s2">&quot;add&quot;</span><span class="p">:</span>
             <span class="c1"># If over 125 rows need to be written to a single sheet, chunk</span>
             <span class="c1"># the rows into segments of 125. Anything over 125 will cause</span>
@@ -457,6 +492,9 @@
                     <span class="k">return</span> <span class="n">result</span>
         <span class="c1"># TODO: Handle results better (get HTTP codes, messages)</span>
         <span class="k">elif</span> <span class="n">rows_to_write</span> <span class="ow">and</span> <span class="n">write_method</span> <span class="o">==</span> <span class="s2">&quot;update&quot;</span><span class="p">:</span>
+            <span class="c1"># If over 125 rows need to be written to a single sheet, chunk</span>
+            <span class="c1"># the rows into segments of 125. Anything over 125 will cause</span>
+            <span class="c1"># the API to fail.</span>
             <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">rows_to_write</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">125</span><span class="p">:</span>
                 <span class="n">chunked_cells</span> <span class="o">=</span> <span class="n">helper</span><span class="o">.</span><span class="n">chunks</span><span class="p">(</span><span class="n">rows_to_write</span><span class="p">,</span> <span class="mi">125</span><span class="p">)</span>
                 <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">chunked_cells</span><span class="p">:</span>
@@ -509,9 +547,12 @@ existing rows. Defaults to "add".</li>
 
 <ul>
 <li><strong>TypeError:</strong>  Rows to Write must be a list of row data</li>
+<li><strong>TypeError:</strong>  Row in Rows to Write must be a smartsheet.model.Row</li>
 <li><strong>TypeError:</strong>  Sheet must be either a sheet object (dict) or a sheet ID
 (int)</li>
 <li><strong>TypeError:</strong>  Write method should be a str, or none if not passed</li>
+<li><strong>ValueError:</strong>  Write method must be either 'add' or 'update'. Method is
+case sensitive</li>
 <li><strong>ValueError:</strong>  Rows to write must not be an empty list</li>
 </ul>
 </div>
@@ -538,6 +579,8 @@ existing rows. Defaults to "add".</li>
 
 <span class="sd">    Raises:</span>
 <span class="sd">        TypeError: Workspace ID must be an INT to query the API correctly</span>
+<span class="sd">        ValueError: Workspace ID must not be an empty list.</span>
+<span class="sd">        ValueError: Workspace ID must be a positive integer</span>
 
 <span class="sd">    Returns:</span>
 <span class="sd">        smartsheet.models.Workspace: An application/json object of all objects</span>
@@ -550,6 +593,20 @@ existing rows. Defaults to "add".</li>
     <span class="k">if</span> <span class="ow">not</span> <span class="n">workspace_id</span><span class="p">:</span>
         <span class="n">msg</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="s2">&quot;Workspace ID must not be an empty list.&quot;</span><span class="p">)</span>
         <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
+    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">workspace_id</span><span class="p">,</span> <span class="nb">int</span><span class="p">):</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">workspace_id</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="n">msg</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="s2">&quot;Workspace ID must be a positive integer.&quot;</span><span class="p">)</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
+    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">workspace_id</span><span class="p">,</span> <span class="nb">list</span><span class="p">):</span>
+        <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">workspace_id</span><span class="p">:</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">i</span><span class="p">,</span> <span class="nb">int</span><span class="p">):</span>
+                <span class="n">msg</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="s2">&quot;Workspace ID must be type: int &quot;</span>
+                          <span class="s2">&quot;not type: </span><span class="si">{}</span><span class="s2">&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="nb">type</span><span class="p">(</span><span class="n">workspace_id</span><span class="p">))</span>
+                <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="n">i</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+                <span class="n">msg</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="s2">&quot;Workspace ID must be a positive integer.&quot;</span><span class="p">)</span>
+                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
+
     <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">workspace_id</span><span class="p">,</span> <span class="nb">int</span><span class="p">):</span>
         <span class="n">workspace</span> <span class="o">=</span> <span class="n">smartsheet_client</span><span class="o">.</span><span class="n">Workspaces</span><span class="o">.</span><span class="n">get_workspace</span><span class="p">(</span>
             <span class="n">workspace_id</span><span class="p">,</span> <span class="n">load_all</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
@@ -579,6 +636,8 @@ LoadAll = True to get objects from all nested folders in the Workspace.</p>
 
 <ul>
 <li><strong>TypeError:</strong>  Workspace ID must be an INT to query the API correctly</li>
+<li><strong>ValueError:</strong>  Workspace ID must not be an empty list.</li>
+<li><strong>ValueError:</strong>  Workspace ID must be a positive integer</li>
 </ul>
 
 <h6 id="returns">Returns</h6>
@@ -627,18 +686,28 @@ LoadAll = True to get objects from all nested folders in the Workspace.</p>
         <span class="n">msg</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="s2">&quot;Minutes must be type: int &quot;</span>
                   <span class="s2">&quot;not type: </span><span class="si">{}</span><span class="s2">&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="nb">type</span><span class="p">(</span><span class="n">minutes</span><span class="p">))</span>
         <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">minutes</span> <span class="o">&lt;</span> <span class="mi">0</span><span class="p">:</span>
+        <span class="n">msg</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="s2">&quot;Time travel to the future not supported. Minutes must be &quot;</span>
+                  <span class="s2">&quot;greater than or equal to zero.&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="nb">type</span><span class="p">(</span><span class="n">minutes</span><span class="p">))</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
 
+    <span class="c1"># If minutes is greater than zero, calculate n minutes into the past and</span>
+    <span class="c1"># return the datetime. Pass that to the API to only get rows modified</span>
+    <span class="c1"># since the datetime.</span>
     <span class="k">if</span> <span class="n">minutes</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
         <span class="n">_</span><span class="p">,</span> <span class="n">modified_since</span> <span class="o">=</span> <span class="n">helper</span><span class="o">.</span><span class="n">get_timestamp</span><span class="p">(</span><span class="n">minutes</span><span class="p">)</span>
 
         <span class="n">sheet</span> <span class="o">=</span> <span class="n">smartsheet_client</span><span class="o">.</span><span class="n">Sheets</span><span class="o">.</span><span class="n">get_sheet</span><span class="p">(</span>
             <span class="n">sheet_id</span><span class="p">,</span> <span class="n">include</span><span class="o">=</span><span class="s1">&#39;object_value&#39;</span><span class="p">,</span> <span class="n">level</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span>
             <span class="n">rows_modified_since</span><span class="o">=</span><span class="n">modified_since</span><span class="p">)</span>
+    <span class="c1"># If minutes is zero, get all rows regardless of modified date</span>
     <span class="k">elif</span> <span class="n">minutes</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
         <span class="n">sheet</span> <span class="o">=</span> <span class="n">smartsheet_client</span><span class="o">.</span><span class="n">Sheets</span><span class="o">.</span><span class="n">get_sheet</span><span class="p">(</span>
             <span class="n">sheet_id</span><span class="p">,</span> <span class="n">include</span><span class="o">=</span><span class="s1">&#39;object_value&#39;</span><span class="p">,</span> <span class="n">level</span><span class="o">=</span><span class="mi">2</span><span class="p">)</span>
+    <span class="c1"># If somehow minutes is less than zero but doesn&#39;t raise a ValueError,</span>
+    <span class="c1"># default to dev_minutes and return the sheet.</span>
     <span class="k">else</span><span class="p">:</span>
-        <span class="n">modified_since</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="n">helper</span><span class="o">.</span><span class="n">get_timestamp</span><span class="p">(</span><span class="n">minutes</span><span class="p">)</span>
+        <span class="n">modified_since</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="n">helper</span><span class="o">.</span><span class="n">get_timestamp</span><span class="p">(</span><span class="n">app_vars</span><span class="o">.</span><span class="n">dev_minutes</span><span class="p">)</span>
         <span class="n">sheet</span> <span class="o">=</span> <span class="n">smartsheet_client</span><span class="o">.</span><span class="n">Sheets</span><span class="o">.</span><span class="n">get_sheet</span><span class="p">(</span>
             <span class="n">sheet_id</span><span class="p">,</span> <span class="n">include</span><span class="o">=</span><span class="s1">&#39;object_value&#39;</span><span class="p">,</span> <span class="n">level</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span>
             <span class="n">rows_modified_since</span><span class="o">=</span><span class="n">modified_since</span><span class="p">)</span>
@@ -696,6 +765,8 @@ LoadAll = True to get objects from all nested folders in the Workspace.</p>
 <span class="sd">    Raises:</span>
 <span class="sd">        TypeError: Sheet ID must be an INT to query the API correctly</span>
 <span class="sd">        TypeError: Row ID must be an INT to query the API correctly</span>
+<span class="sd">        ValueError: Sheet ID must be a positive integer</span>
+<span class="sd">        ValueError: Row ID must be a positive integer</span>
 
 <span class="sd">    Returns:</span>
 <span class="sd">        smartsheet.models.Row: Returns the row data in dict/json format</span>
@@ -709,6 +780,14 @@ LoadAll = True to get objects from all nested folders in the Workspace.</p>
         <span class="n">msg</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="s2">&quot;Row ID must be type: int &quot;</span>
                   <span class="s2">&quot;not type: </span><span class="si">{}</span><span class="s2">&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="nb">type</span><span class="p">(</span><span class="n">row_id</span><span class="p">))</span>
         <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">sheet_id</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+        <span class="n">msg</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="s2">&quot;Jira Index row ID must not be zero or negative.&quot;</span>
+                  <span class="s2">&quot;&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">format</span><span class="p">()</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">row_id</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+        <span class="n">msg</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="s2">&quot;Jira Index row ID must not be zero or negative.&quot;</span>
+                  <span class="s2">&quot;&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">format</span><span class="p">()</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
 
     <span class="n">row</span> <span class="o">=</span> <span class="n">smartsheet_client</span><span class="o">.</span><span class="n">Sheets</span><span class="o">.</span><span class="n">get_row</span><span class="p">(</span><span class="n">sheet_id</span><span class="p">,</span> <span class="n">row_id</span><span class="p">,</span>
                                            <span class="n">include</span><span class="o">=</span><span class="s1">&#39;objectValue&#39;</span><span class="p">)</span>
@@ -731,6 +810,8 @@ LoadAll = True to get objects from all nested folders in the Workspace.</p>
 <ul>
 <li><strong>TypeError:</strong>  Sheet ID must be an INT to query the API correctly</li>
 <li><strong>TypeError:</strong>  Row ID must be an INT to query the API correctly</li>
+<li><strong>ValueError:</strong>  Sheet ID must be a positive integer</li>
+<li><strong>ValueError:</strong>  Row ID must be a positive integer</li>
 </ul>
 
 <h6 id="returns">Returns</h6>
@@ -739,51 +820,6 @@ LoadAll = True to get objects from all nested folders in the Workspace.</p>
   <p>smartsheet.models.Row: Returns the row data in dict/json format
   for further manipulation</p>
 </blockquote>
-</div>
-
-
-                </section>
-                <section id="get_columns">
-                            <div class="attr function"><a class="headerlink" href="#get_columns">#&nbsp;&nbsp</a>
-
-        
-            <span class="def">def</span>
-            <span class="name">get_columns</span><span class="signature">(sheet_id)</span>:
-    </div>
-
-                <details>
-            <summary>View Source</summary>
-            <div class="codehilite"><pre><span></span><span class="k">def</span> <span class="nf">get_columns</span><span class="p">(</span><span class="n">sheet_id</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;Gets columns from the given sheet and create a map of Column Name: ID</span>
-
-<span class="sd">    Args:</span>
-<span class="sd">        sheet_id (int): ID of the sheet to query</span>
-<span class="sd">    &quot;&quot;&quot;</span>
-    <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">sheet_id</span><span class="p">,</span> <span class="nb">int</span><span class="p">):</span>
-        <span class="n">msg</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="s2">&quot;Sheet ID must be type: int &quot;</span>
-                  <span class="s2">&quot;not type: </span><span class="si">{}</span><span class="s2">&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="nb">type</span><span class="p">(</span><span class="n">sheet_id</span><span class="p">))</span>
-        <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
-    <span class="k">if</span> <span class="ow">not</span> <span class="n">sheet_id</span><span class="p">:</span>
-        <span class="n">msg</span> <span class="o">=</span> <span class="s2">&quot;Sheet ID must not be empty.&quot;</span>
-        <span class="ne">ValueError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
-
-    <span class="n">columns</span> <span class="o">=</span> <span class="n">smartsheet_client</span><span class="o">.</span><span class="n">Sheets</span><span class="o">.</span><span class="n">get_columns</span><span class="p">(</span><span class="n">sheet_id</span><span class="p">,</span> <span class="n">include_all</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
-    <span class="n">column_map</span> <span class="o">=</span> <span class="p">[]</span>
-
-    <span class="k">for</span> <span class="n">column</span> <span class="ow">in</span> <span class="n">columns</span><span class="p">:</span>
-        <span class="n">column_map</span><span class="p">[</span><span class="n">column</span><span class="o">.</span><span class="n">title</span><span class="p">]</span> <span class="o">=</span> <span class="n">column</span><span class="o">.</span><span class="n">id</span>
-    <span class="k">return</span> <span class="n">column_map</span>
-</pre></div>
-
-        </details>
-
-            <div class="docstring"><p>Gets columns from the given sheet and create a map of Column Name: ID</p>
-
-<h6 id="args">Args</h6>
-
-<ul>
-<li><strong>sheet_id (int):</strong>  ID of the sheet to query</li>
-</ul>
 </div>
 
 
