@@ -72,32 +72,45 @@ def test_write_rows_to_sheet_1(row, sheet_fixture):
     sheet, _, _, _ = sheet_fixture
     rows_to_write = [row]
 
+    result = smartsheet.models.Result()
+    result.message = "SUCCESS"
+    result.result_code = 0
+
     @patch("uuid_module.smartsheet_api.write_rows_to_sheet",
-           return_value={"result": {"statusCode": 200}})
+           return_value=result)
     def test_0(mock_0):
         response = smartsheet_api.write_rows_to_sheet(
             rows_to_write, sheet)
         return response
     response = test_0()
-    assert response['result']['statusCode'] == 200
+    assert response.message == "SUCCESS"
+    assert response.result_code == 0
 
 
 def test_write_rows_to_sheet_2(row, sheet_fixture):
     sheet, _, _, _ = sheet_fixture
     rows_to_write = [row]
 
+    result = smartsheet.models.Result()
+    result.message = "SUCCESS"
+    result.result_code = 0
+
     @patch("uuid_module.smartsheet_api.write_rows_to_sheet",
-           return_value={"result": {"statusCode": 200}})
+           return_value=result)
     def test_0(mock_0):
         response = smartsheet_api.write_rows_to_sheet(
             rows_to_write, sheet.id)
         return response
     response = test_0()
-    assert response['result']['statusCode'] == 200
+    assert response.message == "SUCCESS"
+    assert response.result_code == 0
 
 
 def test_write_rows_to_sheet_3(row, sheet_fixture):
     sheet, _, _, _ = sheet_fixture
+    result = smartsheet.models.Result()
+    result.message = "SUCCESS"
+    result.result_code = 0
     i = 0
     rows_to_write = []
     while i <= 150:
@@ -105,31 +118,40 @@ def test_write_rows_to_sheet_3(row, sheet_fixture):
         i += 1
 
     @patch("uuid_module.smartsheet_api.write_rows_to_sheet",
-           return_value={"result": {"statusCode": 200}})
+           return_value=result)
     def test_0(mock_0):
         response = smartsheet_api.write_rows_to_sheet(
             rows_to_write, sheet, write_method="add")
         return response
     response = test_0()
-    assert response['result']['statusCode'] == 200
+    assert response.message == "SUCCESS"
+    assert response.result_code == 0
 
 
 def test_write_rows_to_sheet_4(row, sheet_fixture):
     sheet, _, _, _ = sheet_fixture
     rows_to_write = [row]
 
+    result = smartsheet.models.Result()
+    result.message = "SUCCESS"
+    result.result_code = 0
+
     @patch("uuid_module.smartsheet_api.write_rows_to_sheet",
-           return_value={"result": {"statusCode": 200}})
+           return_value=result)
     def test_0(mock_0):
         response = smartsheet_api.write_rows_to_sheet(
             rows_to_write, sheet, write_method="update")
         return response
     response = test_0()
-    assert response['result']['statusCode'] == 200
+    assert response.message == "SUCCESS"
+    assert response.result_code == 0
 
 
 def test_write_rows_to_sheet_5(row, sheet_fixture):
     sheet, _, _, _ = sheet_fixture
+    result = smartsheet.models.Result()
+    result.message = "SUCCESS"
+    result.result_code = 0
     i = 0
     rows_to_write = []
     while i <= 150:
@@ -137,13 +159,14 @@ def test_write_rows_to_sheet_5(row, sheet_fixture):
         i += 1
 
     @patch("uuid_module.smartsheet_api.write_rows_to_sheet",
-           return_value={"result": {"statusCode": 200}})
+           return_value=result)
     def test_0(mock_0):
         response = smartsheet_api.write_rows_to_sheet(
             rows_to_write, sheet, write_method="update")
         return response
     response = test_0()
-    assert response['result']['statusCode'] == 200
+    assert response.message == "SUCCESS"
+    assert response.result_code == 0
 
 
 def test_get_workspace_0():
