@@ -237,8 +237,12 @@ def test_create_ticket_index_1(sheet_fixture, index_sheet_fixture):
     sheet, _, _, _ = sheet_fixture
     source_sheets = [sheet]
     index_sheet, index_col_map = index_sheet_fixture
+    result = smartsheet.models.Result()
+    result.message = "SUCCESS"
+    result.result_code = 0
 
-    @patch("uuid_module.smartsheet_api.write_rows_to_sheet", return_value=200)
+    @patch("uuid_module.smartsheet_api.write_rows_to_sheet",
+           return_value=result)
     def test(mock_0):
         ticket_index = create_jira_tickets.create_ticket_index(
             source_sheets, index_sheet, index_col_map)
@@ -260,10 +264,14 @@ def test_create_tickets_1():
     import app.config as config
     import uuid_module.create_jira_tickets as jira
 
+    result = smartsheet.models.Result()
+    result.message = "SUCCESS"
+    result.result_code = 0
+
     @patch("uuid_module.create_jira_tickets.create_ticket_index",
            return_value={"Row": "Data"})
     @patch("uuid_module.smartsheet_api.write_rows_to_sheet",
-           return_value="SUCCESS")
+           return_value=result)
     @patch("uuid_module.create_jira_tickets.form_rows",
            return_value=['row 1', 'row 2'])
     def test_0(mock_0, mock_1, mock_2):
