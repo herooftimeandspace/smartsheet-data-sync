@@ -121,10 +121,6 @@ def get_secret_name(env="--debug"):
     elif env in ("-d", "--debug", "-debug"):
         secret_name = "staging/smartsheet-data-sync/svc-api-token"
         return secret_name
-    else:
-        logging.error("Failed to set API Key from AWS Secrets")
-        secret_name = ""
-        return secret_name
 
 
 def set_env_vars(env):
@@ -173,6 +169,7 @@ def set_env_vars(env):
                       "").format(workspace_id, index_sheet, minutes,
                                  push_tickets_sheet)
     else:
+        flag = env
         workspace_id = app_vars.dev_workspace_id
         index_sheet = app_vars.dev_jira_idx_sheet
         minutes = app_vars.dev_minutes
@@ -180,8 +177,9 @@ def set_env_vars(env):
         env_msg = str("Invalid flag: {}. Using Staging variables. Set "
                       "workspace_id to: {}, index_sheet to: {}, and minutes "
                       "to: {}. Pushing tickets to {}"
-                      "").format(workspace_id, index_sheet, minutes,
+                      "").format(flag, workspace_id, index_sheet, minutes,
                                  push_tickets_sheet)
+        env = "--debug"
     env_dict = {'env': env, 'env_msg': env_msg, 'workspace_id': workspace_id,
                 'index_sheet': index_sheet, 'minutes': minutes,
                 'push_tickets_sheet': push_tickets_sheet}
@@ -209,8 +207,7 @@ def set_logging_config(env):
     if env not in ("-s", "--staging", "-staging", "-p", "--prod", "-prod",
                    "-d", "--debug", "-debug"):
         msg = str("Invalid environment flag. '{}' was passed but it should "
-                  "be '--debug', '--staging' or '--prod'").format(
-            type(env))
+                  "be '--debug', '--staging' or '--prod'").format(env)
         raise ValueError(msg)
 
     logging_config = dict(
