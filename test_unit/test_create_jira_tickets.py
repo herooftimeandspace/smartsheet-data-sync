@@ -43,6 +43,15 @@ def index_sheet_fixture():
     return dev_idx_sheet, col_map
 
 
+@pytest.fixture
+def push_tickets_sheet_fixture():
+    with open(cwd + '/dev_push_jira_tickets_sheet.json') as f:
+        push_tickets_sheet = json.load(f)
+        push_tickets_sheet = smartsheet.models.Sheet(push_tickets_sheet)
+    col_map = helper.get_column_map(push_tickets_sheet)
+    return push_tickets_sheet, col_map
+
+
 @pytest.fixture(scope="module")
 def row_fixture():
     with open(cwd + '/dev_program_plan_row.json') as f:
@@ -51,10 +60,17 @@ def row_fixture():
     return row, row_json
 
 
+@pytest.fixture
+def cell_fixture():
+    with open(cwd + '/dev_cell_with_url_and_incoming_link.json') as f:
+        cell_json = json.load(f)
+    url_cell = smartsheet.models.Cell(cell_json)
+    return url_cell
+
+
 def test_form_rows_0(row_fixture, index_sheet_fixture, sheet_fixture):
-    sheet, _, _, _ = sheet_fixture
+    _, col_map, _, _ = sheet_fixture
     _, index_col_map = index_sheet_fixture
-    col_map = helper.get_column_map(sheet)
     row, _ = row_fixture
     row_dict = {}
     row_dict[row.id] = create_jira_tickets.build_row_data(row, col_map)
@@ -72,9 +88,8 @@ def test_form_rows_0(row_fixture, index_sheet_fixture, sheet_fixture):
 
 def test_form_rows_1(row_fixture, index_sheet_fixture, sheet_fixture):
 
-    sheet, _, _, _ = sheet_fixture
+    _, col_map, _, _ = sheet_fixture
     _, index_col_map = index_sheet_fixture
-    col_map = helper.get_column_map(sheet)
     row, _ = row_fixture
     row_dict = {}
     row_dict[row.id] = create_jira_tickets.build_row_data(row, col_map)
@@ -85,9 +100,8 @@ def test_form_rows_1(row_fixture, index_sheet_fixture, sheet_fixture):
 
 def test_form_rows_2(row_fixture, index_sheet_fixture, sheet_fixture):
 
-    sheet, _, _, _ = sheet_fixture
+    _, col_map, _, _ = sheet_fixture
     _, index_col_map = index_sheet_fixture
-    col_map = helper.get_column_map(sheet)
     row, _ = row_fixture
     row_dict = {}
     row_dict[row.id] = create_jira_tickets.build_row_data(row, col_map)
@@ -103,9 +117,8 @@ def test_form_rows_2(row_fixture, index_sheet_fixture, sheet_fixture):
 
 def test_form_rows_3(row_fixture, index_sheet_fixture, sheet_fixture):
 
-    sheet, _, _, _ = sheet_fixture
+    _, col_map, _, _ = sheet_fixture
     _, index_col_map = index_sheet_fixture
-    col_map = helper.get_column_map(sheet)
     row, _ = row_fixture
     row_dict = {}
     row_dict[row.id] = create_jira_tickets.build_row_data(row, col_map)
@@ -319,6 +332,129 @@ def test_copy_uuid_to_index_sheet_2(index_sheet_fixture):
     # assert result is True
     pass
 
+
+def test_copy_errors_to_sheet_0(sheet_fixture, push_tickets_sheet_fixture,
+                                row_fixture, cell_fixture):
+    import uuid_module.create_jira_tickets as jira
+    sheet, col_map, _, _ = sheet_fixture
+    push_tickets_sheet, push_col_map = push_tickets_sheet_fixture
+    row, _ = row_fixture
+    cell_0 = None
+
+    result = smartsheet.models.Result()
+    result.message = "SUCCESS"
+    result.result_code = 0
+
+    @patch("uuid_module.smartsheet_api.write_rows_to_sheet",
+           return_value=result)
+    @patch("uuid_module.smartsheet_api.get_row", return_value=row)
+    @patch("uuid_module.helper.get_column_map", return_value=col_map)
+    @patch("uuid_module.smartsheet_api.get_sheet", return_value=sheet)
+    @patch("uuid_module.helper.get_cell_data", return_value=cell_0)
+    @patch("uuid_module.create_jira_tickets.get_push_tickets_sheet",
+           return_value=[push_tickets_sheet, push_col_map])
+    def test_0(mock_0, mock_1, mock_2, mock_3, mock_4, mock_5):
+        success_count, failure_count, skip_count = jira.copy_errors_to_sheet()
+        return success_count, failure_count, skip_count
+
+    result_0, result_1, result_2 = test_0()
+    assert isinstance(result_0, int)
+    assert isinstance(result_1, int)
+    assert isinstance(result_2, int)
+
+    # cell_1 = cell_fixture
+    # cell_1.value = smartsheet.models.ExplicitNull()
+
+    # @patch("uuid_module.smartsheet_api.write_rows_to_sheet",
+    #        return_value=result)
+    # @patch("uuid_module.smartsheet_api.get_row", return_value=row)
+    # @patch("uuid_module.helper.get_column_map", return_value=col_map)
+    # @patch("uuid_module.smartsheet_api.get_sheet", return_value=sheet)
+    # @patch("uuid_module.helper.get_cell_data", return_value=cell_1)
+    # @patch("uuid_module.create_jira_tickets.get_push_tickets_sheet",
+    #        return_value=[push_tickets_sheet, push_col_map])
+    # def test_1(mock_0, mock_1, mock_2, mock_3, mock_4, mock_5):
+    #     success_count, failure_count, skip_count = jira.copy_errors_to_sheet()
+    #     return success_count, failure_count, skip_count
+
+    # result_0, result_1, result_2 = test_1()
+    # assert isinstance(result_0, int)
+    # assert isinstance(result_1, int)
+    # assert isinstance(result_2, int)
+
+
+# def test_copy_errors_to_sheet_1(sheet_fixture, push_tickets_sheet_fixture,
+#                                 row_fixture, cell_fixture):
+#     import uuid_module.create_jira_tickets as jira
+#     sheet, col_map, _, _ = sheet_fixture
+#     push_tickets_sheet, push_col_map = push_tickets_sheet_fixture
+#     row, _ = row_fixture
+#     uuid_cell = cell_fixture
+#     uuid_cell.value = "3027747506284420-5242519141410692-"
+#     "8645231372461956-202111182123540000"
+#     sync_cell = cell_fixture
+#     sync_cell.value = "reasonPhrase"
+#     jira_cell = cell_fixture
+#     jira_cell.value = "Pending..."
+#     jira_cell.hyperlink = smartsheet.models.ExplicitNull()
+#     result = smartsheet.models.Result()
+#     result.message = "SUCCESS"
+#     result.result_code = 0
+
+#     @patch("uuid_module.smartsheet_api.write_rows_to_sheet",
+#            return_value=result)
+#     @patch("uuid_module.smartsheet_api.get_row", return_value=row)
+#     @patch("uuid_module.helper.get_column_map", return_value=col_map)
+#     @patch("uuid_module.smartsheet_api.get_sheet", return_value=sheet)
+#     @patch("uuid_module.helper.get_cell_data",
+#            side_effect=[uuid_cell, sync_cell, jira_cell])
+#     @patch("uuid_module.create_jira_tickets.get_push_tickets_sheet",
+#            return_value=[push_tickets_sheet, push_col_map])
+#     def test_0(mock_0, mock_1, mock_2, mock_3, mock_4, mock_5):
+#         success_count, failure_count, skip_count = jira.copy_errors_to_sheet()
+#         return success_count, failure_count, skip_count
+
+#     result_0, result_1, result_2 = test_0()
+#     assert result_0 > 0
+#     assert result_1 == 0
+#     assert isinstance(result_2, int)
+
+
+# def test_copy_errors_to_sheet_2(sheet_fixture, push_tickets_sheet_fixture,
+#                                 row_fixture, cell_fixture):
+#     import uuid_module.create_jira_tickets as jira
+#     sheet, col_map, _, _ = sheet_fixture
+#     push_tickets_sheet, push_col_map = push_tickets_sheet_fixture
+#     row, _ = row_fixture
+#     uuid_cell = cell_fixture
+#     uuid_cell.value = "3027747506284420-5242519141410692-"
+#     "8645231372461956-202111182123540000"
+#     sync_cell = cell_fixture
+#     sync_cell.value = "reasonPhrase"
+#     jira_cell = cell_fixture
+#     jira_cell.value = smartsheet.models.ExplicitNull()
+#     jira_cell.hyperlink = smartsheet.models.ExplicitNull()
+#     result = smartsheet.models.Result()
+#     result.message = "SUCCESS"
+#     result.result_code = 0
+
+#     @patch("uuid_module.smartsheet_api.write_rows_to_sheet",
+#            return_value=result)
+#     @patch("uuid_module.smartsheet_api.get_row", return_value=row)
+#     @patch("uuid_module.helper.get_column_map", return_value=col_map)
+#     @patch("uuid_module.smartsheet_api.get_sheet", return_value=sheet)
+#     @patch("uuid_module.helper.get_cell_data",
+#            side_effect=[uuid_cell, sync_cell, jira_cell])
+#     @patch("uuid_module.create_jira_tickets.get_push_tickets_sheet",
+#            return_value=[push_tickets_sheet, push_col_map])
+#     def test_0(mock_0, mock_1, mock_2, mock_3, mock_4, mock_5):
+#         success_count, failure_count, skip_count = jira.copy_errors_to_sheet()
+#         return success_count, failure_count, skip_count
+
+#     result_0, result_1, result_2 = test_0()
+#     assert result_0 > 0
+#     assert result_1 == 0
+#     assert isinstance(result_2, int)
 
 # def test_get_push_tickets_sheet(index_sheet_fixture):
 #
