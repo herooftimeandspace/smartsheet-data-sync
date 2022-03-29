@@ -85,8 +85,12 @@ def test_full_jira_sync_1(env_dict):
     import app.app as app
     minutes = env_dict['minutes']
 
+    result = smartsheet.models.Result()
+    result.message = "SUCCESS"
+    result.result_code = 0
+
     @patch("uuid_module.smartsheet_api.write_rows_to_sheet",
-           return_value={"result": {"statusCode": 200}})
+           return_value=result)
     @patch("uuid_module.get_data.get_all_sheet_ids", return_value=[])
     def test_0(mock_0, mock_1):
         var_0 = app.full_jira_sync(minutes)
@@ -167,14 +171,19 @@ def test_full_jira_sync_5(env_dict, sheet_fixture, jira_index_sheet_fixture):
     index_sheet, index_col_map, index_rows = jira_index_sheet_fixture
     minutes = env_dict['minutes']
 
+    result = smartsheet.models.Result()
+    result.message = "SUCCESS"
+    result.result_code = 0
+
     @patch("uuid_module.get_data.refresh_source_sheets", return_value=[sheet])
     @patch("uuid_module.get_data.get_all_sheet_ids",
            return_value=[3027747506284420])
     @patch("uuid_module.smartsheet_api.write_rows_to_sheet",
-           return_value={"result": {"statusCode": 200}})
+           return_value=result)
+    @patch("uuid_module.helper.truncate", return_value=10)
     @patch("uuid_module.get_data.load_jira_index",
            return_value=(index_sheet, index_col_map, index_rows))
-    def test_0(mock_0, mock_1, mock_2, mock_3):
+    def test_0(mock_0, mock_1, mock_2, mock_3, mock_4):
         var_0 = app.full_jira_sync(minutes)
         return var_0
 
@@ -183,7 +192,7 @@ def test_full_jira_sync_5(env_dict, sheet_fixture, jira_index_sheet_fixture):
     @patch("uuid_module.get_data.get_all_sheet_ids",
            return_value=[3027747506284420])
     @patch("uuid_module.smartsheet_api.write_rows_to_sheet",
-           return_value={"result": {"statusCode": 200}})
+           return_value=result)
     @patch("uuid_module.helper.truncate", return_value=45)
     @patch("uuid_module.get_data.load_jira_index",
            return_value=(index_sheet, index_col_map, index_rows))
@@ -192,14 +201,15 @@ def test_full_jira_sync_5(env_dict, sheet_fixture, jira_index_sheet_fixture):
         return var_0, var_1
 
     result_0 = test_0()
-    result_1 = "Full Jira sync took: " in result_0
     assert isinstance(result_0, str)
-    assert result_1 is True
+    assert result_0 == "Full Jira sync took: 10 seconds."
 
-    _, result_2 = test_1()
-    result_3 = "seconds longer than the interval." in result_2
+    result_1, result_2 = test_1()
+    assert isinstance(result_1, str)
     assert isinstance(result_2, str)
-    assert result_3 is True
+    assert result_1 == "Full Jira sync took: 45 seconds."
+    assert result_2 == str("Full Jira Sync took 15 seconds longer than the "
+                           "interval.")
 
 
 def test_full_smartsheet_sync_0(env_dict):
@@ -239,9 +249,13 @@ def test_full_smartsheet_sync_2(env_dict, sheet_fixture):
     sheet, _, _, _ = sheet_fixture
     minutes = env_dict['minutes']
 
+    result = smartsheet.models.Result()
+    result.message = "SUCCESS"
+    result.result_code = 0
+
     @patch("uuid_module.get_data.refresh_source_sheets", return_value=[sheet])
     @patch("uuid_module.smartsheet_api.write_rows_to_sheet",
-           return_value={"result": {"statusCode": 200}})
+           return_value=result)
     def test_0(mock_0, mock_1):
         var_0 = app.full_smartsheet_sync(minutes)
         return var_0
@@ -252,15 +266,43 @@ def test_full_smartsheet_sync_2(env_dict, sheet_fixture):
     assert result_1 is True
 
 
+def test_full_smartsheet_sync_3(env_dict, sheet_fixture):
+    import app.app as app
+    sheet, _, _, _ = sheet_fixture
+    minutes = env_dict['minutes']
+
+    result = smartsheet.models.Result()
+    result.message = "SUCCESS"
+    result.result_code = 0
+
+    @patch("uuid_module.get_data.refresh_source_sheets", return_value=[sheet])
+    @patch("uuid_module.smartsheet_api.write_rows_to_sheet",
+           return_value=result)
+    @patch("uuid_module.helper.truncate", return_value=180)
+    def test_0(mock_0, mock_1, mock_2):
+        var_0 = app.full_smartsheet_sync(minutes)
+        return var_0
+
+    result_0, result_1 = test_0()
+    assert isinstance(result_0, str)
+    assert isinstance(result_1, str)
+    assert result_0 == "Full Smartsheet cross-sheet sync took: 180 seconds."
+    assert result_1 == str("Full Smartsheet cross-sheet sync took 60 seconds "
+                           "longer than the interval.")
+
+
 # def test_full_smartsheet_sync_3(env_dict, sheet_fixture):
 #     import app.app as app
 #     sheet, _, _, _ = sheet_fixture
 #     minutes = env_dict['minutes']
+    # result = smartsheet.models.Result()
+    # result.message = "SUCCESS"
+    # result.result_code = 0
 
 #     @patch("uuid_module.get_data.refresh_source_sheets",
 #            return_value=[sheet])
 #     @patch("uuid_module.smartsheet_api.write_rows_to_sheet",
-#            return_value={"result": {"statusCode": 200}})
+#            return_value=result)
 #     @patch("uuid_module.helper.truncate", return_value=180)
 #     def test_0(mock_0, mock_1, mock_2):
 #         var_0, var_1 = app.full_smartsheet_sync(minutes)
