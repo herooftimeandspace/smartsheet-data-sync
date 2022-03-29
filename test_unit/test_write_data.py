@@ -128,8 +128,12 @@ def test_write_uuids_1(sheet_fixture):
     sheets_to_update[sheet.id] = {
         "sheet_name": sheet.name, "row_data": {}}
 
+    result = smartsheet.models.Result()
+    result.message = "SUCCESS"
+    result.result_code = 0
+
     @patch("uuid_module.smartsheet_api.write_rows_to_sheet",
-           return_value={"result": {"statusCode": 200}})
+           return_value=result)
     def test_0(mock_0):
         sheets_updated = write_data.write_uuids(sheets_to_update)
         return sheets_updated
@@ -143,8 +147,12 @@ def test_write_uuids_2(sheet_fixture):
     sheet, _, _, _ = sheet_fixture
     sheets_to_update = get_data.get_blank_uuids([sheet])
 
+    result = smartsheet.models.Result()
+    result.message = "SUCCESS"
+    result.result_code = 0
+
     @patch("uuid_module.smartsheet_api.write_rows_to_sheet",
-           return_value={"result": {"statusCode": 200}})
+           return_value=result)
     def test_0(mock_0):
         sheets_updated = write_data.write_uuids(sheets_to_update)
         return sheets_updated
@@ -167,8 +175,12 @@ def test_write_jira_index_cell_links_1(index_fixture,
     sheet, _, _, _ = sheet_fixture
     jira_index_sheet, jira_index_col_map, jira_index_rows = index_fixture
 
+    result = smartsheet.models.Result()
+    result.message = "SUCCESS"
+    result.result_code = 0
+
     @patch("uuid_module.smartsheet_api.write_rows_to_sheet",
-           return_value={"result": {"statusCode": 200}})
+           return_value=result)
     @patch("uuid_module.get_data.load_jira_index",
            return_value=(jira_index_sheet, jira_index_col_map,
                          jira_index_rows))
@@ -181,7 +193,7 @@ def test_write_jira_index_cell_links_1(index_fixture,
         return True
 
     @patch("uuid_module.smartsheet_api.write_rows_to_sheet",
-           return_value={"result": {"statusCode": 200}})
+           return_value=result)
     @patch("uuid_module.get_data.load_jira_index",
            return_value=(jira_index_sheet, jira_index_col_map,
                          jira_index_rows))
@@ -205,8 +217,12 @@ def test_write_jira_index_cell_links_2(project_indexes, index_fixture,
     sheet, _, _, _ = sheet_fixture
     jira_index_sheet, jira_index_col_map, jira_index_rows = index_fixture
 
+    result = smartsheet.models.Result()
+    result.message = "SUCCESS"
+    result.result_code = 0
+
     @patch("uuid_module.smartsheet_api.write_rows_to_sheet",
-           return_value={"result": {"statusCode": 200}})
+           return_value=result)
     @patch("uuid_module.get_data.load_jira_index",
            return_value=(jira_index_sheet, jira_index_col_map,
                          jira_index_rows))
@@ -230,8 +246,12 @@ def test_write_jira_index_cell_links_2(project_indexes, index_fixture,
 #     jira_index_sheet, jira_index_col_map, jira_index_rows = index_fixture
 #     row, _ = row_fixture
 
-#     @patch("uuid_module.smartsheet_api.write_rows_to_sheet",
-#            return_value={"result": {"statusCode": 200}})
+#     result = smartsheet.models.Result()
+    # result.message = "SUCCESS"
+    # result.result_code = 0
+
+    # @patch("uuid_module.smartsheet_api.write_rows_to_sheet",
+    #        return_value=result)
 #     @patch("uuid_module.build_data.build_row", return_value=row)
 #     @patch("uuid_module.get_data.load_jira_index",
 #            return_value=(jira_index_sheet, jira_index_col_map,
@@ -303,6 +323,9 @@ def test_write_predecessor_dates_1(src_data, project_indexes,
     with open(cwd + '/dev_cell_basic.json') as f:
         cell = json.load(f)
     pred_cell = smartsheet.models.Cell(cell)
+    result = smartsheet.models.Result()
+    result.message = "SUCCESS"
+    result.result_code = 0
 
     @patch("uuid_module.smartsheet_api.get_sheet", return_value=sheet)
     @patch("uuid_module.helper.get_column_map", return_value=col_map)
@@ -310,7 +333,7 @@ def test_write_predecessor_dates_1(src_data, project_indexes,
     @patch("uuid_module.helper.get_cell_data",
            return_value=pred_cell)
     @patch("uuid_module.smartsheet_api.write_rows_to_sheet",
-           return_value={"result": {"statusCode": 200}})
+           return_value=result)
     def test_0(mock_0, mock_1, mock_2, mock_3, mock_4):
         result_0 = write_data.write_predecessor_dates(src_data,
                                                       project_data_index)
