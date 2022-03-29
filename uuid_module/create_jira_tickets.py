@@ -418,7 +418,7 @@ def copy_jira_tickets_to_sheets(source_sheets, index_sheet, index_col_map):
                                                write_method="update")
             sheets_updated += 1
         else:
-            msg = str("No new Jira Tickets are ready for copy to"
+            msg = str("No new Jira Tickets are ready for copy to "
                       "Sheet Name: {} | Sheet ID: {}").format(sheet.name,
                                                               sheet.id)
             logging.info(msg)
@@ -435,6 +435,70 @@ def copy_jira_tickets_to_sheets(source_sheets, index_sheet, index_col_map):
 #     4. Form row, add to list of rows to create and push to Jira
 #        Index
 #     return parent
+
+
+def copy_errors_to_sheet():
+    """Copies any sync errors back to the original sheet so that the end user
+       knows if/when/why a ticket creation failed.
+    """
+    push_sheet, push_col_map = get_push_tickets_sheet()
+    success_count = 0
+    failure_count = 0
+    skip_count = 0
+    for row in push_sheet.rows:
+        uuid_cell = helper.get_cell_data(row, app_vars.uuid_col, push_col_map)
+        sync_cell = helper.get_cell_data(row, "Sync Status", push_col_map)
+
+        # Skip empty UUID or Sync Error cells or None cell values.
+        if not uuid_cell:
+            skip_count += 1
+            continue
+        if not sync_cell:
+            skip_count += 1
+            continue
+        if not uuid_cell.value:
+            skip_count += 1
+            continue
+        if not sync_cell.value:
+            skip_count += 1
+            continue
+
+        # Get the sheet ID and row ID from the UUID
+        split = uuid_cell.value.split("-")
+        sheet_id = int(split[0])
+        row_id = int(split[1])
+
+        # Get the Jira Cell value in the sheet and validate that it should
+        # be written to.
+        sheet = smartsheet_api.get_sheet(sheet_id, config.minutes)
+        col_map = helper.get_column_map(sheet)
+        dest_row = smartsheet_api.get_row(sheet.id, row_id)
+        jira_cell = helper.get_cell_data(dest_row, app_vars.jira_col, col_map)
+
+        if bool(re.match(r"[a-zA-Z]+-\d+", jira_cell.value)):
+            # Cell value matches the Jira Ticket pattern, skip.
+            skip_count += 1
+            continue
+        if "reasonPhrase" in jira_cell.value:
+            # Sync Cell has already been copied.
+            logging.info("reasonPhrase in Jira Cell, skipping.")
+            skip_count += 1
+            continue
+
+        # Write the sync error cell to the row
+        new_row = smartsheet.models.Row()
+        new_row.id = row_id
+        sync_cell.column_id = col_map[app_vars.jira_col]
+        sync_cell.hyperlink = smartsheet.models.ExplicitNull()
+        new_row.cells.append(sync_cell)
+        result = smartsheet_api.write_rows_to_sheet([new_row], sheet, "update")
+        logging.debug(result)
+
+        if not result.message == "SUCCESS":
+            failure_count += 1
+        else:
+            success_count += 1
+    return success_count, failure_count, skip_count
 
 
 def copy_uuid_to_index_sheet(index_sheet, index_col_map):
@@ -645,6 +709,27 @@ def create_ticket_index(source_sheets, index_sheet, index_col_map):
                                      row_data["Parent Issue Type"])
                 logging.debug(msg)
                 continue
+            if bool(re.match(r"[a-zA-Z]+-\d+", row_data[app_vars.jira_col])):
+                # Skip tickets that match the Jira Ticket pattern
+                msg = str("Jira Ticket {} on row {} matches the Jira Ticket"
+                          "pattern").format(row_data[app_vars.jira_col],
+                                            row_data["row_num"])
+                logging.debug(msg)
+                continue
+            if "reasonPhrase" in row_data["Parent Ticket"]:
+                # Skip rows where the parent ticket has a sync error
+                msg = str("Parent ticket for row {} has a Jira Sync error: "
+                          "{}. Skipping.").format(row_data["row_num"],
+                                                  row_data[app_vars.jira_col])
+                logging.debug(msg)
+                continue
+            if "reasonPhrase" in row_data[app_vars.jira_col]:
+                # Skip rows where the Jira ticket has a sync error
+                msg = str("Jira ticket for row {} is a Jira Sync error: "
+                          "{}. Skipping.").format(row_data["row_num"],
+                                                  row_data[app_vars.jira_col])
+                logging.debug(msg)
+                continue
             if row_data["Parent Ticket"] is None and \
                     row_data[app_vars.jira_col] in ("Create", "create"):
                 tickets_to_create[row_data[app_vars.uuid_col]] = row_data
@@ -661,14 +746,14 @@ def create_ticket_index(source_sheets, index_sheet, index_col_map):
                           "column in Sheet Name: {} to Pending..."
                           "").format(row_data[app_vars.uuid_col], sheet.name)
                 logging.debug(msg)
-                logging.debug(row_data)
+                # logging.debug(row_data)
                 continue
             if row_data[app_vars.jira_col] == "Pending...":
                 # Skip any row that's already in process
                 msg = str("Skipped because Jira Ticket or Parent Ticket "
                           "column was set to Pending...")
                 logging.debug(msg)
-                logging.debug(row_data)
+                # logging.debug(row_data)
                 pending_count += 1
                 continue
             if row_data['Parent Ticket'] == "Pending...":
@@ -676,11 +761,20 @@ def create_ticket_index(source_sheets, index_sheet, index_col_map):
                 msg = str("Skipped because Parent Ticket column was set to "
                           "Pending...")
                 logging.debug(msg)
-                logging.debug(row_data)
+                # logging.debug(row_data)
                 parent_pending_count += 1
                 continue
             if row_data['Parent Ticket'] not in ('Create', 'create',
                                                  'Pending...', None):
+                if not bool(re.match(r"[a-zA-Z]+-\d+",
+                                     row_data["Parent Ticket"])):
+                    msg = str("Parent Ticket {} on row {} does not match the "
+                              "Jira Ticket pattern. Skipping"
+                              "").format(row_data[app_vars.jira_col],
+                                         row_data["row_num"])
+                    logging.debug(msg)
+                    continue
+
                 if row_data[app_vars.jira_col] in ('Create', 'create'):
                     # Add row data to create tickets.
                     tickets_to_create[row_data[app_vars.uuid_col]] = row_data
@@ -694,15 +788,12 @@ def create_ticket_index(source_sheets, index_sheet, index_col_map):
                     })
                     sheet_rows_to_update.append(new_row)
                     pending_count += 1
-                    # TODO: Validate Jira ticket so that comments don't
-                    # cause errors.
-                    msg = str("Parent Ticket isn't 'Create' or 'Pending...' "
-                              "but it does have a value. Adding row_data to "
-                              "tickets_to_create and setting Jira Ticket "
-                              "to Pending...")
-                    logging.debug(msg)
-                    logging.debug(row_data)
                     continue
+            # TODO: Validate Jira ticket so that comments don't
+            # cause errors.
+            msg = str("Parent Ticket isn't 'Create' or 'Pending...' "
+                      "but it does have a value. Dumping data.")
+            logging.debug(msg)
             logging.debug(row_data)
 
         # Validate that there are rows to write.
@@ -774,6 +865,22 @@ def create_tickets(minutes=app_vars.dev_minutes):
     if result:
         index_sheet = smartsheet_api.get_sheet(config.index_sheet,
                                                config.minutes)
+
+    logging.info("Starting to push sync error messages to the Program Plans.")
+    success_count, failure_count, skip_count = copy_errors_to_sheet()
+    if success_count:
+        msg = str("Successfully pushed {} sync error messages to "
+                  "their respective source sheets.").format(success_count)
+        logging.info(msg)
+
+    if failure_count:
+        msg = str("Failed to push {} sync error messages to "
+                  "their respective source sheets.").format(failure_count)
+        logging.info(msg)
+
+    if skip_count:
+        msg = str("{} rows skipped.").format(skip_count)
+        logging.info(msg)
 
     # Copy Jira Tickets from the index sheet back to the source sheets
     logging.info("Starting to copy Jira Tickets from the Index Sheet to the "
