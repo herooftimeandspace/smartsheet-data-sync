@@ -241,11 +241,21 @@ def main():
 
     logging.debug("------------------------")
     logging.debug("Adding job to write new Jira tickets in real time. "
-                  "Interval = every 5 minutes.")
+                  "Interval = every 2 minutes.")
     logging.debug("------------------------")
     # TODO: Revert to 5 mins before merging with debug
     config.scheduler.add_job(create_jira_tickets.create_tickets,
                              'interval',
                              args=[config.minutes],
                              minutes=2)
+
+    logging.debug("------------------------")
+    logging.debug("Adding job to create any tickets missed in the past week. "
+                  "Cron = every day at 1:00am UTC.")
+    logging.debug("------------------------")
+    config.scheduler.add_job(create_jira_tickets.create_tickets,
+                             'cron',
+                             args=[10080],
+                             day='*/1',
+                             hour='1')
     return True
