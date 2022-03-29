@@ -21,8 +21,8 @@ def write_rows_to_sheet(rows_to_write, sheet, write_method="add"):
     Args:
         rows_to_write (list): A list of rows and their data to write back to
             the sheet
-        sheet (dict): The sheet that contains the rows that need to be added
-            or updated
+        sheet (dict, int, smartsheet.models.sheet): The sheet that contains
+            the rows that need to be added or updated
         write_method (str, optional): Whether to add new rows or update
             existing rows. Defaults to "add".
 

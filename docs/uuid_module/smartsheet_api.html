@@ -87,8 +87,8 @@
 <span class="sd">    Args:</span>
 <span class="sd">        rows_to_write (list): A list of rows and their data to write back to</span>
 <span class="sd">            the sheet</span>
-<span class="sd">        sheet (dict): The sheet that contains the rows that need to be added</span>
-<span class="sd">            or updated</span>
+<span class="sd">        sheet (dict, int, smartsheet.models.sheet): The sheet that contains</span>
+<span class="sd">            the rows that need to be added or updated</span>
 <span class="sd">        write_method (str, optional): Whether to add new rows or update</span>
 <span class="sd">            existing rows. Defaults to &quot;add&quot;.</span>
 
@@ -404,8 +404,8 @@ Defer importing the token and secrets until all modules are loaded.</p>
 <span class="sd">    Args:</span>
 <span class="sd">        rows_to_write (list): A list of rows and their data to write back to</span>
 <span class="sd">            the sheet</span>
-<span class="sd">        sheet (dict): The sheet that contains the rows that need to be added</span>
-<span class="sd">            or updated</span>
+<span class="sd">        sheet (dict, int, smartsheet.models.sheet): The sheet that contains</span>
+<span class="sd">            the rows that need to be added or updated</span>
 <span class="sd">        write_method (str, optional): Whether to add new rows or update</span>
 <span class="sd">            existing rows. Defaults to &quot;add&quot;.</span>
 
@@ -537,8 +537,8 @@ Defer importing the token and secrets until all modules are loaded.</p>
 <ul>
 <li><strong>rows_to_write (list):</strong>  A list of rows and their data to write back to
 the sheet</li>
-<li><strong>sheet (dict):</strong>  The sheet that contains the rows that need to be added
-or updated</li>
+<li><strong>sheet (dict, int, smartsheet.models.sheet):</strong>  The sheet that contains
+the rows that need to be added or updated</li>
 <li><strong>write_method (str, optional):</strong>  Whether to add new rows or update
 existing rows. Defaults to "add".</li>
 </ul>

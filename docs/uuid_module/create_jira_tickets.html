@@ -43,6 +43,9 @@
                     <a class="function" href="#copy_jira_tickets_to_sheets">copy_jira_tickets_to_sheets</a>
             </li>
             <li>
+                    <a class="function" href="#copy_errors_to_sheet">copy_errors_to_sheet</a>
+            </li>
+            <li>
                     <a class="function" href="#copy_uuid_to_index_sheet">copy_uuid_to_index_sheet</a>
             </li>
             <li>
@@ -512,6 +515,46 @@
 <span class="c1">#     return parent</span>
 
 
+<span class="k">def</span> <span class="nf">copy_errors_to_sheet</span><span class="p">():</span>
+    <span class="sd">&quot;&quot;&quot;Copies any sync errors back to the original sheet so that the end user</span>
+<span class="sd">       knows if/when/why a ticket creation failed.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">push_sheet</span><span class="p">,</span> <span class="n">push_col_map</span> <span class="o">=</span> <span class="n">get_push_tickets_sheet</span><span class="p">()</span>
+    <span class="n">success_count</span> <span class="o">=</span> <span class="mi">0</span>
+    <span class="n">failure_count</span> <span class="o">=</span> <span class="mi">0</span>
+    <span class="k">for</span> <span class="n">row</span> <span class="ow">in</span> <span class="n">push_sheet</span><span class="o">.</span><span class="n">rows</span><span class="p">:</span>
+        <span class="n">uuid_cell</span> <span class="o">=</span> <span class="n">helper</span><span class="o">.</span><span class="n">get_cell_data</span><span class="p">(</span><span class="n">row</span><span class="p">,</span> <span class="n">app_vars</span><span class="o">.</span><span class="n">uuid_col</span><span class="p">,</span> <span class="n">push_col_map</span><span class="p">)</span>
+        <span class="n">sync_cell</span> <span class="o">=</span> <span class="n">helper</span><span class="o">.</span><span class="n">get_cell_data</span><span class="p">(</span><span class="n">row</span><span class="p">,</span> <span class="s2">&quot;Sync Status&quot;</span><span class="p">,</span> <span class="n">push_col_map</span><span class="p">)</span>
+
+        <span class="c1"># Skip empty cells or None cell values.</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">uuid_cell</span><span class="p">:</span>
+            <span class="k">continue</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">sync_cell</span><span class="p">:</span>
+            <span class="k">continue</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">uuid_cell</span><span class="o">.</span><span class="n">value</span><span class="p">:</span>
+            <span class="k">continue</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">sync_cell</span><span class="o">.</span><span class="n">value</span><span class="p">:</span>
+            <span class="k">continue</span>
+
+        <span class="n">split</span> <span class="o">=</span> <span class="n">uuid_cell</span><span class="o">.</span><span class="n">value</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s2">&quot;-&quot;</span><span class="p">)</span>
+        <span class="n">sheet_id</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">split</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+        <span class="n">row_id</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">split</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span>
+
+        <span class="n">sheet</span> <span class="o">=</span> <span class="n">smartsheet_api</span><span class="o">.</span><span class="n">get_sheet</span><span class="p">(</span><span class="n">sheet_id</span><span class="p">,</span> <span class="n">config</span><span class="o">.</span><span class="n">minutes</span><span class="p">)</span>
+        <span class="n">col_map</span> <span class="o">=</span> <span class="n">helper</span><span class="o">.</span><span class="n">get_column_map</span><span class="p">(</span><span class="n">sheet</span><span class="p">)</span>
+        <span class="n">new_row</span> <span class="o">=</span> <span class="n">smartsheet</span><span class="o">.</span><span class="n">models</span><span class="o">.</span><span class="n">Row</span><span class="p">()</span>
+        <span class="n">new_row</span><span class="o">.</span><span class="n">id</span> <span class="o">=</span> <span class="n">row_id</span>
+        <span class="n">sync_cell</span><span class="o">.</span><span class="n">column_id</span> <span class="o">=</span> <span class="n">col_map</span><span class="p">[</span><span class="n">app_vars</span><span class="o">.</span><span class="n">jira_col</span><span class="p">]</span>
+        <span class="n">new_row</span><span class="o">.</span><span class="n">cells</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">sync_cell</span><span class="p">)</span>
+        <span class="n">result</span> <span class="o">=</span> <span class="n">smartsheet_api</span><span class="o">.</span><span class="n">write_rows_to_sheet</span><span class="p">([</span><span class="n">new_row</span><span class="p">],</span> <span class="n">sheet</span><span class="p">,</span> <span class="s2">&quot;update&quot;</span><span class="p">)</span>
+        <span class="n">logging</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="n">result</span><span class="p">)</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">result</span><span class="o">.</span><span class="n">message</span> <span class="o">==</span> <span class="s2">&quot;SUCCESS&quot;</span><span class="p">:</span>
+            <span class="n">failure_count</span> <span class="o">+=</span> <span class="mi">1</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">success_count</span> <span class="o">+=</span> <span class="mi">1</span>
+    <span class="k">return</span> <span class="n">success_count</span><span class="p">,</span> <span class="n">failure_count</span>
+
+
 <span class="k">def</span> <span class="nf">copy_uuid_to_index_sheet</span><span class="p">(</span><span class="n">index_sheet</span><span class="p">,</span> <span class="n">index_col_map</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;Copy the UUID from the Push Data Sheet into the Jira Index Sheet after</span>
 <span class="sd">       the ticket is created in Jira and synced in to the Index Sheet so that</span>
@@ -720,6 +763,13 @@
                                      <span class="n">row_data</span><span class="p">[</span><span class="s2">&quot;Parent Issue Type&quot;</span><span class="p">])</span>
                 <span class="n">logging</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
                 <span class="k">continue</span>
+            <span class="k">if</span> <span class="nb">bool</span><span class="p">(</span><span class="n">re</span><span class="o">.</span><span class="n">match</span><span class="p">(</span><span class="sa">r</span><span class="s2">&quot;[a-zA-Z]+-\d+&quot;</span><span class="p">,</span> <span class="n">row_data</span><span class="p">[</span><span class="n">app_vars</span><span class="o">.</span><span class="n">jira_col</span><span class="p">])):</span>
+                <span class="c1"># Skip tickets that match the Jira Ticket pattern</span>
+                <span class="n">msg</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="s2">&quot;Jira Ticket </span><span class="si">{}</span><span class="s2"> on row </span><span class="si">{}</span><span class="s2"> matches the Jira Ticket&quot;</span>
+                          <span class="s2">&quot;pattern&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">row_data</span><span class="p">[</span><span class="n">app_vars</span><span class="o">.</span><span class="n">jira_col</span><span class="p">],</span>
+                                            <span class="n">row_data</span><span class="p">[</span><span class="s2">&quot;row_num&quot;</span><span class="p">])</span>
+                <span class="n">logging</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
+                <span class="k">continue</span>
             <span class="k">if</span> <span class="n">row_data</span><span class="p">[</span><span class="s2">&quot;Parent Ticket&quot;</span><span class="p">]</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">and</span> \
                     <span class="n">row_data</span><span class="p">[</span><span class="n">app_vars</span><span class="o">.</span><span class="n">jira_col</span><span class="p">]</span> <span class="ow">in</span> <span class="p">(</span><span class="s2">&quot;Create&quot;</span><span class="p">,</span> <span class="s2">&quot;create&quot;</span><span class="p">):</span>
                 <span class="n">tickets_to_create</span><span class="p">[</span><span class="n">row_data</span><span class="p">[</span><span class="n">app_vars</span><span class="o">.</span><span class="n">uuid_col</span><span class="p">]]</span> <span class="o">=</span> <span class="n">row_data</span>
@@ -736,14 +786,14 @@
                           <span class="s2">&quot;column in Sheet Name: </span><span class="si">{}</span><span class="s2"> to Pending...&quot;</span>
                           <span class="s2">&quot;&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">row_data</span><span class="p">[</span><span class="n">app_vars</span><span class="o">.</span><span class="n">uuid_col</span><span class="p">],</span> <span class="n">sheet</span><span class="o">.</span><span class="n">name</span><span class="p">)</span>
                 <span class="n">logging</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
-                <span class="n">logging</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="n">row_data</span><span class="p">)</span>
+                <span class="c1"># logging.debug(row_data)</span>
                 <span class="k">continue</span>
             <span class="k">if</span> <span class="n">row_data</span><span class="p">[</span><span class="n">app_vars</span><span class="o">.</span><span class="n">jira_col</span><span class="p">]</span> <span class="o">==</span> <span class="s2">&quot;Pending...&quot;</span><span class="p">:</span>
                 <span class="c1"># Skip any row that&#39;s already in process</span>
                 <span class="n">msg</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="s2">&quot;Skipped because Jira Ticket or Parent Ticket &quot;</span>
                           <span class="s2">&quot;column was set to Pending...&quot;</span><span class="p">)</span>
                 <span class="n">logging</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
-                <span class="n">logging</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="n">row_data</span><span class="p">)</span>
+                <span class="c1"># logging.debug(row_data)</span>
                 <span class="n">pending_count</span> <span class="o">+=</span> <span class="mi">1</span>
                 <span class="k">continue</span>
             <span class="k">if</span> <span class="n">row_data</span><span class="p">[</span><span class="s1">&#39;Parent Ticket&#39;</span><span class="p">]</span> <span class="o">==</span> <span class="s2">&quot;Pending...&quot;</span><span class="p">:</span>
@@ -751,11 +801,20 @@
                 <span class="n">msg</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="s2">&quot;Skipped because Parent Ticket column was set to &quot;</span>
                           <span class="s2">&quot;Pending...&quot;</span><span class="p">)</span>
                 <span class="n">logging</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
-                <span class="n">logging</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="n">row_data</span><span class="p">)</span>
+                <span class="c1"># logging.debug(row_data)</span>
                 <span class="n">parent_pending_count</span> <span class="o">+=</span> <span class="mi">1</span>
                 <span class="k">continue</span>
             <span class="k">if</span> <span class="n">row_data</span><span class="p">[</span><span class="s1">&#39;Parent Ticket&#39;</span><span class="p">]</span> <span class="ow">not</span> <span class="ow">in</span> <span class="p">(</span><span class="s1">&#39;Create&#39;</span><span class="p">,</span> <span class="s1">&#39;create&#39;</span><span class="p">,</span>
                                                  <span class="s1">&#39;Pending...&#39;</span><span class="p">,</span> <span class="kc">None</span><span class="p">):</span>
+                <span class="k">if</span> <span class="ow">not</span> <span class="nb">bool</span><span class="p">(</span><span class="n">re</span><span class="o">.</span><span class="n">match</span><span class="p">(</span><span class="sa">r</span><span class="s2">&quot;[a-zA-Z]+-\d+&quot;</span><span class="p">,</span>
+                                     <span class="n">row_data</span><span class="p">[</span><span class="s2">&quot;Parent Ticket&quot;</span><span class="p">])):</span>
+                    <span class="n">msg</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="s2">&quot;Parent Ticket </span><span class="si">{}</span><span class="s2"> on row </span><span class="si">{}</span><span class="s2"> does not match the &quot;</span>
+                              <span class="s2">&quot;Jira Ticket pattern. Skipping&quot;</span>
+                              <span class="s2">&quot;&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">row_data</span><span class="p">[</span><span class="n">app_vars</span><span class="o">.</span><span class="n">jira_col</span><span class="p">],</span>
+                                         <span class="n">row_data</span><span class="p">[</span><span class="s2">&quot;row_num&quot;</span><span class="p">])</span>
+                    <span class="n">logging</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
+                    <span class="k">continue</span>
+
                 <span class="k">if</span> <span class="n">row_data</span><span class="p">[</span><span class="n">app_vars</span><span class="o">.</span><span class="n">jira_col</span><span class="p">]</span> <span class="ow">in</span> <span class="p">(</span><span class="s1">&#39;Create&#39;</span><span class="p">,</span> <span class="s1">&#39;create&#39;</span><span class="p">):</span>
                     <span class="c1"># Add row data to create tickets.</span>
                     <span class="n">tickets_to_create</span><span class="p">[</span><span class="n">row_data</span><span class="p">[</span><span class="n">app_vars</span><span class="o">.</span><span class="n">uuid_col</span><span class="p">]]</span> <span class="o">=</span> <span class="n">row_data</span>
@@ -769,15 +828,12 @@
                     <span class="p">})</span>
                     <span class="n">sheet_rows_to_update</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">new_row</span><span class="p">)</span>
                     <span class="n">pending_count</span> <span class="o">+=</span> <span class="mi">1</span>
-                    <span class="c1"># TODO: Validate Jira ticket so that comments don&#39;t</span>
-                    <span class="c1"># cause errors.</span>
-                    <span class="n">msg</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="s2">&quot;Parent Ticket isn&#39;t &#39;Create&#39; or &#39;Pending...&#39; &quot;</span>
-                              <span class="s2">&quot;but it does have a value. Adding row_data to &quot;</span>
-                              <span class="s2">&quot;tickets_to_create and setting Jira Ticket &quot;</span>
-                              <span class="s2">&quot;to Pending...&quot;</span><span class="p">)</span>
-                    <span class="n">logging</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
-                    <span class="n">logging</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="n">row_data</span><span class="p">)</span>
                     <span class="k">continue</span>
+            <span class="c1"># TODO: Validate Jira ticket so that comments don&#39;t</span>
+            <span class="c1"># cause errors.</span>
+            <span class="n">msg</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="s2">&quot;Parent Ticket isn&#39;t &#39;Create&#39; or &#39;Pending...&#39; &quot;</span>
+                      <span class="s2">&quot;but it does have a value. Dumping data.&quot;</span><span class="p">)</span>
+            <span class="n">logging</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
             <span class="n">logging</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="n">row_data</span><span class="p">)</span>
 
         <span class="c1"># Validate that there are rows to write.</span>
@@ -849,6 +905,18 @@
     <span class="k">if</span> <span class="n">result</span><span class="p">:</span>
         <span class="n">index_sheet</span> <span class="o">=</span> <span class="n">smartsheet_api</span><span class="o">.</span><span class="n">get_sheet</span><span class="p">(</span><span class="n">config</span><span class="o">.</span><span class="n">index_sheet</span><span class="p">,</span>
                                                <span class="n">config</span><span class="o">.</span><span class="n">minutes</span><span class="p">)</span>
+
+    <span class="n">logging</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;Starting to push sync error messages to the Program Plans.&quot;</span><span class="p">)</span>
+    <span class="n">success_count</span><span class="p">,</span> <span class="n">failure_count</span> <span class="o">=</span> <span class="n">copy_errors_to_sheet</span><span class="p">()</span>
+    <span class="k">if</span> <span class="n">success_count</span><span class="p">:</span>
+        <span class="n">msg</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="s2">&quot;Successfully pushed </span><span class="si">{}</span><span class="s2"> sync error messages to &quot;</span>
+                  <span class="s2">&quot;their respective source sheets.&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">success_count</span><span class="p">)</span>
+        <span class="n">logging</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">failure_count</span><span class="p">:</span>
+        <span class="n">msg</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="s2">&quot;Failed to push </span><span class="si">{}</span><span class="s2"> sync error messages to &quot;</span>
+                  <span class="s2">&quot;their respective source sheets.&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">failure_count</span><span class="p">)</span>
+        <span class="n">logging</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
 
     <span class="c1"># Copy Jira Tickets from the index sheet back to the source sheets</span>
     <span class="n">logging</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;Starting to copy Jira Tickets from the Index Sheet to the &quot;</span>
@@ -1455,6 +1523,64 @@ for the Jira Index Sheet</li>
 
 
                 </section>
+                <section id="copy_errors_to_sheet">
+                            <div class="attr function"><a class="headerlink" href="#copy_errors_to_sheet">#&nbsp;&nbsp</a>
+
+        
+            <span class="def">def</span>
+            <span class="name">copy_errors_to_sheet</span><span class="signature">()</span>:
+    </div>
+
+                <details>
+            <summary>View Source</summary>
+            <div class="codehilite"><pre><span></span><span class="k">def</span> <span class="nf">copy_errors_to_sheet</span><span class="p">():</span>
+    <span class="sd">&quot;&quot;&quot;Copies any sync errors back to the original sheet so that the end user</span>
+<span class="sd">       knows if/when/why a ticket creation failed.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">push_sheet</span><span class="p">,</span> <span class="n">push_col_map</span> <span class="o">=</span> <span class="n">get_push_tickets_sheet</span><span class="p">()</span>
+    <span class="n">success_count</span> <span class="o">=</span> <span class="mi">0</span>
+    <span class="n">failure_count</span> <span class="o">=</span> <span class="mi">0</span>
+    <span class="k">for</span> <span class="n">row</span> <span class="ow">in</span> <span class="n">push_sheet</span><span class="o">.</span><span class="n">rows</span><span class="p">:</span>
+        <span class="n">uuid_cell</span> <span class="o">=</span> <span class="n">helper</span><span class="o">.</span><span class="n">get_cell_data</span><span class="p">(</span><span class="n">row</span><span class="p">,</span> <span class="n">app_vars</span><span class="o">.</span><span class="n">uuid_col</span><span class="p">,</span> <span class="n">push_col_map</span><span class="p">)</span>
+        <span class="n">sync_cell</span> <span class="o">=</span> <span class="n">helper</span><span class="o">.</span><span class="n">get_cell_data</span><span class="p">(</span><span class="n">row</span><span class="p">,</span> <span class="s2">&quot;Sync Status&quot;</span><span class="p">,</span> <span class="n">push_col_map</span><span class="p">)</span>
+
+        <span class="c1"># Skip empty cells or None cell values.</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">uuid_cell</span><span class="p">:</span>
+            <span class="k">continue</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">sync_cell</span><span class="p">:</span>
+            <span class="k">continue</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">uuid_cell</span><span class="o">.</span><span class="n">value</span><span class="p">:</span>
+            <span class="k">continue</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">sync_cell</span><span class="o">.</span><span class="n">value</span><span class="p">:</span>
+            <span class="k">continue</span>
+
+        <span class="n">split</span> <span class="o">=</span> <span class="n">uuid_cell</span><span class="o">.</span><span class="n">value</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s2">&quot;-&quot;</span><span class="p">)</span>
+        <span class="n">sheet_id</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">split</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+        <span class="n">row_id</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">split</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span>
+
+        <span class="n">sheet</span> <span class="o">=</span> <span class="n">smartsheet_api</span><span class="o">.</span><span class="n">get_sheet</span><span class="p">(</span><span class="n">sheet_id</span><span class="p">,</span> <span class="n">config</span><span class="o">.</span><span class="n">minutes</span><span class="p">)</span>
+        <span class="n">col_map</span> <span class="o">=</span> <span class="n">helper</span><span class="o">.</span><span class="n">get_column_map</span><span class="p">(</span><span class="n">sheet</span><span class="p">)</span>
+        <span class="n">new_row</span> <span class="o">=</span> <span class="n">smartsheet</span><span class="o">.</span><span class="n">models</span><span class="o">.</span><span class="n">Row</span><span class="p">()</span>
+        <span class="n">new_row</span><span class="o">.</span><span class="n">id</span> <span class="o">=</span> <span class="n">row_id</span>
+        <span class="n">sync_cell</span><span class="o">.</span><span class="n">column_id</span> <span class="o">=</span> <span class="n">col_map</span><span class="p">[</span><span class="n">app_vars</span><span class="o">.</span><span class="n">jira_col</span><span class="p">]</span>
+        <span class="n">new_row</span><span class="o">.</span><span class="n">cells</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">sync_cell</span><span class="p">)</span>
+        <span class="n">result</span> <span class="o">=</span> <span class="n">smartsheet_api</span><span class="o">.</span><span class="n">write_rows_to_sheet</span><span class="p">([</span><span class="n">new_row</span><span class="p">],</span> <span class="n">sheet</span><span class="p">,</span> <span class="s2">&quot;update&quot;</span><span class="p">)</span>
+        <span class="n">logging</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="n">result</span><span class="p">)</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">result</span><span class="o">.</span><span class="n">message</span> <span class="o">==</span> <span class="s2">&quot;SUCCESS&quot;</span><span class="p">:</span>
+            <span class="n">failure_count</span> <span class="o">+=</span> <span class="mi">1</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">success_count</span> <span class="o">+=</span> <span class="mi">1</span>
+    <span class="k">return</span> <span class="n">success_count</span><span class="p">,</span> <span class="n">failure_count</span>
+</pre></div>
+
+        </details>
+
+            <div class="docstring"><p>Copies any sync errors back to the original sheet so that the end user
+knows if/when/why a ticket creation failed.</p>
+</div>
+
+
+                </section>
                 <section id="copy_uuid_to_index_sheet">
                             <div class="attr function"><a class="headerlink" href="#copy_uuid_to_index_sheet">#&nbsp;&nbsp</a>
 
@@ -1747,6 +1873,13 @@ for the Jira Index Sheet</li>
                                      <span class="n">row_data</span><span class="p">[</span><span class="s2">&quot;Parent Issue Type&quot;</span><span class="p">])</span>
                 <span class="n">logging</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
                 <span class="k">continue</span>
+            <span class="k">if</span> <span class="nb">bool</span><span class="p">(</span><span class="n">re</span><span class="o">.</span><span class="n">match</span><span class="p">(</span><span class="sa">r</span><span class="s2">&quot;[a-zA-Z]+-\d+&quot;</span><span class="p">,</span> <span class="n">row_data</span><span class="p">[</span><span class="n">app_vars</span><span class="o">.</span><span class="n">jira_col</span><span class="p">])):</span>
+                <span class="c1"># Skip tickets that match the Jira Ticket pattern</span>
+                <span class="n">msg</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="s2">&quot;Jira Ticket </span><span class="si">{}</span><span class="s2"> on row </span><span class="si">{}</span><span class="s2"> matches the Jira Ticket&quot;</span>
+                          <span class="s2">&quot;pattern&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">row_data</span><span class="p">[</span><span class="n">app_vars</span><span class="o">.</span><span class="n">jira_col</span><span class="p">],</span>
+                                            <span class="n">row_data</span><span class="p">[</span><span class="s2">&quot;row_num&quot;</span><span class="p">])</span>
+                <span class="n">logging</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
+                <span class="k">continue</span>
             <span class="k">if</span> <span class="n">row_data</span><span class="p">[</span><span class="s2">&quot;Parent Ticket&quot;</span><span class="p">]</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">and</span> \
                     <span class="n">row_data</span><span class="p">[</span><span class="n">app_vars</span><span class="o">.</span><span class="n">jira_col</span><span class="p">]</span> <span class="ow">in</span> <span class="p">(</span><span class="s2">&quot;Create&quot;</span><span class="p">,</span> <span class="s2">&quot;create&quot;</span><span class="p">):</span>
                 <span class="n">tickets_to_create</span><span class="p">[</span><span class="n">row_data</span><span class="p">[</span><span class="n">app_vars</span><span class="o">.</span><span class="n">uuid_col</span><span class="p">]]</span> <span class="o">=</span> <span class="n">row_data</span>
@@ -1763,14 +1896,14 @@ for the Jira Index Sheet</li>
                           <span class="s2">&quot;column in Sheet Name: </span><span class="si">{}</span><span class="s2"> to Pending...&quot;</span>
                           <span class="s2">&quot;&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">row_data</span><span class="p">[</span><span class="n">app_vars</span><span class="o">.</span><span class="n">uuid_col</span><span class="p">],</span> <span class="n">sheet</span><span class="o">.</span><span class="n">name</span><span class="p">)</span>
                 <span class="n">logging</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
-                <span class="n">logging</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="n">row_data</span><span class="p">)</span>
+                <span class="c1"># logging.debug(row_data)</span>
                 <span class="k">continue</span>
             <span class="k">if</span> <span class="n">row_data</span><span class="p">[</span><span class="n">app_vars</span><span class="o">.</span><span class="n">jira_col</span><span class="p">]</span> <span class="o">==</span> <span class="s2">&quot;Pending...&quot;</span><span class="p">:</span>
                 <span class="c1"># Skip any row that&#39;s already in process</span>
                 <span class="n">msg</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="s2">&quot;Skipped because Jira Ticket or Parent Ticket &quot;</span>
                           <span class="s2">&quot;column was set to Pending...&quot;</span><span class="p">)</span>
                 <span class="n">logging</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
-                <span class="n">logging</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="n">row_data</span><span class="p">)</span>
+                <span class="c1"># logging.debug(row_data)</span>
                 <span class="n">pending_count</span> <span class="o">+=</span> <span class="mi">1</span>
                 <span class="k">continue</span>
             <span class="k">if</span> <span class="n">row_data</span><span class="p">[</span><span class="s1">&#39;Parent Ticket&#39;</span><span class="p">]</span> <span class="o">==</span> <span class="s2">&quot;Pending...&quot;</span><span class="p">:</span>
@@ -1778,11 +1911,20 @@ for the Jira Index Sheet</li>
                 <span class="n">msg</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="s2">&quot;Skipped because Parent Ticket column was set to &quot;</span>
                           <span class="s2">&quot;Pending...&quot;</span><span class="p">)</span>
                 <span class="n">logging</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
-                <span class="n">logging</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="n">row_data</span><span class="p">)</span>
+                <span class="c1"># logging.debug(row_data)</span>
                 <span class="n">parent_pending_count</span> <span class="o">+=</span> <span class="mi">1</span>
                 <span class="k">continue</span>
             <span class="k">if</span> <span class="n">row_data</span><span class="p">[</span><span class="s1">&#39;Parent Ticket&#39;</span><span class="p">]</span> <span class="ow">not</span> <span class="ow">in</span> <span class="p">(</span><span class="s1">&#39;Create&#39;</span><span class="p">,</span> <span class="s1">&#39;create&#39;</span><span class="p">,</span>
                                                  <span class="s1">&#39;Pending...&#39;</span><span class="p">,</span> <span class="kc">None</span><span class="p">):</span>
+                <span class="k">if</span> <span class="ow">not</span> <span class="nb">bool</span><span class="p">(</span><span class="n">re</span><span class="o">.</span><span class="n">match</span><span class="p">(</span><span class="sa">r</span><span class="s2">&quot;[a-zA-Z]+-\d+&quot;</span><span class="p">,</span>
+                                     <span class="n">row_data</span><span class="p">[</span><span class="s2">&quot;Parent Ticket&quot;</span><span class="p">])):</span>
+                    <span class="n">msg</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="s2">&quot;Parent Ticket </span><span class="si">{}</span><span class="s2"> on row </span><span class="si">{}</span><span class="s2"> does not match the &quot;</span>
+                              <span class="s2">&quot;Jira Ticket pattern. Skipping&quot;</span>
+                              <span class="s2">&quot;&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">row_data</span><span class="p">[</span><span class="n">app_vars</span><span class="o">.</span><span class="n">jira_col</span><span class="p">],</span>
+                                         <span class="n">row_data</span><span class="p">[</span><span class="s2">&quot;row_num&quot;</span><span class="p">])</span>
+                    <span class="n">logging</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
+                    <span class="k">continue</span>
+
                 <span class="k">if</span> <span class="n">row_data</span><span class="p">[</span><span class="n">app_vars</span><span class="o">.</span><span class="n">jira_col</span><span class="p">]</span> <span class="ow">in</span> <span class="p">(</span><span class="s1">&#39;Create&#39;</span><span class="p">,</span> <span class="s1">&#39;create&#39;</span><span class="p">):</span>
                     <span class="c1"># Add row data to create tickets.</span>
                     <span class="n">tickets_to_create</span><span class="p">[</span><span class="n">row_data</span><span class="p">[</span><span class="n">app_vars</span><span class="o">.</span><span class="n">uuid_col</span><span class="p">]]</span> <span class="o">=</span> <span class="n">row_data</span>
@@ -1796,15 +1938,12 @@ for the Jira Index Sheet</li>
                     <span class="p">})</span>
                     <span class="n">sheet_rows_to_update</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">new_row</span><span class="p">)</span>
                     <span class="n">pending_count</span> <span class="o">+=</span> <span class="mi">1</span>
-                    <span class="c1"># TODO: Validate Jira ticket so that comments don&#39;t</span>
-                    <span class="c1"># cause errors.</span>
-                    <span class="n">msg</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="s2">&quot;Parent Ticket isn&#39;t &#39;Create&#39; or &#39;Pending...&#39; &quot;</span>
-                              <span class="s2">&quot;but it does have a value. Adding row_data to &quot;</span>
-                              <span class="s2">&quot;tickets_to_create and setting Jira Ticket &quot;</span>
-                              <span class="s2">&quot;to Pending...&quot;</span><span class="p">)</span>
-                    <span class="n">logging</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
-                    <span class="n">logging</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="n">row_data</span><span class="p">)</span>
                     <span class="k">continue</span>
+            <span class="c1"># TODO: Validate Jira ticket so that comments don&#39;t</span>
+            <span class="c1"># cause errors.</span>
+            <span class="n">msg</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="s2">&quot;Parent Ticket isn&#39;t &#39;Create&#39; or &#39;Pending...&#39; &quot;</span>
+                      <span class="s2">&quot;but it does have a value. Dumping data.&quot;</span><span class="p">)</span>
+            <span class="n">logging</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
             <span class="n">logging</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="n">row_data</span><span class="p">)</span>
 
         <span class="c1"># Validate that there are rows to write.</span>
@@ -1917,6 +2056,18 @@ Column Name: Column ID</li>
     <span class="k">if</span> <span class="n">result</span><span class="p">:</span>
         <span class="n">index_sheet</span> <span class="o">=</span> <span class="n">smartsheet_api</span><span class="o">.</span><span class="n">get_sheet</span><span class="p">(</span><span class="n">config</span><span class="o">.</span><span class="n">index_sheet</span><span class="p">,</span>
                                                <span class="n">config</span><span class="o">.</span><span class="n">minutes</span><span class="p">)</span>
+
+    <span class="n">logging</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;Starting to push sync error messages to the Program Plans.&quot;</span><span class="p">)</span>
+    <span class="n">success_count</span><span class="p">,</span> <span class="n">failure_count</span> <span class="o">=</span> <span class="n">copy_errors_to_sheet</span><span class="p">()</span>
+    <span class="k">if</span> <span class="n">success_count</span><span class="p">:</span>
+        <span class="n">msg</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="s2">&quot;Successfully pushed </span><span class="si">{}</span><span class="s2"> sync error messages to &quot;</span>
+                  <span class="s2">&quot;their respective source sheets.&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">success_count</span><span class="p">)</span>
+        <span class="n">logging</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">failure_count</span><span class="p">:</span>
+        <span class="n">msg</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="s2">&quot;Failed to push </span><span class="si">{}</span><span class="s2"> sync error messages to &quot;</span>
+                  <span class="s2">&quot;their respective source sheets.&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">failure_count</span><span class="p">)</span>
+        <span class="n">logging</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
 
     <span class="c1"># Copy Jira Tickets from the index sheet back to the source sheets</span>
     <span class="n">logging</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;Starting to copy Jira Tickets from the Index Sheet to the &quot;</span>
