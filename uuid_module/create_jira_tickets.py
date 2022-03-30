@@ -4,6 +4,7 @@ import time
 
 import app.config as config
 import smartsheet
+import apscheduler
 
 import uuid_module.helper as helper
 import uuid_module.smartsheet_api as smartsheet_api
@@ -481,7 +482,7 @@ def copy_errors_to_sheet():
             continue
         if "reasonPhrase" in jira_cell.value:
             # Sync Cell has already been copied.
-            logging.info("reasonPhrase in Jira Cell, skipping.")
+            logging.debug("reasonPhrase in Jira Cell, skipping.")
             skip_count += 1
             continue
 
@@ -673,19 +674,23 @@ def create_ticket_index(source_sheets, index_sheet, index_col_map):
             logging.debug("New Row")
             logging.debug("------------------------")
             row_data = build_row_data(row, col_map)
-            if row_data[app_vars.summary_col] == "True":
-                # Skip summary rows
-                msg = str("Row {} skipped because Summary column was true"
+            if not row_data[app_vars.jira_col]:
+                # Skip rows with no data in the Jira column
+                msg = str("Row {} skipped because Jira column was empty."
                           "").format(row_data["row_num"])
                 logging.debug(msg)
-                logging.debug(row_data)
+                continue
+            if row_data[app_vars.summary_col] == "True":
+                # Skip summary rows
+                msg = str("Row {} skipped because Summary column was true."
+                          "").format(row_data["row_num"])
+                logging.debug(msg)
                 continue
             if row_data["Team"] is None:
                 # Need team defined (so we can get project key). Skip.
                 msg = str("Row {} skipped because Team column was empty."
                           "").format(row_data["row_num"])
                 logging.debug(msg)
-                logging.debug(row_data)
                 continue
             if row_data[app_vars.uuid_col] is None:
                 # No UUID means we can't push the created ticket IDs back
@@ -693,7 +698,6 @@ def create_ticket_index(source_sheets, index_sheet, index_col_map):
                 msg = str("Row {} skipped because UUID column was empty."
                           "").format(row_data["row_num"])
                 logging.debug(msg)
-                logging.debug(row_data)
                 continue
             if row_data['Issue Type'] == "Sub-Task":
                 # Skip Subtasks, we can't create them with the connector
@@ -709,7 +713,8 @@ def create_ticket_index(source_sheets, index_sheet, index_col_map):
                                      row_data["Parent Issue Type"])
                 logging.debug(msg)
                 continue
-            if bool(re.match(r"[a-zA-Z]+-\d+", row_data[app_vars.jira_col])):
+            if bool(re.match(r"[a-zA-Z]+-\d+",
+                             str(row_data[app_vars.jira_col]))):
                 # Skip tickets that match the Jira Ticket pattern
                 msg = str("Jira Ticket {} on row {} matches the Jira Ticket"
                           "pattern").format(row_data[app_vars.jira_col],
@@ -820,6 +825,77 @@ def create_ticket_index(source_sheets, index_sheet, index_col_map):
     return tickets_to_create
 
 
+def modify_scheduler(time):
+    """Dynamically modifies the given job depending on how long the last
+       job took to complete.
+
+    Args:
+        time (int): The amount of time elapsed from the start of the job
+                    to the end of the job (in seconds)
+    """
+    time_in_seconds = time
+    # If time comes in in minutes, make time = 60 seconds
+    if time <= 1:
+        time = time * 60
+
+    # Get currently scheduled interval in minutes
+    jobs = config.scheduler.get_job("create_jira_interval")
+    jobs = str(jobs)
+    split = jobs.split(":")
+    interval = int(split[2])
+
+    # Round time up to the nearest minute
+    time = time // 60 + (time % 60 > 0)
+
+    if interval == time:
+        # Do nothing. Interval is correctly sized
+        msg = str("Job interval and job runtime are within 1 minute of "
+                  "each other. No changes to interval.")
+    elif interval > time:
+        # If the interval is greater than the time it took to run the process,
+        # check to see how much more. If the total time the process took was
+        # over 1 minute less than the interval, reduce the interval by 1
+        # minute.
+        delta = interval - time
+        if delta >= 1:
+            new_interval = interval - 1
+            config.scheduler.reschedule_job("create_jira_interval",
+                                            trigger="interval",
+                                            minutes=int(new_interval))
+            msg = str("Job interval is {} minute(s) longer than the job "
+                      "runtime. Reduced interval to {} minutes"
+                      "").format(delta, new_interval)
+        else:
+            msg = str("SUCCESS: Job interval {}, elapsed time {}, delta {}"
+                      "").format(interval, time, delta)
+
+    elif interval < time:
+        # If the interval is less than the time it took to run the process,
+        # increase the interval. If the delta is less than one minute, add 1
+        # minutes, otherwise add the delta to the interval
+
+        elapsed_warning = helper.truncate(time_in_seconds, 2)
+        msg = str("Create Jira Tickets took {} seconds longer than "
+                  "the interval").format(elapsed_warning)
+        logging.warning(msg)
+        delta = time - interval
+        if delta <= 1:
+            new_interval = interval + 1
+            config.scheduler.reschedule_job("create_jira_interval",
+                                            trigger="interval",
+                                            minutes=int(new_interval))
+        else:
+            new_interval = interval + delta
+            config.scheduler.reschedule_job("create_jira_interval",
+                                            trigger="interval",
+                                            minutes=int(new_interval))
+        msg = str("New job interval set to {} minutes")
+    else:
+        msg = str("ERROR: Job interval {}, elapsed time {}"
+                  "").format(interval, time)
+    return msg
+
+
 # TODO: Drop parent rows once written to index sheet by removing the "Create"
 # from the Jira Ticket field and/or filtering out UUID matches + nonNull
 # Jira Ticket field on the Index sheet
@@ -912,11 +988,8 @@ def create_tickets(minutes=app_vars.dev_minutes):
         elapsed = helper.truncate(elapsed, 2)
         logging.info("Create new tickets from Program Plan line items "
                      "took: {} seconds.".format(elapsed))
-        if elapsed > 120:
-            elapsed_warning = helper.truncate(elapsed, 2)
-            msg = str("Create Jira Tickets took {} seconds longer than "
-                      "the interval").format(elapsed_warning)
-            logging.warning(msg)
+        interval_msg = modify_scheduler(elapsed)
+        logging.info(interval_msg)
         return True
     elif not tickets_to_create:
         msg = str("No parent or child rows remain to be written to the "
@@ -927,14 +1000,15 @@ def create_tickets(minutes=app_vars.dev_minutes):
         elapsed = helper.truncate(elapsed, 2)
         logging.info("Create new tickets from Program Plan line items "
                      "took: {} seconds.".format(elapsed))
-        if elapsed > 120:
-            elapsed_warning = elapsed - 120
-            elapsed_warning = helper.truncate(elapsed, 2)
-            msg = str("Create Jira Tickets took {} seconds longer than "
-                      "the interval").format(elapsed_warning)
-            logging.warning(msg)
+        interval_msg = modify_scheduler(elapsed)
+        logging.info(interval_msg)
         return False
     else:
+        end = time.time()
+        elapsed = end - start
+        elapsed = helper.truncate(elapsed, 2)
+        interval_msg = modify_scheduler(elapsed)
+        logging.info(interval_msg)
         msg = str("Looping through rows rows to create Jira Tickts "
                   "failed with an unknown error.")
         logging.warning(msg)

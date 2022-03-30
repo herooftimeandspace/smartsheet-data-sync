@@ -3,7 +3,7 @@
 **/.pytest_cache
 /.DS_Store
 /.vscode
-/logs
+/logs/*
 /tmp
 *.code-workspace
 docker_terminal_commands.txt

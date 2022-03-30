@@ -227,7 +227,8 @@ def main():
     config.scheduler.add_job(full_jira_sync,
                              'interval',
                              args=[config.minutes],
-                             seconds=30)
+                             seconds=30,
+                             id="sync_jira_interval")
 
     logging.debug("------------------------")
     logging.debug("Adding job to get all data in the past week. "
@@ -237,17 +238,18 @@ def main():
                              'cron',
                              args=[10080],
                              day='*/1',
-                             hour='1')
+                             hour='1',
+                             id="sync_jira_cron")
 
     logging.debug("------------------------")
     logging.debug("Adding job to write new Jira tickets in real time. "
                   "Interval = every 2 minutes.")
     logging.debug("------------------------")
-    # TODO: Revert to 5 mins before merging with debug
     config.scheduler.add_job(create_jira_tickets.create_tickets,
                              'interval',
                              args=[config.minutes],
-                             minutes=2)
+                             minutes=2,
+                             id="create_jira_interval")
 
     logging.debug("------------------------")
     logging.debug("Adding job to create any tickets missed in the past week. "
@@ -257,5 +259,6 @@ def main():
                              'cron',
                              args=[10080],
                              day='*/1',
-                             hour='1')
+                             hour='1',
+                             id="create_jira_cron")
     return True
