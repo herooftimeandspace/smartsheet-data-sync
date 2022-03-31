@@ -281,13 +281,15 @@ def test_create_tickets_1():
     result.message = "SUCCESS"
     result.result_code = 0
 
+    @patch("uuid_module.create_jira_tickets.modify_scheduler",
+           return_value="message")
     @patch("uuid_module.create_jira_tickets.create_ticket_index",
            return_value={"Row": "Data"})
     @patch("uuid_module.smartsheet_api.write_rows_to_sheet",
            return_value=result)
     @patch("uuid_module.create_jira_tickets.form_rows",
            return_value=['row 1', 'row 2'])
-    def test_0(mock_0, mock_1, mock_2):
+    def test_0(mock_0, mock_1, mock_2, mock_3):
         result = jira.create_tickets(config.minutes)
         return result
     result = test_0()
@@ -296,14 +298,81 @@ def test_create_tickets_1():
 
 def test_create_tickets_2():
     import app.config as config
+    import uuid_module.create_jira_tickets as jira
 
     @patch("uuid_module.create_jira_tickets.create_ticket_index",
            return_value={})
-    def test_0(mock_0):
-        result = create_jira_tickets.create_tickets(config.minutes)
+    @patch("uuid_module.create_jira_tickets.modify_scheduler",
+           return_value="message")
+    def test_0(mock_0, mock_1):
+        result = jira.create_tickets(config.minutes)
         return result
     result_0 = test_0()
     assert result_0 is False
+
+
+def test_modify_scheduler_0():
+    import uuid_module.create_jira_tickets as jira
+    with pytest.raises(TypeError):
+        jira.modify_scheduler("1337")
+    with pytest.raises(ValueError):
+        jira.modify_scheduler(-1337)
+
+
+def test_modify_scheduler_1():
+    import uuid_module.create_jira_tickets as jira
+    import app.config as config
+
+    def test_0():
+        config.scheduler.add_job(create_jira_tickets.create_tickets,
+                                 'interval',
+                                 args=[config.minutes],
+                                 minutes=2,
+                                 id="create_jira_interval")
+        result = jira.modify_scheduler(30.567)
+        config.scheduler.remove_all_jobs()
+        return result
+    result_0 = test_0()
+    assert isinstance(result_0, str)
+    assert "Job interval is 1 minute(s) longer than the job " in result_0
+    assert "runtime. Reduced interval to 1 minutes" in result_0
+
+
+def test_modify_scheduler_2():
+    import uuid_module.create_jira_tickets as jira
+    import app.config as config
+
+    def test_0():
+        config.scheduler.add_job(create_jira_tickets.create_tickets,
+                                 'interval',
+                                 args=[config.minutes],
+                                 minutes=2,
+                                 id="create_jira_interval")
+        result = jira.modify_scheduler(120)
+        config.scheduler.remove_all_jobs()
+        return result
+    result_0 = test_0()
+    assert isinstance(result_0, str)
+    assert "Job interval and job runtime are within 1 minute of " in result_0
+    assert "each other. No changes to interval." in result_0
+
+
+def test_modify_scheduler_3():
+    import uuid_module.create_jira_tickets as jira
+    import app.config as config
+
+    def test_0():
+        config.scheduler.add_job(create_jira_tickets.create_tickets,
+                                 'interval',
+                                 args=[config.minutes],
+                                 minutes=2,
+                                 id="create_jira_interval")
+        result = jira.modify_scheduler(179)
+        config.scheduler.remove_all_jobs()
+        return result
+    result_0 = test_0()
+    assert isinstance(result_0, str)
+    assert result_0 == "New job interval set to 3 minutes"
 
 
 def test_copy_uuid_to_index_sheet_0(index_sheet_fixture):

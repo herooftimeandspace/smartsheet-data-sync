@@ -4,7 +4,6 @@ import time
 
 import app.config as config
 import smartsheet
-import apscheduler
 
 import uuid_module.helper as helper
 import uuid_module.smartsheet_api as smartsheet_api
@@ -832,7 +831,22 @@ def modify_scheduler(time):
     Args:
         time (int): The amount of time elapsed from the start of the job
                     to the end of the job (in seconds)
+
+    Raises:
+        TypeError: Time must be an int or float
+        ValueError: Time must be a positive integer
+
+    Returns:
+        str: A message about whether the interval was modified or remains
+             the same
     """
+    if not isinstance(time, (int, float)):
+        msg = str("Time must be an int or float, not {}").format(type(time))
+        raise TypeError(msg)
+    if time <= 0:
+        msg = str("Time must be a positive int or float, not {}").format(time)
+        raise ValueError(msg)
+
     time_in_seconds = time
     # If time comes in in minutes, make time = 60 seconds
     if time <= 1:
@@ -864,7 +878,7 @@ def modify_scheduler(time):
                                             minutes=int(new_interval))
             msg = str("Job interval is {} minute(s) longer than the job "
                       "runtime. Reduced interval to {} minutes"
-                      "").format(delta, new_interval)
+                      "").format(int(delta), new_interval)
         else:
             msg = str("SUCCESS: Job interval {}, elapsed time {}, delta {}"
                       "").format(interval, time, delta)
@@ -873,8 +887,10 @@ def modify_scheduler(time):
         # If the interval is less than the time it took to run the process,
         # increase the interval. If the delta is less than one minute, add 1
         # minutes, otherwise add the delta to the interval
-
-        elapsed_warning = helper.truncate(time_in_seconds, 2)
+        if isinstance(time_in_seconds, float):
+            elapsed_warning = helper.truncate(time_in_seconds, 2)
+        else:
+            elapsed_warning = time_in_seconds
         msg = str("Create Jira Tickets took {} seconds longer than "
                   "the interval").format(elapsed_warning)
         logging.warning(msg)
@@ -889,7 +905,8 @@ def modify_scheduler(time):
             config.scheduler.reschedule_job("create_jira_interval",
                                             trigger="interval",
                                             minutes=int(new_interval))
-        msg = str("New job interval set to {} minutes")
+        msg = str("New job interval set to {} minutes").format(
+            int(new_interval))
     else:
         msg = str("ERROR: Job interval {}, elapsed time {}"
                   "").format(interval, time)
