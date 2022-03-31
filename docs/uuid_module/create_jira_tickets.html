@@ -55,6 +55,9 @@
                     <a class="function" href="#create_ticket_index">create_ticket_index</a>
             </li>
             <li>
+                    <a class="function" href="#modify_scheduler">modify_scheduler</a>
+            </li>
+            <li>
                     <a class="function" href="#create_tickets">create_tickets</a>
             </li>
     </ul>
@@ -559,7 +562,7 @@
             <span class="k">continue</span>
         <span class="k">if</span> <span class="s2">&quot;reasonPhrase&quot;</span> <span class="ow">in</span> <span class="n">jira_cell</span><span class="o">.</span><span class="n">value</span><span class="p">:</span>
             <span class="c1"># Sync Cell has already been copied.</span>
-            <span class="n">logging</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;reasonPhrase in Jira Cell, skipping.&quot;</span><span class="p">)</span>
+            <span class="n">logging</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">&quot;reasonPhrase in Jira Cell, skipping.&quot;</span><span class="p">)</span>
             <span class="n">skip_count</span> <span class="o">+=</span> <span class="mi">1</span>
             <span class="k">continue</span>
 
@@ -751,19 +754,23 @@
             <span class="n">logging</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">&quot;New Row&quot;</span><span class="p">)</span>
             <span class="n">logging</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">&quot;------------------------&quot;</span><span class="p">)</span>
             <span class="n">row_data</span> <span class="o">=</span> <span class="n">build_row_data</span><span class="p">(</span><span class="n">row</span><span class="p">,</span> <span class="n">col_map</span><span class="p">)</span>
-            <span class="k">if</span> <span class="n">row_data</span><span class="p">[</span><span class="n">app_vars</span><span class="o">.</span><span class="n">summary_col</span><span class="p">]</span> <span class="o">==</span> <span class="s2">&quot;True&quot;</span><span class="p">:</span>
-                <span class="c1"># Skip summary rows</span>
-                <span class="n">msg</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="s2">&quot;Row </span><span class="si">{}</span><span class="s2"> skipped because Summary column was true&quot;</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="n">row_data</span><span class="p">[</span><span class="n">app_vars</span><span class="o">.</span><span class="n">jira_col</span><span class="p">]:</span>
+                <span class="c1"># Skip rows with no data in the Jira column</span>
+                <span class="n">msg</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="s2">&quot;Row </span><span class="si">{}</span><span class="s2"> skipped because Jira column was empty.&quot;</span>
                           <span class="s2">&quot;&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">row_data</span><span class="p">[</span><span class="s2">&quot;row_num&quot;</span><span class="p">])</span>
                 <span class="n">logging</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
-                <span class="n">logging</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="n">row_data</span><span class="p">)</span>
+                <span class="k">continue</span>
+            <span class="k">if</span> <span class="n">row_data</span><span class="p">[</span><span class="n">app_vars</span><span class="o">.</span><span class="n">summary_col</span><span class="p">]</span> <span class="o">==</span> <span class="s2">&quot;True&quot;</span><span class="p">:</span>
+                <span class="c1"># Skip summary rows</span>
+                <span class="n">msg</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="s2">&quot;Row </span><span class="si">{}</span><span class="s2"> skipped because Summary column was true.&quot;</span>
+                          <span class="s2">&quot;&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">row_data</span><span class="p">[</span><span class="s2">&quot;row_num&quot;</span><span class="p">])</span>
+                <span class="n">logging</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
                 <span class="k">continue</span>
             <span class="k">if</span> <span class="n">row_data</span><span class="p">[</span><span class="s2">&quot;Team&quot;</span><span class="p">]</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
                 <span class="c1"># Need team defined (so we can get project key). Skip.</span>
                 <span class="n">msg</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="s2">&quot;Row </span><span class="si">{}</span><span class="s2"> skipped because Team column was empty.&quot;</span>
                           <span class="s2">&quot;&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">row_data</span><span class="p">[</span><span class="s2">&quot;row_num&quot;</span><span class="p">])</span>
                 <span class="n">logging</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
-                <span class="n">logging</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="n">row_data</span><span class="p">)</span>
                 <span class="k">continue</span>
             <span class="k">if</span> <span class="n">row_data</span><span class="p">[</span><span class="n">app_vars</span><span class="o">.</span><span class="n">uuid_col</span><span class="p">]</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
                 <span class="c1"># No UUID means we can&#39;t push the created ticket IDs back</span>
@@ -771,7 +778,6 @@
                 <span class="n">msg</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="s2">&quot;Row </span><span class="si">{}</span><span class="s2"> skipped because UUID column was empty.&quot;</span>
                           <span class="s2">&quot;&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">row_data</span><span class="p">[</span><span class="s2">&quot;row_num&quot;</span><span class="p">])</span>
                 <span class="n">logging</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
-                <span class="n">logging</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="n">row_data</span><span class="p">)</span>
                 <span class="k">continue</span>
             <span class="k">if</span> <span class="n">row_data</span><span class="p">[</span><span class="s1">&#39;Issue Type&#39;</span><span class="p">]</span> <span class="o">==</span> <span class="s2">&quot;Sub-Task&quot;</span><span class="p">:</span>
                 <span class="c1"># Skip Subtasks, we can&#39;t create them with the connector</span>
@@ -787,7 +793,8 @@
                                      <span class="n">row_data</span><span class="p">[</span><span class="s2">&quot;Parent Issue Type&quot;</span><span class="p">])</span>
                 <span class="n">logging</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
                 <span class="k">continue</span>
-            <span class="k">if</span> <span class="nb">bool</span><span class="p">(</span><span class="n">re</span><span class="o">.</span><span class="n">match</span><span class="p">(</span><span class="sa">r</span><span class="s2">&quot;[a-zA-Z]+-\d+&quot;</span><span class="p">,</span> <span class="n">row_data</span><span class="p">[</span><span class="n">app_vars</span><span class="o">.</span><span class="n">jira_col</span><span class="p">])):</span>
+            <span class="k">if</span> <span class="nb">bool</span><span class="p">(</span><span class="n">re</span><span class="o">.</span><span class="n">match</span><span class="p">(</span><span class="sa">r</span><span class="s2">&quot;[a-zA-Z]+-\d+&quot;</span><span class="p">,</span>
+                             <span class="nb">str</span><span class="p">(</span><span class="n">row_data</span><span class="p">[</span><span class="n">app_vars</span><span class="o">.</span><span class="n">jira_col</span><span class="p">]))):</span>
                 <span class="c1"># Skip tickets that match the Jira Ticket pattern</span>
                 <span class="n">msg</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="s2">&quot;Jira Ticket </span><span class="si">{}</span><span class="s2"> on row </span><span class="si">{}</span><span class="s2"> matches the Jira Ticket&quot;</span>
                           <span class="s2">&quot;pattern&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">row_data</span><span class="p">[</span><span class="n">app_vars</span><span class="o">.</span><span class="n">jira_col</span><span class="p">],</span>
@@ -898,6 +905,94 @@
     <span class="k">return</span> <span class="n">tickets_to_create</span>
 
 
+<span class="k">def</span> <span class="nf">modify_scheduler</span><span class="p">(</span><span class="n">time</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Dynamically modifies the given job depending on how long the last</span>
+<span class="sd">       job took to complete.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        time (int): The amount of time elapsed from the start of the job</span>
+<span class="sd">                    to the end of the job (in seconds)</span>
+
+<span class="sd">    Raises:</span>
+<span class="sd">        TypeError: Time must be an int or float</span>
+<span class="sd">        ValueError: Time must be a positive integer</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        str: A message about whether the interval was modified or remains</span>
+<span class="sd">             the same</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">time</span><span class="p">,</span> <span class="p">(</span><span class="nb">int</span><span class="p">,</span> <span class="nb">float</span><span class="p">)):</span>
+        <span class="n">msg</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="s2">&quot;Time must be an int or float, not </span><span class="si">{}</span><span class="s2">&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="nb">type</span><span class="p">(</span><span class="n">time</span><span class="p">))</span>
+        <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">time</span> <span class="o">&lt;=</span> <span class="mi">0</span><span class="p">:</span>
+        <span class="n">msg</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="s2">&quot;Time must be a positive int or float, not </span><span class="si">{}</span><span class="s2">&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">time</span><span class="p">)</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
+
+    <span class="n">time_in_seconds</span> <span class="o">=</span> <span class="n">time</span>
+    <span class="c1"># If time comes in in minutes, make time = 60 seconds</span>
+    <span class="k">if</span> <span class="n">time</span> <span class="o">&lt;=</span> <span class="mi">1</span><span class="p">:</span>
+        <span class="n">time</span> <span class="o">=</span> <span class="n">time</span> <span class="o">*</span> <span class="mi">60</span>
+
+    <span class="c1"># Get currently scheduled interval in minutes</span>
+    <span class="n">jobs</span> <span class="o">=</span> <span class="n">config</span><span class="o">.</span><span class="n">scheduler</span><span class="o">.</span><span class="n">get_job</span><span class="p">(</span><span class="s2">&quot;create_jira_interval&quot;</span><span class="p">)</span>
+    <span class="n">jobs</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">jobs</span><span class="p">)</span>
+    <span class="n">split</span> <span class="o">=</span> <span class="n">jobs</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s2">&quot;:&quot;</span><span class="p">)</span>
+    <span class="n">interval</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">split</span><span class="p">[</span><span class="mi">2</span><span class="p">])</span>
+
+    <span class="c1"># Round time up to the nearest minute</span>
+    <span class="n">time</span> <span class="o">=</span> <span class="n">time</span> <span class="o">//</span> <span class="mi">60</span> <span class="o">+</span> <span class="p">(</span><span class="n">time</span> <span class="o">%</span> <span class="mi">60</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">interval</span> <span class="o">==</span> <span class="n">time</span><span class="p">:</span>
+        <span class="c1"># Do nothing. Interval is correctly sized</span>
+        <span class="n">msg</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="s2">&quot;Job interval and job runtime are within 1 minute of &quot;</span>
+                  <span class="s2">&quot;each other. No changes to interval.&quot;</span><span class="p">)</span>
+    <span class="k">elif</span> <span class="n">interval</span> <span class="o">&gt;</span> <span class="n">time</span><span class="p">:</span>
+        <span class="c1"># If the interval is greater than the time it took to run the process,</span>
+        <span class="c1"># check to see how much more. If the total time the process took was</span>
+        <span class="c1"># over 1 minute less than the interval, reduce the interval by 1</span>
+        <span class="c1"># minute.</span>
+        <span class="n">delta</span> <span class="o">=</span> <span class="n">interval</span> <span class="o">-</span> <span class="n">time</span>
+        <span class="k">if</span> <span class="n">delta</span> <span class="o">&gt;=</span> <span class="mi">1</span><span class="p">:</span>
+            <span class="n">new_interval</span> <span class="o">=</span> <span class="n">interval</span> <span class="o">-</span> <span class="mi">1</span>
+            <span class="n">config</span><span class="o">.</span><span class="n">scheduler</span><span class="o">.</span><span class="n">reschedule_job</span><span class="p">(</span><span class="s2">&quot;create_jira_interval&quot;</span><span class="p">,</span>
+                                            <span class="n">trigger</span><span class="o">=</span><span class="s2">&quot;interval&quot;</span><span class="p">,</span>
+                                            <span class="n">minutes</span><span class="o">=</span><span class="nb">int</span><span class="p">(</span><span class="n">new_interval</span><span class="p">))</span>
+            <span class="n">msg</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="s2">&quot;Job interval is </span><span class="si">{}</span><span class="s2"> minute(s) longer than the job &quot;</span>
+                      <span class="s2">&quot;runtime. Reduced interval to </span><span class="si">{}</span><span class="s2"> minutes&quot;</span>
+                      <span class="s2">&quot;&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="nb">int</span><span class="p">(</span><span class="n">delta</span><span class="p">),</span> <span class="n">new_interval</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">msg</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="s2">&quot;SUCCESS: Job interval </span><span class="si">{}</span><span class="s2">, elapsed time </span><span class="si">{}</span><span class="s2">, delta </span><span class="si">{}</span><span class="s2">&quot;</span>
+                      <span class="s2">&quot;&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">interval</span><span class="p">,</span> <span class="n">time</span><span class="p">,</span> <span class="n">delta</span><span class="p">)</span>
+
+    <span class="k">elif</span> <span class="n">interval</span> <span class="o">&lt;</span> <span class="n">time</span><span class="p">:</span>
+        <span class="c1"># If the interval is less than the time it took to run the process,</span>
+        <span class="c1"># increase the interval. If the delta is less than one minute, add 1</span>
+        <span class="c1"># minutes, otherwise add the delta to the interval</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">time_in_seconds</span><span class="p">,</span> <span class="nb">float</span><span class="p">):</span>
+            <span class="n">elapsed_warning</span> <span class="o">=</span> <span class="n">helper</span><span class="o">.</span><span class="n">truncate</span><span class="p">(</span><span class="n">time_in_seconds</span><span class="p">,</span> <span class="mi">2</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">elapsed_warning</span> <span class="o">=</span> <span class="n">time_in_seconds</span>
+        <span class="n">msg</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="s2">&quot;Create Jira Tickets took </span><span class="si">{}</span><span class="s2"> seconds longer than &quot;</span>
+                  <span class="s2">&quot;the interval&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">elapsed_warning</span><span class="p">)</span>
+        <span class="n">logging</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
+        <span class="n">delta</span> <span class="o">=</span> <span class="n">time</span> <span class="o">-</span> <span class="n">interval</span>
+        <span class="k">if</span> <span class="n">delta</span> <span class="o">&lt;=</span> <span class="mi">1</span><span class="p">:</span>
+            <span class="n">new_interval</span> <span class="o">=</span> <span class="n">interval</span> <span class="o">+</span> <span class="mi">1</span>
+            <span class="n">config</span><span class="o">.</span><span class="n">scheduler</span><span class="o">.</span><span class="n">reschedule_job</span><span class="p">(</span><span class="s2">&quot;create_jira_interval&quot;</span><span class="p">,</span>
+                                            <span class="n">trigger</span><span class="o">=</span><span class="s2">&quot;interval&quot;</span><span class="p">,</span>
+                                            <span class="n">minutes</span><span class="o">=</span><span class="nb">int</span><span class="p">(</span><span class="n">new_interval</span><span class="p">))</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">new_interval</span> <span class="o">=</span> <span class="n">interval</span> <span class="o">+</span> <span class="n">delta</span>
+            <span class="n">config</span><span class="o">.</span><span class="n">scheduler</span><span class="o">.</span><span class="n">reschedule_job</span><span class="p">(</span><span class="s2">&quot;create_jira_interval&quot;</span><span class="p">,</span>
+                                            <span class="n">trigger</span><span class="o">=</span><span class="s2">&quot;interval&quot;</span><span class="p">,</span>
+                                            <span class="n">minutes</span><span class="o">=</span><span class="nb">int</span><span class="p">(</span><span class="n">new_interval</span><span class="p">))</span>
+        <span class="n">msg</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="s2">&quot;New job interval set to </span><span class="si">{}</span><span class="s2"> minutes&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">new_interval</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">msg</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="s2">&quot;ERROR: Job interval </span><span class="si">{}</span><span class="s2">, elapsed time </span><span class="si">{}</span><span class="s2">&quot;</span>
+                  <span class="s2">&quot;&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">interval</span><span class="p">,</span> <span class="n">time</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">msg</span>
+
+
 <span class="c1"># TODO: Drop parent rows once written to index sheet by removing the &quot;Create&quot;</span>
 <span class="c1"># from the Jira Ticket field and/or filtering out UUID matches + nonNull</span>
 <span class="c1"># Jira Ticket field on the Index sheet</span>
@@ -990,11 +1085,8 @@
         <span class="n">elapsed</span> <span class="o">=</span> <span class="n">helper</span><span class="o">.</span><span class="n">truncate</span><span class="p">(</span><span class="n">elapsed</span><span class="p">,</span> <span class="mi">2</span><span class="p">)</span>
         <span class="n">logging</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;Create new tickets from Program Plan line items &quot;</span>
                      <span class="s2">&quot;took: </span><span class="si">{}</span><span class="s2"> seconds.&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">elapsed</span><span class="p">))</span>
-        <span class="k">if</span> <span class="n">elapsed</span> <span class="o">&gt;</span> <span class="mi">120</span><span class="p">:</span>
-            <span class="n">elapsed_warning</span> <span class="o">=</span> <span class="n">helper</span><span class="o">.</span><span class="n">truncate</span><span class="p">(</span><span class="n">elapsed</span><span class="p">,</span> <span class="mi">2</span><span class="p">)</span>
-            <span class="n">msg</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="s2">&quot;Create Jira Tickets took </span><span class="si">{}</span><span class="s2"> seconds longer than &quot;</span>
-                      <span class="s2">&quot;the interval&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">elapsed_warning</span><span class="p">)</span>
-            <span class="n">logging</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
+        <span class="n">interval_msg</span> <span class="o">=</span> <span class="n">modify_scheduler</span><span class="p">(</span><span class="n">elapsed</span><span class="p">)</span>
+        <span class="n">logging</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="n">interval_msg</span><span class="p">)</span>
         <span class="k">return</span> <span class="kc">True</span>
     <span class="k">elif</span> <span class="ow">not</span> <span class="n">tickets_to_create</span><span class="p">:</span>
         <span class="n">msg</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="s2">&quot;No parent or child rows remain to be written to the &quot;</span>
@@ -1005,14 +1097,15 @@
         <span class="n">elapsed</span> <span class="o">=</span> <span class="n">helper</span><span class="o">.</span><span class="n">truncate</span><span class="p">(</span><span class="n">elapsed</span><span class="p">,</span> <span class="mi">2</span><span class="p">)</span>
         <span class="n">logging</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;Create new tickets from Program Plan line items &quot;</span>
                      <span class="s2">&quot;took: </span><span class="si">{}</span><span class="s2"> seconds.&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">elapsed</span><span class="p">))</span>
-        <span class="k">if</span> <span class="n">elapsed</span> <span class="o">&gt;</span> <span class="mi">120</span><span class="p">:</span>
-            <span class="n">elapsed_warning</span> <span class="o">=</span> <span class="n">elapsed</span> <span class="o">-</span> <span class="mi">120</span>
-            <span class="n">elapsed_warning</span> <span class="o">=</span> <span class="n">helper</span><span class="o">.</span><span class="n">truncate</span><span class="p">(</span><span class="n">elapsed</span><span class="p">,</span> <span class="mi">2</span><span class="p">)</span>
-            <span class="n">msg</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="s2">&quot;Create Jira Tickets took </span><span class="si">{}</span><span class="s2"> seconds longer than &quot;</span>
-                      <span class="s2">&quot;the interval&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">elapsed_warning</span><span class="p">)</span>
-            <span class="n">logging</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
+        <span class="n">interval_msg</span> <span class="o">=</span> <span class="n">modify_scheduler</span><span class="p">(</span><span class="n">elapsed</span><span class="p">)</span>
+        <span class="n">logging</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="n">interval_msg</span><span class="p">)</span>
         <span class="k">return</span> <span class="kc">False</span>
     <span class="k">else</span><span class="p">:</span>
+        <span class="n">end</span> <span class="o">=</span> <span class="n">time</span><span class="o">.</span><span class="n">time</span><span class="p">()</span>
+        <span class="n">elapsed</span> <span class="o">=</span> <span class="n">end</span> <span class="o">-</span> <span class="n">start</span>
+        <span class="n">elapsed</span> <span class="o">=</span> <span class="n">helper</span><span class="o">.</span><span class="n">truncate</span><span class="p">(</span><span class="n">elapsed</span><span class="p">,</span> <span class="mi">2</span><span class="p">)</span>
+        <span class="n">interval_msg</span> <span class="o">=</span> <span class="n">modify_scheduler</span><span class="p">(</span><span class="n">elapsed</span><span class="p">)</span>
+        <span class="n">logging</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="n">interval_msg</span><span class="p">)</span>
         <span class="n">msg</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="s2">&quot;Looping through rows rows to create Jira Tickts &quot;</span>
                   <span class="s2">&quot;failed with an unknown error.&quot;</span><span class="p">)</span>
         <span class="n">logging</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
@@ -1619,7 +1712,7 @@ for the Jira Index Sheet</li>
             <span class="k">continue</span>
         <span class="k">if</span> <span class="s2">&quot;reasonPhrase&quot;</span> <span class="ow">in</span> <span class="n">jira_cell</span><span class="o">.</span><span class="n">value</span><span class="p">:</span>
             <span class="c1"># Sync Cell has already been copied.</span>
-            <span class="n">logging</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;reasonPhrase in Jira Cell, skipping.&quot;</span><span class="p">)</span>
+            <span class="n">logging</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">&quot;reasonPhrase in Jira Cell, skipping.&quot;</span><span class="p">)</span>
             <span class="n">skip_count</span> <span class="o">+=</span> <span class="mi">1</span>
             <span class="k">continue</span>
 
@@ -1903,19 +1996,23 @@ knows if/when/why a ticket creation failed.</p>
             <span class="n">logging</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">&quot;New Row&quot;</span><span class="p">)</span>
             <span class="n">logging</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">&quot;------------------------&quot;</span><span class="p">)</span>
             <span class="n">row_data</span> <span class="o">=</span> <span class="n">build_row_data</span><span class="p">(</span><span class="n">row</span><span class="p">,</span> <span class="n">col_map</span><span class="p">)</span>
-            <span class="k">if</span> <span class="n">row_data</span><span class="p">[</span><span class="n">app_vars</span><span class="o">.</span><span class="n">summary_col</span><span class="p">]</span> <span class="o">==</span> <span class="s2">&quot;True&quot;</span><span class="p">:</span>
-                <span class="c1"># Skip summary rows</span>
-                <span class="n">msg</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="s2">&quot;Row </span><span class="si">{}</span><span class="s2"> skipped because Summary column was true&quot;</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="n">row_data</span><span class="p">[</span><span class="n">app_vars</span><span class="o">.</span><span class="n">jira_col</span><span class="p">]:</span>
+                <span class="c1"># Skip rows with no data in the Jira column</span>
+                <span class="n">msg</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="s2">&quot;Row </span><span class="si">{}</span><span class="s2"> skipped because Jira column was empty.&quot;</span>
                           <span class="s2">&quot;&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">row_data</span><span class="p">[</span><span class="s2">&quot;row_num&quot;</span><span class="p">])</span>
                 <span class="n">logging</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
-                <span class="n">logging</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="n">row_data</span><span class="p">)</span>
+                <span class="k">continue</span>
+            <span class="k">if</span> <span class="n">row_data</span><span class="p">[</span><span class="n">app_vars</span><span class="o">.</span><span class="n">summary_col</span><span class="p">]</span> <span class="o">==</span> <span class="s2">&quot;True&quot;</span><span class="p">:</span>
+                <span class="c1"># Skip summary rows</span>
+                <span class="n">msg</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="s2">&quot;Row </span><span class="si">{}</span><span class="s2"> skipped because Summary column was true.&quot;</span>
+                          <span class="s2">&quot;&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">row_data</span><span class="p">[</span><span class="s2">&quot;row_num&quot;</span><span class="p">])</span>
+                <span class="n">logging</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
                 <span class="k">continue</span>
             <span class="k">if</span> <span class="n">row_data</span><span class="p">[</span><span class="s2">&quot;Team&quot;</span><span class="p">]</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
                 <span class="c1"># Need team defined (so we can get project key). Skip.</span>
                 <span class="n">msg</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="s2">&quot;Row </span><span class="si">{}</span><span class="s2"> skipped because Team column was empty.&quot;</span>
                           <span class="s2">&quot;&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">row_data</span><span class="p">[</span><span class="s2">&quot;row_num&quot;</span><span class="p">])</span>
                 <span class="n">logging</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
-                <span class="n">logging</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="n">row_data</span><span class="p">)</span>
                 <span class="k">continue</span>
             <span class="k">if</span> <span class="n">row_data</span><span class="p">[</span><span class="n">app_vars</span><span class="o">.</span><span class="n">uuid_col</span><span class="p">]</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
                 <span class="c1"># No UUID means we can&#39;t push the created ticket IDs back</span>
@@ -1923,7 +2020,6 @@ knows if/when/why a ticket creation failed.</p>
                 <span class="n">msg</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="s2">&quot;Row </span><span class="si">{}</span><span class="s2"> skipped because UUID column was empty.&quot;</span>
                           <span class="s2">&quot;&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">row_data</span><span class="p">[</span><span class="s2">&quot;row_num&quot;</span><span class="p">])</span>
                 <span class="n">logging</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
-                <span class="n">logging</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="n">row_data</span><span class="p">)</span>
                 <span class="k">continue</span>
             <span class="k">if</span> <span class="n">row_data</span><span class="p">[</span><span class="s1">&#39;Issue Type&#39;</span><span class="p">]</span> <span class="o">==</span> <span class="s2">&quot;Sub-Task&quot;</span><span class="p">:</span>
                 <span class="c1"># Skip Subtasks, we can&#39;t create them with the connector</span>
@@ -1939,7 +2035,8 @@ knows if/when/why a ticket creation failed.</p>
                                      <span class="n">row_data</span><span class="p">[</span><span class="s2">&quot;Parent Issue Type&quot;</span><span class="p">])</span>
                 <span class="n">logging</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
                 <span class="k">continue</span>
-            <span class="k">if</span> <span class="nb">bool</span><span class="p">(</span><span class="n">re</span><span class="o">.</span><span class="n">match</span><span class="p">(</span><span class="sa">r</span><span class="s2">&quot;[a-zA-Z]+-\d+&quot;</span><span class="p">,</span> <span class="n">row_data</span><span class="p">[</span><span class="n">app_vars</span><span class="o">.</span><span class="n">jira_col</span><span class="p">])):</span>
+            <span class="k">if</span> <span class="nb">bool</span><span class="p">(</span><span class="n">re</span><span class="o">.</span><span class="n">match</span><span class="p">(</span><span class="sa">r</span><span class="s2">&quot;[a-zA-Z]+-\d+&quot;</span><span class="p">,</span>
+                             <span class="nb">str</span><span class="p">(</span><span class="n">row_data</span><span class="p">[</span><span class="n">app_vars</span><span class="o">.</span><span class="n">jira_col</span><span class="p">]))):</span>
                 <span class="c1"># Skip tickets that match the Jira Ticket pattern</span>
                 <span class="n">msg</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="s2">&quot;Jira Ticket </span><span class="si">{}</span><span class="s2"> on row </span><span class="si">{}</span><span class="s2"> matches the Jira Ticket&quot;</span>
                           <span class="s2">&quot;pattern&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">row_data</span><span class="p">[</span><span class="n">app_vars</span><span class="o">.</span><span class="n">jira_col</span><span class="p">],</span>
@@ -2084,6 +2181,133 @@ Column Name: Column ID</li>
 
 
                 </section>
+                <section id="modify_scheduler">
+                            <div class="attr function"><a class="headerlink" href="#modify_scheduler">#&nbsp;&nbsp</a>
+
+        
+            <span class="def">def</span>
+            <span class="name">modify_scheduler</span><span class="signature">(time)</span>:
+    </div>
+
+                <details>
+            <summary>View Source</summary>
+            <div class="codehilite"><pre><span></span><span class="k">def</span> <span class="nf">modify_scheduler</span><span class="p">(</span><span class="n">time</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Dynamically modifies the given job depending on how long the last</span>
+<span class="sd">       job took to complete.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        time (int): The amount of time elapsed from the start of the job</span>
+<span class="sd">                    to the end of the job (in seconds)</span>
+
+<span class="sd">    Raises:</span>
+<span class="sd">        TypeError: Time must be an int or float</span>
+<span class="sd">        ValueError: Time must be a positive integer</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        str: A message about whether the interval was modified or remains</span>
+<span class="sd">             the same</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">time</span><span class="p">,</span> <span class="p">(</span><span class="nb">int</span><span class="p">,</span> <span class="nb">float</span><span class="p">)):</span>
+        <span class="n">msg</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="s2">&quot;Time must be an int or float, not </span><span class="si">{}</span><span class="s2">&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="nb">type</span><span class="p">(</span><span class="n">time</span><span class="p">))</span>
+        <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">time</span> <span class="o">&lt;=</span> <span class="mi">0</span><span class="p">:</span>
+        <span class="n">msg</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="s2">&quot;Time must be a positive int or float, not </span><span class="si">{}</span><span class="s2">&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">time</span><span class="p">)</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
+
+    <span class="n">time_in_seconds</span> <span class="o">=</span> <span class="n">time</span>
+    <span class="c1"># If time comes in in minutes, make time = 60 seconds</span>
+    <span class="k">if</span> <span class="n">time</span> <span class="o">&lt;=</span> <span class="mi">1</span><span class="p">:</span>
+        <span class="n">time</span> <span class="o">=</span> <span class="n">time</span> <span class="o">*</span> <span class="mi">60</span>
+
+    <span class="c1"># Get currently scheduled interval in minutes</span>
+    <span class="n">jobs</span> <span class="o">=</span> <span class="n">config</span><span class="o">.</span><span class="n">scheduler</span><span class="o">.</span><span class="n">get_job</span><span class="p">(</span><span class="s2">&quot;create_jira_interval&quot;</span><span class="p">)</span>
+    <span class="n">jobs</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">jobs</span><span class="p">)</span>
+    <span class="n">split</span> <span class="o">=</span> <span class="n">jobs</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s2">&quot;:&quot;</span><span class="p">)</span>
+    <span class="n">interval</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">split</span><span class="p">[</span><span class="mi">2</span><span class="p">])</span>
+
+    <span class="c1"># Round time up to the nearest minute</span>
+    <span class="n">time</span> <span class="o">=</span> <span class="n">time</span> <span class="o">//</span> <span class="mi">60</span> <span class="o">+</span> <span class="p">(</span><span class="n">time</span> <span class="o">%</span> <span class="mi">60</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">interval</span> <span class="o">==</span> <span class="n">time</span><span class="p">:</span>
+        <span class="c1"># Do nothing. Interval is correctly sized</span>
+        <span class="n">msg</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="s2">&quot;Job interval and job runtime are within 1 minute of &quot;</span>
+                  <span class="s2">&quot;each other. No changes to interval.&quot;</span><span class="p">)</span>
+    <span class="k">elif</span> <span class="n">interval</span> <span class="o">&gt;</span> <span class="n">time</span><span class="p">:</span>
+        <span class="c1"># If the interval is greater than the time it took to run the process,</span>
+        <span class="c1"># check to see how much more. If the total time the process took was</span>
+        <span class="c1"># over 1 minute less than the interval, reduce the interval by 1</span>
+        <span class="c1"># minute.</span>
+        <span class="n">delta</span> <span class="o">=</span> <span class="n">interval</span> <span class="o">-</span> <span class="n">time</span>
+        <span class="k">if</span> <span class="n">delta</span> <span class="o">&gt;=</span> <span class="mi">1</span><span class="p">:</span>
+            <span class="n">new_interval</span> <span class="o">=</span> <span class="n">interval</span> <span class="o">-</span> <span class="mi">1</span>
+            <span class="n">config</span><span class="o">.</span><span class="n">scheduler</span><span class="o">.</span><span class="n">reschedule_job</span><span class="p">(</span><span class="s2">&quot;create_jira_interval&quot;</span><span class="p">,</span>
+                                            <span class="n">trigger</span><span class="o">=</span><span class="s2">&quot;interval&quot;</span><span class="p">,</span>
+                                            <span class="n">minutes</span><span class="o">=</span><span class="nb">int</span><span class="p">(</span><span class="n">new_interval</span><span class="p">))</span>
+            <span class="n">msg</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="s2">&quot;Job interval is </span><span class="si">{}</span><span class="s2"> minute(s) longer than the job &quot;</span>
+                      <span class="s2">&quot;runtime. Reduced interval to </span><span class="si">{}</span><span class="s2"> minutes&quot;</span>
+                      <span class="s2">&quot;&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="nb">int</span><span class="p">(</span><span class="n">delta</span><span class="p">),</span> <span class="n">new_interval</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">msg</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="s2">&quot;SUCCESS: Job interval </span><span class="si">{}</span><span class="s2">, elapsed time </span><span class="si">{}</span><span class="s2">, delta </span><span class="si">{}</span><span class="s2">&quot;</span>
+                      <span class="s2">&quot;&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">interval</span><span class="p">,</span> <span class="n">time</span><span class="p">,</span> <span class="n">delta</span><span class="p">)</span>
+
+    <span class="k">elif</span> <span class="n">interval</span> <span class="o">&lt;</span> <span class="n">time</span><span class="p">:</span>
+        <span class="c1"># If the interval is less than the time it took to run the process,</span>
+        <span class="c1"># increase the interval. If the delta is less than one minute, add 1</span>
+        <span class="c1"># minutes, otherwise add the delta to the interval</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">time_in_seconds</span><span class="p">,</span> <span class="nb">float</span><span class="p">):</span>
+            <span class="n">elapsed_warning</span> <span class="o">=</span> <span class="n">helper</span><span class="o">.</span><span class="n">truncate</span><span class="p">(</span><span class="n">time_in_seconds</span><span class="p">,</span> <span class="mi">2</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">elapsed_warning</span> <span class="o">=</span> <span class="n">time_in_seconds</span>
+        <span class="n">msg</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="s2">&quot;Create Jira Tickets took </span><span class="si">{}</span><span class="s2"> seconds longer than &quot;</span>
+                  <span class="s2">&quot;the interval&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">elapsed_warning</span><span class="p">)</span>
+        <span class="n">logging</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
+        <span class="n">delta</span> <span class="o">=</span> <span class="n">time</span> <span class="o">-</span> <span class="n">interval</span>
+        <span class="k">if</span> <span class="n">delta</span> <span class="o">&lt;=</span> <span class="mi">1</span><span class="p">:</span>
+            <span class="n">new_interval</span> <span class="o">=</span> <span class="n">interval</span> <span class="o">+</span> <span class="mi">1</span>
+            <span class="n">config</span><span class="o">.</span><span class="n">scheduler</span><span class="o">.</span><span class="n">reschedule_job</span><span class="p">(</span><span class="s2">&quot;create_jira_interval&quot;</span><span class="p">,</span>
+                                            <span class="n">trigger</span><span class="o">=</span><span class="s2">&quot;interval&quot;</span><span class="p">,</span>
+                                            <span class="n">minutes</span><span class="o">=</span><span class="nb">int</span><span class="p">(</span><span class="n">new_interval</span><span class="p">))</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">new_interval</span> <span class="o">=</span> <span class="n">interval</span> <span class="o">+</span> <span class="n">delta</span>
+            <span class="n">config</span><span class="o">.</span><span class="n">scheduler</span><span class="o">.</span><span class="n">reschedule_job</span><span class="p">(</span><span class="s2">&quot;create_jira_interval&quot;</span><span class="p">,</span>
+                                            <span class="n">trigger</span><span class="o">=</span><span class="s2">&quot;interval&quot;</span><span class="p">,</span>
+                                            <span class="n">minutes</span><span class="o">=</span><span class="nb">int</span><span class="p">(</span><span class="n">new_interval</span><span class="p">))</span>
+        <span class="n">msg</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="s2">&quot;New job interval set to </span><span class="si">{}</span><span class="s2"> minutes&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">new_interval</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">msg</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="s2">&quot;ERROR: Job interval </span><span class="si">{}</span><span class="s2">, elapsed time </span><span class="si">{}</span><span class="s2">&quot;</span>
+                  <span class="s2">&quot;&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">interval</span><span class="p">,</span> <span class="n">time</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">msg</span>
+</pre></div>
+
+        </details>
+
+            <div class="docstring"><p>Dynamically modifies the given job depending on how long the last
+   job took to complete.</p>
+
+<h6 id="args">Args</h6>
+
+<ul>
+<li><strong>time (int):</strong>  The amount of time elapsed from the start of the job
+to the end of the job (in seconds)</li>
+</ul>
+
+<h6 id="raises">Raises</h6>
+
+<ul>
+<li><strong>TypeError:</strong>  Time must be an int or float</li>
+<li><strong>ValueError:</strong>  Time must be a positive integer</li>
+</ul>
+
+<h6 id="returns">Returns</h6>
+
+<blockquote>
+  <p>str: A message about whether the interval was modified or remains
+       the same</p>
+</blockquote>
+</div>
+
+
+                </section>
                 <section id="create_tickets">
                             <div class="attr function"><a class="headerlink" href="#create_tickets">#&nbsp;&nbsp</a>
 
@@ -2183,11 +2407,8 @@ Column Name: Column ID</li>
         <span class="n">elapsed</span> <span class="o">=</span> <span class="n">helper</span><span class="o">.</span><span class="n">truncate</span><span class="p">(</span><span class="n">elapsed</span><span class="p">,</span> <span class="mi">2</span><span class="p">)</span>
         <span class="n">logging</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;Create new tickets from Program Plan line items &quot;</span>
                      <span class="s2">&quot;took: </span><span class="si">{}</span><span class="s2"> seconds.&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">elapsed</span><span class="p">))</span>
-        <span class="k">if</span> <span class="n">elapsed</span> <span class="o">&gt;</span> <span class="mi">120</span><span class="p">:</span>
-            <span class="n">elapsed_warning</span> <span class="o">=</span> <span class="n">helper</span><span class="o">.</span><span class="n">truncate</span><span class="p">(</span><span class="n">elapsed</span><span class="p">,</span> <span class="mi">2</span><span class="p">)</span>
-            <span class="n">msg</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="s2">&quot;Create Jira Tickets took </span><span class="si">{}</span><span class="s2"> seconds longer than &quot;</span>
-                      <span class="s2">&quot;the interval&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">elapsed_warning</span><span class="p">)</span>
-            <span class="n">logging</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
+        <span class="n">interval_msg</span> <span class="o">=</span> <span class="n">modify_scheduler</span><span class="p">(</span><span class="n">elapsed</span><span class="p">)</span>
+        <span class="n">logging</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="n">interval_msg</span><span class="p">)</span>
         <span class="k">return</span> <span class="kc">True</span>
     <span class="k">elif</span> <span class="ow">not</span> <span class="n">tickets_to_create</span><span class="p">:</span>
         <span class="n">msg</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="s2">&quot;No parent or child rows remain to be written to the &quot;</span>
@@ -2198,14 +2419,15 @@ Column Name: Column ID</li>
         <span class="n">elapsed</span> <span class="o">=</span> <span class="n">helper</span><span class="o">.</span><span class="n">truncate</span><span class="p">(</span><span class="n">elapsed</span><span class="p">,</span> <span class="mi">2</span><span class="p">)</span>
         <span class="n">logging</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;Create new tickets from Program Plan line items &quot;</span>
                      <span class="s2">&quot;took: </span><span class="si">{}</span><span class="s2"> seconds.&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">elapsed</span><span class="p">))</span>
-        <span class="k">if</span> <span class="n">elapsed</span> <span class="o">&gt;</span> <span class="mi">120</span><span class="p">:</span>
-            <span class="n">elapsed_warning</span> <span class="o">=</span> <span class="n">elapsed</span> <span class="o">-</span> <span class="mi">120</span>
-            <span class="n">elapsed_warning</span> <span class="o">=</span> <span class="n">helper</span><span class="o">.</span><span class="n">truncate</span><span class="p">(</span><span class="n">elapsed</span><span class="p">,</span> <span class="mi">2</span><span class="p">)</span>
-            <span class="n">msg</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="s2">&quot;Create Jira Tickets took </span><span class="si">{}</span><span class="s2"> seconds longer than &quot;</span>
-                      <span class="s2">&quot;the interval&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">elapsed_warning</span><span class="p">)</span>
-            <span class="n">logging</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
+        <span class="n">interval_msg</span> <span class="o">=</span> <span class="n">modify_scheduler</span><span class="p">(</span><span class="n">elapsed</span><span class="p">)</span>
+        <span class="n">logging</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="n">interval_msg</span><span class="p">)</span>
         <span class="k">return</span> <span class="kc">False</span>
     <span class="k">else</span><span class="p">:</span>
+        <span class="n">end</span> <span class="o">=</span> <span class="n">time</span><span class="o">.</span><span class="n">time</span><span class="p">()</span>
+        <span class="n">elapsed</span> <span class="o">=</span> <span class="n">end</span> <span class="o">-</span> <span class="n">start</span>
+        <span class="n">elapsed</span> <span class="o">=</span> <span class="n">helper</span><span class="o">.</span><span class="n">truncate</span><span class="p">(</span><span class="n">elapsed</span><span class="p">,</span> <span class="mi">2</span><span class="p">)</span>
+        <span class="n">interval_msg</span> <span class="o">=</span> <span class="n">modify_scheduler</span><span class="p">(</span><span class="n">elapsed</span><span class="p">)</span>
+        <span class="n">logging</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="n">interval_msg</span><span class="p">)</span>
         <span class="n">msg</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="s2">&quot;Looping through rows rows to create Jira Tickts &quot;</span>
                   <span class="s2">&quot;failed with an unknown error.&quot;</span><span class="p">)</span>
         <span class="n">logging</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
