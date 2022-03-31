@@ -8,7 +8,7 @@ from logging.config import dictConfig
 import boto3
 import smartsheet
 from apscheduler.executors.pool import ProcessPoolExecutor, ThreadPoolExecutor
-from apscheduler.schedulers.background import BackgroundScheduler
+from apscheduler.schedulers.background import BlockingScheduler
 from botocore.exceptions import ClientError
 import uuid_module.helper as helper
 import uuid_module.variables as app_vars
@@ -343,14 +343,14 @@ def init(args):
     # Set parameters for the task scheduler
     executors = {
         'default': ThreadPoolExecutor(20),
-        'processpool': ProcessPoolExecutor(1)
+        'processpool': ProcessPoolExecutor(2)
     }
     job_defaults = {
         'coalesce': True,
-        'max_instances': 10,
+        'max_instances': 1,
         'misfire_grace_time': None
     }
-    scheduler = BackgroundScheduler(
+    scheduler = BlockingScheduler(
         executors=executors, job_defaults=job_defaults)
 
     secret_name = get_secret_name(env)
