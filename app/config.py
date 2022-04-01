@@ -107,8 +107,9 @@ def get_secret_name(env="--debug"):
     """
     if not isinstance(env, str):
         raise TypeError("Env is not type: str")
-    elif env not in ("-d", "--debug", "-debug", "-p", "--prod", "-prod", "-s",
-                     "--staging", "-staging"):
+    elif env not in ("-d", "--debug", "-debug", "--dev", "-dev"
+                     "-s", "--staging", "-staging",
+                     "-p", "--prod", "-prod"):
         msg = str("Invalid argument passed. Value passed was {}").format(env)
         raise ValueError(msg)
 
@@ -151,7 +152,7 @@ def set_env_vars(env):
         index_sheet = app_vars.dev_jira_idx_sheet
         minutes = app_vars.dev_minutes
         push_tickets_sheet = app_vars.dev_push_jira_tickets_sheet
-        env_msg = str("Using Staging variables for workspace_id "
+        env_msg = str("Using Dev variables for workspace_id "
                       "and Jira index sheet. Set workspace_id to: {}, "
                       "index_sheet to: {}, and minutes to: {}. "
                       "Pushing tickets to {}"
@@ -185,7 +186,7 @@ def set_env_vars(env):
         index_sheet = app_vars.dev_jira_idx_sheet
         minutes = app_vars.dev_minutes
         push_tickets_sheet = app_vars.dev_push_jira_tickets_sheet
-        env_msg = str("Invalid flag: {}. Using Staging variables. Set "
+        env_msg = str("Invalid flag: {}. Using Dev variables. Set "
                       "workspace_id to: {}, index_sheet to: {}, and minutes "
                       "to: {}. Pushing tickets to {}"
                       "").format(flag, workspace_id, index_sheet, minutes,
@@ -215,10 +216,11 @@ def set_logging_config(env):
         msg = str("Environment should be type: str, not {}").format(
             type(env))
         raise TypeError(msg)
-    if env not in ("-s", "--staging", "-staging", "-p", "--prod", "-prod",
-                   "-d", "--debug", "-debug", "--dev", "-dev"):
+    if env not in ("-d", "--debug", "-debug", "--dev", "-dev",
+                   "-s", "--staging", "-staging",
+                   "-p", "--prod", "-prod"):
         msg = str("Invalid environment flag. '{}' was passed but it should "
-                  "be '--debug', '--staging' or '--prod'").format(env)
+                  "be '--dev', '--staging' or '--prod'").format(env)
         raise ValueError(msg)
 
     logging_config = dict(
@@ -241,7 +243,34 @@ def set_logging_config(env):
             'disable_existing_loggers': False
         },
     )
-    if env in ("-s", "--staging", "-staging"):
+    if env in ("-d", "--debug", "-debug", "--dev", "-dev"):
+        logging_config = dict(
+            version=1,
+            formatters={
+                'f': {'format':
+                      "%(asctime)s - %(levelname)s - %(message)s"}
+            },
+            handlers={
+                'file': {
+                    'class': 'logging.FileHandler',
+                    'formatter': 'f',
+                    'level': logging.DEBUG,
+                    'filename': log_location + app_vars.module_log_name
+                },
+                'docker': {
+                    'class': 'logging.StreamHandler',
+                    'formatter': 'f',
+                    'level': logging.DEBUG,
+                    'stream': 'ext://sys.stdout'
+                }
+            },
+            root={
+                'handlers': ['docker', 'file'],  # 'console', 'file'
+                'level': logging.DEBUG,
+                'disable_existing_loggers': False
+            },
+        )
+    elif env in ("-s", "--staging", "-staging"):
         logging_config = dict(
             version=1,
             formatters={
@@ -279,33 +308,6 @@ def set_logging_config(env):
             },
             root={
                 'handlers': ['docker'],  # 'console', 'file'
-                'level': logging.DEBUG,
-                'disable_existing_loggers': False
-            },
-        )
-    elif env in ("-d", "--debug", "-debug", "--dev", "-dev"):
-        logging_config = dict(
-            version=1,
-            formatters={
-                'f': {'format':
-                      "%(asctime)s - %(levelname)s - %(message)s"}
-            },
-            handlers={
-                'file': {
-                    'class': 'logging.FileHandler',
-                    'formatter': 'f',
-                    'level': logging.DEBUG,
-                    'filename': log_location + app_vars.module_log_name
-                },
-                'docker': {
-                    'class': 'logging.StreamHandler',
-                    'formatter': 'f',
-                    'level': logging.DEBUG,
-                    'stream': 'ext://sys.stdout'
-                }
-            },
-            root={
-                'handlers': ['docker', 'file'],  # 'console', 'file'
                 'level': logging.DEBUG,
                 'disable_existing_loggers': False
             },
