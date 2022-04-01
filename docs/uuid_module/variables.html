@@ -37,18 +37,6 @@
                     <a class="variable" href="#module_log_name">module_log_name</a>
             </li>
             <li>
-                    <a class="variable" href="#prod_workspace_id">prod_workspace_id</a>
-            </li>
-            <li>
-                    <a class="variable" href="#prod_jira_idx_sheet">prod_jira_idx_sheet</a>
-            </li>
-            <li>
-                    <a class="variable" href="#prod_push_jira_tickets_sheet">prod_push_jira_tickets_sheet</a>
-            </li>
-            <li>
-                    <a class="variable" href="#prod_minutes">prod_minutes</a>
-            </li>
-            <li>
                     <a class="variable" href="#dev_workspace_id">dev_workspace_id</a>
             </li>
             <li>
@@ -59,6 +47,30 @@
             </li>
             <li>
                     <a class="variable" href="#dev_minutes">dev_minutes</a>
+            </li>
+            <li>
+                    <a class="variable" href="#stg_workspace_id">stg_workspace_id</a>
+            </li>
+            <li>
+                    <a class="variable" href="#stg_jira_idx_sheet">stg_jira_idx_sheet</a>
+            </li>
+            <li>
+                    <a class="variable" href="#stg_push_jira_tickets_sheet">stg_push_jira_tickets_sheet</a>
+            </li>
+            <li>
+                    <a class="variable" href="#stg_minutes">stg_minutes</a>
+            </li>
+            <li>
+                    <a class="variable" href="#prod_workspace_id">prod_workspace_id</a>
+            </li>
+            <li>
+                    <a class="variable" href="#prod_jira_idx_sheet">prod_jira_idx_sheet</a>
+            </li>
+            <li>
+                    <a class="variable" href="#prod_push_jira_tickets_sheet">prod_push_jira_tickets_sheet</a>
+            </li>
+            <li>
+                    <a class="variable" href="#prod_minutes">prod_minutes</a>
             </li>
             <li>
                     <a class="variable" href="#uuid_col">uuid_col</a>
@@ -130,6 +142,41 @@
 <span class="n">module_log_name</span> <span class="o">=</span> <span class="s2">&quot;main.log&quot;</span>
 <span class="sd">&quot;&quot;&quot;The main log written to disk</span>
 <span class="sd">    &quot;&quot;&quot;</span>
+
+<span class="c1"># INTEGRATION TESTS / DEV ENV</span>
+<span class="n">dev_workspace_id</span> <span class="o">=</span> <span class="p">[</span><span class="mi">7802463043512196</span><span class="p">]</span>
+<span class="sd">&quot;&quot;&quot;Single Workspace ID for Integration Testing, so that tests can run without</span>
+<span class="sd">   affecting active Prod data. Workspace Type: list, Workspace IDs Type: int</span>
+<span class="sd">   &quot;&quot;&quot;</span>
+<span class="n">dev_jira_idx_sheet</span> <span class="o">=</span> <span class="mi">5786250381682564</span>
+<span class="sd">&quot;&quot;&quot;Jira Index Sheet in Dev. Type: int</span>
+<span class="sd">   &quot;&quot;&quot;</span>
+<span class="n">dev_push_jira_tickets_sheet</span> <span class="o">=</span> <span class="mi">3312520078354308</span>
+<span class="sd">&quot;&quot;&quot;Sheet used to push rows into Jira to create new tickets. Separate from the</span>
+<span class="sd">   index sheet to prevent accidental data corruption.</span>
+<span class="sd">   &quot;&quot;&quot;</span>
+<span class="n">dev_minutes</span> <span class="o">=</span> <span class="mi">525600</span>
+<span class="sd">&quot;&quot;&quot;The maximum number of minutes into the past the get_timestamp function</span>
+<span class="sd">    should look before filtering out results. 1 Year for Dev. Type: int&quot;&quot;&quot;</span>
+
+
+<span class="c1"># STAGING</span>
+<span class="n">stg_workspace_id</span> <span class="o">=</span> <span class="p">[</span><span class="mi">2618107878500228</span><span class="p">]</span>
+<span class="sd">&quot;&quot;&quot;Single Workspace ID for Integration Testing, so that tests can run without</span>
+<span class="sd">   affecting active Prod data. Workspace Type: list, Workspace IDs Type: int</span>
+<span class="sd">   &quot;&quot;&quot;</span>
+<span class="n">stg_jira_idx_sheet</span> <span class="o">=</span> <span class="n">dev_jira_idx_sheet</span>
+<span class="sd">&quot;&quot;&quot;Jira Index Sheet in Dev. Type: int</span>
+<span class="sd">   &quot;&quot;&quot;</span>
+<span class="n">stg_push_jira_tickets_sheet</span> <span class="o">=</span> <span class="n">dev_push_jira_tickets_sheet</span>
+<span class="sd">&quot;&quot;&quot;Sheet used to push rows into Jira to create new tickets. Separate from the</span>
+<span class="sd">   index sheet to prevent accidental data corruption.&quot;&quot;&quot;</span>
+
+<span class="n">stg_minutes</span> <span class="o">=</span> <span class="mi">130</span>
+<span class="sd">&quot;&quot;&quot;The maximum number of minutes into the past the get_timestamp function</span>
+<span class="sd">    should look before filtering out results. Type: int</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
 <span class="c1"># PROD</span>
 <span class="n">prod_workspace_id</span> <span class="o">=</span> <span class="p">[</span><span class="mi">8158274374657924</span><span class="p">,</span> <span class="mi">1479840747546500</span><span class="p">,</span> <span class="mi">6569226535233412</span><span class="p">]</span>
 <span class="sd">&quot;&quot;&quot;List of workspace IDs. Workspace IDs are Type: int.</span>
@@ -145,22 +192,6 @@
 <span class="sd">&quot;&quot;&quot;The maximum number of minutes into the past the get_timestamp function</span>
 <span class="sd">    should look before filtering out results. Type: int</span>
 <span class="sd">    &quot;&quot;&quot;</span>
-
-<span class="c1"># INTEGRATION TESTS / DEV ENV</span>
-<span class="n">dev_workspace_id</span> <span class="o">=</span> <span class="p">[</span><span class="mi">2618107878500228</span><span class="p">]</span>
-<span class="sd">&quot;&quot;&quot;Single Workspace ID for Integration Testing, so that tests can run without</span>
-<span class="sd">   affecting active Prod data. Workspace Type: list, Workspace IDs Type: int</span>
-<span class="sd">   &quot;&quot;&quot;</span>
-<span class="n">dev_jira_idx_sheet</span> <span class="o">=</span> <span class="mi">5786250381682564</span>
-<span class="sd">&quot;&quot;&quot;Jira Index Sheet in Dev. Type: int</span>
-<span class="sd">   &quot;&quot;&quot;</span>
-<span class="n">dev_push_jira_tickets_sheet</span> <span class="o">=</span> <span class="mi">3312520078354308</span>
-<span class="sd">&quot;&quot;&quot;Sheet used to push rows into Jira to create new tickets. Separate from the</span>
-<span class="sd">   index sheet to prevent accidental data corruption.</span>
-<span class="sd">   &quot;&quot;&quot;</span>
-<span class="n">dev_minutes</span> <span class="o">=</span> <span class="mi">525600</span>
-<span class="sd">&quot;&quot;&quot;The maximum number of minutes into the past the get_timestamp function</span>
-<span class="sd">    should look before filtering out results. 1 Year for Dev. Type: int&quot;&quot;&quot;</span>
 
 <span class="n">uuid_col</span> <span class="o">=</span> <span class="s2">&quot;UUID&quot;</span>
 <span class="sd">&quot;&quot;&quot;UUID column name. Type: str</span>
@@ -243,6 +274,100 @@
 
 
                 </section>
+                <section id="dev_workspace_id">
+                                <div class="attr variable"><a class="headerlink" href="#dev_workspace_id">#&nbsp;&nbsp</a>
+
+        <span class="name">dev_workspace_id</span><span class="default_value"> = [7802463043512196]</span>
+    </div>
+
+            <div class="docstring"><p>Single Workspace ID for Integration Testing, so that tests can run without
+affecting active Prod data. Workspace Type: list, Workspace IDs Type: int</p>
+</div>
+
+
+                </section>
+                <section id="dev_jira_idx_sheet">
+                                <div class="attr variable"><a class="headerlink" href="#dev_jira_idx_sheet">#&nbsp;&nbsp</a>
+
+        <span class="name">dev_jira_idx_sheet</span><span class="default_value"> = 5786250381682564</span>
+    </div>
+
+            <div class="docstring"><p>Jira Index Sheet in Dev. Type: int</p>
+</div>
+
+
+                </section>
+                <section id="dev_push_jira_tickets_sheet">
+                                <div class="attr variable"><a class="headerlink" href="#dev_push_jira_tickets_sheet">#&nbsp;&nbsp</a>
+
+        <span class="name">dev_push_jira_tickets_sheet</span><span class="default_value"> = 3312520078354308</span>
+    </div>
+
+            <div class="docstring"><p>Sheet used to push rows into Jira to create new tickets. Separate from the
+index sheet to prevent accidental data corruption.</p>
+</div>
+
+
+                </section>
+                <section id="dev_minutes">
+                                <div class="attr variable"><a class="headerlink" href="#dev_minutes">#&nbsp;&nbsp</a>
+
+        <span class="name">dev_minutes</span><span class="default_value"> = 525600</span>
+    </div>
+
+            <div class="docstring"><p>The maximum number of minutes into the past the get_timestamp function
+should look before filtering out results. 1 Year for Dev. Type: int</p>
+</div>
+
+
+                </section>
+                <section id="stg_workspace_id">
+                                <div class="attr variable"><a class="headerlink" href="#stg_workspace_id">#&nbsp;&nbsp</a>
+
+        <span class="name">stg_workspace_id</span><span class="default_value"> = [2618107878500228]</span>
+    </div>
+
+            <div class="docstring"><p>Single Workspace ID for Integration Testing, so that tests can run without
+affecting active Prod data. Workspace Type: list, Workspace IDs Type: int</p>
+</div>
+
+
+                </section>
+                <section id="stg_jira_idx_sheet">
+                                <div class="attr variable"><a class="headerlink" href="#stg_jira_idx_sheet">#&nbsp;&nbsp</a>
+
+        <span class="name">stg_jira_idx_sheet</span><span class="default_value"> = 5786250381682564</span>
+    </div>
+
+            <div class="docstring"><p>Jira Index Sheet in Dev. Type: int</p>
+</div>
+
+
+                </section>
+                <section id="stg_push_jira_tickets_sheet">
+                                <div class="attr variable"><a class="headerlink" href="#stg_push_jira_tickets_sheet">#&nbsp;&nbsp</a>
+
+        <span class="name">stg_push_jira_tickets_sheet</span><span class="default_value"> = 3312520078354308</span>
+    </div>
+
+            <div class="docstring"><p>Sheet used to push rows into Jira to create new tickets. Separate from the
+index sheet to prevent accidental data corruption.</p>
+</div>
+
+
+                </section>
+                <section id="stg_minutes">
+                                <div class="attr variable"><a class="headerlink" href="#stg_minutes">#&nbsp;&nbsp</a>
+
+        <span class="name">stg_minutes</span><span class="default_value"> = 130</span>
+    </div>
+
+            <div class="docstring"><p>The maximum number of minutes into the past the get_timestamp function
+should look before filtering out results. Type: int</p>
+</div>
+
+
+                </section>
                 <section id="prod_workspace_id">
                                 <div class="attr variable"><a class="headerlink" href="#prod_workspace_id">#&nbsp;&nbsp</a>
 
@@ -285,53 +410,6 @@ index sheet to prevent accidental data corruption.</p>
 
             <div class="docstring"><p>The maximum number of minutes into the past the get_timestamp function
 should look before filtering out results. Type: int</p>
-</div>
-
-
-                </section>
-                <section id="dev_workspace_id">
-                                <div class="attr variable"><a class="headerlink" href="#dev_workspace_id">#&nbsp;&nbsp</a>
-
-        <span class="name">dev_workspace_id</span><span class="default_value"> = [2618107878500228]</span>
-    </div>
-
-            <div class="docstring"><p>Single Workspace ID for Integration Testing, so that tests can run without
-affecting active Prod data. Workspace Type: list, Workspace IDs Type: int</p>
-</div>
-
-
-                </section>
-                <section id="dev_jira_idx_sheet">
-                                <div class="attr variable"><a class="headerlink" href="#dev_jira_idx_sheet">#&nbsp;&nbsp</a>
-
-        <span class="name">dev_jira_idx_sheet</span><span class="default_value"> = 5786250381682564</span>
-    </div>
-
-            <div class="docstring"><p>Jira Index Sheet in Dev. Type: int</p>
-</div>
-
-
-                </section>
-                <section id="dev_push_jira_tickets_sheet">
-                                <div class="attr variable"><a class="headerlink" href="#dev_push_jira_tickets_sheet">#&nbsp;&nbsp</a>
-
-        <span class="name">dev_push_jira_tickets_sheet</span><span class="default_value"> = 3312520078354308</span>
-    </div>
-
-            <div class="docstring"><p>Sheet used to push rows into Jira to create new tickets. Separate from the
-index sheet to prevent accidental data corruption.</p>
-</div>
-
-
-                </section>
-                <section id="dev_minutes">
-                                <div class="attr variable"><a class="headerlink" href="#dev_minutes">#&nbsp;&nbsp</a>
-
-        <span class="name">dev_minutes</span><span class="default_value"> = 525600</span>
-    </div>
-
-            <div class="docstring"><p>The maximum number of minutes into the past the get_timestamp function
-should look before filtering out results. 1 Year for Dev. Type: int</p>
 </div>
 
 
