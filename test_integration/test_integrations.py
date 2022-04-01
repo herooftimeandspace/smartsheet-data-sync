@@ -86,7 +86,7 @@ def setup_new_sheet(sheet_fixture):
         return temp_sheet
 
     response = smartsheet_client.Sheets.copy_sheet(
-        sheet.id,
+        5447415714080644,  # sheet.id,
         smartsheet.models.ContainerDestination({
             'destination_type': 'folder',
             'destination_id': 5967463516006276,
