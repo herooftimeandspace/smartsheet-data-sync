@@ -4,21 +4,6 @@ log_location = "logs/"
 module_log_name = "main.log"
 """The main log written to disk
     """
-# PROD
-prod_workspace_id = [8158274374657924, 1479840747546500, 6569226535233412]
-"""List of workspace IDs. Workspace IDs are Type: int.
-    """
-prod_jira_idx_sheet = 5366809688860548
-"""Jira Index Sheet ID. Type: int
-    """
-prod_push_jira_tickets_sheet = None
-"""Sheet used to push rows into Jira to create new tickets. Separate from the
-   index sheet to prevent accidental data corruption.
-   """
-prod_minutes = 65
-"""The maximum number of minutes into the past the get_timestamp function
-    should look before filtering out results. Type: int
-    """
 
 # INTEGRATION TESTS / DEV ENV
 dev_workspace_id = [7802463043512196]
@@ -54,6 +39,21 @@ stg_minutes = 130
     should look before filtering out results. Type: int
     """
 
+# PROD
+prod_workspace_id = [8158274374657924, 1479840747546500, 6569226535233412]
+"""List of workspace IDs. Workspace IDs are Type: int.
+    """
+prod_jira_idx_sheet = 5366809688860548
+"""Jira Index Sheet ID. Type: int
+    """
+prod_push_jira_tickets_sheet = None
+"""Sheet used to push rows into Jira to create new tickets. Separate from the
+   index sheet to prevent accidental data corruption.
+   """
+prod_minutes = 65
+"""The maximum number of minutes into the past the get_timestamp function
+    should look before filtering out results. Type: int
+    """
 
 uuid_col = "UUID"
 """UUID column name. Type: str
