@@ -347,7 +347,7 @@ def init(args):
     }
     job_defaults = {
         'coalesce': True,
-        'max_instances': 1,
+        'max_instances': 10,
         'misfire_grace_time': None
     }
     scheduler = BlockingScheduler(
