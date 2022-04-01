@@ -21,7 +21,7 @@ prod_minutes = 65
     """
 
 # INTEGRATION TESTS / DEV ENV
-dev_workspace_id = [2618107878500228]
+dev_workspace_id = [7802463043512196]
 """Single Workspace ID for Integration Testing, so that tests can run without
    affecting active Prod data. Workspace Type: list, Workspace IDs Type: int
    """
@@ -35,6 +35,25 @@ dev_push_jira_tickets_sheet = 3312520078354308
 dev_minutes = 525600
 """The maximum number of minutes into the past the get_timestamp function
     should look before filtering out results. 1 Year for Dev. Type: int"""
+
+
+# STAGING
+stg_workspace_id = [2618107878500228]
+"""Single Workspace ID for Integration Testing, so that tests can run without
+   affecting active Prod data. Workspace Type: list, Workspace IDs Type: int
+   """
+stg_jira_idx_sheet = dev_jira_idx_sheet
+"""Jira Index Sheet in Dev. Type: int
+   """
+stg_push_jira_tickets_sheet = dev_push_jira_tickets_sheet
+"""Sheet used to push rows into Jira to create new tickets. Separate from the
+   index sheet to prevent accidental data corruption."""
+
+stg_minutes = 130
+"""The maximum number of minutes into the past the get_timestamp function
+    should look before filtering out results. Type: int
+    """
+
 
 uuid_col = "UUID"
 """UUID column name. Type: str

@@ -31,11 +31,11 @@ environments:
   dev:
   #  count: 2               # Number of tasks to run for the "test" environment.
     variables:
-      COPILOT_ENV: debug
+      COPILOT_ENV: dev
     image:
       build:
         args:
-          COPILOT_ENV: debug
+          COPILOT_ENV: dev
   staging:
   #  count: 2               # Number of tasks to run for the "test" environment.
     variables:

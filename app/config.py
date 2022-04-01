@@ -118,7 +118,7 @@ def get_secret_name(env="--debug"):
     elif env in ("-p", "--prod", "-prod"):
         secret_name = "prod/smartsheet-data-sync/svc-api-token"
         return secret_name
-    elif env in ("-d", "--debug", "-debug"):
+    elif env in ("-d", "--debug", "-debug", "--dev", "-dev"):
         secret_name = "staging/smartsheet-data-sync/svc-api-token"
         return secret_name
 
@@ -146,10 +146,21 @@ def set_env_vars(env):
     global env_msg
     global push_tickets_sheet
 
-    if env in ("-s", "--staging", "-staging", "-d", "--debug", "-debug"):
+    if env in ("-d", "--debug", "-debug", "--dev", "-dev"):
         workspace_id = app_vars.dev_workspace_id
         index_sheet = app_vars.dev_jira_idx_sheet
         minutes = app_vars.dev_minutes
+        push_tickets_sheet = app_vars.dev_push_jira_tickets_sheet
+        env_msg = str("Using Staging variables for workspace_id "
+                      "and Jira index sheet. Set workspace_id to: {}, "
+                      "index_sheet to: {}, and minutes to: {}. "
+                      "Pushing tickets to {}"
+                      "").format(workspace_id, index_sheet, minutes,
+                                 push_tickets_sheet)
+    elif env in ("-s", "--staging", "-staging"):
+        workspace_id = app_vars.stg_workspace_id
+        index_sheet = app_vars.stg_jira_idx_sheet
+        minutes = app_vars.stg_minutes
         push_tickets_sheet = app_vars.dev_push_jira_tickets_sheet
         env_msg = str("Using Staging variables for workspace_id "
                       "and Jira index sheet. Set workspace_id to: {}, "
@@ -195,7 +206,7 @@ def set_logging_config(env):
 
     Raises:
         TypeError: Env should be a string
-        ValueError: Env should be some iteration of prod, staging or debug
+        ValueError: Env should be some iteration of prod, staging, dev or debug
 
     Returns:
         dict: The logging configuration to use
@@ -205,7 +216,7 @@ def set_logging_config(env):
             type(env))
         raise TypeError(msg)
     if env not in ("-s", "--staging", "-staging", "-p", "--prod", "-prod",
-                   "-d", "--debug", "-debug"):
+                   "-d", "--debug", "-debug", "--dev", "-dev"):
         msg = str("Invalid environment flag. '{}' was passed but it should "
                   "be '--debug', '--staging' or '--prod'").format(env)
         raise ValueError(msg)
@@ -272,7 +283,7 @@ def set_logging_config(env):
                 'disable_existing_loggers': False
             },
         )
-    elif env in ("-d", "--debug", "-debug"):
+    elif env in ("-d", "--debug", "-debug", "--dev", "-dev"):
         logging_config = dict(
             version=1,
             formatters={
@@ -347,7 +358,7 @@ def init(args):
     }
     job_defaults = {
         'coalesce': True,
-        'max_instances': 10,
+        'max_instances': 5,
         'misfire_grace_time': None
     }
     scheduler = BlockingScheduler(
