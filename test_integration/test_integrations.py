@@ -5,52 +5,53 @@ import smartsheet
 import uuid_module.helper as helper
 import uuid_module.smartsheet_api as smartsheet_api
 import uuid_module.variables as app_vars
+from test_unit.conftest import sheet_fixture, row_fixture, workspace_fixture
 
 _, cwd = helper.get_local_paths()
 
 
-@pytest.fixture(scope="module")
-def sheet_fixture():
-    with open(cwd + '/dev_program_plan.json') as f:
-        sheet_json = json.load(f)
+# @pytest.fixture(scope="module")
+# def sheet_fixture():
+#     with open(cwd + '/dev_program_plan.json') as f:
+#         sheet_json = json.load(f)
 
-    def no_uuid_col(sheet_json):
-        sheet_json['columns'][20]['title'] = "Not UUID"
-        no_uuid_col = smartsheet.models.Sheet(sheet_json)
-        return no_uuid_col
+#     def no_uuid_col(sheet_json):
+#         sheet_json['columns'][20]['title'] = "Not UUID"
+#         no_uuid_col = smartsheet.models.Sheet(sheet_json)
+#         return no_uuid_col
 
-    def no_summary_col(sheet_json):
-        sheet_json['columns'][4]['name'] = "Not Summary"
-        no_summary_col = smartsheet.models.Sheet(sheet_json)
-        return no_summary_col
+#     def no_summary_col(sheet_json):
+#         sheet_json['columns'][4]['name'] = "Not Summary"
+#         no_summary_col = smartsheet.models.Sheet(sheet_json)
+#         return no_summary_col
 
-    sheet = smartsheet.models.Sheet(sheet_json)
-    col_map = helper.get_column_map(sheet)
-    sheet_no_uuid_col = no_uuid_col(sheet_json)
-    sheet_no_summary_col = no_summary_col(sheet_json)
-    return sheet, col_map, sheet_no_uuid_col, sheet_no_summary_col
-
-
-@pytest.fixture
-def row_fixture():
-    with open(cwd + '/dev_program_plan_row.json') as f:
-        row_json = json.load(f)
-    linked_row = smartsheet.models.Row(row_json)
-    with open(cwd + '/dev_program_plan_unlinked_row.json') as f:
-        unlinked_row_json = json.load(f)
-    unlinked_row = smartsheet.models.Row(unlinked_row_json)
-    return linked_row, unlinked_row
+#     sheet = smartsheet.models.Sheet(sheet_json)
+#     col_map = helper.get_column_map(sheet)
+#     sheet_no_uuid_col = no_uuid_col(sheet_json)
+#     sheet_no_summary_col = no_summary_col(sheet_json)
+#     return sheet, col_map, sheet_no_uuid_col, sheet_no_summary_col
 
 
-@pytest.fixture
-def workspace_fixture():
-    with open(cwd + "/dev_workspaces.json") as f:
-        workspace_json = json.load(f)
-    workspace = smartsheet.models.Workspace(workspace_json)
-    workspaces = [workspace, workspace]
-    return workspace, workspaces
+# @pytest.fixture
+# def row_fixture():
+#     with open(cwd + '/dev_program_plan_row.json') as f:
+#         row_json = json.load(f)
+#     linked_row = smartsheet.models.Row(row_json)
+#     with open(cwd + '/dev_program_plan_unlinked_row.json') as f:
+#         unlinked_row_json = json.load(f)
+#     unlinked_row = smartsheet.models.Row(unlinked_row_json)
+#     return linked_row, unlinked_row
 
 
+# @pytest.fixture
+# def workspace_fixture():
+#     with open(cwd + "/dev_workspaces.json") as f:
+#         workspace_json = json.load(f)
+#     workspace = smartsheet.models.Workspace(workspace_json)
+#     workspaces = [workspace, workspace]
+#     return workspace, workspaces
+
+@pytest.mark.usefixtures("sheet_fixture")
 @pytest.fixture
 def setup_new_sheet(sheet_fixture):
     sheet, _, _, _ = sheet_fixture
@@ -86,8 +87,8 @@ def setup_new_sheet(sheet_fixture):
         sheet.id,
         smartsheet.models.ContainerDestination({
             'destination_type': 'folder',
-            'destination_id': 8062773914560388,
-            'new_name': 'Program Plan Integration Test'
+            'destination_id': 4587159811319684,
+            'new_name': 'Program Integration Tests'
         })
     )
     assert response.message == "SUCCESS"
@@ -251,14 +252,17 @@ def test_updating_rows_1(setup_new_sheet):
     assert result.result_code == 0
 
 
+@pytest.mark.usefixtures("workspace_fixture")
 def test_get_workspace_0(workspace_fixture):
     workspace, _ = workspace_fixture
     response_0 = smartsheet_api.get_workspace(app_vars.dev_workspace_id[0])
     assert response_0.id == workspace.id
 
 
+@pytest.mark.usefixtures("workspace_fixture")
 def test_get_workspace_1(workspace_fixture):
-    _, workspaces = workspace_fixture
+    workspace, _ = workspace_fixture
+    workspaces = [workspace, workspace]
     workspace_ids = [app_vars.dev_workspace_id[0],
                      app_vars.dev_workspace_id[0]]
     response_0 = smartsheet_api.get_workspace(workspace_ids)
@@ -269,6 +273,7 @@ def test_get_workspace_1(workspace_fixture):
             assert res.id == ws.id
 
 
+@pytest.mark.usefixtures("sheet_fixture")
 def test_get_sheet_0(sheet_fixture):
     sheet, col_map, _, _ = sheet_fixture
     response_0 = smartsheet_api.get_sheet(sheet.id)
