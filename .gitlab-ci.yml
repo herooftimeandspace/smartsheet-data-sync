@@ -99,6 +99,21 @@ include:
   # rules:
   # - if: "$CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH"
 
+deploy_dev:
+  stage: deploy
+  image: ubuntu:latest
+  tags:
+  - copilot
+  script:
+  - copilot svc deploy --name smartsheet-data-sync-backend --env dev
+  - docker rm -v $(docker ps -a -q -f status=exited) || true
+  - docker rmi $(docker images -f "dangling=true" -q) || true
+  - docker image prune -a --force --filter "until=730h" || true
+  environment:
+    name: Staging
+  only:
+  - debug
+
 deploy_staging:
   stage: deploy
   image: ubuntu:latest
@@ -113,7 +128,6 @@ deploy_staging:
     name: Staging
   only:
   - staging
-  - debug
 
 deploy_prod:
   stage: deploy
