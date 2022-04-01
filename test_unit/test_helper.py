@@ -3,6 +3,7 @@ import json
 
 import pytest
 import smartsheet
+import uuid_module.variables as app_vars
 import uuid_module.helper as helper
 from freezegun import freeze_time
 
@@ -12,110 +13,61 @@ null = None
 
 _, cwd = helper.get_local_paths()
 
-
-@pytest.fixture
-def sheet_fixture():
-    with open(cwd + '/dev_program_plan.json') as f:
-        sheet_json = json.load(f)
-
-    def no_uuid_col_fixture(sheet_json):
-        sheet_json['columns'][20]['title'] = "Not UUID"
-        no_uuid_col = smartsheet.models.Sheet(sheet_json)
-        return no_uuid_col
-
-    def no_summary_col_fixture(sheet_json):
-        sheet_json['columns'][4]['name'] = "Not Summary"
-        no_summary_col = smartsheet.models.Sheet(sheet_json)
-        return no_summary_col
-
-    sheet = smartsheet.models.Sheet(sheet_json)
-    col_map = helper.get_column_map(sheet)
-    sheet_no_uuid_col = no_uuid_col_fixture(sheet_json)
-    sheet_no_summary_col = no_summary_col_fixture(sheet_json)
-    return sheet, col_map, sheet_no_uuid_col, sheet_no_summary_col
-
-
-@pytest.fixture
-def row_fixture():
-    with open(cwd + '/dev_program_plan_row.json') as f:
-        row_json = json.load(f)
-    linked_row = smartsheet.models.Row(row_json)
-
-    with open(cwd + '/dev_program_plan_unlinked_row.json') as f:
-        row_json = json.load(f)
-    unlinked_row = smartsheet.models.Row(row_json)
-    return linked_row, unlinked_row
-
-
-@pytest.fixture
-def cell():
-    with open(cwd + '/dev_cell_with_url_and_incoming_link.json') as f:
-        cell_json = json.load(f)
-    cell = smartsheet.models.Cell(cell_json)
-    return cell
-
-
-@pytest.fixture
-def col_name():
-    col_name = "Tasks"
-    return col_name
-
-
-@pytest.fixture
-def col_map():
-    col_map = {
-        'Actual Inject LoE': 482457047852932,
-        'Actual Planned LoE': 4986056675223428,
-        'Allocation %': 5760112861177732,
-        'Assigned To': 1256513233807236,
-        'Change': 763932024563588,
-        'Child Projects': 4141631745091460,
-        'Comments': 8011912674862980,
-        'Confidence': 6111956582066052,
-        'Created': 7660068953974660,
-        'Current Quarter': 8785968860817284,
-        'Description': 2171306908116868,
-        'Duration': 8926706349172612,
-        'Estimated Inject LoE': 2734256861538180,
-        'Estimated LoE': 1608356954695556,
-        'Estimated Planned LoE': 7237856488908676,
-        'Finish': 4634212954335108,
-        'Hierarchy': 8363756395751300,
-        'Initiative': 5267531651934084,
-        'Inject': 5549006628644740,
-        'Issue Type': 4877680976914308,
-        'Jira Sync': 6956381512198020,
-        'Jira Ticket': 6886012768020356,
-        'KTLO': 6817156137543556,
-        'Launch Calendar': 2452781884827524,
-        'Launch Date Row': 1045407001274244,
-        'Level': 7519331465619332,
-        'LoE': 4423106721802116,
-        'Modified': 2030569419761540,
-        'Modified Copy': 6534169047132036,
-        'Next Quarter Task': 200982071142276,
-        'Parent': 6393431558776708,
-        'Parent Issue Type': 633554282538884,
-        'Parent Team': 3578681791670148,
-        'Parent Ticket': 374081349543812,
-        'ParentUUID': 5830481605355396,
-        'Predecessors': 3508313047492484,
-        'Priority': 8082281419040644,
-        'Program': 3015731838248836,
-        'Project Key': 1326881977984900,
-        'Quarter': 2382413140649860,
-        'Quarter Rollup': 4704581698512772,
-        'RowID': 3156469326604164,
-        'Start': 130613326964612,
-        'Status': 3297206814959492,
-        'Summary': 4282369233446788,
-        'Tasks': 7800806442329988,
-        'Team': 6674906535487364,
-        'UUID': 8645231372461956,
-        'Year': 1889831931406212,
-        '← Hide Everything to the Left': 3860156768380804,
-    }
-    return col_map
+# @pytest.fixture
+# def col_map():
+#     col_map = {
+#         'Actual Inject LoE': 482457047852932,
+#         'Actual Planned LoE': 4986056675223428,
+#         'Allocation %': 5760112861177732,
+#         'Assigned To': 1256513233807236,
+#         'Change': 763932024563588,
+#         'Child Projects': 4141631745091460,
+#         'Comments': 8011912674862980,
+#         'Confidence': 6111956582066052,
+#         'Created': 7660068953974660,
+#         'Current Quarter': 8785968860817284,
+#         'Description': 2171306908116868,
+#         'Duration': 8926706349172612,
+#         'Estimated Inject LoE': 2734256861538180,
+#         'Estimated LoE': 1608356954695556,
+#         'Estimated Planned LoE': 7237856488908676,
+#         'Finish': 4634212954335108,
+#         'Hierarchy': 8363756395751300,
+#         'Initiative': 5267531651934084,
+#         'Inject': 5549006628644740,
+#         'Issue Type': 4877680976914308,
+#         'Jira Sync': 6956381512198020,
+#         'Jira Ticket': 6886012768020356,
+#         'KTLO': 6817156137543556,
+#         'Launch Calendar': 2452781884827524,
+#         'Launch Date Row': 1045407001274244,
+#         'Level': 7519331465619332,
+#         'LoE': 4423106721802116,
+#         'Modified': 2030569419761540,
+#         'Modified Copy': 6534169047132036,
+#         'Next Quarter Task': 200982071142276,
+#         'Parent': 6393431558776708,
+#         'Parent Issue Type': 633554282538884,
+#         'Parent Team': 3578681791670148,
+#         'Parent Ticket': 374081349543812,
+#         'ParentUUID': 5830481605355396,
+#         'Predecessors': 3508313047492484,
+#         'Priority': 8082281419040644,
+#         'Program': 3015731838248836,
+#         'Project Key': 1326881977984900,
+#         'Quarter': 2382413140649860,
+#         'Quarter Rollup': 4704581698512772,
+#         'RowID': 3156469326604164,
+#         'Start': 130613326964612,
+#         'Status': 3297206814959492,
+#         'Summary': 4282369233446788,
+#         'Tasks': 7800806442329988,
+#         'Team': 6674906535487364,
+#         'UUID': 8645231372461956,
+#         'Year': 1889831931406212,
+#         '← Hide Everything to the Left': 3860156768380804,
+#     }
+#     return col_map
 
 
 @pytest.fixture
@@ -167,41 +119,41 @@ def set_init_fixture():
     smartsheet_client = config.smartsheet_client
 
 
-def test_get_cell_data_0(row_fixture, col_name, col_map):
+def test_get_cell_data_0(row_fixture, sheet_fixture):
     row, _ = row_fixture
+    _, col_map, _, _ = sheet_fixture
     import uuid_module.helper as helper
     with pytest.raises(TypeError):
-        helper.get_cell_data("Row", col_name, col_map)
+        helper.get_cell_data("Row", app_vars.task_col, col_map)
     with pytest.raises(TypeError):
         helper.get_cell_data(row, 1, col_map)
     with pytest.raises(TypeError):
-        helper.get_cell_data(row, col_name, "col_map")
+        helper.get_cell_data(row, app_vars.task_col, "col_map")
     with pytest.raises(KeyError):
         keyerror_col_map = {}
         keyerror_col_map["Jira Issue"] = 1337
-        helper.get_cell_data(row, col_name, keyerror_col_map)
+        helper.get_cell_data(row, app_vars.task_col, keyerror_col_map)
     with pytest.raises(ValueError):
-        helper.get_cell_data(row, col_name, {})
+        helper.get_cell_data(row, app_vars.task_col, {})
     with pytest.raises(TypeError):
         k_type_error = {}
         k_type_error[12345] = 12345
-        helper.get_cell_data(row, col_name, k_type_error)
+        helper.get_cell_data(row, app_vars.task_col, k_type_error)
     with pytest.raises(TypeError):
         v_type_error = {}
         v_type_error["Jira Ticket"] = "12345"
-        helper.get_cell_data(row, col_name, v_type_error)
+        helper.get_cell_data(row, app_vars.task_col, v_type_error)
     with pytest.raises(ValueError):
         v_value_error = {}
         v_value_error["Jira Ticket"] = -1337
-        helper.get_cell_data(row, col_name, v_value_error)
+        helper.get_cell_data(row, app_vars.task_col, v_value_error)
 
 
-def test_get_all_cell_data_1(row_fixture, col_name, col_map):
+def test_get_all_cell_data_1(row_fixture, sheet_fixture, cell_fixture):
     row, _ = row_fixture
-    with open(cwd + '/dev_cell_basic.json') as f:
-        cell_json = json.load(f)
-    test_fixture_cell_data = smartsheet.models.Cell(cell_json)
-    test_cell_data = helper.get_cell_data(row, col_name, col_map)
+    _, col_map, _, _ = sheet_fixture
+    test_fixture_cell_data, _, _, _, _, _ = cell_fixture
+    test_cell_data = helper.get_cell_data(row, app_vars.task_col, col_map)
     assert (test_cell_data.value,
             test_cell_data.column_id,
             test_cell_data.column_type,
@@ -226,22 +178,24 @@ def test_get_column_map_1(sheet_fixture):
         assert isinstance(v, int)
 
 
-def test_has_cell_link_0(cell):
+def test_has_cell_link_0(cell_fixture):
+    _, _, _, incoming_link, _, _ = cell_fixture
     direction = "In"
     with pytest.raises(TypeError):
-        helper.has_cell_link("cell", direction)
+        helper.has_cell_link("incoming_link", direction)
     with pytest.raises(TypeError):
-        helper.has_cell_link(cell, 7)
+        helper.has_cell_link(incoming_link, 7)
     with pytest.raises(TypeError):
-        helper.has_cell_link(cell, "In", sheet_id="Sheet ID")
+        helper.has_cell_link(incoming_link, "In", sheet_id="Sheet ID")
     with pytest.raises(ValueError):
-        helper.has_cell_link(cell, "Sideways")
+        helper.has_cell_link(incoming_link, "Sideways")
 
 
-def test_has_cell_link_1(cell, bad_cell):
+def test_has_cell_link_1(cell_fixture):
     direction = "In"
-    assert helper.has_cell_link(cell, direction) == "OK"
-    assert helper.has_cell_link(bad_cell, direction) == "Unlinked"
+    _, _, _, incoming_link, _, broken_link = cell_fixture
+    assert helper.has_cell_link(incoming_link, direction) == "OK"
+    assert helper.has_cell_link(broken_link, direction) == "BROKEN"
 
 
 def test_has_cell_link_2(sheet_fixture, row_fixture):

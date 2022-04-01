@@ -16,79 +16,79 @@ utc = pytz.UTC
 _, cwd = helper.get_local_paths()
 
 
-@pytest.fixture(scope="module")
-def sheet_fixture():
-    with open(cwd + '/dev_program_plan.json') as f:
-        sheet_json = json.load(f)
+# @pytest.fixture(scope="module")
+# def sheet_fixture():
+#     with open(cwd + '/dev_program_plan.json') as f:
+#         sheet_json = json.load(f)
 
-    def no_uuid_col(sheet_json):
-        sheet_json['columns'][20]['title'] = "Not UUID"
-        no_uuid_col = smartsheet.models.Sheet(sheet_json)
-        return no_uuid_col
+#     def no_uuid_col(sheet_json):
+#         sheet_json['columns'][20]['title'] = "Not UUID"
+#         no_uuid_col = smartsheet.models.Sheet(sheet_json)
+#         return no_uuid_col
 
-    def no_summary_col(sheet_json):
-        sheet_json['columns'][4]['title'] = "Not Summary"
-        no_summary_col = smartsheet.models.Sheet(sheet_json)
-        return no_summary_col
+#     def no_summary_col(sheet_json):
+#         sheet_json['columns'][4]['title'] = "Not Summary"
+#         no_summary_col = smartsheet.models.Sheet(sheet_json)
+#         return no_summary_col
 
-    sheet = smartsheet.models.Sheet(sheet_json)
-    col_map = helper.get_column_map(sheet)
-    sheet_no_uuid_col = no_uuid_col(sheet_json)
-    sheet_no_summary_col = no_summary_col(sheet_json)
-    return sheet, col_map, sheet_no_uuid_col, sheet_no_summary_col
-
-
-@pytest.fixture(scope="module")
-def jira_index_sheet_fixture():
-    with open(cwd + '/dev_jira_index_sheet.json') as f:
-        dev_idx_sheet = json.load(f)
-        dev_idx_sheet = smartsheet.models.Sheet(dev_idx_sheet)
-    with open(cwd + '/dev_jira_idx_rows.json') as f:
-        dev_idx_rows = json.load(f)
-    dev_idx_col_map = helper.get_column_map(dev_idx_sheet)
-    return dev_idx_sheet, dev_idx_col_map, dev_idx_rows
+#     sheet = smartsheet.models.Sheet(sheet_json)
+#     col_map = helper.get_column_map(sheet)
+#     sheet_no_uuid_col = no_uuid_col(sheet_json)
+#     sheet_no_summary_col = no_summary_col(sheet_json)
+#     return sheet, col_map, sheet_no_uuid_col, sheet_no_summary_col
 
 
-@pytest.fixture(scope="module")
-def workspace_fixture():
-    with open(cwd + '/dev_workspaces.json') as f:
-        dev_workspace = json.load(f)
-        dev_workspace = smartsheet.models.Workspace(dev_workspace)
-    ws_ids = [2125936310151044, 7754886088550276, 775947692599172,
-              5279547319969668, 3027747506284420, 7531347133654916,
-              1901847599441796, 6405447226812292, 4153647413127044,
-              8657247040497540]
-    return dev_workspace, ws_ids
+# @pytest.fixture(scope="module")
+# def jira_index_sheet_fixture():
+#     with open(cwd + '/dev_jira_index_sheet.json') as f:
+#         dev_idx_sheet = json.load(f)
+#         dev_idx_sheet = smartsheet.models.Sheet(dev_idx_sheet)
+#     with open(cwd + '/dev_jira_idx_rows.json') as f:
+#         dev_idx_rows = json.load(f)
+#     dev_idx_col_map = helper.get_column_map(dev_idx_sheet)
+#     return dev_idx_sheet, dev_idx_col_map, dev_idx_rows
 
 
-@pytest.fixture(scope="module")
-def row():
-    with open(cwd + '/dev_program_plan_row.json') as f:
-        row_json = json.load(f)
-    row = smartsheet.models.Row(row_json)
-    row_list = [row]
-    return row, row_list
+# @pytest.fixture(scope="module")
+# def workspace_fixture():
+#     with open(cwd + '/dev_workspaces.json') as f:
+#         dev_workspace = json.load(f)
+#         dev_workspace = smartsheet.models.Workspace(dev_workspace)
+#     ws_ids = [2125936310151044, 7754886088550276, 775947692599172,
+#               5279547319969668, 5447415714080644, 7531347133654916,
+#               1901847599441796, 6405447226812292, 4153647413127044,
+#               8657247040497540]
+#     return dev_workspace, ws_ids
 
 
-@pytest.fixture
-def env():
-    return "--debug"
+# @pytest.fixture(scope="module")
+# def row():
+#     with open(cwd + '/dev_program_plan_row.json') as f:
+#         row_json = json.load(f)
+#     row = smartsheet.models.Row(row_json)
+#     row_list = [row]
+#     return row, row_list
 
 
-@pytest.fixture
-def sheet_ids():
-    return [3027747506284420]
+# @pytest.fixture
+# def env():
+#     return "--debug"
 
 
-@pytest.fixture
-def minutes():
-    return 5
+# @pytest.fixture
+# def sheet_ids():
+#     return [5447415714080644]
 
 
-@pytest.fixture
-def columns():
-    columns = app_vars.sheet_columns
-    return columns
+# @pytest.fixture
+# def minutes():
+#     return 5
+
+
+# @pytest.fixture
+# def columns():
+#     columns = app_vars.sheet_columns
+# return columns
 
 
 def set_init_fixture():
@@ -100,7 +100,7 @@ def set_init_fixture():
 
 # Type testing. Separate tests needed for integraiton.
 @freeze_time("2021-11-18 21:23:54")
-def test_refresh_source_sheets_0(sheet_ids, sheet_fixture):
+def test_refresh_source_sheets_0(sheet_fixture):
     import app.config as config
     sheet, _, _, _ = sheet_fixture
     sheet_ids = [sheet.id]
@@ -119,9 +119,10 @@ def test_refresh_source_sheets_0(sheet_ids, sheet_fixture):
 
 
 @freeze_time("2021-11-18 21:23:54")
-def test_refresh_source_sheets_1(sheet_ids, sheet_fixture):
+def test_refresh_source_sheets_1(sheet_fixture):
     import app.config as config
     sheet, _, _, _ = sheet_fixture
+    sheet_ids = [sheet.id]
 
     @patch("uuid_module.smartsheet_api.get_sheet", return_value=sheet)
     def test_0(mock_0):
@@ -214,13 +215,13 @@ def test_get_all_row_data_3(sheet_fixture):
 
 
 @freeze_time("2021-11-18 21:23:54")
-def test_get_all_row_data_4(sheet_fixture, columns):
+def test_get_all_row_data_4(sheet_fixture):
     import app.config as config
     _, _, _, no_summary = sheet_fixture
 
     def test_0():
         result = get_data.get_all_row_data(
-            [no_summary], columns, config.minutes)
+            [no_summary], app_vars.sheet_columns, config.minutes)
         return result
 
     result_0 = test_0()
@@ -302,22 +303,22 @@ def test_load_jira_index_0():
 # TODO: Static return and check for actual values
 
 
-def test_load_jira_index_1(jira_index_sheet_fixture):
-    jira_idx_sheet, jira_idx_col_map, _ = jira_index_sheet_fixture
+def test_load_jira_index_1(index_sheet_fixture):
+    index_sheet, index_col_map, _, _ = index_sheet_fixture
 
-    @patch("uuid_module.smartsheet_api.get_sheet", return_value=jira_idx_sheet)
+    @patch("uuid_module.smartsheet_api.get_sheet", return_value=index_sheet)
     def test_0(mock_0):
-        sheet, col_map, rows = get_data.load_jira_index(jira_idx_sheet.id)
+        sheet, col_map, rows = get_data.load_jira_index(index_sheet.id)
         return sheet, col_map, rows
 
     sheet, col_map, rows = test_0()
     assert isinstance(sheet, smartsheet.models.sheet.Sheet)
     assert isinstance(rows, dict)
     assert isinstance(col_map, dict)
-    assert sheet.id == jira_idx_sheet.id
-    assert sheet.name == jira_idx_sheet.name
-    assert sheet == jira_idx_sheet
-    assert col_map == jira_idx_col_map
+    assert sheet.id == index_sheet.id
+    assert sheet.name == index_sheet.name
+    assert sheet == index_sheet
+    assert col_map == index_col_map
     for col in app_vars.sync_columns:
         assert col in col_map.keys()
 
@@ -383,7 +384,7 @@ def test_get_all_sheet_ids_1(workspace_fixture):
     result_0 = test_0()
     for id in result_0:
         assert id in ws_ids
-    assert 5786250381682564 not in ws_ids
+    assert app_vars.dev_jira_idx_sheet not in ws_ids
 
 
 # TODO: Failing pynguin test

@@ -3,21 +3,24 @@ import pytest
 
 
 @pytest.fixture
-def env_fixture():
-    return "--debug"
-
-
-@pytest.fixture
 def env_dict():
     import uuid_module.variables as app_vars
-    debug = {'env': '--debug', 'env_msg': "Using Staging variables for "
-             "workspace_id and Jira index sheet. Set workspace_id to: "
-             "[2618107878500228], index_sheet to: 5786250381682564, and "
-             "minutes to: 525600. Pushing tickets to 3312520078354308",
-             'workspace_id': [app_vars.dev_workspace_id],
-             'index_sheet': app_vars.dev_jira_idx_sheet,
-             'minutes': app_vars.dev_minutes,
-             'push_tickets_sheet': app_vars.dev_push_jira_tickets_sheet}
+    dev = {'env': '--debug', 'env_msg': "Using Dev variables for "
+           "workspace_id and Jira index sheet. Set workspace_id to: "
+           "[7802463043512196], index_sheet to: 5786250381682564, and "
+           "minutes to: 525600. Pushing tickets to 3312520078354308",
+           'workspace_id': [app_vars.dev_workspace_id],
+           'index_sheet': app_vars.dev_jira_idx_sheet,
+           'minutes': app_vars.dev_minutes,
+           'push_tickets_sheet': app_vars.dev_push_jira_tickets_sheet}
+    staging = {'env': '--staging', 'env_msg': "Using Staging variables for "
+               "workspace_id and Jira index sheet. Set workspace_id to: "
+               "[2618107878500228], index_sheet to: 5786250381682564, and "
+               "minutes to: 130. Pushing tickets to 3312520078354308",
+               'workspace_id': [app_vars.stg_workspace_id],
+               'index_sheet': app_vars.stg_jira_idx_sheet,
+               'minutes': app_vars.stg_minutes,
+               'push_tickets_sheet': app_vars.stg_push_jira_tickets_sheet}
     prod = {'env': '--prod', 'env_msg': "Using Prod environment variables for "
             "workspace_id and Jira index sheet. Set workspace_id to: "
             "[8158274374657924, 1479840747546500, 6569226535233412], "
@@ -28,14 +31,14 @@ def env_dict():
             'minutes': app_vars.prod_minutes,
             'push_tickets_sheet': app_vars.prod_push_jira_tickets_sheet}
     canary = {'env': '--debug', 'env_msg': "Invalid flag: --canary. Using "
-              "Staging variables. Set workspace_id to: "
-              "[2618107878500228], index_sheet to: 5786250381682564, and "
+              "Dev variables. Set workspace_id to: "
+              "[7802463043512196], index_sheet to: 5786250381682564, and "
               "minutes to: 525600. Pushing tickets to 3312520078354308",
               'workspace_id': [app_vars.dev_workspace_id],
               'index_sheet': app_vars.dev_jira_idx_sheet,
               'minutes': app_vars.dev_minutes,
               'push_tickets_sheet': app_vars.dev_push_jira_tickets_sheet}
-    return debug, prod, canary
+    return dev, staging, prod, canary
 
 
 def set_init_fixture():
@@ -119,7 +122,7 @@ def test_set_env_vars_0():
 
 
 def test_set_env_vars_1(env_dict):
-    debug, _, _ = env_dict
+    debug, _, _, _ = env_dict
     import app.config as config
     var_0 = config.set_env_vars("--debug")
     assert isinstance(var_0, dict)
@@ -132,7 +135,20 @@ def test_set_env_vars_1(env_dict):
 
 
 def test_set_env_vars_2(env_dict):
-    _, prod, _ = env_dict
+    _, staging, _, _ = env_dict
+    import app.config as config
+    var_0 = config.set_env_vars("--staging")
+    assert isinstance(var_0, dict)
+    assert var_0['env'] == staging['env']
+    assert var_0['env_msg'] == staging['env_msg']
+    assert var_0['workspace_id'] == staging['workspace_id'][0]
+    assert var_0['index_sheet'] == staging['index_sheet']
+    assert var_0['minutes'] == staging['minutes']
+    assert var_0['push_tickets_sheet'] == staging['push_tickets_sheet']
+
+
+def test_set_env_vars_3(env_dict):
+    _, _, prod, _ = env_dict
     import app.config as config
     var_0 = config.set_env_vars("--prod")
     assert isinstance(var_0, dict)
@@ -144,8 +160,8 @@ def test_set_env_vars_2(env_dict):
     assert var_0['push_tickets_sheet'] == prod['push_tickets_sheet']
 
 
-def test_set_env_vars_3(env_dict):
-    _, _, canary = env_dict
+def test_set_env_vars_4(env_dict):
+    _, _, _, canary = env_dict
     import app.config as config
     var_0 = config.set_env_vars("--canary")
     assert isinstance(var_0, dict)
@@ -157,9 +173,9 @@ def test_set_env_vars_3(env_dict):
     assert var_0['push_tickets_sheet'] == canary['push_tickets_sheet']
 
 
-def test_set_env_vars_4(env_fixture, env_dict):
+def test_set_env_vars_5(env_fixture, env_dict):
     import app.config as module_0
-    debug, _, _ = env_dict
+    debug, _, _, _ = env_dict
     set_init_fixture()
     var_0 = module_0.set_env_vars(env_fixture)
     assert isinstance(var_0, dict)
@@ -171,15 +187,18 @@ def test_set_env_vars_4(env_fixture, env_dict):
     assert module_0.push_tickets_sheet == debug['push_tickets_sheet']
     assert module_0.app_vars.dev_jira_idx_sheet == 5786250381682564
     assert module_0.app_vars.dev_minutes == 525600
-    assert module_0.app_vars.dev_workspace_id == [2618107878500228]
+    assert module_0.app_vars.dev_workspace_id == [7802463043512196]
     assert module_0.app_vars.dev_push_jira_tickets_sheet == 3312520078354308
+    assert module_0.app_vars.stg_jira_idx_sheet == 5786250381682564
+    assert module_0.app_vars.stg_minutes == 130
+    assert module_0.app_vars.stg_workspace_id == [2618107878500228]
+    assert module_0.app_vars.stg_push_jira_tickets_sheet == 3312520078354308
     assert module_0.app_vars.prod_jira_idx_sheet == 5366809688860548
     assert module_0.app_vars.prod_minutes == 65
     assert module_0.app_vars.prod_workspace_id == [8158274374657924,
                                                    1479840747546500,
                                                    6569226535233412]
-    var_1 = module_0.app_vars.prod_push_jira_tickets_sheet
-    assert var_1 is None
+    assert module_0.app_vars.prod_push_jira_tickets_sheet is None
     assert module_0.logger.filters == []
     assert module_0.logger.name == 'app.config'
     assert module_0.logger.level == 0
@@ -188,8 +207,7 @@ def test_set_env_vars_4(env_fixture, env_dict):
     # assert module_0.logger.disabled is False
 
 
-def test_set_logging_config_0(env_dict):
-    debug, prod, canary = env_dict
+def test_set_logging_config_0():
     import app.config as config
     with pytest.raises(TypeError):
         config.set_logging_config(1337)

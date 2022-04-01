@@ -1,4 +1,3 @@
-import json
 from unittest.mock import patch
 
 import pytest
@@ -10,47 +9,48 @@ import uuid_module.variables as app_vars
 _, cwd = helper.get_local_paths()
 
 
-@pytest.fixture
-def sheet_fixture():
-    with open(cwd + '/dev_program_plan.json') as f:
-        sheet_json = json.load(f)
+# @pytest.fixture
+# def sheet_fixture():
+#     with open(cwd + '/dev_program_plan.json') as f:
+#         sheet_json = json.load(f)
 
-    def no_uuid_col_fixture(sheet_json):
-        sheet_json['columns'][20]['title'] = "Not UUID"
-        no_uuid_col = smartsheet.models.Sheet(sheet_json)
-        return no_uuid_col
+#     def no_uuid_col_fixture(sheet_json):
+#         sheet_json['columns'][20]['title'] = "Not UUID"
+#         no_uuid_col = smartsheet.models.Sheet(sheet_json)
+#         return no_uuid_col
 
-    def no_summary_col_fixture(sheet_json):
-        sheet_json['columns'][4]['name'] = "Not Summary"
-        no_summary_col = smartsheet.models.Sheet(sheet_json)
-        return no_summary_col
+#     def no_summary_col_fixture(sheet_json):
+#         sheet_json['columns'][4]['name'] = "Not Summary"
+#         no_summary_col = smartsheet.models.Sheet(sheet_json)
+#         return no_summary_col
 
-    sheet = smartsheet.models.Sheet(sheet_json)
-    col_map = helper.get_column_map(sheet)
-    sheet_no_uuid_col = no_uuid_col_fixture(sheet_json)
-    sheet_no_summary_col = no_summary_col_fixture(sheet_json)
-    return sheet, col_map, sheet_no_uuid_col, sheet_no_summary_col
-
-
-@pytest.fixture
-def row():
-    with open(cwd + '/dev_program_plan_row.json') as f:
-        row_json = json.load(f)
-    row = smartsheet.models.Row(row_json)
-    return row
+#     sheet = smartsheet.models.Sheet(sheet_json)
+#     col_map = helper.get_column_map(sheet)
+#     sheet_no_uuid_col = no_uuid_col_fixture(sheet_json)
+#     sheet_no_summary_col = no_summary_col_fixture(sheet_json)
+#     return sheet, col_map, sheet_no_uuid_col, sheet_no_summary_col
 
 
-@pytest.fixture
-def workspace_fixture():
-    with open(cwd + "/dev_workspaces.json") as f:
-        workspace_json = json.load(f)
-    workspace = smartsheet.models.Workspace(workspace_json)
-    workspaces = [workspace, workspace]
-    return workspace, workspaces
+# @pytest.fixture
+# def row():
+#     with open(cwd + '/dev_program_plan_row.json') as f:
+#         row_json = json.load(f)
+#     row = smartsheet.models.Row(row_json)
+#     return row
 
 
-def test_write_rows_to_sheet_0(row, sheet_fixture):
+# @pytest.fixture
+# def workspace_fixture():
+#     with open(cwd + "/dev_workspaces.json") as f:
+#         workspace_json = json.load(f)
+#     workspace = smartsheet.models.Workspace(workspace_json)
+#     workspaces = [workspace, workspace]
+#     return workspace, workspaces
+
+
+def test_write_rows_to_sheet_0(row_fixture, sheet_fixture):
     sheet, _, _, _ = sheet_fixture
+    row, _ = row_fixture
     rows_to_write = [row]
     with pytest.raises(TypeError):
         smartsheet_api.write_rows_to_sheet("rows_to_write", sheet)
@@ -68,8 +68,9 @@ def test_write_rows_to_sheet_0(row, sheet_fixture):
         smartsheet_api.write_rows_to_sheet([row, "not_row"], sheet)
 
 
-def test_write_rows_to_sheet_1(row, sheet_fixture):
+def test_write_rows_to_sheet_1(row_fixture, sheet_fixture):
     sheet, _, _, _ = sheet_fixture
+    row, _ = row_fixture
     rows_to_write = [row]
 
     result = smartsheet.models.Result()
@@ -87,8 +88,9 @@ def test_write_rows_to_sheet_1(row, sheet_fixture):
     assert response.result_code == 0
 
 
-def test_write_rows_to_sheet_2(row, sheet_fixture):
+def test_write_rows_to_sheet_2(row_fixture, sheet_fixture):
     sheet, _, _, _ = sheet_fixture
+    row, _ = row_fixture
     rows_to_write = [row]
 
     result = smartsheet.models.Result()
@@ -106,8 +108,9 @@ def test_write_rows_to_sheet_2(row, sheet_fixture):
     assert response.result_code == 0
 
 
-def test_write_rows_to_sheet_3(row, sheet_fixture):
+def test_write_rows_to_sheet_3(row_fixture, sheet_fixture):
     sheet, _, _, _ = sheet_fixture
+    row, _ = row_fixture
     result = smartsheet.models.Result()
     result.message = "SUCCESS"
     result.result_code = 0
@@ -128,8 +131,9 @@ def test_write_rows_to_sheet_3(row, sheet_fixture):
     assert response.result_code == 0
 
 
-def test_write_rows_to_sheet_4(row, sheet_fixture):
+def test_write_rows_to_sheet_4(row_fixture, sheet_fixture):
     sheet, _, _, _ = sheet_fixture
+    row, _ = row_fixture
     rows_to_write = [row]
 
     result = smartsheet.models.Result()
@@ -147,8 +151,9 @@ def test_write_rows_to_sheet_4(row, sheet_fixture):
     assert response.result_code == 0
 
 
-def test_write_rows_to_sheet_5(row, sheet_fixture):
+def test_write_rows_to_sheet_5(row_fixture, sheet_fixture):
     sheet, _, _, _ = sheet_fixture
+    row, _ = row_fixture
     result = smartsheet.models.Result()
     result.message = "SUCCESS"
     result.result_code = 0
@@ -195,7 +200,8 @@ def test_get_workspace_1(workspace_fixture):
 
 
 def test_get_workspace_2(workspace_fixture):
-    _, workspaces = workspace_fixture
+    workspace, _ = workspace_fixture
+    workspaces = [workspace, workspace]
 
     @patch("uuid_module.smartsheet_api.get_workspace", return_value=workspaces)
     def test_1(mock_0):
@@ -252,8 +258,9 @@ def test_get_sheet_3(sheet_fixture):
     assert response == sheet
 
 
-def test_get_row_0(sheet_fixture, row):
+def test_get_row_0(sheet_fixture, row_fixture):
     sheet, _, _, _ = sheet_fixture
+    row, _ = row_fixture
 
     with pytest.raises(TypeError):
         smartsheet_api.get_row("sheet_id", row.id)
@@ -265,8 +272,9 @@ def test_get_row_0(sheet_fixture, row):
         smartsheet_api.get_row(sheet.id, -1337)
 
 
-def test_get_row_1(sheet_fixture, row):
+def test_get_row_1(sheet_fixture, row_fixture):
     sheet, _, _, _ = sheet_fixture
+    row, _ = row_fixture
 
     @patch("uuid_module.smartsheet_api.get_row", return_value=row)
     def test_0(mock_0):

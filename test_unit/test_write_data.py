@@ -14,63 +14,63 @@ _, cwd = helper.get_local_paths()
 logger = logging.getLogger(__name__)
 
 
-@pytest.fixture(scope="module")
-def sheet_fixture():
-    import uuid_module.helper as helper
-    with open(cwd + '/dev_program_plan.json') as f:
-        sheet_json = json.load(f)
+# @pytest.fixture(scope="module")
+# def sheet_fixture():
+#     import uuid_module.helper as helper
+#     with open(cwd + '/dev_program_plan.json') as f:
+#         sheet_json = json.load(f)
 
-    def no_uuid_col_fixture(sheet_json):
-        json_copy = sheet_json.copy()
-        json_copy['columns'][20]['name'] = "Not UUID"
-        no_uuid_col = smartsheet.models.Sheet(json_copy)
-        return no_uuid_col
+#     def no_uuid_col_fixture(sheet_json):
+#         json_copy = sheet_json.copy()
+#         json_copy['columns'][20]['name'] = "Not UUID"
+#         no_uuid_col = smartsheet.models.Sheet(json_copy)
+#         return no_uuid_col
 
-    def no_summary_col_fixture(sheet_json):
-        json_copy = sheet_json.copy()
-        json_copy['columns'][4]['name'] = "Not Summary"
-        no_summary_col = smartsheet.models.Sheet(json_copy)
-        return no_summary_col
+#     def no_summary_col_fixture(sheet_json):
+#         json_copy = sheet_json.copy()
+#         json_copy['columns'][4]['name'] = "Not Summary"
+#         no_summary_col = smartsheet.models.Sheet(json_copy)
+#         return no_summary_col
 
-    sheet = smartsheet.models.Sheet(sheet_json)
-    col_map = helper.get_column_map(sheet)
-    sheet_no_uuid_col = no_uuid_col_fixture(sheet_json)
-    sheet_no_summary_col = no_summary_col_fixture(sheet_json)
-    return sheet, col_map, sheet_no_uuid_col, sheet_no_summary_col
-
-
-@pytest.fixture
-def row_fixture():
-    with open(cwd + '/dev_program_plan_row.json') as f:
-        linked_row_json = json.load(f)
-    with open(cwd + '/dev_program_plan_row.json') as f:
-        unlinked_row_json = json.load(f)
-    linked_row = smartsheet.models.Row(linked_row_json)
-    unlinked_row = smartsheet.models.Row(unlinked_row_json)
-    return linked_row, unlinked_row
+#     sheet = smartsheet.models.Sheet(sheet_json)
+#     col_map = helper.get_column_map(sheet)
+#     sheet_no_uuid_col = no_uuid_col_fixture(sheet_json)
+#     sheet_no_summary_col = no_summary_col_fixture(sheet_json)
+#     return sheet, col_map, sheet_no_uuid_col, sheet_no_summary_col
 
 
-@pytest.fixture(scope="module")
-def index_fixture():
-    import uuid_module.get_data as get_data
-    with open(cwd + '/dev_jira_index_sheet.json') as f:
-        sheet_json = json.load(f)
-    index_sheet = smartsheet.models.Sheet(sheet_json)
-
-    @patch("uuid_module.smartsheet_api.get_sheet", return_value=index_sheet)
-    def load_jira_index_fixture(mock_0):
-        jira_index_sheet, jira_index_col_map, jira_index_rows \
-            = get_data.load_jira_index(index_sheet.id)
-        return jira_index_sheet, jira_index_col_map, jira_index_rows
-
-    jira_index_sheet, jira_index_col_map, jira_index_rows \
-        = load_jira_index_fixture()
-    return jira_index_sheet, jira_index_col_map, jira_index_rows
+# @pytest.fixture
+# def row_fixture():
+#     with open(cwd + '/dev_program_plan_row.json') as f:
+#         linked_row_json = json.load(f)
+#     with open(cwd + '/dev_program_plan_row.json') as f:
+#         unlinked_row_json = json.load(f)
+#     linked_row = smartsheet.models.Row(linked_row_json)
+#     unlinked_row = smartsheet.models.Row(unlinked_row_json)
+#     return linked_row, unlinked_row
 
 
-@pytest.fixture
-def env():
-    return "-debug"
+# @pytest.fixture(scope="module")
+# def index_fixture():
+#     import uuid_module.get_data as get_data
+#     with open(cwd + '/dev_jira_index_sheet.json') as f:
+#         sheet_json = json.load(f)
+#     index_sheet = smartsheet.models.Sheet(sheet_json)
+
+#     @patch("uuid_module.smartsheet_api.get_sheet", return_value=index_sheet)
+#     def load_jira_index_fixture(mock_0):
+#         jira_index_sheet, jira_index_col_map, jira_index_rows \
+#             = get_data.load_jira_index(index_sheet.id)
+#         return jira_index_sheet, jira_index_col_map, jira_index_rows
+
+#     jira_index_sheet, jira_index_col_map, jira_index_rows \
+#         = load_jira_index_fixture()
+#     return jira_index_sheet, jira_index_col_map, jira_index_rows
+
+
+# @pytest.fixture
+# def env():
+#     return "-debug"
 
 
 @pytest.fixture
@@ -169,11 +169,11 @@ def test_write_jira_index_cell_links_0():
         write_data.write_jira_index_cell_links({})
 
 
-def test_write_jira_index_cell_links_1(index_fixture,
+def test_write_jira_index_cell_links_1(index_sheet_fixture,
                                        sheet_fixture):
 
     sheet, _, _, _ = sheet_fixture
-    jira_index_sheet, jira_index_col_map, jira_index_rows = index_fixture
+    index_sheet, index_col_map, index_rows, _ = index_sheet_fixture
 
     result = smartsheet.models.Result()
     result.message = "SUCCESS"
@@ -182,8 +182,8 @@ def test_write_jira_index_cell_links_1(index_fixture,
     @patch("uuid_module.smartsheet_api.write_rows_to_sheet",
            return_value=result)
     @patch("uuid_module.get_data.load_jira_index",
-           return_value=(jira_index_sheet, jira_index_col_map,
-                         jira_index_rows))
+           return_value=(index_sheet, index_col_map,
+                         index_rows))
     @patch("uuid_module.smartsheet_api.get_sheet", return_value=sheet)
     def test_0(mock_0, mock_1, mock_2):
         project_sub_index = {}
@@ -195,8 +195,8 @@ def test_write_jira_index_cell_links_1(index_fixture,
     @patch("uuid_module.smartsheet_api.write_rows_to_sheet",
            return_value=result)
     @patch("uuid_module.get_data.load_jira_index",
-           return_value=(jira_index_sheet, jira_index_col_map,
-                         jira_index_rows))
+           return_value=(index_sheet, index_col_map,
+                         index_rows))
     @patch("uuid_module.smartsheet_api.get_sheet", return_value=sheet)
     def test_1(mock_0, mock_1, mock_2):
         project_sub_index = {}
@@ -211,11 +211,11 @@ def test_write_jira_index_cell_links_1(index_fixture,
     assert result_1 is True
 
 
-def test_write_jira_index_cell_links_2(project_indexes, index_fixture,
+def test_write_jira_index_cell_links_2(project_indexes, index_sheet_fixture,
                                        sheet_fixture):
     _, project_sub_index = project_indexes
     sheet, _, _, _ = sheet_fixture
-    jira_index_sheet, jira_index_col_map, jira_index_rows = index_fixture
+    index_sheet, index_col_map, index_rows, _ = index_sheet_fixture
 
     result = smartsheet.models.Result()
     result.message = "SUCCESS"
@@ -224,8 +224,8 @@ def test_write_jira_index_cell_links_2(project_indexes, index_fixture,
     @patch("uuid_module.smartsheet_api.write_rows_to_sheet",
            return_value=result)
     @patch("uuid_module.get_data.load_jira_index",
-           return_value=(jira_index_sheet, jira_index_col_map,
-                         jira_index_rows))
+           return_value=(index_sheet, index_col_map,
+                         index_rows))
     @patch("uuid_module.smartsheet_api.get_sheet", return_value=sheet)
     def test_0(mock_0, mock_1, mock_2):
         var_0 = write_data.write_jira_index_cell_links(project_sub_index)
