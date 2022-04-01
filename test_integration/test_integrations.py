@@ -1,3 +1,5 @@
+import json
+
 import pytest
 import smartsheet
 import uuid_module.helper as helper
@@ -7,46 +9,50 @@ import uuid_module.variables as app_vars
 _, cwd = helper.get_local_paths()
 
 
-# @pytest.fixture(scope="module")
-# def sheet_fixture():
-#     with open(cwd + '/dev_program_plan.json') as f:
-#         sheet_json = json.load(f)
-
-#     def no_uuid_col(sheet_json):
-#         sheet_json['columns'][20]['title'] = "Not UUID"
-#         no_uuid_col = smartsheet.models.Sheet(sheet_json)
-#         return no_uuid_col
-
-#     def no_summary_col(sheet_json):
-#         sheet_json['columns'][4]['name'] = "Not Summary"
-#         no_summary_col = smartsheet.models.Sheet(sheet_json)
-#         return no_summary_col
-
-#     sheet = smartsheet.models.Sheet(sheet_json)
-#     col_map = helper.get_column_map(sheet)
-#     sheet_no_uuid_col = no_uuid_col(sheet_json)
-#     sheet_no_summary_col = no_summary_col(sheet_json)
-#     return sheet, col_map, sheet_no_uuid_col, sheet_no_summary_col
+@pytest.fixture(scope="module")
+def workspace_fixture():
+    with open(cwd + '/dev_workspaces.json') as f:
+        dev_workspace = json.load(f)
+        dev_workspace = smartsheet.models.Workspace(dev_workspace)
+    ws_ids = [8262165481187204, 943816086710148, 5447415714080644,
+              3195615900395396, 7699215527765892, 2069715993552772,
+              6573315620923268, 4321515807238020]
+    return dev_workspace, ws_ids
 
 
-# @pytest.fixture
-# def row_fixture():
-#     with open(cwd + '/dev_program_plan_row.json') as f:
-#         row_json = json.load(f)
-#     linked_row = smartsheet.models.Row(row_json)
-#     with open(cwd + '/dev_program_plan_unlinked_row.json') as f:
-#         unlinked_row_json = json.load(f)
-#     unlinked_row = smartsheet.models.Row(unlinked_row_json)
-#     return linked_row, unlinked_row
+@pytest.fixture(scope="module")
+def sheet_fixture():
+    with open(cwd + '/dev_program_plan.json') as f:
+        sheet_json = json.load(f)
+
+    def no_uuid_col_fixture(sheet_json):
+        sheet_json['columns'][20]['title'] = "Not UUID"
+        no_uuid_col = smartsheet.models.Sheet(sheet_json)
+        return no_uuid_col
+
+    def no_summary_col_fixture(sheet_json):
+        sheet_json['columns'][4]['name'] = "Not Summary"
+        no_summary_col = smartsheet.models.Sheet(sheet_json)
+        return no_summary_col
+
+    sheet = smartsheet.models.Sheet(sheet_json)
+    col_map = helper.get_column_map(sheet)
+    sheet_no_uuid_col = no_uuid_col_fixture(sheet_json)
+    sheet_no_summary_col = no_summary_col_fixture(sheet_json)
+    return sheet, col_map, sheet_no_uuid_col, sheet_no_summary_col
 
 
-# @pytest.fixture
-# def workspace_fixture():
-#     with open(cwd + "/dev_workspaces.json") as f:
-#         workspace_json = json.load(f)
-#     workspace = smartsheet.models.Workspace(workspace_json)
-#     workspaces = [workspace, workspace]
-#     return workspace, workspaces
+@pytest.fixture(scope="module")
+def row_fixture():
+    with open(cwd + '/dev_program_plan_row.json') as f:
+        row_json = json.load(f)
+    linked_row = smartsheet.models.Row(row_json)
+
+    with open(cwd + '/dev_program_plan_unlinked_row.json') as f:
+        row_json = json.load(f)
+    unlinked_row = smartsheet.models.Row(row_json)
+    return linked_row, unlinked_row
+
 
 @pytest.fixture
 def setup_new_sheet(sheet_fixture):
