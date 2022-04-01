@@ -10,16 +10,19 @@ if __name__ == '__main__':
     env_vars = config.init(sys.argv[1:])
     config.logger
     app.main()
-    scheduler = config.scheduler
+
+    logging.info("------------------------")
+    logging.info("App configured as follows:")
+    logging.info(config.env_msg)
+    logging.info("------------------------")
 
     try:
         logging.debug("------------------------")
         logging.debug("Starting job scheduler.")
         logging.debug("------------------------")
-        scheduler.start()
+        config.scheduler.start()
     except KeyboardInterrupt:
         logging.warning("------------------------")
-        logging.warning("Scheduled Jobs shut down due "
-                        "to Keyboard Interrupt.")
+        logging.warning("Scheduled Jobs shut down due to Keyboard Interrupt.")
         logging.warning("------------------------")
-        scheduler.shutdown()
+        config.scheduler.shutdown()
