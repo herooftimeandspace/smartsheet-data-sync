@@ -1,11 +1,8 @@
-import json
-
 import pytest
 import smartsheet
 import uuid_module.helper as helper
 import uuid_module.smartsheet_api as smartsheet_api
 import uuid_module.variables as app_vars
-from test_unit.conftest import sheet_fixture, row_fixture, workspace_fixture
 
 _, cwd = helper.get_local_paths()
 
@@ -51,7 +48,6 @@ _, cwd = helper.get_local_paths()
 #     workspaces = [workspace, workspace]
 #     return workspace, workspaces
 
-@pytest.mark.usefixtures("sheet_fixture")
 @pytest.fixture
 def setup_new_sheet(sheet_fixture):
     sheet, _, _, _ = sheet_fixture
@@ -252,14 +248,12 @@ def test_updating_rows_1(setup_new_sheet):
     assert result.result_code == 0
 
 
-@pytest.mark.usefixtures("workspace_fixture")
 def test_get_workspace_0(workspace_fixture):
     workspace, _ = workspace_fixture
     response_0 = smartsheet_api.get_workspace(app_vars.dev_workspace_id[0])
     assert response_0.id == workspace.id
 
 
-@pytest.mark.usefixtures("workspace_fixture")
 def test_get_workspace_1(workspace_fixture):
     workspace, _ = workspace_fixture
     workspaces = [workspace, workspace]
@@ -273,7 +267,6 @@ def test_get_workspace_1(workspace_fixture):
             assert res.id == ws.id
 
 
-@pytest.mark.usefixtures("sheet_fixture")
 def test_get_sheet_0(sheet_fixture):
     sheet, col_map, _, _ = sheet_fixture
     response_0 = smartsheet_api.get_sheet(sheet.id)
