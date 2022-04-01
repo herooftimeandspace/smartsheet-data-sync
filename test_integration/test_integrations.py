@@ -89,8 +89,8 @@ def setup_new_sheet(sheet_fixture):
         sheet.id,
         smartsheet.models.ContainerDestination({
             'destination_type': 'folder',
-            'destination_id': 4587159811319684,
-            'new_name': 'Program Integration Tests'
+            'destination_id': 5967463516006276,
+            'new_name': 'Program Plan Integration Test Sheet - Dev'
         })
     )
     assert response.message == "SUCCESS"
