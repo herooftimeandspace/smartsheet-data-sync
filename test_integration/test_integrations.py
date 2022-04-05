@@ -22,7 +22,7 @@ def workspace_fixture():
 
 @pytest.fixture(scope="module")
 def sheet_fixture():
-    with open(cwd + '/dev_program_plan.json') as f:
+    with open(cwd + '/dev_program_plan_integration.json') as f:
         sheet_json = json.load(f)
 
     def no_uuid_col_fixture(sheet_json):
@@ -86,7 +86,7 @@ def setup_new_sheet(sheet_fixture):
         return temp_sheet
 
     response = smartsheet_client.Sheets.copy_sheet(
-        5447415714080644,  # sheet.id,
+        sheet.id,
         smartsheet.models.ContainerDestination({
             'destination_type': 'folder',
             'destination_id': 5967463516006276,
