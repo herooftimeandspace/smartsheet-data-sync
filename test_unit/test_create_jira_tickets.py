@@ -11,60 +11,97 @@ logger = logging.getLogger(__name__)
 _, cwd = helper.get_local_paths()
 
 
-# @pytest.fixture
-# def sheet_fixture():
-#     with open(cwd + '/dev_program_plan.json') as f:
-#         sheet_json = json.load(f)
+def test_build_sub_indexes_0(index_sheet_fixture):
 
-#     def no_uuid_col_fixture(sheet_json):
-#         sheet_json['columns'][20]['title'] = "Not UUID"
-#         no_uuid_col = smartsheet.models.Sheet(sheet_json)
-#         return no_uuid_col
-
-#     def no_summary_col_fixture(sheet_json):
-#         sheet_json['columns'][4]['name'] = "Not Summary"
-#         no_summary_col = smartsheet.models.Sheet(sheet_json)
-#         return no_summary_col
-
-#     sheet = smartsheet.models.Sheet(sheet_json)
-#     col_map = helper.get_column_map(sheet)
-#     sheet_no_uuid_col = no_uuid_col_fixture(sheet_json)
-#     sheet_no_summary_col = no_summary_col_fixture(sheet_json)
-#     return sheet, col_map, sheet_no_uuid_col, sheet_no_summary_col
+    index_sheet, index_col_map, _, _ = index_sheet_fixture
+    with pytest.raises(TypeError):
+        create_jira_tickets.build_sub_indexes(
+            "index_sheet", index_col_map)
+    with pytest.raises(TypeError):
+        create_jira_tickets.build_sub_indexes(
+            index_sheet, "index_col_map")
+    with pytest.raises(TypeError):
+        create_jira_tickets.build_sub_indexes(None, index_col_map)
+    with pytest.raises(TypeError):
+        create_jira_tickets.build_sub_indexes(index_sheet, None)
 
 
-# @pytest.fixture
-# def index_sheet_fixture():
-#     with open(cwd + '/dev_jira_index_sheet.json') as f:
-#         dev_idx_sheet = json.load(f)
-#         dev_idx_sheet = smartsheet.models.Sheet(dev_idx_sheet)
-#     col_map = helper.get_column_map(dev_idx_sheet)
-#     return dev_idx_sheet, col_map
+def test_build_sub_indexes_1(index_sheet_fixture):
+    index_sheet, index_col_map, _, _ = index_sheet_fixture
+    sub_index_dict, sub_index_list = \
+        create_jira_tickets.build_sub_indexes(index_sheet, index_col_map)
+    assert isinstance(sub_index_dict, dict)
+    assert isinstance(sub_index_list, list)
+    assert sub_index_dict is not None
+    assert sub_index_list is not None
 
 
-# @pytest.fixture
-# def push_tickets_sheet_fixture():
-#     with open(cwd + '/dev_push_jira_tickets_sheet.json') as f:
-#         push_tickets_sheet = json.load(f)
-#         push_tickets_sheet = smartsheet.models.Sheet(push_tickets_sheet)
-#     col_map = helper.get_column_map(push_tickets_sheet)
-#     return push_tickets_sheet, col_map
+def test_build_sub_indexes_2(index_sheet_fixture):
+    index_sheet, index_col_map, _, _ = index_sheet_fixture
+
+    @patch("uuid_module.helper.get_cell_data", return_value=None)
+    def test_0(mock_0):
+        sub_index_dict, sub_index_list = \
+            create_jira_tickets.build_sub_indexes(index_sheet, index_col_map)
+        return sub_index_dict, sub_index_list
+
+    result_0, result_1 = test_0()
+    assert isinstance(result_0, dict)
+    assert isinstance(result_1, list)
 
 
-# @pytest.fixture(scope="module")
-# def row_fixture():
-#     with open(cwd + '/dev_program_plan_row.json') as f:
-#         row_json = json.load(f)
-#     row = smartsheet.models.Row(row_json)
-#     return row, row_json
+def test_build_sub_indexes_3(index_sheet_fixture, cell_fixture):
+    index_sheet, index_col_map, _, _ = index_sheet_fixture
+    basic_cell, _, _, _, _, _ = cell_fixture
+    basic_cell.value = "None"
+
+    @patch("uuid_module.helper.get_cell_data", return_value=basic_cell)
+    def test_0(mock_0):
+        sub_index_dict, sub_index_list = \
+            create_jira_tickets.build_sub_indexes(index_sheet, index_col_map)
+        return sub_index_dict, sub_index_list
+
+    result_0, result_1 = test_0()
+    assert isinstance(result_0, dict)
+    assert isinstance(result_1, list)
 
 
-# @pytest.fixture
-# def cell_fixture():
-#     with open(cwd + '/dev_cell_with_url_and_incoming_link.json') as f:
-#         cell_json = json.load(f)
-#     url_cell = smartsheet.models.Cell(cell_json)
-#     return url_cell
+def test_build_sub_indexes_4(index_sheet_fixture, cell_fixture):
+    index_sheet, index_col_map, _, _ = index_sheet_fixture
+    uuid_cell, _, _, _, _, _ = cell_fixture
+    uuid_cell.value = "1-2-3-4"
+    jira_cell = uuid_cell
+    jira_cell.value = None
+
+    @patch("uuid_module.helper.get_cell_data", return_value=jira_cell)
+    @patch("uuid_module.helper.get_cell_data", return_value=uuid_cell)
+    def test_0(mock_0, mock_1):
+        sub_index_dict, sub_index_list = \
+            create_jira_tickets.build_sub_indexes(index_sheet, index_col_map)
+        return sub_index_dict, sub_index_list
+
+    result_0, result_1 = test_0()
+    assert isinstance(result_0, dict)
+    assert isinstance(result_1, list)
+
+
+def test_build_sub_indexes_5(index_sheet_fixture, cell_fixture):
+    index_sheet, index_col_map, _, _ = index_sheet_fixture
+    uuid_cell, _, _, _, _, _ = cell_fixture
+    uuid_cell.value = "A-B-C-D"
+    jira_cell = uuid_cell
+    jira_cell.value = None
+
+    @patch("uuid_module.helper.get_cell_data", return_value=jira_cell)
+    @patch("uuid_module.helper.get_cell_data", return_value=uuid_cell)
+    def test_0(mock_0, mock_1):
+        sub_index_dict, sub_index_list = \
+            create_jira_tickets.build_sub_indexes(index_sheet, index_col_map)
+        return sub_index_dict, sub_index_list
+
+    result_0, result_1 = test_0()
+    assert isinstance(result_0, dict)
+    assert isinstance(result_1, list)
 
 
 def test_form_rows_0(row_fixture, index_sheet_fixture, sheet_fixture):
@@ -133,6 +170,191 @@ def test_form_rows_3(row_fixture, index_sheet_fixture, sheet_fixture):
     assert rows_to_add_1
 
 
+def test_form_rows_4(row_fixture, index_sheet_fixture, sheet_fixture):
+    _, col_map, _, _ = sheet_fixture
+    _, index_col_map, _, _ = index_sheet_fixture
+    row, _ = row_fixture
+    row_dict = {}
+    row_dict[row.id] = create_jira_tickets.build_row_data(row, col_map)
+    rows_to_add_0 = create_jira_tickets.form_rows(
+        row_dict, index_col_map)
+    assert rows_to_add_0
+    copy_0 = row_dict.copy()
+    copy_0[row.id]['Jira Ticket'] = "Create"
+    copy_0[row.id]['Inject'] = True
+    # copy_0[row.id]['KTLO'] = True
+    copy_0[row.id]['Not KLTO'] = copy_0[row.id].pop('KTLO')
+
+    rows_to_add_1 = create_jira_tickets.form_rows(
+        copy_0, index_col_map)
+
+    assert isinstance(rows_to_add_1, list)
+    for row in rows_to_add_1:
+        assert isinstance(row, smartsheet.models.row.Row)
+
+    @patch.dict(index_col_map,
+                {'Tasks': None})
+    def test_0(mock_0):
+        rows_to_add_2 = create_jira_tickets.form_rows(
+            copy_0, index_col_map)
+        return rows_to_add_2
+
+    result_0 = test_0(index_col_map)
+    assert result_0
+
+    @patch.dict(row_dict, {row.id: {"Issue Type": "Epic",
+                                    "Tasks": "Super Task",
+                                    "Parent Issue Type": "Project",
+                                    "Parent Ticket": "JAR-1234"}})
+    def test_1(mock_0):
+        rows_to_add_2 = create_jira_tickets.form_rows(
+            row_dict, index_col_map)
+        return rows_to_add_2
+
+    result_1 = test_1(row_dict)
+    assert result_1
+
+    @patch.dict(row_dict, {row.id: {"Issue Type": "Story",
+                                    "Tasks": "Super Task",
+                                    "Parent Issue Type": "Epic",
+                                    "Parent Ticket": "JAR-1234"}})
+    def test_2(mock_0):
+        rows_to_add_2 = create_jira_tickets.form_rows(
+            row_dict, index_col_map)
+        return rows_to_add_2
+
+    result_2 = test_2(row_dict)
+    assert result_2
+
+    @patch.dict(row_dict, {row.id: {"Issue Type": "Story",
+                                    "Tasks": "Super Task",
+                                    "Parent Issue Type": "Story",
+                                    "Parent Ticket": "JAR-1234"}})
+    def test_3(mock_0):
+        rows_to_add_2 = create_jira_tickets.form_rows(
+            row_dict, index_col_map)
+        return rows_to_add_2
+
+    result_3 = test_3(row_dict)
+    assert result_3
+
+
+def test_get_push_tickets_sheet_0(push_tickets_sheet_fixture):
+    push_tickets_sheet, push_col_map = push_tickets_sheet_fixture
+
+    @patch("uuid_module.smartsheet_api.get_sheet",
+           return_value=push_tickets_sheet)
+    def test_0(mock_0):
+        sheet, col_map = create_jira_tickets.get_push_tickets_sheet()
+        return sheet, col_map
+
+    result_0, result_1 = test_0()
+    assert result_0 == push_tickets_sheet
+    assert result_1 == push_col_map
+
+
+def test_copy_jira_tickets_to_sheet_0(sheet_fixture, index_sheet_fixture):
+
+    sheet, sheet_col_map, _, _ = sheet_fixture
+    _, index_col_map, _, _ = index_sheet_fixture
+
+    with pytest.raises(TypeError):
+        create_jira_tickets.copy_jira_tickets_to_sheets(
+            "sheet", sheet_col_map, index_sheet_fixture, index_col_map)
+    with pytest.raises(TypeError):
+        create_jira_tickets.copy_jira_tickets_to_sheets(
+            sheet, "sheet_col_map", index_sheet_fixture, index_col_map)
+    with pytest.raises(TypeError):
+        create_jira_tickets.copy_jira_tickets_to_sheets(
+            sheet, sheet_col_map, "index_sheet_fixture", index_col_map)
+    with pytest.raises(TypeError):
+        create_jira_tickets.copy_jira_tickets_to_sheets(
+            sheet, sheet_col_map, index_sheet_fixture, "index_col_map")
+
+
+def test_copy_jira_tickets_to_sheet_1(sheet_fixture, index_sheet_fixture,
+                                      cell_fixture):
+    import uuid_module.create_jira_tickets as jira
+    sheet, sheet_col_map, _, _ = sheet_fixture
+    index_sheet, index_col_map, _, _ = index_sheet_fixture
+    basic_cell, _, _, _, _, _ = cell_fixture
+    basic_cell.value = "JAR-1234"
+    result = smartsheet.models.Result
+    result.message = "SUCCESS"
+    result.result_code = 0
+
+    @patch("uuid_module.smartsheet_api.write_rows_to_sheet",
+           return_value=result)
+    def test_0(mock_0):
+        sheets_updated = jira.copy_jira_tickets_to_sheets([sheet],
+                                                          index_sheet,
+                                                          index_col_map)
+        return sheets_updated
+
+    result_0 = test_0()
+    assert isinstance(result_0, int)
+    assert result_0 == 0
+
+    @patch("uuid_module.smartsheet_api.write_rows_to_sheet",
+           return_value=result)
+    @patch("uuid_module.create_jira_tickets.build_sub_indexes",
+           return_value=[{"3027747506284420-2568506862659460-3-4": "JAR-1234"},
+                         ["JAR-1234"]])
+    @patch.dict(sheet_col_map, {"Tasks": 12345678900})
+    def test_1(mock_0, mock_1, mock_2):
+        sheets_updated = jira.copy_jira_tickets_to_sheets([sheet],
+                                                          index_sheet,
+                                                          index_col_map)
+        return sheets_updated
+
+    result_1 = test_1(sheet_col_map)
+    assert isinstance(result_1, int)
+    assert result_1 == 0
+
+    @patch("uuid_module.smartsheet_api.write_rows_to_sheet",
+           return_value=result)
+    @patch("uuid_module.create_jira_tickets.build_sub_indexes",
+           return_value=[{"3027747506284420-2568506862659460-3-4": "JAR-1234"},
+                         ["JAR-1234"]])
+    @patch.dict(sheet_col_map, {"UUID": 12344568999, "Tasks": 12345678900})
+    def test_2(mock_0, mock_1, mock_2):
+        sheets_updated = jira.copy_jira_tickets_to_sheets([sheet],
+                                                          index_sheet,
+                                                          index_col_map)
+        return sheets_updated
+
+    result_2 = test_2(sheet_col_map)
+    assert isinstance(result_2, int)
+    assert result_2 == 0
+
+
+def test_copy_jira_tickets_to_sheet_2(sheet_fixture, index_sheet_fixture,
+                                      cell_fixture):
+    import uuid_module.create_jira_tickets as jira
+    sheet, sheet_col_map, _, _ = sheet_fixture
+    index_sheet, index_col_map, _, _ = index_sheet_fixture
+    basic_cell, _, _, _, _, _ = cell_fixture
+    basic_cell.value = "JAR-1234"
+    result = smartsheet.models.Result
+    result.message = "SUCCESS"
+    result.result_code = 0
+
+    @patch("uuid_module.smartsheet_api.write_rows_to_sheet",
+           return_value=result)
+    @patch("uuid_module.create_jira_tickets.build_sub_indexes",
+           return_value=[{"3027747506284420-2568506862659460-3-4": "JAR-1234"},
+                         ["JAR-1234"]])
+    def test_3(mock_0, mock_1):
+        sheets_updated = jira.copy_jira_tickets_to_sheets([sheet],
+                                                          index_sheet,
+                                                          index_col_map)
+        return sheets_updated
+
+    result_3 = test_3()
+    assert isinstance(result_3, int)
+    assert result_3 == 0
+
+
 def test_link_jira_index_to_sheet_0(index_sheet_fixture, sheet_fixture):
 
     sheet, _, _, _, = sheet_fixture
@@ -164,50 +386,6 @@ def test_link_jira_index_to_sheet_1(index_sheet_fixture,
         return sheets_updated
     sheets_updated = test()
     assert sheets_updated == 0
-
-
-def test_build_sub_indexes_0(index_sheet_fixture):
-
-    index_sheet, index_col_map, _, _ = index_sheet_fixture
-    with pytest.raises(TypeError):
-        create_jira_tickets.build_sub_indexes(
-            "index_sheet", index_col_map)
-    with pytest.raises(TypeError):
-        create_jira_tickets.build_sub_indexes(
-            index_sheet, "index_col_map")
-    with pytest.raises(TypeError):
-        create_jira_tickets.build_sub_indexes(None, index_col_map)
-    with pytest.raises(TypeError):
-        create_jira_tickets.build_sub_indexes(index_sheet, None)
-
-
-def test_build_sub_indexes_1(index_sheet_fixture):
-    index_sheet, index_col_map, _, _ = index_sheet_fixture
-    sub_index_dict, sub_index_list = \
-        create_jira_tickets.build_sub_indexes(index_sheet, index_col_map)
-    assert isinstance(sub_index_dict, dict)
-    assert isinstance(sub_index_list, list)
-    assert sub_index_dict is not None
-    assert sub_index_list is not None
-
-
-def test_push_jira_tickets_to_sheet_0(sheet_fixture, index_sheet_fixture):
-
-    sheet, sheet_col_map, _, _ = sheet_fixture
-    _, index_col_map, _, _ = index_sheet_fixture
-
-    with pytest.raises(TypeError):
-        create_jira_tickets.copy_jira_tickets_to_sheets(
-            "sheet", sheet_col_map, index_sheet_fixture, index_col_map)
-    with pytest.raises(TypeError):
-        create_jira_tickets.copy_jira_tickets_to_sheets(
-            sheet, "sheet_col_map", index_sheet_fixture, index_col_map)
-    with pytest.raises(TypeError):
-        create_jira_tickets.copy_jira_tickets_to_sheets(
-            sheet, sheet_col_map, "index_sheet_fixture", index_col_map)
-    with pytest.raises(TypeError):
-        create_jira_tickets.copy_jira_tickets_to_sheets(
-            sheet, sheet_col_map, index_sheet_fixture, "index_col_map")
 
 
 def test_build_row_data_0(row_fixture, sheet_fixture):

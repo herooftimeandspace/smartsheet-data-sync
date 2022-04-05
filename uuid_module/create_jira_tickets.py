@@ -50,12 +50,7 @@ def build_sub_indexes(sheet, col_map):
         msg = str("Index Column Map should be dict, not {}"
                   "").format(type(col_map))
         raise TypeError(msg)
-    if not sheet:
-        msg = str("Index Sheet should not be {}").format(sheet)
-        raise ValueError(msg)
-    if not col_map:
-        msg = str("Index Col Map should not be {}").format(sheet)
-        raise ValueError(msg)
+
     # UUID: Jira Ticket
     sub_index_dict = {}
     sub_index_list = []
@@ -156,14 +151,10 @@ def form_rows(row_dict, col_map):
                 # when adding to the Index sheet
                 continue
 
-            try:
-                col_id = col_map[col_name]
-            except KeyError:
-                msg = str("KeyError when looking up column name {} in "
-                          "the Jira Index Column Map").format(col_name)
-                logging.debug(msg)
-                # Move to next data set, create the row with data that works
+            col_id = col_map.get(col_name)
+            if not col_id:
                 continue
+
             new_row.cells.append({
                 'column_id': col_id,
                 'object_value': value
@@ -173,11 +164,18 @@ def form_rows(row_dict, col_map):
             logging.debug(msg)
 
         # Create labels for program, initiative and team
-        labels = [data['Program'], data['Initiative'], data['Team']]
-        if data['Inject']:
+        labels = []
+        if data.get('Program'):
+            labels.append('Program')
+        if data.get('Initiative'):
+            labels.append('Initiative')
+        if data.get('Team'):
+            labels.append('Team')
+        if data.get("Inject"):
             labels.append("Inject")
-        if data['KTLO']:
+        if data.get('KTLO'):
             labels.append("KTLO")
+
         # Spaces are not supported in Labels. Replace with dashes. For labels
         # that already have dashes, replace with a single dash rather than the
         # previous pattern.
@@ -201,19 +199,17 @@ def form_rows(row_dict, col_map):
             }
         })
         # If the issue type is an epic, set the Epic Name = Tasks column value
-        if data['Issue Type'] == "Epic":
-            epic_name = data['Tasks']
+        # If the issue type is an epic and the parent is a project or epic
+        # use the 'implenets' issue link to connect the tickets because epics
+        # can't use the Epic Link field.
+        if data.get('Issue Type') == "Epic":
+            epic_name = data.get('Tasks')
             new_row.cells.append({
                 'column_id': col_map['Epic Name'],
                 'object_value': epic_name
             })
-
-        # if the issue type is an epic and the parent is a project or epic
-        # use the 'implenets' issue link to connect the tickets because epics
-        # can't use the Epic Link field.
-        if data['Issue Type'] == "Epic":
-            if data['Parent Issue Type'] in ("Project", "Epic"):
-                ticket = data['Parent Ticket']
+            if data.get('Parent Issue Type') in ("Project", "Epic"):
+                ticket = data.get('Parent Ticket')
                 issue_link = str("implements {}").format(ticket)
                 new_row.cells.append({
                     'column_id': col_map['Issue Links'],
@@ -222,7 +218,7 @@ def form_rows(row_dict, col_map):
 
         # If the issue type is a story, task or project, and the parent is
         # an epic, set the Epic link instead of issue link
-        if data['Issue Type'] in ("Story", "Task", "Project"):
+        if data.get('Issue Type') in ("Story", "Task", "Project"):
             if data['Parent Issue Type'] == "Epic":
                 epic_link = data['Parent Ticket']
                 new_row.cells.append({
@@ -232,8 +228,8 @@ def form_rows(row_dict, col_map):
 
             # But if the parent is also a story, task or project, use
             # Issue links instead
-            if data['Parent Issue Type'] in ("Story", "Task", "Project"):
-                ticket = data['Parent Ticket']
+            if data.get('Parent Issue Type') in ("Story", "Task", "Project"):
+                ticket = data.get('Parent Ticket')
                 issue_link = str("implements {}").format(ticket)
                 new_row.cells.append({
                     'column_id': col_map['Issue Links'],
@@ -289,59 +285,56 @@ def copy_jira_tickets_to_sheets(source_sheets, index_sheet, index_col_map):
         msg = str("Index Column Map should be dict, not {}"
                   "").format(type(index_col_map))
         raise TypeError(msg)
-    if not index_col_map:
-        msg = str("Index Column Map must not be empty."
-                  "").format()
-        raise ValueError(msg)
 
-    def get_jira_cell(row_id, sheet, col_map):
-        """Parse through the sheet's rows, see if the sheet's row.id is a
-           match to the given row_id. If there's a match, get the Jira cell
-           data. Return None if the row ID was not found.
+    # def get_jira_cell(row_id, sheet, col_map):
+    #     """Parse through the sheet's rows, see if the sheet's row.id is a
+    #        match to the given row_id. If there's a match, get the Jira cell
+    #        data. Return None if the row ID was not found.
 
-        Args:
-            row_id (int): The row ID that we want to copy data to
-            sheet (smartsheet.models.Sheet): The sheet that may contain the
-               row_id to copy data to
-            col_map (dict): _description_
+    #     Args:
+    #         row_id (int): The row ID that we want to copy data to.
+    #         sheet (smartsheet.models.Sheet): The sheet that may contain the
+    #            row_id to copy data to.
+    #         col_map (dict): The map of Column Names: Column IDs for the given
+    #            sheet.
 
-        Returns:
-            smartsheet.models.Cell: A cell object containing the Jira Ticket
-            None: No matching row_id was found in the sheet.
-        """
-        for row in sheet.rows:
-            if not row_id == row.id:
-                continue
+    #     Returns:
+    #         smartsheet.models.Cell: A cell object containing the Jira Ticket
+    #         None: No matching row_id was found in the sheet.
+    #     """
+    #     for row in sheet.rows:
+    #         if not row_id == row.id:
+    #             continue
 
-            jira_cell = helper.get_cell_data(
-                row, app_vars.jira_col, col_map)
-            return jira_cell
-        else:
-            return None
+    #         jira_cell = helper.get_cell_data(
+    #             row, app_vars.jira_col, col_map)
+    #         return jira_cell
+    #     else:
+    #         return None
 
-    def contains_uuid(uuid_list, index_dict):
-        """Check to see if the sheet contains any UUIDs from the Jira Index
-           Sheet. Return a subset of matches.
+    # def contains_uuid(uuid_list, index_dict):
+    #     """Check to see if the sheet contains any UUIDs from the Jira Index
+    #        Sheet. Return a subset of matches.
 
-        Args:
-            uuid_list (list): A list of UUIDs (str) from the source sheet
-            index_dict (dict): A dict of UUIDs (str): Jira Ticket (str) from
-               the Jira Index Sheet
+    #     Args:
+    #         uuid_list (list): A list of UUIDs (str) from the source sheet
+    #         index_dict (dict): A dict of UUIDs (str): Jira Ticket (str) from
+    #            the Jira Index Sheet
 
-        Returns:
-            dict: A dict of UUIDs: Jira Tickets
-        """
-        tiny_jira_index = {}
-        # For each UUID in the sheet UUID list, check to see if that UUID
-        # is in the index dict keys. If it is not, move on. If it is,
-        # add it to the tiny dict.
-        for sheet_uuid in uuid_list:
-            if sheet_uuid not in index_dict.keys():
-                continue
-            else:
-                # Create new entry with Sheet UUID, index_dict Jira Ticket
-                tiny_jira_index[sheet_uuid] = index_dict[sheet_uuid]
-        return tiny_jira_index
+    #     Returns:
+    #         dict: A dict of UUIDs: Jira Tickets
+    #     """
+    #     tiny_jira_index = {}
+    #     # For each UUID in the sheet UUID list, check to see if that UUID
+    #     # is in the index dict keys. If it is not, move on. If it is,
+    #     # add it to the tiny dict.
+    #     for sheet_uuid in uuid_list:
+    #         if sheet_uuid not in index_dict.keys():
+    #             continue
+    #         else:
+    #             # Create new entry with Sheet UUID, index_dict Jira Ticket
+    #             tiny_jira_index[sheet_uuid] = index_dict[sheet_uuid]
+    #     return tiny_jira_index
 
     sheets_updated = 0
 
@@ -369,19 +362,30 @@ def copy_jira_tickets_to_sheets(source_sheets, index_sheet, index_col_map):
         # Build a list of UUIDs from the sheet.
         _, sheet_uuid_list = build_sub_indexes(sheet, sheet_col_map)
 
-        # These are all the UUIDs that had a match in the Jira Index Sheet,
-        # with the associated Jira Ticket from the Index Sheet.
-        tiny_index = contains_uuid(sheet_uuid_list, jira_sub_index)
-        if not tiny_index:
+        tiny_jira_index = {}
+        # For each UUID in the sheet UUID list, check to see if that UUID
+        # is in the index dict keys. If it is not, move on. If it is,
+        # add it to the tiny dict.
+        for sheet_uuid in sheet_uuid_list:
+            if sheet_uuid not in jira_sub_index.keys():
+                continue
+            else:
+                # Create new entry with Sheet UUID, index_dict Jira Ticket
+                tiny_jira_index[sheet_uuid] = jira_sub_index[sheet_uuid]
+        if not tiny_jira_index:
             # The index is empty and we didn't actually match any UUIDs
             continue
 
         # Check the sheet and row for each UUID, validate that the ticket is
         # not already present
-        for uuid, ticket in tiny_index.items():
+        for uuid, ticket in tiny_jira_index.items():
             split = uuid.split("-")
             row_id = int(split[1])
-            jira_cell = get_jira_cell(row_id, sheet, sheet_col_map)
+            for row in sheet.rows:
+                if not row_id == row.id:
+                    continue
+                jira_cell = helper.get_cell_data(
+                    row, app_vars.jira_col, sheet_col_map)
 
             if not jira_cell:
                 # Jira column and cell data should exist on this sheet but
