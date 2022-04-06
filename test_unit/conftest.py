@@ -114,7 +114,7 @@ def cell_fixture():
 
 @pytest.fixture(scope="module")
 def env_fixture():
-    return "--debug"
+    return "--dev"
 
 
 @pytest.fixture
@@ -134,7 +134,7 @@ def project_indexes(sheet_fixture):
 @pytest.fixture(scope="session")
 def set_init_fixture():
     import app.config as config
-    config.init(["--debug"])
+    config.init(["--dev"])
     global smartsheet_client
     smartsheet_client = config.smartsheet_client
     return smartsheet_client

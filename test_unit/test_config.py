@@ -5,7 +5,7 @@ import pytest
 @pytest.fixture
 def env_dict():
     import uuid_module.variables as app_vars
-    dev = {'env': '--debug', 'env_msg': "Using Dev variables for "
+    dev = {'env': '--dev', 'env_msg': "Using Dev variables for "
            "workspace_id and Jira index sheet. Set workspace_id to: "
            "[7802463043512196], index_sheet to: 5786250381682564, and "
            "minutes to: 525600. Pushing tickets to 3312520078354308",
@@ -30,7 +30,7 @@ def env_dict():
             'index_sheet': app_vars.prod_jira_idx_sheet,
             'minutes': app_vars.prod_minutes,
             'push_tickets_sheet': app_vars.prod_push_jira_tickets_sheet}
-    canary = {'env': '--debug', 'env_msg': "Invalid flag: --canary. Using "
+    canary = {'env': '--dev', 'env_msg': "Invalid flag: --canary. Using "
               "Dev variables. Set workspace_id to: "
               "[7802463043512196], index_sheet to: 5786250381682564, and "
               "minutes to: 525600. Pushing tickets to 3312520078354308",
@@ -43,7 +43,7 @@ def env_dict():
 
 def set_init_fixture():
     import app.config as config
-    config.init(["--debug"])
+    config.init(["--dev"])
     global smartsheet_client
     smartsheet_client = config.smartsheet_client
 
@@ -85,7 +85,7 @@ def test_get_secret_name_1():
 
     def test_0():
         expected = "staging/smartsheet-data-sync/svc-api-token"
-        actual = config.get_secret_name("--debug")
+        actual = config.get_secret_name("--dev")
         if expected == actual:
             return True
         else:
@@ -124,7 +124,7 @@ def test_set_env_vars_0():
 def test_set_env_vars_1(env_dict):
     debug, _, _, _ = env_dict
     import app.config as config
-    var_0 = config.set_env_vars("--debug")
+    var_0 = config.set_env_vars("--dev")
     assert isinstance(var_0, dict)
     assert config.env == debug['env']
     assert config.env_msg == debug['env_msg']
@@ -219,7 +219,7 @@ def test_set_logging_config_1():
     import app.config as config
     import uuid_module.variables as app_vars
     import logging
-    result_0 = config.set_logging_config("--debug")
+    result_0 = config.set_logging_config("--dev")
     cwd = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
     log_location = os.path.join(cwd, app_vars.log_location)
     assert result_0["version"] == 1
@@ -302,7 +302,7 @@ def test_set_logging_config_3():
 #     @patch("os.mkdir", return_value="False", side_effect=FileExistsError)
 #     def test_0(mock_0):
 #         with pytest.raises(FileExistsError):
-#             config.init(["--debug"])
+#             config.init(["--dev"])
 #             return True
 
 #     assert test_0() is True
@@ -314,13 +314,13 @@ def test_set_logging_config_3():
 #     @patch("os.environ", return_value="config", side_effect=TypeError)
 #     def test_0(mock_0):
 #         with pytest.raises(TypeError):
-#             config.init(["--debug"])
+#             config.init(["--dev"])
 #             return True
 
 #     assert test_0() is True
 
 
-def test_case_1():
+def test_validate_inputs_0():
     import app.config as module_0
     set_init_fixture()
     str_0 = '|Y%X/\r\x0b(\n!'
