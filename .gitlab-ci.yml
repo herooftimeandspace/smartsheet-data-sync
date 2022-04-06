@@ -110,7 +110,7 @@ deploy_dev:
   - docker rmi $(docker images -f "dangling=true" -q) || true
   - docker image prune -a --force --filter "until=730h" || true
   environment:
-    name: Staging
+    name: Dev
   only:
   - debug
 
