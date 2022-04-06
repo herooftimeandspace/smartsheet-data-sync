@@ -213,7 +213,7 @@ def get_blank_uuids(source_sheets):
         msg = str("Source Sheets should be type: list not type {}"
                   "").format(type(source_sheets))
         raise TypeError(msg)
-    if source_sheets is None:
+    if not source_sheets:
         msg = str("Source Sheets list is empty.")
         logging.info(msg)
         return None
@@ -489,13 +489,13 @@ def get_all_sheet_ids(minutes=app_vars.dev_minutes,
     # Don't include the JIRA index sheet or the Push Tickets sheet as part of
     # the sheet collection, if present.
     sheets_to_remove = [config.index_sheet, config.push_tickets_sheet]
-    for sheet_id in sheets_to_remove:
-        try:
-            sheet_ids.remove(sheet_id)
-            msg = str("{} removed from Sheet ID list").format(sheet_id)
+    for id in sheets_to_remove:
+        if id in sheet_ids:
+            sheet_ids.remove(id)
+            msg = str("{} removed from Sheet ID list").format(id)
             logging.debug(msg)
-        except ValueError:
-            logging.debug(
-                "{} not found in Sheet IDs list".format(sheet_id))
+        else:
+            msg = str("{} not found in Sheet IDs list").format(id)
+            logging.debug(msg)
 
     return sheet_ids

@@ -1,4 +1,3 @@
-import json
 import logging
 import smartsheet
 
@@ -196,156 +195,156 @@ def write_jira_index_cell_links(project_sub_index,
             return msg
 
 
-def write_predecessor_dates(src_data, project_data_index):
-    """Ensure predecessor start dates are updated across all linked sheets,
-       but only if the new start date is != the existing start date.
+# def write_predecessor_dates(src_data, project_data_index):
+#     """Ensure predecessor start dates are updated across all linked sheets,
+#        but only if the new start date is != the existing start date.
 
-    Args:
-        src_data (dict): Row data from the write_uuid_cell_links.
-        project_data_index (dict): The dict of UUIDs and row data pulled
-                                   from every project sheet.
+#     Args:
+#         src_data (dict): Row data from the write_uuid_cell_links.
+#         project_data_index (dict): The dict of UUIDs and row data pulled
+#                                    from every project sheet.
 
-    Returns:
-        bool: True if the Start Date in the earliest predecessor was
-              written back via API. False if the Start Date was not
-              written due to failure.
-    """
-    if not isinstance(src_data, dict):
-        msg = str("Source data must be type: dict, not"
-                  " {}").format(type(src_data))
-        raise TypeError(msg)
-    if not isinstance(project_data_index, dict):
-        msg = str("Sheets to Update must be type: dict, not"
-                  " {}").format(type(project_data_index))
-        raise TypeError(msg)
-    for k, v in src_data.items():
-        if not isinstance(v, (str, type(None))):
-            msg = str("{} in project data index is {} not str or None."
-                      "").format(k, type(v))
-            raise ValueError(msg)
-    for col in app_vars.sheet_columns:
-        if col not in src_data.keys():
-            msg = str("Column: {} was not found in the source data keys"
-                      "").format(col)
-            raise ValueError(msg)
+#     Returns:
+#         bool: True if the Start Date in the earliest predecessor was
+#               written back via API. False if the Start Date was not
+#               written due to failure.
+#     """
+#     if not isinstance(src_data, dict):
+#         msg = str("Source data must be type: dict, not"
+#                   " {}").format(type(src_data))
+#         raise TypeError(msg)
+#     if not isinstance(project_data_index, dict):
+#         msg = str("Sheets to Update must be type: dict, not"
+#                   " {}").format(type(project_data_index))
+#         raise TypeError(msg)
+#     for k, v in src_data.items():
+#         if not isinstance(v, (str, type(None))):
+#             msg = str("{} in project data index is {} not str or None."
+#                       "").format(k, type(v))
+#             raise ValueError(msg)
+#     for col in app_vars.sheet_columns:
+#         if col not in src_data.keys():
+#             msg = str("Column: {} was not found in the source data keys"
+#                       "").format(col)
+#             raise ValueError(msg)
 
-    # Create friendly names for sheet ID, row ID and start date.
-    dest_sheet_id = src_data[app_vars.uuid_col].split("-")[0]
-    dest_row_id = src_data[app_vars.uuid_col].split("-")[1]
-    start_date = src_data[app_vars.start_col]
+#     # Create friendly names for sheet ID, row ID and start date.
+#     dest_sheet_id = src_data[app_vars.uuid_col].split("-")[0]
+#     dest_row_id = src_data[app_vars.uuid_col].split("-")[1]
+#     start_date = src_data[app_vars.start_col]
 
-    # Query the API for the sheet data, get the column map, and get the row
-    # data. Include the objectValue so we can see the row predecessor(s).
-    dest_sheet = smartsheet_api.get_sheet(dest_sheet_id)
-    dest_col_map = helper.get_column_map(dest_sheet)
-    dest_row = smartsheet_api.get_row(dest_sheet_id, dest_row_id)
+#     # Query the API for the sheet data, get the column map, and get the row
+#     # data. Include the objectValue so we can see the row predecessor(s).
+#     dest_sheet = smartsheet_api.get_sheet(dest_sheet_id)
+#     dest_col_map = helper.get_column_map(dest_sheet)
+#     dest_row = smartsheet_api.get_row(dest_sheet_id, dest_row_id)
 
-    # Validate that the start date is useful.
-    # if not start_date:
-    #     logging.debug("Start date is {}".format(start_date))
-    #     return False
+#     # Validate that the start date is useful.
+#     # if not start_date:
+#     #     logging.debug("Start date is {}".format(start_date))
+#     #     return False
 
-    # Get the start date of the row's predecessor. Verify that they are
-    # different.
-    # TODO: Replace with get_cell_data
-    pred_start_cell = helper.get_cell_data(
-        dest_row, app_vars.start_col, dest_col_map)
-    if pred_start_cell.value == start_date:
-        msg = str("Start date {} matches the start date {} in the "
-                  "predecessor row. No update needed"
-                  "").format(start_date, pred_start_cell.value)
-        logging.debug(msg)
-        return True
+#     # Get the start date of the row's predecessor. Verify that they are
+#     # different.
+#     # TODO: Replace with get_cell_data
+#     pred_start_cell = helper.get_cell_data(
+#         dest_row, app_vars.start_col, dest_col_map)
+#     if pred_start_cell.value == start_date:
+#         msg = str("Start date {} matches the start date {} in the "
+#                   "predecessor row. No update needed"
+#                   "").format(start_date, pred_start_cell.value)
+#         logging.debug(msg)
+#         return True
 
-    # Get the predecessor cell values.
-    pred_cell = helper.get_cell_data(
-        dest_row, app_vars.predecessor_col, dest_col_map)
+#     # Get the predecessor cell values.
+#     pred_cell = helper.get_cell_data(
+#         dest_row, app_vars.predecessor_col, dest_col_map)
 
-    # Evaluate the value of the predecessor cell. If it has a value other than
-    # None, get the predecessor row ID and loop. If the new pred_cell value
-    # is None but there is no objectValue, the row doesn't have a predecessor
-    # so we set the destination row ID to the final predecessor ID and break
-    # the loop.
+#    # Evaluate the value of the predecessor cell. If it has a value other than
+#     # None, get the predecessor row ID and loop. If the new pred_cell value
+#     # is None but there is no objectValue, the row doesn't have a predecessor
+#     # so we set the destination row ID to the final predecessor ID and break
+#     # the loop.
 
-    # TODO: Handle multiple predecessors. Find earliest predecessor and update
-    # that date, or update every predecessor.
-    predecessor_row = smartsheet_api.get_row(dest_sheet_id, dest_row_id)
-    while pred_cell.value is not None:
-        pred_cell = helper.get_cell_data(predecessor_row,
-                                         app_vars.predecessor_col,
-                                         dest_col_map)
-        # TODO: Replace with get_cell_data
-        pred_start_cell = helper.get_cell_data(
-            dest_row, app_vars.start_col, dest_col_map)
+#    # TODO: Handle multiple predecessors. Find earliest predecessor and update
+#     # that date, or update every predecessor.
+#     predecessor_row = smartsheet_api.get_row(dest_sheet_id, dest_row_id)
+#     while pred_cell.value is not None:
+#         pred_cell = helper.get_cell_data(predecessor_row,
+#                                          app_vars.predecessor_col,
+#                                          dest_col_map)
+#         # TODO: Replace with get_cell_data
+#         pred_start_cell = helper.get_cell_data(
+#             dest_row, app_vars.start_col, dest_col_map)
 
-        if pred_start_cell.value == start_date:
-            msg = str("Start date {} matches the start date {} in the "
-                      "predecessor row. No update needed."
-                      "").format(start_date, pred_start_cell.value)
-            logging.debug(msg)
-            return True
-        elif pred_cell.object_value is None:
-            # Set the destination row ID to the predecessor row and break the
-            # loop even if the cell value is None because the row doesn't
-            # have a predecessor value.
-            dest_row = predecessor_row
-            break
-        else:
-            # Set the destination row ID to the predecessor row ID and loop.
-            cell_dict = json.loads(str(pred_cell))
-            dest_row_id = helper.json_extract(cell_dict, "rowId")
-            dest_row_id = str(dest_row_id).translate(
-                {ord(i): None for i in "[]'"})
-            predecessor_row = smartsheet_api.get_row(dest_sheet_id,
-                                                     dest_row_id)
+#         if pred_start_cell.value == start_date:
+#             msg = str("Start date {} matches the start date {} in the "
+#                       "predecessor row. No update needed."
+#                       "").format(start_date, pred_start_cell.value)
+#             logging.debug(msg)
+#             return True
+#         elif pred_cell.object_value is None:
+#             # Set the destination row ID to the predecessor row and break the
+#             # loop even if the cell value is None because the row doesn't
+#             # have a predecessor value.
+#             dest_row = predecessor_row
+#             break
+#         else:
+#             # Set the destination row ID to the predecessor row ID and loop.
+#             cell_dict = json.loads(str(pred_cell))
+#             dest_row_id = helper.json_extract(cell_dict, "rowId")
+#             dest_row_id = str(dest_row_id).translate(
+#                 {ord(i): None for i in "[]'"})
+#             predecessor_row = smartsheet_api.get_row(dest_sheet_id,
+#                                                      dest_row_id)
 
-    # Get the value of the destination Start Date cell.
-    dest_start_cell = helper.get_cell_data(
-        dest_row, app_vars.start_col, dest_col_map)
+#     # Get the value of the destination Start Date cell.
+#     dest_start_cell = helper.get_cell_data(
+#         dest_row, app_vars.start_col, dest_col_map)
 
-    try:
-        if dest_start_cell.linkInFromCell is not None:
-            # Follow cell links to final destination. Use project
-            # data index to find the UUID, sheet, row and row data.
-            msg = str("Destination Start Date cell is linked to another "
-                      "cell. Locating next Start Date cell at {} and "
-                      "detecting predecessors."
-                      "").format(dest_start_cell.linkInFromCell)
-            logging.warning(msg)
-            dest_sheet_id = helper.json_extract(dest_start_cell, "sheetId")
-            dest_row_id = helper.json_extract(dest_start_cell, "rowId")
-            dest_sheet = smartsheet_api.get_sheet(dest_sheet_id)
-            dest_col_map = helper.get_column_map(dest_sheet)
-            dest_row = smartsheet_api.get_row(dest_sheet_id, dest_row_id)
-            dest_uuid = helper.get_cell_data(
-                dest_row, app_vars.uuid_col, dest_col_map)
-            row_data = project_data_index[dest_uuid]
-            write_predecessor_dates(
-                row_data, project_data_index)
-    except AttributeError:
-        logging.debug("Cell is not linked to another cell. Continuing.")
+#     try:
+#         if dest_start_cell.linkInFromCell is not None:
+#             # Follow cell links to final destination. Use project
+#             # data index to find the UUID, sheet, row and row data.
+#             msg = str("Destination Start Date cell is linked to another "
+#                       "cell. Locating next Start Date cell at {} and "
+#                       "detecting predecessors."
+#                       "").format(dest_start_cell.linkInFromCell)
+#             logging.warning(msg)
+#             dest_sheet_id = helper.json_extract(dest_start_cell, "sheetId")
+#             dest_row_id = helper.json_extract(dest_start_cell, "rowId")
+#             dest_sheet = smartsheet_api.get_sheet(dest_sheet_id)
+#             dest_col_map = helper.get_column_map(dest_sheet)
+#             dest_row = smartsheet_api.get_row(dest_sheet_id, dest_row_id)
+#             dest_uuid = helper.get_cell_data(
+#                 dest_row, app_vars.uuid_col, dest_col_map)
+#             row_data = project_data_index[dest_uuid]
+#             write_predecessor_dates(
+#                 row_data, project_data_index)
+#     except AttributeError:
+#         logging.debug("Cell is not linked to another cell. Continuing.")
 
-    if start_date == dest_start_cell.value:
-        msg = str("Start date {} matches the start date {} in the "
-                  "predecessor row. No update needed."
-                  "").format(start_date, dest_start_cell.value)
-        logging.warning(msg)
-    else:
-        # Create empty cell
-        new_start_date_cell = smartsheet.models.Cell()
-        new_start_date_cell.value = start_date
-        new_start_date_cell.column_id = dest_col_map[app_vars.start_col]
+#     if start_date == dest_start_cell.value:
+#         msg = str("Start date {} matches the start date {} in the "
+#                   "predecessor row. No update needed."
+#                   "").format(start_date, dest_start_cell.value)
+#         logging.warning(msg)
+#     else:
+#         # Create empty cell
+#         new_start_date_cell = smartsheet.models.Cell()
+#         new_start_date_cell.value = start_date
+#         new_start_date_cell.column_id = dest_col_map[app_vars.start_col]
 
-        # Create a new row and append the updated cell
-        new_row = smartsheet.models.Row()
-        new_row.id = predecessor_row.id
-        new_row.cells.append(new_start_date_cell)
+#         # Create a new row and append the updated cell
+#         new_row = smartsheet.models.Row()
+#         new_row.id = predecessor_row.id
+#         new_row.cells.append(new_start_date_cell)
 
-        # Send the updated row to the destination sheet.
-        smartsheet_api.write_rows_to_sheet(
-            new_row, dest_sheet, write_method="update")
-        msg = str("Uploaded new start date {} to ancestor "
-                  "predecessor").format(start_date)
-        logging.debug(msg)
+#         # Send the updated row to the destination sheet.
+#         smartsheet_api.write_rows_to_sheet(
+#             new_row, dest_sheet, write_method="update")
+#         msg = str("Uploaded new start date {} to ancestor "
+#                   "predecessor").format(start_date)
+#         logging.debug(msg)
 
-        return True
+#         return True

@@ -17,9 +17,10 @@ def workspace_fixture():
     with open(cwd + '/dev_workspaces.json') as f:
         dev_workspace = json.load(f)
         dev_workspace = smartsheet.models.Workspace(dev_workspace)
-    ws_ids = [8262165481187204, 943816086710148, 5447415714080644,
-              3195615900395396, 7699215527765892, 2069715993552772,
-              6573315620923268, 4321515807238020]
+    ws_ids = []
+    for folder in dev_workspace.folders:
+        for sheet in folder.sheets:
+            ws_ids.append(sheet.id)
     return dev_workspace, ws_ids
 
 
@@ -29,7 +30,7 @@ def sheet_fixture():
         sheet_json = json.load(f)
 
     def no_uuid_col_fixture(sheet_json):
-        sheet_json['columns'][20]['title'] = "Not UUID"
+        sheet_json['columns'][28]['title'] = "Not UUID"
         no_uuid_col = smartsheet.models.Sheet(sheet_json)
         return no_uuid_col
 

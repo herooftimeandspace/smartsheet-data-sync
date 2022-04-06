@@ -107,7 +107,7 @@ def get_secret_name(env="--debug"):
     """
     if not isinstance(env, str):
         raise TypeError("Env is not type: str")
-    elif env not in ("-d", "--debug", "-debug", "--dev", "-dev"
+    elif env not in ("-d", "--debug", "-debug", "--dev", "-dev",
                      "-s", "--staging", "-staging",
                      "-p", "--prod", "-prod"):
         msg = str("Invalid argument passed. Value passed was {}").format(env)

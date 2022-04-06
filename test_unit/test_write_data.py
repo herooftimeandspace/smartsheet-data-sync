@@ -144,8 +144,18 @@ def test_write_uuids_1(sheet_fixture):
 
 
 def test_write_uuids_2(sheet_fixture):
-    sheet, _, _, _ = sheet_fixture
-    sheets_to_update = get_data.get_blank_uuids([sheet])
+    _, col_map, _, _ = sheet_fixture
+    with open(cwd + '/dev_program_plan.json') as f:
+        blank_uuid_sheet = json.load(f)
+
+    for row in blank_uuid_sheet['rows']:
+        for cell in row['cells']:
+            if cell['columnId'] == col_map[app_vars.uuid_col]:
+                cell['value'] = None
+                cell['objectValue'] = None
+                cell['displayValue'] = None
+    blank_uuid_sheet = smartsheet.models.Sheet(blank_uuid_sheet)
+    sheets_to_update = get_data.get_blank_uuids([blank_uuid_sheet])
 
     result = smartsheet.models.Result()
     result.message = "SUCCESS"
@@ -267,76 +277,74 @@ def test_write_jira_index_cell_links_2(project_indexes, index_sheet_fixture,
 #     assert result_1 is True
 
 
-def test_write_predecessor_dates_0(src_data, project_indexes):
-    project_data_index, _ = project_indexes
-    with pytest.raises(TypeError):
-        write_data.write_predecessor_dates("src_data", project_data_index)
-    with pytest.raises(TypeError):
-        write_data.write_predecessor_dates(src_data, "project_data_index")
-    with pytest.raises(ValueError):
-        data_copy = src_data.copy()
-        data_copy["UUID"] = 1337
-        write_data.write_predecessor_dates(data_copy, project_data_index)
-    with pytest.raises(ValueError):
-        data_copy = src_data.copy()
-        data_copy.pop("UUID", None)
-        write_data.write_predecessor_dates(data_copy, project_data_index)
-    #     Format of the src_data should be:
-    # {
-    #     "UUID": "7208979009955716-3683235938232196-
-    #             7010994181433220-202105112138550000",  # Type: str
-    #     "Tasks": "Retrospective", # Type: str
-    #     "Description": "Thoughts on how the project went.",  # Type: str
-    #     "Status": "In Progress",  # Type: str
-    #     "Assigned To": "link@twitch.tv",  # Type: str
-    #     "Jira Ticket": "ING-12342",  # Type: str
-    #     "Duration": None,  # Type: str
-    #     "Start": "2021-03-31T08:00:00",  # Type: str
-    #     "Finish": "2021-03-31T08:00:00",  # Type: str
-    #     "Predecessors": "38FS +1w",  # Type: str
-    #     "Summary": "False"  # Type: str
-    # }
+# def test_write_predecessor_dates_0(src_data, project_indexes):
+#     project_data_index, _ = project_indexes
+#     with pytest.raises(TypeError):
+#         write_data.write_predecessor_dates("src_data", project_data_index)
+#     with pytest.raises(TypeError):
+#         write_data.write_predecessor_dates(src_data, "project_data_index")
+#     with pytest.raises(ValueError):
+#         data_copy = src_data.copy()
+#         data_copy["UUID"] = 1337
+#         write_data.write_predecessor_dates(data_copy, project_data_index)
+#     with pytest.raises(ValueError):
+#         data_copy = src_data.copy()
+#         data_copy.pop("UUID", None)
+#         write_data.write_predecessor_dates(data_copy, project_data_index)
+#     #     Format of the src_data should be:
+#     # {
+#     #     "UUID": "7208979009955716-3683235938232196-
+#     #             7010994181433220-202105112138550000",  # Type: str
+#     #     "Tasks": "Retrospective", # Type: str
+#     #     "Description": "Thoughts on how the project went.",  # Type: str
+#     #     "Status": "In Progress",  # Type: str
+#     #     "Assigned To": "link@twitch.tv",  # Type: str
+#     #     "Jira Ticket": "ING-12342",  # Type: str
+#     #     "Duration": None,  # Type: str
+#     #     "Start": "2021-03-31T08:00:00",  # Type: str
+#     #     "Finish": "2021-03-31T08:00:00",  # Type: str
+#     #     "Predecessors": "38FS +1w",  # Type: str
+#     #     "Summary": "False"  # Type: str
+#     # }
 
 
-def test_write_predecessor_dates_1(src_data, project_indexes,
-                                   sheet_fixture, row_fixture):
-    project_data_index, _ = project_indexes
-    sheet, col_map, _, _ = sheet_fixture
-    _, unlinked_row = row_fixture
+# def test_write_predecessor_dates_1(src_data, project_indexes,
+#                                    sheet_fixture, row_fixture, cell_fixture):
+#     project_data_index, _ = project_indexes
+#     sheet, col_map, _, _ = sheet_fixture
+#     _, unlinked_row = row_fixture
+#     pred_cell, _, _, _, _, _ = cell_fixture
 
-    #     Format of the src_data should be:
-    # {
-    #     "UUID": "7208979009955716-3683235938232196-
-    #             7010994181433220-202105112138550000",  # Type: str
-    #     "Tasks": "Retrospective", # Type: str
-    #     "Description": "Thoughts on how the project went.",  # Type: str
-    #     "Status": "In Progress",  # Type: str
-    #     "Assigned To": "link@twitch.tv",  # Type: str
-    #     "Jira Ticket": "ING-12342",  # Type: str
-    #     "Duration": None,  # Type: str
-    #     "Start": "2021-03-31T08:00:00",  # Type: str
-    #     "Finish": "2021-03-31T08:00:00",  # Type: str
-    #     "Predecessors": "38FS +1w",  # Type: str
-    #     "Summary": "False"  # Type: str
-    # }
+#     #     Format of the src_data should be:
+#     # {
+#     #     "UUID": "7208979009955716-3683235938232196-
+#     #             7010994181433220-202105112138550000",  # Type: str
+#     #     "Tasks": "Retrospective", # Type: str
+#     #     "Description": "Thoughts on how the project went.",  # Type: str
+#     #     "Status": "In Progress",  # Type: str
+#     #     "Assigned To": "link@twitch.tv",  # Type: str
+#     #     "Jira Ticket": "ING-12342",  # Type: str
+#     #     "Duration": None,  # Type: str
+#     #     "Start": "2021-03-31T08:00:00",  # Type: str
+#     #     "Finish": "2021-03-31T08:00:00",  # Type: str
+#     #     "Predecessors": "38FS +1w",  # Type: str
+#     #     "Summary": "False"  # Type: str
+#     # }
 
-    with open(cwd + '/dev_cell_basic.json') as f:
-        cell = json.load(f)
-    pred_cell = smartsheet.models.Cell(cell)
-    result = smartsheet.models.Result()
-    result.message = "SUCCESS"
-    result.result_code = 0
+#     result = smartsheet.models.Result()
+#     result.message = "SUCCESS"
+#     result.result_code = 0
 
-    @patch("uuid_module.smartsheet_api.get_sheet", return_value=sheet)
-    @patch("uuid_module.helper.get_column_map", return_value=col_map)
-    @patch("uuid_module.smartsheet_api.get_row", return_value=unlinked_row)
-    @patch("uuid_module.helper.get_cell_data",
-           return_value=pred_cell)
-    @patch("uuid_module.smartsheet_api.write_rows_to_sheet",
-           return_value=result)
-    def test_0(mock_0, mock_1, mock_2, mock_3, mock_4):
-        result_0 = write_data.write_predecessor_dates(src_data,
-                                                      project_data_index)
-        return result_0
-    result_1 = test_0()
-    assert result_1 is True
+#     @patch("uuid_module.smartsheet_api.get_sheet", return_value=sheet)
+#     @patch("uuid_module.helper.get_column_map", return_value=col_map)
+#     @patch("uuid_module.smartsheet_api.get_row", return_value=unlinked_row)
+#     @patch("uuid_module.helper.get_cell_data",
+#            return_value=pred_cell)
+#     @patch("uuid_module.smartsheet_api.write_rows_to_sheet",
+#            return_value=result)
+#     def test_0(mock_0, mock_1, mock_2, mock_3, mock_4):
+#         result_0 = write_data.write_predecessor_dates(src_data,
+#                                                       project_data_index)
+#         return result_0
+#     result_1 = test_0()
+#     assert result_1 is True

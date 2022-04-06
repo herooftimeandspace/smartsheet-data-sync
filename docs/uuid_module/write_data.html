@@ -36,9 +36,6 @@
             <li>
                     <a class="function" href="#write_jira_index_cell_links">write_jira_index_cell_links</a>
             </li>
-            <li>
-                    <a class="function" href="#write_predecessor_dates">write_predecessor_dates</a>
-            </li>
     </ul>
 
 
@@ -58,8 +55,7 @@
                 
                         <details>
             <summary>View Source</summary>
-            <div class="codehilite"><pre><span></span><span class="kn">import</span> <span class="nn">json</span>
-<span class="kn">import</span> <span class="nn">logging</span>
+            <div class="codehilite"><pre><span></span><span class="kn">import</span> <span class="nn">logging</span>
 <span class="kn">import</span> <span class="nn">smartsheet</span>
 
 <span class="kn">import</span> <span class="nn">uuid_module.build_data</span> <span class="k">as</span> <span class="nn">build_data</span>
@@ -256,159 +252,159 @@
             <span class="k">return</span> <span class="n">msg</span>
 
 
-<span class="k">def</span> <span class="nf">write_predecessor_dates</span><span class="p">(</span><span class="n">src_data</span><span class="p">,</span> <span class="n">project_data_index</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;Ensure predecessor start dates are updated across all linked sheets,</span>
-<span class="sd">       but only if the new start date is != the existing start date.</span>
+<span class="c1"># def write_predecessor_dates(src_data, project_data_index):</span>
+<span class="c1">#     &quot;&quot;&quot;Ensure predecessor start dates are updated across all linked sheets,</span>
+<span class="c1">#        but only if the new start date is != the existing start date.</span>
 
-<span class="sd">    Args:</span>
-<span class="sd">        src_data (dict): Row data from the write_uuid_cell_links.</span>
-<span class="sd">        project_data_index (dict): The dict of UUIDs and row data pulled</span>
-<span class="sd">                                   from every project sheet.</span>
+<span class="c1">#     Args:</span>
+<span class="c1">#         src_data (dict): Row data from the write_uuid_cell_links.</span>
+<span class="c1">#         project_data_index (dict): The dict of UUIDs and row data pulled</span>
+<span class="c1">#                                    from every project sheet.</span>
 
-<span class="sd">    Returns:</span>
-<span class="sd">        bool: True if the Start Date in the earliest predecessor was</span>
-<span class="sd">              written back via API. False if the Start Date was not</span>
-<span class="sd">              written due to failure.</span>
-<span class="sd">    &quot;&quot;&quot;</span>
-    <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">src_data</span><span class="p">,</span> <span class="nb">dict</span><span class="p">):</span>
-        <span class="n">msg</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="s2">&quot;Source data must be type: dict, not&quot;</span>
-                  <span class="s2">&quot; </span><span class="si">{}</span><span class="s2">&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="nb">type</span><span class="p">(</span><span class="n">src_data</span><span class="p">))</span>
-        <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
-    <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">project_data_index</span><span class="p">,</span> <span class="nb">dict</span><span class="p">):</span>
-        <span class="n">msg</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="s2">&quot;Sheets to Update must be type: dict, not&quot;</span>
-                  <span class="s2">&quot; </span><span class="si">{}</span><span class="s2">&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="nb">type</span><span class="p">(</span><span class="n">project_data_index</span><span class="p">))</span>
-        <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
-    <span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">src_data</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
-        <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">v</span><span class="p">,</span> <span class="p">(</span><span class="nb">str</span><span class="p">,</span> <span class="nb">type</span><span class="p">(</span><span class="kc">None</span><span class="p">))):</span>
-            <span class="n">msg</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="s2">&quot;</span><span class="si">{}</span><span class="s2"> in project data index is </span><span class="si">{}</span><span class="s2"> not str or None.&quot;</span>
-                      <span class="s2">&quot;&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">k</span><span class="p">,</span> <span class="nb">type</span><span class="p">(</span><span class="n">v</span><span class="p">))</span>
-            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
-    <span class="k">for</span> <span class="n">col</span> <span class="ow">in</span> <span class="n">app_vars</span><span class="o">.</span><span class="n">sheet_columns</span><span class="p">:</span>
-        <span class="k">if</span> <span class="n">col</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">src_data</span><span class="o">.</span><span class="n">keys</span><span class="p">():</span>
-            <span class="n">msg</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="s2">&quot;Column: </span><span class="si">{}</span><span class="s2"> was not found in the source data keys&quot;</span>
-                      <span class="s2">&quot;&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">col</span><span class="p">)</span>
-            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
+<span class="c1">#     Returns:</span>
+<span class="c1">#         bool: True if the Start Date in the earliest predecessor was</span>
+<span class="c1">#               written back via API. False if the Start Date was not</span>
+<span class="c1">#               written due to failure.</span>
+<span class="c1">#     &quot;&quot;&quot;</span>
+<span class="c1">#     if not isinstance(src_data, dict):</span>
+<span class="c1">#         msg = str(&quot;Source data must be type: dict, not&quot;</span>
+<span class="c1">#                   &quot; {}&quot;).format(type(src_data))</span>
+<span class="c1">#         raise TypeError(msg)</span>
+<span class="c1">#     if not isinstance(project_data_index, dict):</span>
+<span class="c1">#         msg = str(&quot;Sheets to Update must be type: dict, not&quot;</span>
+<span class="c1">#                   &quot; {}&quot;).format(type(project_data_index))</span>
+<span class="c1">#         raise TypeError(msg)</span>
+<span class="c1">#     for k, v in src_data.items():</span>
+<span class="c1">#         if not isinstance(v, (str, type(None))):</span>
+<span class="c1">#             msg = str(&quot;{} in project data index is {} not str or None.&quot;</span>
+<span class="c1">#                       &quot;&quot;).format(k, type(v))</span>
+<span class="c1">#             raise ValueError(msg)</span>
+<span class="c1">#     for col in app_vars.sheet_columns:</span>
+<span class="c1">#         if col not in src_data.keys():</span>
+<span class="c1">#             msg = str(&quot;Column: {} was not found in the source data keys&quot;</span>
+<span class="c1">#                       &quot;&quot;).format(col)</span>
+<span class="c1">#             raise ValueError(msg)</span>
 
-    <span class="c1"># Create friendly names for sheet ID, row ID and start date.</span>
-    <span class="n">dest_sheet_id</span> <span class="o">=</span> <span class="n">src_data</span><span class="p">[</span><span class="n">app_vars</span><span class="o">.</span><span class="n">uuid_col</span><span class="p">]</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s2">&quot;-&quot;</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
-    <span class="n">dest_row_id</span> <span class="o">=</span> <span class="n">src_data</span><span class="p">[</span><span class="n">app_vars</span><span class="o">.</span><span class="n">uuid_col</span><span class="p">]</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s2">&quot;-&quot;</span><span class="p">)[</span><span class="mi">1</span><span class="p">]</span>
-    <span class="n">start_date</span> <span class="o">=</span> <span class="n">src_data</span><span class="p">[</span><span class="n">app_vars</span><span class="o">.</span><span class="n">start_col</span><span class="p">]</span>
+<span class="c1">#     # Create friendly names for sheet ID, row ID and start date.</span>
+<span class="c1">#     dest_sheet_id = src_data[app_vars.uuid_col].split(&quot;-&quot;)[0]</span>
+<span class="c1">#     dest_row_id = src_data[app_vars.uuid_col].split(&quot;-&quot;)[1]</span>
+<span class="c1">#     start_date = src_data[app_vars.start_col]</span>
 
-    <span class="c1"># Query the API for the sheet data, get the column map, and get the row</span>
-    <span class="c1"># data. Include the objectValue so we can see the row predecessor(s).</span>
-    <span class="n">dest_sheet</span> <span class="o">=</span> <span class="n">smartsheet_api</span><span class="o">.</span><span class="n">get_sheet</span><span class="p">(</span><span class="n">dest_sheet_id</span><span class="p">)</span>
-    <span class="n">dest_col_map</span> <span class="o">=</span> <span class="n">helper</span><span class="o">.</span><span class="n">get_column_map</span><span class="p">(</span><span class="n">dest_sheet</span><span class="p">)</span>
-    <span class="n">dest_row</span> <span class="o">=</span> <span class="n">smartsheet_api</span><span class="o">.</span><span class="n">get_row</span><span class="p">(</span><span class="n">dest_sheet_id</span><span class="p">,</span> <span class="n">dest_row_id</span><span class="p">)</span>
+<span class="c1">#     # Query the API for the sheet data, get the column map, and get the row</span>
+<span class="c1">#     # data. Include the objectValue so we can see the row predecessor(s).</span>
+<span class="c1">#     dest_sheet = smartsheet_api.get_sheet(dest_sheet_id)</span>
+<span class="c1">#     dest_col_map = helper.get_column_map(dest_sheet)</span>
+<span class="c1">#     dest_row = smartsheet_api.get_row(dest_sheet_id, dest_row_id)</span>
 
-    <span class="c1"># Validate that the start date is useful.</span>
-    <span class="c1"># if not start_date:</span>
-    <span class="c1">#     logging.debug(&quot;Start date is {}&quot;.format(start_date))</span>
-    <span class="c1">#     return False</span>
+<span class="c1">#     # Validate that the start date is useful.</span>
+<span class="c1">#     # if not start_date:</span>
+<span class="c1">#     #     logging.debug(&quot;Start date is {}&quot;.format(start_date))</span>
+<span class="c1">#     #     return False</span>
 
-    <span class="c1"># Get the start date of the row&#39;s predecessor. Verify that they are</span>
-    <span class="c1"># different.</span>
-    <span class="c1"># TODO: Replace with get_cell_data</span>
-    <span class="n">pred_start_cell</span> <span class="o">=</span> <span class="n">helper</span><span class="o">.</span><span class="n">get_cell_data</span><span class="p">(</span>
-        <span class="n">dest_row</span><span class="p">,</span> <span class="n">app_vars</span><span class="o">.</span><span class="n">start_col</span><span class="p">,</span> <span class="n">dest_col_map</span><span class="p">)</span>
-    <span class="k">if</span> <span class="n">pred_start_cell</span><span class="o">.</span><span class="n">value</span> <span class="o">==</span> <span class="n">start_date</span><span class="p">:</span>
-        <span class="n">msg</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="s2">&quot;Start date </span><span class="si">{}</span><span class="s2"> matches the start date </span><span class="si">{}</span><span class="s2"> in the &quot;</span>
-                  <span class="s2">&quot;predecessor row. No update needed&quot;</span>
-                  <span class="s2">&quot;&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">start_date</span><span class="p">,</span> <span class="n">pred_start_cell</span><span class="o">.</span><span class="n">value</span><span class="p">)</span>
-        <span class="n">logging</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
-        <span class="k">return</span> <span class="kc">True</span>
+<span class="c1">#     # Get the start date of the row&#39;s predecessor. Verify that they are</span>
+<span class="c1">#     # different.</span>
+<span class="c1">#     # TODO: Replace with get_cell_data</span>
+<span class="c1">#     pred_start_cell = helper.get_cell_data(</span>
+<span class="c1">#         dest_row, app_vars.start_col, dest_col_map)</span>
+<span class="c1">#     if pred_start_cell.value == start_date:</span>
+<span class="c1">#         msg = str(&quot;Start date {} matches the start date {} in the &quot;</span>
+<span class="c1">#                   &quot;predecessor row. No update needed&quot;</span>
+<span class="c1">#                   &quot;&quot;).format(start_date, pred_start_cell.value)</span>
+<span class="c1">#         logging.debug(msg)</span>
+<span class="c1">#         return True</span>
 
-    <span class="c1"># Get the predecessor cell values.</span>
-    <span class="n">pred_cell</span> <span class="o">=</span> <span class="n">helper</span><span class="o">.</span><span class="n">get_cell_data</span><span class="p">(</span>
-        <span class="n">dest_row</span><span class="p">,</span> <span class="n">app_vars</span><span class="o">.</span><span class="n">predecessor_col</span><span class="p">,</span> <span class="n">dest_col_map</span><span class="p">)</span>
+<span class="c1">#     # Get the predecessor cell values.</span>
+<span class="c1">#     pred_cell = helper.get_cell_data(</span>
+<span class="c1">#         dest_row, app_vars.predecessor_col, dest_col_map)</span>
 
-    <span class="c1"># Evaluate the value of the predecessor cell. If it has a value other than</span>
-    <span class="c1"># None, get the predecessor row ID and loop. If the new pred_cell value</span>
-    <span class="c1"># is None but there is no objectValue, the row doesn&#39;t have a predecessor</span>
-    <span class="c1"># so we set the destination row ID to the final predecessor ID and break</span>
-    <span class="c1"># the loop.</span>
+<span class="c1">#    # Evaluate the value of the predecessor cell. If it has a value other than</span>
+<span class="c1">#     # None, get the predecessor row ID and loop. If the new pred_cell value</span>
+<span class="c1">#     # is None but there is no objectValue, the row doesn&#39;t have a predecessor</span>
+<span class="c1">#     # so we set the destination row ID to the final predecessor ID and break</span>
+<span class="c1">#     # the loop.</span>
 
-    <span class="c1"># TODO: Handle multiple predecessors. Find earliest predecessor and update</span>
-    <span class="c1"># that date, or update every predecessor.</span>
-    <span class="n">predecessor_row</span> <span class="o">=</span> <span class="n">smartsheet_api</span><span class="o">.</span><span class="n">get_row</span><span class="p">(</span><span class="n">dest_sheet_id</span><span class="p">,</span> <span class="n">dest_row_id</span><span class="p">)</span>
-    <span class="k">while</span> <span class="n">pred_cell</span><span class="o">.</span><span class="n">value</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
-        <span class="n">pred_cell</span> <span class="o">=</span> <span class="n">helper</span><span class="o">.</span><span class="n">get_cell_data</span><span class="p">(</span><span class="n">predecessor_row</span><span class="p">,</span>
-                                         <span class="n">app_vars</span><span class="o">.</span><span class="n">predecessor_col</span><span class="p">,</span>
-                                         <span class="n">dest_col_map</span><span class="p">)</span>
-        <span class="c1"># TODO: Replace with get_cell_data</span>
-        <span class="n">pred_start_cell</span> <span class="o">=</span> <span class="n">helper</span><span class="o">.</span><span class="n">get_cell_data</span><span class="p">(</span>
-            <span class="n">dest_row</span><span class="p">,</span> <span class="n">app_vars</span><span class="o">.</span><span class="n">start_col</span><span class="p">,</span> <span class="n">dest_col_map</span><span class="p">)</span>
+<span class="c1">#    # TODO: Handle multiple predecessors. Find earliest predecessor and update</span>
+<span class="c1">#     # that date, or update every predecessor.</span>
+<span class="c1">#     predecessor_row = smartsheet_api.get_row(dest_sheet_id, dest_row_id)</span>
+<span class="c1">#     while pred_cell.value is not None:</span>
+<span class="c1">#         pred_cell = helper.get_cell_data(predecessor_row,</span>
+<span class="c1">#                                          app_vars.predecessor_col,</span>
+<span class="c1">#                                          dest_col_map)</span>
+<span class="c1">#         # TODO: Replace with get_cell_data</span>
+<span class="c1">#         pred_start_cell = helper.get_cell_data(</span>
+<span class="c1">#             dest_row, app_vars.start_col, dest_col_map)</span>
 
-        <span class="k">if</span> <span class="n">pred_start_cell</span><span class="o">.</span><span class="n">value</span> <span class="o">==</span> <span class="n">start_date</span><span class="p">:</span>
-            <span class="n">msg</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="s2">&quot;Start date </span><span class="si">{}</span><span class="s2"> matches the start date </span><span class="si">{}</span><span class="s2"> in the &quot;</span>
-                      <span class="s2">&quot;predecessor row. No update needed.&quot;</span>
-                      <span class="s2">&quot;&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">start_date</span><span class="p">,</span> <span class="n">pred_start_cell</span><span class="o">.</span><span class="n">value</span><span class="p">)</span>
-            <span class="n">logging</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
-            <span class="k">return</span> <span class="kc">True</span>
-        <span class="k">elif</span> <span class="n">pred_cell</span><span class="o">.</span><span class="n">object_value</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
-            <span class="c1"># Set the destination row ID to the predecessor row and break the</span>
-            <span class="c1"># loop even if the cell value is None because the row doesn&#39;t</span>
-            <span class="c1"># have a predecessor value.</span>
-            <span class="n">dest_row</span> <span class="o">=</span> <span class="n">predecessor_row</span>
-            <span class="k">break</span>
-        <span class="k">else</span><span class="p">:</span>
-            <span class="c1"># Set the destination row ID to the predecessor row ID and loop.</span>
-            <span class="n">cell_dict</span> <span class="o">=</span> <span class="n">json</span><span class="o">.</span><span class="n">loads</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">pred_cell</span><span class="p">))</span>
-            <span class="n">dest_row_id</span> <span class="o">=</span> <span class="n">helper</span><span class="o">.</span><span class="n">json_extract</span><span class="p">(</span><span class="n">cell_dict</span><span class="p">,</span> <span class="s2">&quot;rowId&quot;</span><span class="p">)</span>
-            <span class="n">dest_row_id</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">dest_row_id</span><span class="p">)</span><span class="o">.</span><span class="n">translate</span><span class="p">(</span>
-                <span class="p">{</span><span class="nb">ord</span><span class="p">(</span><span class="n">i</span><span class="p">):</span> <span class="kc">None</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="s2">&quot;[]&#39;&quot;</span><span class="p">})</span>
-            <span class="n">predecessor_row</span> <span class="o">=</span> <span class="n">smartsheet_api</span><span class="o">.</span><span class="n">get_row</span><span class="p">(</span><span class="n">dest_sheet_id</span><span class="p">,</span>
-                                                     <span class="n">dest_row_id</span><span class="p">)</span>
+<span class="c1">#         if pred_start_cell.value == start_date:</span>
+<span class="c1">#             msg = str(&quot;Start date {} matches the start date {} in the &quot;</span>
+<span class="c1">#                       &quot;predecessor row. No update needed.&quot;</span>
+<span class="c1">#                       &quot;&quot;).format(start_date, pred_start_cell.value)</span>
+<span class="c1">#             logging.debug(msg)</span>
+<span class="c1">#             return True</span>
+<span class="c1">#         elif pred_cell.object_value is None:</span>
+<span class="c1">#             # Set the destination row ID to the predecessor row and break the</span>
+<span class="c1">#             # loop even if the cell value is None because the row doesn&#39;t</span>
+<span class="c1">#             # have a predecessor value.</span>
+<span class="c1">#             dest_row = predecessor_row</span>
+<span class="c1">#             break</span>
+<span class="c1">#         else:</span>
+<span class="c1">#             # Set the destination row ID to the predecessor row ID and loop.</span>
+<span class="c1">#             cell_dict = json.loads(str(pred_cell))</span>
+<span class="c1">#             dest_row_id = helper.json_extract(cell_dict, &quot;rowId&quot;)</span>
+<span class="c1">#             dest_row_id = str(dest_row_id).translate(</span>
+<span class="c1">#                 {ord(i): None for i in &quot;[]&#39;&quot;})</span>
+<span class="c1">#             predecessor_row = smartsheet_api.get_row(dest_sheet_id,</span>
+<span class="c1">#                                                      dest_row_id)</span>
 
-    <span class="c1"># Get the value of the destination Start Date cell.</span>
-    <span class="n">dest_start_cell</span> <span class="o">=</span> <span class="n">helper</span><span class="o">.</span><span class="n">get_cell_data</span><span class="p">(</span>
-        <span class="n">dest_row</span><span class="p">,</span> <span class="n">app_vars</span><span class="o">.</span><span class="n">start_col</span><span class="p">,</span> <span class="n">dest_col_map</span><span class="p">)</span>
+<span class="c1">#     # Get the value of the destination Start Date cell.</span>
+<span class="c1">#     dest_start_cell = helper.get_cell_data(</span>
+<span class="c1">#         dest_row, app_vars.start_col, dest_col_map)</span>
 
-    <span class="k">try</span><span class="p">:</span>
-        <span class="k">if</span> <span class="n">dest_start_cell</span><span class="o">.</span><span class="n">linkInFromCell</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
-            <span class="c1"># Follow cell links to final destination. Use project</span>
-            <span class="c1"># data index to find the UUID, sheet, row and row data.</span>
-            <span class="n">msg</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="s2">&quot;Destination Start Date cell is linked to another &quot;</span>
-                      <span class="s2">&quot;cell. Locating next Start Date cell at </span><span class="si">{}</span><span class="s2"> and &quot;</span>
-                      <span class="s2">&quot;detecting predecessors.&quot;</span>
-                      <span class="s2">&quot;&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">dest_start_cell</span><span class="o">.</span><span class="n">linkInFromCell</span><span class="p">)</span>
-            <span class="n">logging</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
-            <span class="n">dest_sheet_id</span> <span class="o">=</span> <span class="n">helper</span><span class="o">.</span><span class="n">json_extract</span><span class="p">(</span><span class="n">dest_start_cell</span><span class="p">,</span> <span class="s2">&quot;sheetId&quot;</span><span class="p">)</span>
-            <span class="n">dest_row_id</span> <span class="o">=</span> <span class="n">helper</span><span class="o">.</span><span class="n">json_extract</span><span class="p">(</span><span class="n">dest_start_cell</span><span class="p">,</span> <span class="s2">&quot;rowId&quot;</span><span class="p">)</span>
-            <span class="n">dest_sheet</span> <span class="o">=</span> <span class="n">smartsheet_api</span><span class="o">.</span><span class="n">get_sheet</span><span class="p">(</span><span class="n">dest_sheet_id</span><span class="p">)</span>
-            <span class="n">dest_col_map</span> <span class="o">=</span> <span class="n">helper</span><span class="o">.</span><span class="n">get_column_map</span><span class="p">(</span><span class="n">dest_sheet</span><span class="p">)</span>
-            <span class="n">dest_row</span> <span class="o">=</span> <span class="n">smartsheet_api</span><span class="o">.</span><span class="n">get_row</span><span class="p">(</span><span class="n">dest_sheet_id</span><span class="p">,</span> <span class="n">dest_row_id</span><span class="p">)</span>
-            <span class="n">dest_uuid</span> <span class="o">=</span> <span class="n">helper</span><span class="o">.</span><span class="n">get_cell_data</span><span class="p">(</span>
-                <span class="n">dest_row</span><span class="p">,</span> <span class="n">app_vars</span><span class="o">.</span><span class="n">uuid_col</span><span class="p">,</span> <span class="n">dest_col_map</span><span class="p">)</span>
-            <span class="n">row_data</span> <span class="o">=</span> <span class="n">project_data_index</span><span class="p">[</span><span class="n">dest_uuid</span><span class="p">]</span>
-            <span class="n">write_predecessor_dates</span><span class="p">(</span>
-                <span class="n">row_data</span><span class="p">,</span> <span class="n">project_data_index</span><span class="p">)</span>
-    <span class="k">except</span> <span class="ne">AttributeError</span><span class="p">:</span>
-        <span class="n">logging</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">&quot;Cell is not linked to another cell. Continuing.&quot;</span><span class="p">)</span>
+<span class="c1">#     try:</span>
+<span class="c1">#         if dest_start_cell.linkInFromCell is not None:</span>
+<span class="c1">#             # Follow cell links to final destination. Use project</span>
+<span class="c1">#             # data index to find the UUID, sheet, row and row data.</span>
+<span class="c1">#             msg = str(&quot;Destination Start Date cell is linked to another &quot;</span>
+<span class="c1">#                       &quot;cell. Locating next Start Date cell at {} and &quot;</span>
+<span class="c1">#                       &quot;detecting predecessors.&quot;</span>
+<span class="c1">#                       &quot;&quot;).format(dest_start_cell.linkInFromCell)</span>
+<span class="c1">#             logging.warning(msg)</span>
+<span class="c1">#             dest_sheet_id = helper.json_extract(dest_start_cell, &quot;sheetId&quot;)</span>
+<span class="c1">#             dest_row_id = helper.json_extract(dest_start_cell, &quot;rowId&quot;)</span>
+<span class="c1">#             dest_sheet = smartsheet_api.get_sheet(dest_sheet_id)</span>
+<span class="c1">#             dest_col_map = helper.get_column_map(dest_sheet)</span>
+<span class="c1">#             dest_row = smartsheet_api.get_row(dest_sheet_id, dest_row_id)</span>
+<span class="c1">#             dest_uuid = helper.get_cell_data(</span>
+<span class="c1">#                 dest_row, app_vars.uuid_col, dest_col_map)</span>
+<span class="c1">#             row_data = project_data_index[dest_uuid]</span>
+<span class="c1">#             write_predecessor_dates(</span>
+<span class="c1">#                 row_data, project_data_index)</span>
+<span class="c1">#     except AttributeError:</span>
+<span class="c1">#         logging.debug(&quot;Cell is not linked to another cell. Continuing.&quot;)</span>
 
-    <span class="k">if</span> <span class="n">start_date</span> <span class="o">==</span> <span class="n">dest_start_cell</span><span class="o">.</span><span class="n">value</span><span class="p">:</span>
-        <span class="n">msg</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="s2">&quot;Start date </span><span class="si">{}</span><span class="s2"> matches the start date </span><span class="si">{}</span><span class="s2"> in the &quot;</span>
-                  <span class="s2">&quot;predecessor row. No update needed.&quot;</span>
-                  <span class="s2">&quot;&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">start_date</span><span class="p">,</span> <span class="n">dest_start_cell</span><span class="o">.</span><span class="n">value</span><span class="p">)</span>
-        <span class="n">logging</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
-    <span class="k">else</span><span class="p">:</span>
-        <span class="c1"># Create empty cell</span>
-        <span class="n">new_start_date_cell</span> <span class="o">=</span> <span class="n">smartsheet</span><span class="o">.</span><span class="n">models</span><span class="o">.</span><span class="n">Cell</span><span class="p">()</span>
-        <span class="n">new_start_date_cell</span><span class="o">.</span><span class="n">value</span> <span class="o">=</span> <span class="n">start_date</span>
-        <span class="n">new_start_date_cell</span><span class="o">.</span><span class="n">column_id</span> <span class="o">=</span> <span class="n">dest_col_map</span><span class="p">[</span><span class="n">app_vars</span><span class="o">.</span><span class="n">start_col</span><span class="p">]</span>
+<span class="c1">#     if start_date == dest_start_cell.value:</span>
+<span class="c1">#         msg = str(&quot;Start date {} matches the start date {} in the &quot;</span>
+<span class="c1">#                   &quot;predecessor row. No update needed.&quot;</span>
+<span class="c1">#                   &quot;&quot;).format(start_date, dest_start_cell.value)</span>
+<span class="c1">#         logging.warning(msg)</span>
+<span class="c1">#     else:</span>
+<span class="c1">#         # Create empty cell</span>
+<span class="c1">#         new_start_date_cell = smartsheet.models.Cell()</span>
+<span class="c1">#         new_start_date_cell.value = start_date</span>
+<span class="c1">#         new_start_date_cell.column_id = dest_col_map[app_vars.start_col]</span>
 
-        <span class="c1"># Create a new row and append the updated cell</span>
-        <span class="n">new_row</span> <span class="o">=</span> <span class="n">smartsheet</span><span class="o">.</span><span class="n">models</span><span class="o">.</span><span class="n">Row</span><span class="p">()</span>
-        <span class="n">new_row</span><span class="o">.</span><span class="n">id</span> <span class="o">=</span> <span class="n">predecessor_row</span><span class="o">.</span><span class="n">id</span>
-        <span class="n">new_row</span><span class="o">.</span><span class="n">cells</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">new_start_date_cell</span><span class="p">)</span>
+<span class="c1">#         # Create a new row and append the updated cell</span>
+<span class="c1">#         new_row = smartsheet.models.Row()</span>
+<span class="c1">#         new_row.id = predecessor_row.id</span>
+<span class="c1">#         new_row.cells.append(new_start_date_cell)</span>
 
-        <span class="c1"># Send the updated row to the destination sheet.</span>
-        <span class="n">smartsheet_api</span><span class="o">.</span><span class="n">write_rows_to_sheet</span><span class="p">(</span>
-            <span class="n">new_row</span><span class="p">,</span> <span class="n">dest_sheet</span><span class="p">,</span> <span class="n">write_method</span><span class="o">=</span><span class="s2">&quot;update&quot;</span><span class="p">)</span>
-        <span class="n">msg</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="s2">&quot;Uploaded new start date </span><span class="si">{}</span><span class="s2"> to ancestor &quot;</span>
-                  <span class="s2">&quot;predecessor&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">start_date</span><span class="p">)</span>
-        <span class="n">logging</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
+<span class="c1">#         # Send the updated row to the destination sheet.</span>
+<span class="c1">#         smartsheet_api.write_rows_to_sheet(</span>
+<span class="c1">#             new_row, dest_sheet, write_method=&quot;update&quot;)</span>
+<span class="c1">#         msg = str(&quot;Uploaded new start date {} to ancestor &quot;</span>
+<span class="c1">#                   &quot;predecessor&quot;).format(start_date)</span>
+<span class="c1">#         logging.debug(msg)</span>
 
-        <span class="k">return</span> <span class="kc">True</span>
+<span class="c1">#         return True</span>
 </pre></div>
 
         </details>
@@ -666,195 +662,6 @@ Defaults to the Dev Jira Index Sheet</li>
 <blockquote>
   <p>bool: True if any links were written, False if no data was
         written back to any sheet.</p>
-</blockquote>
-</div>
-
-
-                </section>
-                <section id="write_predecessor_dates">
-                            <div class="attr function"><a class="headerlink" href="#write_predecessor_dates">#&nbsp;&nbsp</a>
-
-        
-            <span class="def">def</span>
-            <span class="name">write_predecessor_dates</span><span class="signature">(src_data, project_data_index)</span>:
-    </div>
-
-                <details>
-            <summary>View Source</summary>
-            <div class="codehilite"><pre><span></span><span class="k">def</span> <span class="nf">write_predecessor_dates</span><span class="p">(</span><span class="n">src_data</span><span class="p">,</span> <span class="n">project_data_index</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;Ensure predecessor start dates are updated across all linked sheets,</span>
-<span class="sd">       but only if the new start date is != the existing start date.</span>
-
-<span class="sd">    Args:</span>
-<span class="sd">        src_data (dict): Row data from the write_uuid_cell_links.</span>
-<span class="sd">        project_data_index (dict): The dict of UUIDs and row data pulled</span>
-<span class="sd">                                   from every project sheet.</span>
-
-<span class="sd">    Returns:</span>
-<span class="sd">        bool: True if the Start Date in the earliest predecessor was</span>
-<span class="sd">              written back via API. False if the Start Date was not</span>
-<span class="sd">              written due to failure.</span>
-<span class="sd">    &quot;&quot;&quot;</span>
-    <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">src_data</span><span class="p">,</span> <span class="nb">dict</span><span class="p">):</span>
-        <span class="n">msg</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="s2">&quot;Source data must be type: dict, not&quot;</span>
-                  <span class="s2">&quot; </span><span class="si">{}</span><span class="s2">&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="nb">type</span><span class="p">(</span><span class="n">src_data</span><span class="p">))</span>
-        <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
-    <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">project_data_index</span><span class="p">,</span> <span class="nb">dict</span><span class="p">):</span>
-        <span class="n">msg</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="s2">&quot;Sheets to Update must be type: dict, not&quot;</span>
-                  <span class="s2">&quot; </span><span class="si">{}</span><span class="s2">&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="nb">type</span><span class="p">(</span><span class="n">project_data_index</span><span class="p">))</span>
-        <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
-    <span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">src_data</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
-        <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">v</span><span class="p">,</span> <span class="p">(</span><span class="nb">str</span><span class="p">,</span> <span class="nb">type</span><span class="p">(</span><span class="kc">None</span><span class="p">))):</span>
-            <span class="n">msg</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="s2">&quot;</span><span class="si">{}</span><span class="s2"> in project data index is </span><span class="si">{}</span><span class="s2"> not str or None.&quot;</span>
-                      <span class="s2">&quot;&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">k</span><span class="p">,</span> <span class="nb">type</span><span class="p">(</span><span class="n">v</span><span class="p">))</span>
-            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
-    <span class="k">for</span> <span class="n">col</span> <span class="ow">in</span> <span class="n">app_vars</span><span class="o">.</span><span class="n">sheet_columns</span><span class="p">:</span>
-        <span class="k">if</span> <span class="n">col</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">src_data</span><span class="o">.</span><span class="n">keys</span><span class="p">():</span>
-            <span class="n">msg</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="s2">&quot;Column: </span><span class="si">{}</span><span class="s2"> was not found in the source data keys&quot;</span>
-                      <span class="s2">&quot;&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">col</span><span class="p">)</span>
-            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
-
-    <span class="c1"># Create friendly names for sheet ID, row ID and start date.</span>
-    <span class="n">dest_sheet_id</span> <span class="o">=</span> <span class="n">src_data</span><span class="p">[</span><span class="n">app_vars</span><span class="o">.</span><span class="n">uuid_col</span><span class="p">]</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s2">&quot;-&quot;</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
-    <span class="n">dest_row_id</span> <span class="o">=</span> <span class="n">src_data</span><span class="p">[</span><span class="n">app_vars</span><span class="o">.</span><span class="n">uuid_col</span><span class="p">]</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s2">&quot;-&quot;</span><span class="p">)[</span><span class="mi">1</span><span class="p">]</span>
-    <span class="n">start_date</span> <span class="o">=</span> <span class="n">src_data</span><span class="p">[</span><span class="n">app_vars</span><span class="o">.</span><span class="n">start_col</span><span class="p">]</span>
-
-    <span class="c1"># Query the API for the sheet data, get the column map, and get the row</span>
-    <span class="c1"># data. Include the objectValue so we can see the row predecessor(s).</span>
-    <span class="n">dest_sheet</span> <span class="o">=</span> <span class="n">smartsheet_api</span><span class="o">.</span><span class="n">get_sheet</span><span class="p">(</span><span class="n">dest_sheet_id</span><span class="p">)</span>
-    <span class="n">dest_col_map</span> <span class="o">=</span> <span class="n">helper</span><span class="o">.</span><span class="n">get_column_map</span><span class="p">(</span><span class="n">dest_sheet</span><span class="p">)</span>
-    <span class="n">dest_row</span> <span class="o">=</span> <span class="n">smartsheet_api</span><span class="o">.</span><span class="n">get_row</span><span class="p">(</span><span class="n">dest_sheet_id</span><span class="p">,</span> <span class="n">dest_row_id</span><span class="p">)</span>
-
-    <span class="c1"># Validate that the start date is useful.</span>
-    <span class="c1"># if not start_date:</span>
-    <span class="c1">#     logging.debug(&quot;Start date is {}&quot;.format(start_date))</span>
-    <span class="c1">#     return False</span>
-
-    <span class="c1"># Get the start date of the row&#39;s predecessor. Verify that they are</span>
-    <span class="c1"># different.</span>
-    <span class="c1"># TODO: Replace with get_cell_data</span>
-    <span class="n">pred_start_cell</span> <span class="o">=</span> <span class="n">helper</span><span class="o">.</span><span class="n">get_cell_data</span><span class="p">(</span>
-        <span class="n">dest_row</span><span class="p">,</span> <span class="n">app_vars</span><span class="o">.</span><span class="n">start_col</span><span class="p">,</span> <span class="n">dest_col_map</span><span class="p">)</span>
-    <span class="k">if</span> <span class="n">pred_start_cell</span><span class="o">.</span><span class="n">value</span> <span class="o">==</span> <span class="n">start_date</span><span class="p">:</span>
-        <span class="n">msg</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="s2">&quot;Start date </span><span class="si">{}</span><span class="s2"> matches the start date </span><span class="si">{}</span><span class="s2"> in the &quot;</span>
-                  <span class="s2">&quot;predecessor row. No update needed&quot;</span>
-                  <span class="s2">&quot;&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">start_date</span><span class="p">,</span> <span class="n">pred_start_cell</span><span class="o">.</span><span class="n">value</span><span class="p">)</span>
-        <span class="n">logging</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
-        <span class="k">return</span> <span class="kc">True</span>
-
-    <span class="c1"># Get the predecessor cell values.</span>
-    <span class="n">pred_cell</span> <span class="o">=</span> <span class="n">helper</span><span class="o">.</span><span class="n">get_cell_data</span><span class="p">(</span>
-        <span class="n">dest_row</span><span class="p">,</span> <span class="n">app_vars</span><span class="o">.</span><span class="n">predecessor_col</span><span class="p">,</span> <span class="n">dest_col_map</span><span class="p">)</span>
-
-    <span class="c1"># Evaluate the value of the predecessor cell. If it has a value other than</span>
-    <span class="c1"># None, get the predecessor row ID and loop. If the new pred_cell value</span>
-    <span class="c1"># is None but there is no objectValue, the row doesn&#39;t have a predecessor</span>
-    <span class="c1"># so we set the destination row ID to the final predecessor ID and break</span>
-    <span class="c1"># the loop.</span>
-
-    <span class="c1"># TODO: Handle multiple predecessors. Find earliest predecessor and update</span>
-    <span class="c1"># that date, or update every predecessor.</span>
-    <span class="n">predecessor_row</span> <span class="o">=</span> <span class="n">smartsheet_api</span><span class="o">.</span><span class="n">get_row</span><span class="p">(</span><span class="n">dest_sheet_id</span><span class="p">,</span> <span class="n">dest_row_id</span><span class="p">)</span>
-    <span class="k">while</span> <span class="n">pred_cell</span><span class="o">.</span><span class="n">value</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
-        <span class="n">pred_cell</span> <span class="o">=</span> <span class="n">helper</span><span class="o">.</span><span class="n">get_cell_data</span><span class="p">(</span><span class="n">predecessor_row</span><span class="p">,</span>
-                                         <span class="n">app_vars</span><span class="o">.</span><span class="n">predecessor_col</span><span class="p">,</span>
-                                         <span class="n">dest_col_map</span><span class="p">)</span>
-        <span class="c1"># TODO: Replace with get_cell_data</span>
-        <span class="n">pred_start_cell</span> <span class="o">=</span> <span class="n">helper</span><span class="o">.</span><span class="n">get_cell_data</span><span class="p">(</span>
-            <span class="n">dest_row</span><span class="p">,</span> <span class="n">app_vars</span><span class="o">.</span><span class="n">start_col</span><span class="p">,</span> <span class="n">dest_col_map</span><span class="p">)</span>
-
-        <span class="k">if</span> <span class="n">pred_start_cell</span><span class="o">.</span><span class="n">value</span> <span class="o">==</span> <span class="n">start_date</span><span class="p">:</span>
-            <span class="n">msg</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="s2">&quot;Start date </span><span class="si">{}</span><span class="s2"> matches the start date </span><span class="si">{}</span><span class="s2"> in the &quot;</span>
-                      <span class="s2">&quot;predecessor row. No update needed.&quot;</span>
-                      <span class="s2">&quot;&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">start_date</span><span class="p">,</span> <span class="n">pred_start_cell</span><span class="o">.</span><span class="n">value</span><span class="p">)</span>
-            <span class="n">logging</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
-            <span class="k">return</span> <span class="kc">True</span>
-        <span class="k">elif</span> <span class="n">pred_cell</span><span class="o">.</span><span class="n">object_value</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
-            <span class="c1"># Set the destination row ID to the predecessor row and break the</span>
-            <span class="c1"># loop even if the cell value is None because the row doesn&#39;t</span>
-            <span class="c1"># have a predecessor value.</span>
-            <span class="n">dest_row</span> <span class="o">=</span> <span class="n">predecessor_row</span>
-            <span class="k">break</span>
-        <span class="k">else</span><span class="p">:</span>
-            <span class="c1"># Set the destination row ID to the predecessor row ID and loop.</span>
-            <span class="n">cell_dict</span> <span class="o">=</span> <span class="n">json</span><span class="o">.</span><span class="n">loads</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">pred_cell</span><span class="p">))</span>
-            <span class="n">dest_row_id</span> <span class="o">=</span> <span class="n">helper</span><span class="o">.</span><span class="n">json_extract</span><span class="p">(</span><span class="n">cell_dict</span><span class="p">,</span> <span class="s2">&quot;rowId&quot;</span><span class="p">)</span>
-            <span class="n">dest_row_id</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">dest_row_id</span><span class="p">)</span><span class="o">.</span><span class="n">translate</span><span class="p">(</span>
-                <span class="p">{</span><span class="nb">ord</span><span class="p">(</span><span class="n">i</span><span class="p">):</span> <span class="kc">None</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="s2">&quot;[]&#39;&quot;</span><span class="p">})</span>
-            <span class="n">predecessor_row</span> <span class="o">=</span> <span class="n">smartsheet_api</span><span class="o">.</span><span class="n">get_row</span><span class="p">(</span><span class="n">dest_sheet_id</span><span class="p">,</span>
-                                                     <span class="n">dest_row_id</span><span class="p">)</span>
-
-    <span class="c1"># Get the value of the destination Start Date cell.</span>
-    <span class="n">dest_start_cell</span> <span class="o">=</span> <span class="n">helper</span><span class="o">.</span><span class="n">get_cell_data</span><span class="p">(</span>
-        <span class="n">dest_row</span><span class="p">,</span> <span class="n">app_vars</span><span class="o">.</span><span class="n">start_col</span><span class="p">,</span> <span class="n">dest_col_map</span><span class="p">)</span>
-
-    <span class="k">try</span><span class="p">:</span>
-        <span class="k">if</span> <span class="n">dest_start_cell</span><span class="o">.</span><span class="n">linkInFromCell</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
-            <span class="c1"># Follow cell links to final destination. Use project</span>
-            <span class="c1"># data index to find the UUID, sheet, row and row data.</span>
-            <span class="n">msg</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="s2">&quot;Destination Start Date cell is linked to another &quot;</span>
-                      <span class="s2">&quot;cell. Locating next Start Date cell at </span><span class="si">{}</span><span class="s2"> and &quot;</span>
-                      <span class="s2">&quot;detecting predecessors.&quot;</span>
-                      <span class="s2">&quot;&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">dest_start_cell</span><span class="o">.</span><span class="n">linkInFromCell</span><span class="p">)</span>
-            <span class="n">logging</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
-            <span class="n">dest_sheet_id</span> <span class="o">=</span> <span class="n">helper</span><span class="o">.</span><span class="n">json_extract</span><span class="p">(</span><span class="n">dest_start_cell</span><span class="p">,</span> <span class="s2">&quot;sheetId&quot;</span><span class="p">)</span>
-            <span class="n">dest_row_id</span> <span class="o">=</span> <span class="n">helper</span><span class="o">.</span><span class="n">json_extract</span><span class="p">(</span><span class="n">dest_start_cell</span><span class="p">,</span> <span class="s2">&quot;rowId&quot;</span><span class="p">)</span>
-            <span class="n">dest_sheet</span> <span class="o">=</span> <span class="n">smartsheet_api</span><span class="o">.</span><span class="n">get_sheet</span><span class="p">(</span><span class="n">dest_sheet_id</span><span class="p">)</span>
-            <span class="n">dest_col_map</span> <span class="o">=</span> <span class="n">helper</span><span class="o">.</span><span class="n">get_column_map</span><span class="p">(</span><span class="n">dest_sheet</span><span class="p">)</span>
-            <span class="n">dest_row</span> <span class="o">=</span> <span class="n">smartsheet_api</span><span class="o">.</span><span class="n">get_row</span><span class="p">(</span><span class="n">dest_sheet_id</span><span class="p">,</span> <span class="n">dest_row_id</span><span class="p">)</span>
-            <span class="n">dest_uuid</span> <span class="o">=</span> <span class="n">helper</span><span class="o">.</span><span class="n">get_cell_data</span><span class="p">(</span>
-                <span class="n">dest_row</span><span class="p">,</span> <span class="n">app_vars</span><span class="o">.</span><span class="n">uuid_col</span><span class="p">,</span> <span class="n">dest_col_map</span><span class="p">)</span>
-            <span class="n">row_data</span> <span class="o">=</span> <span class="n">project_data_index</span><span class="p">[</span><span class="n">dest_uuid</span><span class="p">]</span>
-            <span class="n">write_predecessor_dates</span><span class="p">(</span>
-                <span class="n">row_data</span><span class="p">,</span> <span class="n">project_data_index</span><span class="p">)</span>
-    <span class="k">except</span> <span class="ne">AttributeError</span><span class="p">:</span>
-        <span class="n">logging</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">&quot;Cell is not linked to another cell. Continuing.&quot;</span><span class="p">)</span>
-
-    <span class="k">if</span> <span class="n">start_date</span> <span class="o">==</span> <span class="n">dest_start_cell</span><span class="o">.</span><span class="n">value</span><span class="p">:</span>
-        <span class="n">msg</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="s2">&quot;Start date </span><span class="si">{}</span><span class="s2"> matches the start date </span><span class="si">{}</span><span class="s2"> in the &quot;</span>
-                  <span class="s2">&quot;predecessor row. No update needed.&quot;</span>
-                  <span class="s2">&quot;&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">start_date</span><span class="p">,</span> <span class="n">dest_start_cell</span><span class="o">.</span><span class="n">value</span><span class="p">)</span>
-        <span class="n">logging</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
-    <span class="k">else</span><span class="p">:</span>
-        <span class="c1"># Create empty cell</span>
-        <span class="n">new_start_date_cell</span> <span class="o">=</span> <span class="n">smartsheet</span><span class="o">.</span><span class="n">models</span><span class="o">.</span><span class="n">Cell</span><span class="p">()</span>
-        <span class="n">new_start_date_cell</span><span class="o">.</span><span class="n">value</span> <span class="o">=</span> <span class="n">start_date</span>
-        <span class="n">new_start_date_cell</span><span class="o">.</span><span class="n">column_id</span> <span class="o">=</span> <span class="n">dest_col_map</span><span class="p">[</span><span class="n">app_vars</span><span class="o">.</span><span class="n">start_col</span><span class="p">]</span>
-
-        <span class="c1"># Create a new row and append the updated cell</span>
-        <span class="n">new_row</span> <span class="o">=</span> <span class="n">smartsheet</span><span class="o">.</span><span class="n">models</span><span class="o">.</span><span class="n">Row</span><span class="p">()</span>
-        <span class="n">new_row</span><span class="o">.</span><span class="n">id</span> <span class="o">=</span> <span class="n">predecessor_row</span><span class="o">.</span><span class="n">id</span>
-        <span class="n">new_row</span><span class="o">.</span><span class="n">cells</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">new_start_date_cell</span><span class="p">)</span>
-
-        <span class="c1"># Send the updated row to the destination sheet.</span>
-        <span class="n">smartsheet_api</span><span class="o">.</span><span class="n">write_rows_to_sheet</span><span class="p">(</span>
-            <span class="n">new_row</span><span class="p">,</span> <span class="n">dest_sheet</span><span class="p">,</span> <span class="n">write_method</span><span class="o">=</span><span class="s2">&quot;update&quot;</span><span class="p">)</span>
-        <span class="n">msg</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="s2">&quot;Uploaded new start date </span><span class="si">{}</span><span class="s2"> to ancestor &quot;</span>
-                  <span class="s2">&quot;predecessor&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">start_date</span><span class="p">)</span>
-        <span class="n">logging</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
-
-        <span class="k">return</span> <span class="kc">True</span>
-</pre></div>
-
-        </details>
-
-            <div class="docstring"><p>Ensure predecessor start dates are updated across all linked sheets,
-   but only if the new start date is != the existing start date.</p>
-
-<h6 id="args">Args</h6>
-
-<ul>
-<li><strong>src_data (dict):</strong>  Row data from the write_uuid_cell_links.</li>
-<li><strong>project_data_index (dict):</strong>  The dict of UUIDs and row data pulled
-from every project sheet.</li>
-</ul>
-
-<h6 id="returns">Returns</h6>
-
-<blockquote>
-  <p>bool: True if the Start Date in the earliest predecessor was
-        written back via API. False if the Start Date was not
-        written due to failure.</p>
 </blockquote>
 </div>
 

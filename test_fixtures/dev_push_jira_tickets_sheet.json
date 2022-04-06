@@ -1,14 +1,14 @@
 {
     "id": 3312520078354308,
     "name": "Dev Push Jira Tickets",
-    "version": 255,
-    "totalRowCount": 9,
+    "version": 346,
+    "totalRowCount": 7,
     "accessLevel": "OWNER",
     "effectiveAttachmentOptions": [
         "FILE",
-        "DROPBOX",
+        "LINK",
         "EVERNOTE",
-        "LINK"
+        "DROPBOX"
     ],
     "ganttEnabled": false,
     "dependenciesEnabled": false,
@@ -23,13 +23,13 @@
         "summaryPermissions": "ADMIN"
     },
     "workspace": {
-        "id": 2618107878500228,
-        "name": "Twitch - Data Sync Tests"
+        "id": 7802463043512196,
+        "name": "Twitch - Data Sync Tests Dev"
     },
     "hasSummaryFields": false,
     "permalink": "https://app.smartsheet.com/sheets/mm2662PRGJhVMgjhQPWRHgc7FJCxp6hv7mr5HJ51",
     "createdAt": "2022-02-24T23:18:31Z",
-    "modifiedAt": "2022-03-29T18:34:07Z",
+    "modifiedAt": "2022-04-05T16:50:16Z",
     "isMultiPicklistEnabled": true,
     "columns": [
         {
@@ -408,12 +408,12 @@
             ]
         },
         {
-            "id": 506648285341572,
+            "id": 5741714934523780,
             "rowNumber": 2,
             "siblingId": 4408652633925508,
             "expanded": true,
-            "createdAt": "2022-03-29T18:27:45Z",
-            "modifiedAt": "2022-03-29T18:28:07Z",
+            "createdAt": "2022-03-29T21:32:15Z",
+            "modifiedAt": "2022-04-05T16:50:16Z",
             "cells": [
                 {
                     "columnId": 1912716843607940,
@@ -507,15 +507,15 @@
                     "objectValue": "Invalid response from JIRA. statusCode: 400, reasonPhrase:  Component name 'Sync to Smartsheet' is not valid",
                     "displayValue": "Invalid response from JIRA. statusCode: 400, reasonPhrase:  Component name 'Sync to Smartsheet' is not valid",
                     "hyperlink": {
-                        "url": "https://connectors.smartsheet.com/c/jira/execution/5HG7GDO2NOOMCGX7LEKSCMMRZI"
+                        "url": "https://connectors.smartsheet.com/c/jira/execution/OKXID47FXBPT4VLEAPDJPJUD5E"
                     }
                 },
                 {
                     "columnId": 4445991634003844,
-                    "value": "2022-03-29T18:27:57Z",
+                    "value": "2022-03-29T21:32:28Z",
                     "objectValue": {
                         "objectType": "DATETIME",
-                        "value": "2022-03-29T18:27:57Z"
+                        "value": "2022-03-29T21:32:28Z"
                     }
                 },
                 {
@@ -550,12 +550,12 @@
             ]
         },
         {
-            "id": 5010247912712068,
+            "id": 3489915120838532,
             "rowNumber": 3,
-            "siblingId": 506648285341572,
+            "siblingId": 5741714934523780,
             "expanded": true,
-            "createdAt": "2022-03-29T18:27:45Z",
-            "modifiedAt": "2022-03-29T18:28:07Z",
+            "createdAt": "2022-03-29T21:32:15Z",
+            "modifiedAt": "2022-04-05T16:50:16Z",
             "cells": [
                 {
                     "columnId": 1912716843607940,
@@ -649,15 +649,15 @@
                     "objectValue": "Invalid response from JIRA. statusCode: 400, reasonPhrase:  Field 'labels' cannot be set. It is not on the appropriate screen, or unknown.",
                     "displayValue": "Invalid response from JIRA. statusCode: 400, reasonPhrase:  Field 'labels' cannot be set. It is not on the appropriate screen, or unknown.",
                     "hyperlink": {
-                        "url": "https://connectors.smartsheet.com/c/jira/execution/5HG7GDO2NOOMCGX7LEKSCMMRZI"
+                        "url": "https://connectors.smartsheet.com/c/jira/execution/OKXID47FXBPT4VLEAPDJPJUD5E"
                     }
                 },
                 {
                     "columnId": 4445991634003844,
-                    "value": "2022-03-29T18:27:57Z",
+                    "value": "2022-03-29T21:32:28Z",
                     "objectValue": {
                         "objectType": "DATETIME",
-                        "value": "2022-03-29T18:27:57Z"
+                        "value": "2022-03-29T21:32:28Z"
                     }
                 },
                 {
@@ -692,12 +692,12 @@
             ]
         },
         {
-            "id": 2758448099026820,
+            "id": 7993514748209028,
             "rowNumber": 4,
-            "siblingId": 5010247912712068,
+            "siblingId": 3489915120838532,
             "expanded": true,
-            "createdAt": "2022-03-29T18:27:45Z",
-            "modifiedAt": "2022-03-29T18:28:07Z",
+            "createdAt": "2022-03-29T21:32:15Z",
+            "modifiedAt": "2022-04-05T16:50:16Z",
             "cells": [
                 {
                     "columnId": 1912716843607940,
@@ -791,15 +791,15 @@
                     "objectValue": "Invalid response from JIRA. statusCode: 400, reasonPhrase:  Field 'labels' cannot be set. It is not on the appropriate screen, or unknown.",
                     "displayValue": "Invalid response from JIRA. statusCode: 400, reasonPhrase:  Field 'labels' cannot be set. It is not on the appropriate screen, or unknown.",
                     "hyperlink": {
-                        "url": "https://connectors.smartsheet.com/c/jira/execution/5HG7GDO2NOOMCGX7LEKSCMMRZI"
+                        "url": "https://connectors.smartsheet.com/c/jira/execution/OKXID47FXBPT4VLEAPDJPJUD5E"
                     }
                 },
                 {
                     "columnId": 4445991634003844,
-                    "value": "2022-03-29T18:27:57Z",
+                    "value": "2022-03-29T21:32:28Z",
                     "objectValue": {
                         "objectType": "DATETIME",
-                        "value": "2022-03-29T18:27:57Z"
+                        "value": "2022-03-29T21:32:28Z"
                     }
                 },
                 {
@@ -834,12 +834,12 @@
             ]
         },
         {
-            "id": 7262047726397316,
+            "id": 675165353731972,
             "rowNumber": 5,
-            "siblingId": 2758448099026820,
+            "siblingId": 7993514748209028,
             "expanded": true,
-            "createdAt": "2022-03-29T18:27:45Z",
-            "modifiedAt": "2022-03-29T18:28:07Z",
+            "createdAt": "2022-03-29T21:32:15Z",
+            "modifiedAt": "2022-04-05T16:50:16Z",
             "cells": [
                 {
                     "columnId": 1912716843607940,
@@ -933,15 +933,15 @@
                     "objectValue": "Invalid response from JIRA. statusCode: 400, reasonPhrase:  Field 'components' cannot be set. It is not on the appropriate screen, or unknown.",
                     "displayValue": "Invalid response from JIRA. statusCode: 400, reasonPhrase:  Field 'components' cannot be set. It is not on the appropriate screen, or unknown.",
                     "hyperlink": {
-                        "url": "https://connectors.smartsheet.com/c/jira/execution/5HG7GDO2NOOMCGX7LEKSCMMRZI"
+                        "url": "https://connectors.smartsheet.com/c/jira/execution/OKXID47FXBPT4VLEAPDJPJUD5E"
                     }
                 },
                 {
                     "columnId": 4445991634003844,
-                    "value": "2022-03-29T18:27:57Z",
+                    "value": "2022-03-29T21:32:28Z",
                     "objectValue": {
                         "objectType": "DATETIME",
-                        "value": "2022-03-29T18:27:57Z"
+                        "value": "2022-03-29T21:32:28Z"
                     }
                 },
                 {
@@ -976,12 +976,12 @@
             ]
         },
         {
-            "id": 1632548192184196,
+            "id": 5178764981102468,
             "rowNumber": 6,
-            "siblingId": 7262047726397316,
+            "siblingId": 675165353731972,
             "expanded": true,
-            "createdAt": "2022-03-29T18:27:45Z",
-            "modifiedAt": "2022-03-29T18:28:07Z",
+            "createdAt": "2022-03-29T21:32:15Z",
+            "modifiedAt": "2022-04-05T16:50:16Z",
             "cells": [
                 {
                     "columnId": 1912716843607940,
@@ -1075,15 +1075,15 @@
                     "objectValue": "Invalid response from JIRA. statusCode: 400, reasonPhrase:  Field 'labels' cannot be set. It is not on the appropriate screen, or unknown.",
                     "displayValue": "Invalid response from JIRA. statusCode: 400, reasonPhrase:  Field 'labels' cannot be set. It is not on the appropriate screen, or unknown.",
                     "hyperlink": {
-                        "url": "https://connectors.smartsheet.com/c/jira/execution/5HG7GDO2NOOMCGX7LEKSCMMRZI"
+                        "url": "https://connectors.smartsheet.com/c/jira/execution/OKXID47FXBPT4VLEAPDJPJUD5E"
                     }
                 },
                 {
                     "columnId": 4445991634003844,
-                    "value": "2022-03-29T18:27:57Z",
+                    "value": "2022-03-29T21:32:28Z",
                     "objectValue": {
                         "objectType": "DATETIME",
-                        "value": "2022-03-29T18:27:57Z"
+                        "value": "2022-03-29T21:32:28Z"
                     }
                 },
                 {
@@ -1118,12 +1118,12 @@
             ]
         },
         {
-            "id": 4336127025801092,
+            "id": 3615058757347204,
             "rowNumber": 7,
-            "siblingId": 1632548192184196,
+            "siblingId": 5178764981102468,
             "expanded": true,
-            "createdAt": "2022-03-29T18:33:56Z",
-            "modifiedAt": "2022-03-29T18:34:07Z",
+            "createdAt": "2022-03-30T20:22:35Z",
+            "modifiedAt": "2022-04-05T16:50:16Z",
             "cells": [
                 {
                     "columnId": 1912716843607940,
@@ -1135,9 +1135,9 @@
                 },
                 {
                     "columnId": 4164516657293188,
-                    "value": "3027747506284420-7538046860715908-8645231372461956-202203181929060000",
-                    "objectValue": "3027747506284420-7538046860715908-8645231372461956-202203181929060000",
-                    "displayValue": "3027747506284420-7538046860715908-8645231372461956-202203181929060000"
+                    "value": "3027747506284420-4089281497982852-8645231372461956-202203301843300000",
+                    "objectValue": "3027747506284420-4089281497982852-8645231372461956-202203301843300000",
+                    "displayValue": "3027747506284420-4089281497982852-8645231372461956-202203301843300000"
                 },
                 {
                     "columnId": 8668116284663684
@@ -1160,15 +1160,15 @@
                 },
                 {
                     "columnId": 6134841494267780,
-                    "value": "Tests",
-                    "objectValue": "Tests",
-                    "displayValue": "Tests"
+                    "value": "Pre-Handoff Work: Bootstrap Data Center Hardware",
+                    "objectValue": "Pre-Handoff Work: Bootstrap Data Center Hardware",
+                    "displayValue": "Pre-Handoff Work: Bootstrap Data Center Hardware"
                 },
                 {
                     "columnId": 3883041680582532,
-                    "value": "ING",
-                    "objectValue": "ING",
-                    "displayValue": "ING"
+                    "value": "INT",
+                    "objectValue": "INT",
+                    "displayValue": "INT"
                 },
                 {
                     "columnId": 8386641307953028,
@@ -1188,22 +1188,25 @@
                         "values": [
                             "<<Initiative>>",
                             "<<Program-Name>>",
-                            "Ingest-Processing"
+                            "Global-Infrastructure"
                         ]
                     },
-                    "displayValue": "<<Initiative>>, <<Program-Name>>, Ingest-Processing"
+                    "displayValue": "<<Initiative>>, <<Program-Name>>, Global-Infrastructure"
                 },
                 {
-                    "columnId": 5571891540846468
+                    "columnId": 5571891540846468,
+                    "value": "implements IVS-2",
+                    "objectValue": "implements IVS-2",
+                    "displayValue": "implements IVS-2"
                 },
                 {
-                    "columnId": 3320091727161220,
-                    "value": "Invalid response from JIRA. statusCode: 400, reasonPhrase:  Field 'labels' cannot be set. It is not on the appropriate screen, or unknown.",
-                    "objectValue": "Invalid response from JIRA. statusCode: 400, reasonPhrase:  Field 'labels' cannot be set. It is not on the appropriate screen, or unknown.",
-                    "displayValue": "Invalid response from JIRA. statusCode: 400, reasonPhrase:  Field 'labels' cannot be set. It is not on the appropriate screen, or unknown."
+                    "columnId": 3320091727161220
                 },
                 {
-                    "columnId": 7823691354531716
+                    "columnId": 7823691354531716,
+                    "value": "Pre-Handoff Work: Bootstrap Data Center Hardware",
+                    "objectValue": "Pre-Handoff Work: Bootstrap Data Center Hardware",
+                    "displayValue": "Pre-Handoff Work: Bootstrap Data Center Hardware"
                 },
                 {
                     "columnId": 2194191820318596
@@ -1214,300 +1217,22 @@
                     "objectValue": "Invalid response from JIRA. statusCode: 400, reasonPhrase:  issue type is required",
                     "displayValue": "Invalid response from JIRA. statusCode: 400, reasonPhrase:  issue type is required",
                     "hyperlink": {
-                        "url": "https://connectors.smartsheet.com/c/jira/execution/FK7PG6FJR627EG6XOMFGP7XKXM"
+                        "url": "https://connectors.smartsheet.com/c/jira/execution/OKXID47FXBPT4VLEAPDJPJUD5E"
                     }
                 },
                 {
                     "columnId": 4445991634003844,
-                    "value": "2022-03-29T18:34:06Z",
+                    "value": "2022-03-30T20:22:52Z",
                     "objectValue": {
                         "objectType": "DATETIME",
-                        "value": "2022-03-29T18:34:06Z"
+                        "value": "2022-03-30T20:22:52Z"
                     }
                 },
                 {
                     "columnId": 8949591261374340,
-                    "value": "Story",
-                    "objectValue": "Story",
-                    "displayValue": "Story"
-                },
-                {
-                    "columnId": 47945122899844,
-                    "value": 0.0,
-                    "objectValue": 0.0,
-                    "displayValue": "0",
-                    "formula": "=COUNT(ANCESTORS([Jira Ticket]@row))"
-                },
-                {
-                    "columnId": 4551544750270340,
-                    "formula": "=PARENT([Jira Ticket]@row)"
-                },
-                {
-                    "columnId": 2299744936585092,
-                    "value": false,
-                    "objectValue": false,
-                    "formula": "=IF(OR(CONTAINS(\"KTLO\", Components@row), CONTAINS(\"KTLO\", Labels@row)), 1, 0)"
-                },
-                {
-                    "columnId": 6803344563955588,
-                    "value": false,
-                    "objectValue": false,
-                    "formula": "=IF(OR(CONTAINS(\"Inject\", Components@row), CONTAINS(\"Inject\", Labels@row)), 1, 0)"
-                }
-            ]
-        },
-        {
-            "id": 8839726653171588,
-            "rowNumber": 8,
-            "siblingId": 4336127025801092,
-            "expanded": true,
-            "createdAt": "2022-03-29T18:33:56Z",
-            "modifiedAt": "2022-03-29T18:34:07Z",
-            "cells": [
-                {
-                    "columnId": 1912716843607940,
-                    "value": false,
-                    "objectValue": false
-                },
-                {
-                    "columnId": 6416316470978436
-                },
-                {
-                    "columnId": 4164516657293188,
-                    "value": "3027747506284420-1908547326502788-8645231372461956-202203181929060000",
-                    "objectValue": "3027747506284420-1908547326502788-8645231372461956-202203181929060000",
-                    "displayValue": "3027747506284420-1908547326502788-8645231372461956-202203181929060000"
-                },
-                {
-                    "columnId": 8668116284663684
-                },
-                {
-                    "columnId": 505341960054660
-                },
-                {
-                    "columnId": 5008941587425156,
-                    "formula": "=VLOOKUP([Jira Status]@row, {Data Maps: Jira Status}, 2, false)"
-                },
-                {
-                    "columnId": 2757141773739908
-                },
-                {
-                    "columnId": 7260741401110404
-                },
-                {
-                    "columnId": 1631241866897284
-                },
-                {
-                    "columnId": 6134841494267780,
-                    "value": "Documentation",
-                    "objectValue": "Documentation",
-                    "displayValue": "Documentation"
-                },
-                {
-                    "columnId": 3883041680582532,
-                    "value": "ING",
-                    "objectValue": "ING",
-                    "displayValue": "ING"
-                },
-                {
-                    "columnId": 8386641307953028,
-                    "objectValue": {
-                        "objectType": "MULTI_PICKLIST",
-                        "values": [
-                            "Autogenerated by Smartsheet",
-                            "Sync to Smartsheet"
-                        ]
-                    },
-                    "displayValue": "Autogenerated by Smartsheet, Sync to Smartsheet"
-                },
-                {
-                    "columnId": 1068291913475972,
-                    "objectValue": {
-                        "objectType": "MULTI_PICKLIST",
-                        "values": [
-                            "<<Initiative>>",
-                            "<<Program-Name>>",
-                            "Ingest-Processing"
-                        ]
-                    },
-                    "displayValue": "<<Initiative>>, <<Program-Name>>, Ingest-Processing"
-                },
-                {
-                    "columnId": 5571891540846468
-                },
-                {
-                    "columnId": 3320091727161220,
-                    "value": "Invalid response from JIRA. statusCode: 400, reasonPhrase:  Field 'labels' cannot be set. It is not on the appropriate screen, or unknown.",
-                    "objectValue": "Invalid response from JIRA. statusCode: 400, reasonPhrase:  Field 'labels' cannot be set. It is not on the appropriate screen, or unknown.",
-                    "displayValue": "Invalid response from JIRA. statusCode: 400, reasonPhrase:  Field 'labels' cannot be set. It is not on the appropriate screen, or unknown."
-                },
-                {
-                    "columnId": 7823691354531716
-                },
-                {
-                    "columnId": 2194191820318596
-                },
-                {
-                    "columnId": 6697791447689092,
-                    "value": "Invalid response from JIRA. statusCode: 400, reasonPhrase:  issue type is required",
-                    "objectValue": "Invalid response from JIRA. statusCode: 400, reasonPhrase:  issue type is required",
-                    "displayValue": "Invalid response from JIRA. statusCode: 400, reasonPhrase:  issue type is required",
-                    "hyperlink": {
-                        "url": "https://connectors.smartsheet.com/c/jira/execution/FK7PG6FJR627EG6XOMFGP7XKXM"
-                    }
-                },
-                {
-                    "columnId": 4445991634003844,
-                    "value": "2022-03-29T18:34:06Z",
-                    "objectValue": {
-                        "objectType": "DATETIME",
-                        "value": "2022-03-29T18:34:06Z"
-                    }
-                },
-                {
-                    "columnId": 8949591261374340,
-                    "value": "Story",
-                    "objectValue": "Story",
-                    "displayValue": "Story"
-                },
-                {
-                    "columnId": 47945122899844,
-                    "value": 0.0,
-                    "objectValue": 0.0,
-                    "displayValue": "0",
-                    "formula": "=COUNT(ANCESTORS([Jira Ticket]@row))"
-                },
-                {
-                    "columnId": 4551544750270340,
-                    "formula": "=PARENT([Jira Ticket]@row)"
-                },
-                {
-                    "columnId": 2299744936585092,
-                    "value": false,
-                    "objectValue": false,
-                    "formula": "=IF(OR(CONTAINS(\"KTLO\", Components@row), CONTAINS(\"KTLO\", Labels@row)), 1, 0)"
-                },
-                {
-                    "columnId": 6803344563955588,
-                    "value": false,
-                    "objectValue": false,
-                    "formula": "=IF(OR(CONTAINS(\"Inject\", Components@row), CONTAINS(\"Inject\", Labels@row)), 1, 0)"
-                }
-            ]
-        },
-        {
-            "id": 254739863496580,
-            "rowNumber": 9,
-            "siblingId": 8839726653171588,
-            "expanded": true,
-            "createdAt": "2022-03-29T18:33:56Z",
-            "modifiedAt": "2022-03-29T18:34:07Z",
-            "cells": [
-                {
-                    "columnId": 1912716843607940,
-                    "value": false,
-                    "objectValue": false
-                },
-                {
-                    "columnId": 6416316470978436
-                },
-                {
-                    "columnId": 4164516657293188,
-                    "value": "3027747506284420-6412146953873284-8645231372461956-202203181929060000",
-                    "objectValue": "3027747506284420-6412146953873284-8645231372461956-202203181929060000",
-                    "displayValue": "3027747506284420-6412146953873284-8645231372461956-202203181929060000"
-                },
-                {
-                    "columnId": 8668116284663684
-                },
-                {
-                    "columnId": 505341960054660
-                },
-                {
-                    "columnId": 5008941587425156,
-                    "formula": "=VLOOKUP([Jira Status]@row, {Data Maps: Jira Status}, 2, false)"
-                },
-                {
-                    "columnId": 2757141773739908
-                },
-                {
-                    "columnId": 7260741401110404
-                },
-                {
-                    "columnId": 1631241866897284
-                },
-                {
-                    "columnId": 6134841494267780,
-                    "value": "QA",
-                    "objectValue": "QA",
-                    "displayValue": "QA"
-                },
-                {
-                    "columnId": 3883041680582532,
-                    "value": "ING",
-                    "objectValue": "ING",
-                    "displayValue": "ING"
-                },
-                {
-                    "columnId": 8386641307953028,
-                    "objectValue": {
-                        "objectType": "MULTI_PICKLIST",
-                        "values": [
-                            "Autogenerated by Smartsheet",
-                            "Sync to Smartsheet"
-                        ]
-                    },
-                    "displayValue": "Autogenerated by Smartsheet, Sync to Smartsheet"
-                },
-                {
-                    "columnId": 1068291913475972,
-                    "objectValue": {
-                        "objectType": "MULTI_PICKLIST",
-                        "values": [
-                            "<<Initiative>>",
-                            "<<Program-Name>>",
-                            "Ingest-Processing"
-                        ]
-                    },
-                    "displayValue": "<<Initiative>>, <<Program-Name>>, Ingest-Processing"
-                },
-                {
-                    "columnId": 5571891540846468
-                },
-                {
-                    "columnId": 3320091727161220,
-                    "value": "Invalid response from JIRA. statusCode: 400, reasonPhrase:  Field 'labels' cannot be set. It is not on the appropriate screen, or unknown.",
-                    "objectValue": "Invalid response from JIRA. statusCode: 400, reasonPhrase:  Field 'labels' cannot be set. It is not on the appropriate screen, or unknown.",
-                    "displayValue": "Invalid response from JIRA. statusCode: 400, reasonPhrase:  Field 'labels' cannot be set. It is not on the appropriate screen, or unknown."
-                },
-                {
-                    "columnId": 7823691354531716
-                },
-                {
-                    "columnId": 2194191820318596
-                },
-                {
-                    "columnId": 6697791447689092,
-                    "value": "Invalid response from JIRA. statusCode: 400, reasonPhrase:  issue type is required",
-                    "objectValue": "Invalid response from JIRA. statusCode: 400, reasonPhrase:  issue type is required",
-                    "displayValue": "Invalid response from JIRA. statusCode: 400, reasonPhrase:  issue type is required",
-                    "hyperlink": {
-                        "url": "https://connectors.smartsheet.com/c/jira/execution/FK7PG6FJR627EG6XOMFGP7XKXM"
-                    }
-                },
-                {
-                    "columnId": 4445991634003844,
-                    "value": "2022-03-29T18:34:06Z",
-                    "objectValue": {
-                        "objectType": "DATETIME",
-                        "value": "2022-03-29T18:34:06Z"
-                    }
-                },
-                {
-                    "columnId": 8949591261374340,
-                    "value": "Story",
-                    "objectValue": "Story",
-                    "displayValue": "Story"
+                    "value": "Epic",
+                    "objectValue": "Epic",
+                    "displayValue": "Epic"
                 },
                 {
                     "columnId": 47945122899844,

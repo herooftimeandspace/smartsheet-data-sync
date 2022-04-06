@@ -1,266 +1,253 @@
 {
-    "id": 3483300536969092,
-    "sheetId": 3027747506284420,
-    "rowNumber": 53,
-    "parentId": 5735100350654340,
-    "version": 63,
+    "id": 5876685884024708,
+    "sheetId": 5447415714080644,
+    "rowNumber": 104,
+    "parentId": 7002585790867332,
+    "siblingId": 1373086256654212,
+    "version": 7,
     "expanded": true,
     "accessLevel": "OWNER",
-    "createdAt": "2021-11-18T21:23:54Z",
-    "modifiedAt": "2022-01-13T22:11:13Z",
+    "createdAt": "2022-04-01T19:53:25Z",
+    "modifiedAt": "2022-04-05T23:48:51Z",
     "cells": [
         {
-            "columnId": 3156469326604164,
-            "value": "000051",
-            "objectValue": "000051",
-            "displayValue": "000051"
+            "columnId": 7389372265850756,
+            "value": "000249",
+            "objectValue": "000249",
+            "displayValue": "000249"
         },
         {
-            "columnId": 7660068953974660,
-            "value": "2021-11-18T21:23:54Z",
+            "columnId": 1759872731637636,
+            "value": "2022-04-01T19:53:25Z",
             "objectValue": {
                 "objectType": "DATETIME",
-                "value": "2021-11-18T21:23:54Z"
+                "value": "2022-04-01T19:53:25Z"
             }
         },
         {
-            "columnId": 2030569419761540,
-            "value": "2022-01-13T22:11:13Z",
+            "columnId": 6263472359008132,
+            "value": "2022-04-05T23:48:51Z",
             "objectValue": {
                 "objectType": "DATETIME",
-                "value": "2022-01-13T22:11:13Z"
+                "value": "2022-04-05T23:48:51Z"
             }
         },
         {
-            "columnId": 6534169047132036,
-            "value": "01/13/22 2:11 PM",
-            "objectValue": "01/13/22 2:11 PM",
-            "displayValue": "01/13/22 2:11 PM",
+            "columnId": 4011672545322884,
+            "value": "04/05/22 4:48 PM",
+            "objectValue": "04/05/22 4:48 PM",
+            "displayValue": "04/05/22 4:48 PM",
             "formula": "=Modified@row + \"\""
         },
         {
-            "columnId": 4282369233446788,
+            "columnId": 8515272172693380,
             "value": false,
             "objectValue": false,
             "formula": "=IF(OR(Tasks@row = \"Summary\", PARENT(Tasks@row) = \"Summary\"), true, false)"
         },
         {
-            "columnId": 8785968860817284,
+            "columnId": 352497848084356,
             "value": false,
             "objectValue": false,
             "formula": "=IF(HAS([Quarter Rollup]@row, INDEX({Quarter}, MATCH(true, {Current Quarter}, 0))), 1, 0)"
         },
         {
-            "columnId": 200982071142276,
+            "columnId": 4856097475454852,
             "value": false,
             "objectValue": false,
             "formula": "=IF(Summary@row = true, \"\", IF(Quarter@row = INDEX(COLLECT({Quarter}, {Start}, @cell >= {Today}), 1), true, false))"
         },
         {
-            "columnId": 4704581698512772,
+            "columnId": 2604297661769604,
             "formula": "=IFERROR(IF(Summary@row = 1, \"\", JOIN(COLLECT({Quarter}, {Start}, @cell <= Finish@row, {End}, @cell >= Start@row), CHAR(10))), \"\")"
         },
         {
-            "columnId": 2452781884827524,
+            "columnId": 7107897289140100,
             "value": false,
             "objectValue": false,
             "formula": "=IF(PARENT(Tasks@row) = \"Amazon Launch Tasks\", 1, 0)"
         },
         {
-            "columnId": 6956381512198020,
+            "columnId": 1478397754926980,
             "value": false,
             "objectValue": false,
             "formula": "=IF(Summary@row = true, \"\", IF([Sync to Jira]# = false, false, IF(OR(Tasks@row = \"Amazon Launch Tasks\", PARENT(Tasks@row) = \"Amazon Launch Tasks\"), false, true)))"
         },
         {
-            "columnId": 5830481605355396,
-            "value": "3027747506284420-5735100350654340-8645231372461956-202111182123540000",
-            "objectValue": "3027747506284420-5735100350654340-8645231372461956-202111182123540000",
-            "displayValue": "3027747506284420-5735100350654340-8645231372461956-202111182123540000",
+            "columnId": 5981997382297476,
+            "value": "5447415714080644-7002585790867332-8093059707627396-202204011953250000",
+            "objectValue": "5447415714080644-7002585790867332-8093059707627396-202204011953250000",
+            "displayValue": "5447415714080644-7002585790867332-8093059707627396-202204011953250000",
             "formula": "=IFERROR(PARENT(UUID@row), \"\")"
         },
         {
-            "columnId": 3578681791670148,
+            "columnId": 3730197568612228,
             "formula": "=IF(CONTAINS(\"-\", Team@row), LEFT(Team@row, FIND(\"-\", Team@row) - 1), Team@row)"
         },
         {
-            "columnId": 8082281419040644,
+            "columnId": 8233797195982724,
             "value": "<<Priority>>",
             "objectValue": "<<Priority>>",
             "displayValue": "<<Priority>>",
             "formula": "=IF(Summary@row = false, INDEX(Description:Description, MATCH(\"Priority\", Tasks:Tasks, 0)), \"\")"
         },
         {
-            "columnId": 763932024563588,
+            "columnId": 915447801505668,
             "formula": "=\"\""
         },
         {
-            "columnId": 5267531651934084,
+            "columnId": 5419047428876164,
             "value": "<<Initiative>>",
             "objectValue": "<<Initiative>>",
             "displayValue": "<<Initiative>>",
             "formula": "=IF(Summary@row = false, INDEX(Description:Description, MATCH(\"Initiative\", Tasks:Tasks, 0)), \"\")"
         },
         {
-            "columnId": 3015731838248836,
+            "columnId": 3167247615190916,
             "value": "<<Program Name>>",
             "objectValue": "<<Program Name>>",
             "displayValue": "<<Program Name>>",
             "formula": "=IF(Summary@row = false, INDEX(Description:Description, MATCH(\"Name\", Tasks:Tasks, 0)), \"\")"
         },
         {
-            "columnId": 7519331465619332,
-            "value": "Task",
-            "objectValue": "Task",
-            "displayValue": "Task",
+            "columnId": 7670847242561412,
+            "value": "Parent",
+            "objectValue": "Parent",
+            "displayValue": "Parent",
             "formula": "=IF(Summary@row = true, \"\", IF(COUNT(ANCESTORS(Tasks@row)) = 0, \"Project\", IF(COUNT(CHILDREN(Tasks@row)) > 0, \"Parent\", \"Task\")))"
         },
         {
-            "columnId": 1889831931406212,
+            "columnId": 2041347708348292,
             "formula": "=IF(Summary@row = true, \"\", VALUE(LEFT(Quarter@row, 4)))"
         },
         {
-            "columnId": 6393431558776708,
-            "value": false,
-            "objectValue": false,
+            "columnId": 6544947335718788,
+            "value": true,
+            "objectValue": true,
             "formula": "=IF(Summary@row = true, false, IF(COUNT(CHILDREN(Tasks@row)) > 0, true, false))"
         },
         {
-            "columnId": 4141631745091460,
+            "columnId": 4293147522033540,
             "value": false,
             "objectValue": false,
             "formula": "=IF(Summary@row = true, false, IF({Child Projects} > 0, true, false))"
         },
         {
-            "columnId": 8645231372461956,
-            "value": "3027747506284420-3483300536969092-8645231372461956-202111182123540000",
-            "objectValue": "3027747506284420-3483300536969092-8645231372461956-202111182123540000",
-            "displayValue": "3027747506284420-3483300536969092-8645231372461956-202111182123540000"
-        },
-        {
-            "columnId": 482457047852932,
+            "columnId": 8796747149404036,
             "formula": "=IF(Summary@row = true, \"\", IF([Child Projects]@row = true, \"\", IF(Inject@row = true, LoE@row, IF(INDEX(Description:Description, MATCH(\"Inject\", Tasks:Tasks, 0)) = true, LoE@row, \"\"))))"
         },
         {
-            "columnId": 4986056675223428,
+            "columnId": 211760359729028,
             "formula": "=IF(Summary@row = true, \"\", IF([Child Projects]@row = true, \"\", IF(Inject@row = true, \"\", IF(INDEX(Description:Description, MATCH(\"Inject\", Tasks:Tasks, 0)) = true, \"\", LoE@row))))"
         },
         {
-            "columnId": 2734256861538180,
+            "columnId": 4715359987099524,
             "formula": "=IF(Summary@row = true, \"\", IF([Child Projects]@row = true, \"\", IF(Inject@row = true, [Estimated LoE]@row, IF(INDEX(Description:Description, MATCH(\"Inject\", Tasks:Tasks, 0)) = true, [Estimated LoE]@row, \"\"))))"
         },
         {
-            "columnId": 7237856488908676,
+            "columnId": 2463560173414276,
             "formula": "=IF(Summary@row = true, \"\", IF([Child Projects]@row = true, \"\", IF(Inject@row = true, \"\", IF(INDEX(Description:Description, MATCH(\"Inject\", Tasks:Tasks, 0)) = true, \"\", [Estimated LoE]@row))))"
         },
         {
-            "columnId": 1608356954695556
+            "columnId": 6967159800784772
         },
         {
-            "columnId": 6111956582066052
+            "columnId": 1337660266571652
         },
         {
-            "columnId": 3860156768380804
+            "columnId": 5841259893942148
         },
         {
-            "columnId": 8363756395751300,
+            "columnId": 3589460080256900,
             "value": 2.0,
             "objectValue": 2.0,
             "displayValue": "2",
             "formula": "=COUNT(ANCESTORS())"
         },
         {
-            "columnId": 1045407001274244
+            "columnId": 8093059707627396,
+            "value": "5447415714080644-5876685884024708-8093059707627396-202204011953250000",
+            "objectValue": "5447415714080644-5876685884024708-8093059707627396-202204011953250000",
+            "displayValue": "5447415714080644-5876685884024708-8093059707627396-202204011953250000"
         },
         {
-            "columnId": 5549006628644740
+            "columnId": 774710313150340
         },
         {
-            "columnId": 6817156137543556
+            "columnId": 5278309940520836
         },
         {
-            "columnId": 3297206814959492
+            "columnId": 3026510126835588
         },
         {
-            "columnId": 7800806442329988,
-            "value": "Finalize Specifications",
-            "objectValue": "Finalize Specifications",
-            "displayValue": "Finalize Specifications"
+            "columnId": 7530109754206084
         },
         {
-            "columnId": 2171306908116868,
-            "value": "bump",
-            "objectValue": "bump",
-            "displayValue": "bump"
+            "columnId": 1900610219992964,
+            "value": "Deliverable Team 6",
+            "objectValue": "Deliverable Team 6",
+            "displayValue": "Deliverable Team 6"
         },
         {
-            "columnId": 6886012768020356
+            "columnId": 6404209847363460
         },
         {
-            "columnId": 374081349543812,
+            "columnId": 4152410033678212
+        },
+        {
+            "columnId": 8656009661048708,
             "formula": "=PARENT([Jira Ticket]@row)"
         },
         {
-            "columnId": 4877680976914308,
+            "columnId": 493235336439684,
             "value": "Story",
             "objectValue": "Story",
             "displayValue": "Story",
-            "formula": "=IFERROR(IF(Hierarchy@row <= 1, \"Epic\", IF(Hierarchy@row = 2, \"Story\", IF(Hierarchy@row = 3, \"Task\", IF(Hierarchy@row = 4, \"Sub-Task\", \"\")))), \"\")"
+            "formula": "=IF(AND(Hierarchy@row = 0, Team@row = \"IVS PMO\"), \"Project\", IF(AND(Team@row = \"IVS PMO\", COUNT(CHILDREN(Tasks@row)) = 0), \"Task\", IF(OR(PARENT(Team@row) = \"IVS PMO\", Hierarchy@row < 2), \"Epic\", IF(PARENT() = \"Story\", \"Task\", IF(PARENT() = \"Task\", \"Task\", \"Story\")))))"
         },
         {
-            "columnId": 633554282538884,
+            "columnId": 4996834963810180,
             "value": "Epic",
             "objectValue": "Epic",
             "displayValue": "Epic",
             "formula": "=PARENT([Issue Type]@row)"
         },
         {
-            "columnId": 1326881977984900,
+            "columnId": 2745035150124932,
             "formula": "=IFERROR(IF(Summary@row = 1, \"\", VLOOKUP(Team@row, {TeamMap}, 2, false)), \"\")"
         },
         {
-            "columnId": 6674906535487364
+            "columnId": 7248634777495428
         },
         {
-            "columnId": 3508313047492484
+            "columnId": 1619135243282308
         },
         {
-            "columnId": 4423106721802116
+            "columnId": 6122734870652804
         },
         {
-            "columnId": 8926706349172612,
-            "value": "2021-12-18T21:23:54Z",
-            "objectValue": {
-                "objectType": "DATETIME",
-                "value": "2021-12-18T21:23:54Z"
-            }
+            "columnId": 3870935056967556,
+            "formula": "=CALCDURATION(Start104, Finish104)"
         },
         {
-            "columnId": 130613326964612,
-            "value": "2021-12-18T21:23:54Z",
-            "objectValue": {
-                "objectType": "DATETIME",
-                "value": "2021-12-18T21:23:54Z"
-            }
+            "columnId": 8374534684338052,
+            "formula": "=MIN(CHILDREN())"
         },
         {
-            "columnId": 4634212954335108
+            "columnId": 1056185289860996
         },
         {
-            "columnId": 2382413140649860,
+            "columnId": 5559784917231492,
             "formula": "=INDEX(COLLECT({Quarter}, {Start}, @cell <= Finish@row, {End}, @cell >= Finish@row), 1)"
         },
         {
-            "columnId": 1256513233807236
+            "columnId": 3307985103546244
         },
         {
-            "columnId": 5760112861177732,
-            "value": 1.0,
-            "objectValue": 1.0,
-            "displayValue": "100%"
+            "columnId": 7811584730916740
         },
         {
-            "columnId": 8011912674862980
+            "columnId": 2182085196703620
         }
     ]
 }

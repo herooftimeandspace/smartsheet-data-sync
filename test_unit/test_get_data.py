@@ -16,86 +16,27 @@ utc = pytz.UTC
 _, cwd = helper.get_local_paths()
 
 
-# @pytest.fixture(scope="module")
-# def sheet_fixture():
-#     with open(cwd + '/dev_program_plan.json') as f:
-#         sheet_json = json.load(f)
-
-#     def no_uuid_col(sheet_json):
-#         sheet_json['columns'][20]['title'] = "Not UUID"
-#         no_uuid_col = smartsheet.models.Sheet(sheet_json)
-#         return no_uuid_col
-
-#     def no_summary_col(sheet_json):
-#         sheet_json['columns'][4]['title'] = "Not Summary"
-#         no_summary_col = smartsheet.models.Sheet(sheet_json)
-#         return no_summary_col
-
-#     sheet = smartsheet.models.Sheet(sheet_json)
-#     col_map = helper.get_column_map(sheet)
-#     sheet_no_uuid_col = no_uuid_col(sheet_json)
-#     sheet_no_summary_col = no_summary_col(sheet_json)
-#     return sheet, col_map, sheet_no_uuid_col, sheet_no_summary_col
-
-
-# @pytest.fixture(scope="module")
-# def jira_index_sheet_fixture():
-#     with open(cwd + '/dev_jira_index_sheet.json') as f:
-#         dev_idx_sheet = json.load(f)
-#         dev_idx_sheet = smartsheet.models.Sheet(dev_idx_sheet)
-#     with open(cwd + '/dev_jira_idx_rows.json') as f:
-#         dev_idx_rows = json.load(f)
-#     dev_idx_col_map = helper.get_column_map(dev_idx_sheet)
-#     return dev_idx_sheet, dev_idx_col_map, dev_idx_rows
-
-
-# @pytest.fixture(scope="module")
-# def workspace_fixture():
-#     with open(cwd + '/dev_workspaces.json') as f:
-#         dev_workspace = json.load(f)
-#         dev_workspace = smartsheet.models.Workspace(dev_workspace)
-#     ws_ids = [2125936310151044, 7754886088550276, 775947692599172,
-#               5279547319969668, 5447415714080644, 7531347133654916,
-#               1901847599441796, 6405447226812292, 4153647413127044,
-#               8657247040497540]
-#     return dev_workspace, ws_ids
-
-
-# @pytest.fixture(scope="module")
-# def row():
-#     with open(cwd + '/dev_program_plan_row.json') as f:
-#         row_json = json.load(f)
-#     row = smartsheet.models.Row(row_json)
-#     row_list = [row]
-#     return row, row_list
-
-
-# @pytest.fixture
-# def env():
-#     return "--debug"
-
-
-# @pytest.fixture
-# def sheet_ids():
-#     return [5447415714080644]
-
-
-# @pytest.fixture
-# def minutes():
-#     return 5
-
-
-# @pytest.fixture
-# def columns():
-#     columns = app_vars.sheet_columns
-# return columns
-
-
 def set_init_fixture():
     import app.config as config
     config.init(["--debug"])
     global smartsheet_client
     smartsheet_client = config.smartsheet_client
+
+
+# def test_set_all_row_data(sheet_fixture):
+#     import app.config as config
+#     sheet, _, _, _ = sheet_fixture
+#     all_row_data = get_data.get_all_row_data(
+#         [sheet], app_vars.sheet_columns, config.minutes)
+#     for _, values in all_row_data.items():
+#         for col, v in values.items():
+#             if col == "Summary":
+#                 if not v:
+#                     values[col] = str("False")
+#             elif not v:
+#                 values[col] = str("None")
+#     with open(cwd + '/dev_all_row_data.json', 'w', encoding='utf-8') as f:
+#         json.dump(all_row_data, f, ensure_ascii=False, indent=4)
 
 
 # Type testing. Separate tests needed for integraiton.
@@ -177,7 +118,7 @@ def test_get_all_row_data_1(sheet_fixture):
             [sheet], app_vars.sheet_columns, config.minutes)
         return result_0
 
-    # TODO: Handle rows without UUID (Program Plan row 77)
+    # TODO: Handle rows without UUID
     all_row_data = prep_0()
     result_1 = test_0()
     for k in result_1.keys():
@@ -262,18 +203,30 @@ def test_get_blank_uuids_0():
 
 @freeze_time("2021-11-18 21:23:54")
 def test_get_blank_uuids_1(sheet_fixture):
-    sheet, _, _, _ = sheet_fixture
+    _, col_map, _, _ = sheet_fixture
+    with open(cwd + '/dev_program_plan.json') as f:
+        blank_uuid_sheet = json.load(f)
+
+    for row in blank_uuid_sheet['rows']:
+        for cell in row['cells']:
+            if cell['columnId'] == col_map[app_vars.uuid_col]:
+                cell['value'] = None
+                cell['objectValue'] = None
+                cell['displayValue'] = None
+    blank_uuid_sheet = smartsheet.models.Sheet(blank_uuid_sheet)
 
     def test_0():
-        result = get_data.get_blank_uuids([sheet])
+        result = get_data.get_blank_uuids([blank_uuid_sheet])
         return result
 
     def test_1():
         result = get_data.get_blank_uuids([])
         return result
 
-    def test_2(test_0_result):
-        for sheet_id_key, values_0 in test_0_result.items():
+    def test_2():
+        result_0 = get_data.get_blank_uuids([blank_uuid_sheet])
+
+        for sheet_id_key, values_0 in result_0.items():
             assert isinstance(sheet_id_key, int)
             assert isinstance(values_0["row_data"], dict)
             assert isinstance(values_0["sheet_name"], str)
@@ -287,7 +240,7 @@ def test_get_blank_uuids_1(sheet_fixture):
     assert result_0 is not None
     result_1 = test_1()
     assert result_1 is None
-    result_2 = test_2(result_0)
+    result_2 = test_2()
     assert result_2 is True
     # with open(cwd + '/blank_uuids.txt') as f:
     #     print(f)
@@ -384,7 +337,8 @@ def test_get_all_sheet_ids_1(workspace_fixture):
     result_0 = test_0()
     for id in result_0:
         assert id in ws_ids
-    assert app_vars.dev_jira_idx_sheet not in ws_ids
+    assert config.index_sheet not in result_0
+    assert config.push_tickets_sheet not in result_0
 
 
 # TODO: Failing pynguin test

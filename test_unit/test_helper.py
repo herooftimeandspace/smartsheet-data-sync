@@ -153,7 +153,7 @@ def test_get_all_cell_data_1(row_fixture, sheet_fixture, cell_fixture):
     row, _ = row_fixture
     _, col_map, _, _ = sheet_fixture
     test_fixture_cell_data, _, _, _, _, _ = cell_fixture
-    test_cell_data = helper.get_cell_data(row, app_vars.task_col, col_map)
+    test_cell_data = helper.get_cell_data(row, app_vars.uuid_col, col_map)
     assert (test_cell_data.value,
             test_cell_data.column_id,
             test_cell_data.column_type,
