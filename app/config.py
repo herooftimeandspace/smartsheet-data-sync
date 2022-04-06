@@ -91,12 +91,12 @@ def get_secret(secret_name):
             return decoded_binary_secret
 
 
-def get_secret_name(env="--debug"):
+def get_secret_name(env="--dev"):
     """Gets the name of the secret name to query based on the environmental
        variable set when the app is loaded
 
     Args:
-        env (str, optional): The environment variable. Defaults to "--debug".
+        env (str, optional): The environment variable. Defaults to "--dev".
 
     Raises:
         TypeError: Must be a string
@@ -191,7 +191,7 @@ def set_env_vars(env):
                       "to: {}. Pushing tickets to {}"
                       "").format(flag, workspace_id, index_sheet, minutes,
                                  push_tickets_sheet)
-        env = "--debug"
+        env = "--dev"
     env_dict = {'env': env, 'env_msg': env_msg, 'workspace_id': workspace_id,
                 'index_sheet': index_sheet, 'minutes': minutes,
                 'push_tickets_sheet': push_tickets_sheet}
@@ -337,7 +337,7 @@ def init(args):
     try:
         env = args[0]
     except IndexError:
-        env = '--debug'
+        env = '--dev'
     config = set_env_vars(env)
 
     # Get the logging config and try to create a new file for logs if the
