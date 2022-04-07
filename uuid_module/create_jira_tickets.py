@@ -552,7 +552,7 @@ def copy_uuid_to_index_sheet(index_sheet, index_col_map):
             if sub_ticket == jira_ticket.value:
                 msg = str("Push ticket {} matches Index ticket {}, writing "
                           "UUID: {}").format(sub_ticket, jira_ticket.value,
-                                             uuid.value)
+                                             uuid)
                 logging.debug(msg)
                 new_row = smartsheet.models.Row()
                 new_row.id = row.id
@@ -562,9 +562,9 @@ def copy_uuid_to_index_sheet(index_sheet, index_col_map):
                 })
                 rows_to_write.append(new_row)
     if rows_to_write:
-        smartsheet_api.write_rows_to_sheet(rows_to_write, index_sheet,
-                                           write_method="update")
-        return True
+        result = smartsheet_api.write_rows_to_sheet(rows_to_write, index_sheet,
+                                                    write_method="update")
+        return result
     else:
         msg = str("No UUIDs copied to Sheet ID: {}, Sheet Name: {}"
                   "").format(index_sheet.id, index_sheet.name)
@@ -640,7 +640,7 @@ def create_ticket_index(source_sheets, index_sheet, index_col_map):
               Program Plans
     """
     if not isinstance(source_sheets, list):
-        msg = str("Sheet should be dict or smartsheet.Sheet, not {}"
+        msg = str("Source Sheets should be a list, not {}"
                   "").format(type(source_sheets))
         raise TypeError(msg)
     if not isinstance(index_sheet, (dict, smartsheet.models.Sheet)):
@@ -677,10 +677,18 @@ def create_ticket_index(source_sheets, index_sheet, index_col_map):
             logging.debug("New Row")
             logging.debug("------------------------")
             row_data = build_row_data(row, col_map)
-            if not row_data[app_vars.jira_col]:
+            if row_data[app_vars.jira_col] is None:
                 # Skip rows with no data in the Jira column
                 msg = str("Row {} skipped because Jira column was empty."
                           "").format(row_data["row_num"])
+                logging.debug(msg)
+                continue
+            if bool(re.match(r"[a-zA-Z]+-\d+",
+                             str(row_data[app_vars.jira_col]))):
+                # Skip tickets that match the Jira Ticket pattern
+                msg = str("Jira Ticket {} on row {} matches the Jira Ticket"
+                          "pattern").format(row_data[app_vars.jira_col],
+                                            row_data["row_num"])
                 logging.debug(msg)
                 continue
             if row_data[app_vars.summary_col] == "True":
@@ -714,14 +722,6 @@ def create_ticket_index(source_sheets, index_sheet, index_col_map):
                 msg = str("Row {} skipped because Parent Issue Type is {}."
                           "").format(row_data["row_num"],
                                      row_data["Parent Issue Type"])
-                logging.debug(msg)
-                continue
-            if bool(re.match(r"[a-zA-Z]+-\d+",
-                             str(row_data[app_vars.jira_col]))):
-                # Skip tickets that match the Jira Ticket pattern
-                msg = str("Jira Ticket {} on row {} matches the Jira Ticket"
-                          "pattern").format(row_data[app_vars.jira_col],
-                                            row_data["row_num"])
                 logging.debug(msg)
                 continue
             if "reasonPhrase" in row_data["Parent Ticket"]:
@@ -883,9 +883,9 @@ def modify_scheduler(time):
             msg = str("Job interval is {} minute(s) longer than the job "
                       "runtime. Reduced interval to {} minutes"
                       "").format(int(delta), new_interval)
-        else:
-            msg = str("SUCCESS: Job interval {}, elapsed time {}, delta {}"
-                      "").format(interval, time, delta)
+        # else:
+        #     msg = str("SUCCESS: Job interval {}, elapsed time {}, delta {}"
+        #               "").format(interval, time, delta)
 
     elif interval < time:
         # If the interval is less than the time it took to run the process,
@@ -1024,13 +1024,13 @@ def create_tickets(minutes=app_vars.dev_minutes):
         interval_msg = modify_scheduler(elapsed)
         logging.info(interval_msg)
         return False
-    else:
-        end = time.time()
-        elapsed = end - start
-        elapsed = helper.truncate(elapsed, 2)
-        interval_msg = modify_scheduler(elapsed)
-        logging.info(interval_msg)
-        msg = str("Looping through rows rows to create Jira Tickts "
-                  "failed with an unknown error.")
-        logging.warning(msg)
-        return None
+    # else:
+    #     end = time.time()
+    #     elapsed = end - start
+    #     elapsed = helper.truncate(elapsed, 2)
+    #     interval_msg = modify_scheduler(elapsed)
+    #     logging.info(interval_msg)
+    #     msg = str("Looping through rows rows to create Jira Tickts "
+    #               "failed with an unknown error.")
+    #     logging.warning(msg)
+    #     return None

@@ -73,8 +73,14 @@ def push_tickets_sheet_fixture():
     with open(cwd + '/dev_push_jira_tickets_sheet.json') as f:
         push_tickets_sheet = json.load(f)
         push_tickets_sheet = smartsheet.models.Sheet(push_tickets_sheet)
+    with open(cwd + '/dev_push_jira_tickets_sheet_row.json') as f:
+        push_tickets_row = json.load(f)
+        push_tickets_row = smartsheet.models.Row(push_tickets_row)
     col_map = helper.get_column_map(push_tickets_sheet)
-    return push_tickets_sheet, col_map
+    uuid_cell = helper.get_cell_data(
+        push_tickets_row, app_vars.uuid_col, col_map)
+    sync_cell = helper.get_cell_data(push_tickets_row, "Sync Status", col_map)
+    return push_tickets_sheet, col_map, push_tickets_row, uuid_cell, sync_cell
 
 
 @pytest.fixture(scope="module")

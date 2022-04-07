@@ -633,7 +633,7 @@
             <span class="k">if</span> <span class="n">sub_ticket</span> <span class="o">==</span> <span class="n">jira_ticket</span><span class="o">.</span><span class="n">value</span><span class="p">:</span>
                 <span class="n">msg</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="s2">&quot;Push ticket </span><span class="si">{}</span><span class="s2"> matches Index ticket </span><span class="si">{}</span><span class="s2">, writing &quot;</span>
                           <span class="s2">&quot;UUID: </span><span class="si">{}</span><span class="s2">&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">sub_ticket</span><span class="p">,</span> <span class="n">jira_ticket</span><span class="o">.</span><span class="n">value</span><span class="p">,</span>
-                                             <span class="n">uuid</span><span class="o">.</span><span class="n">value</span><span class="p">)</span>
+                                             <span class="n">uuid</span><span class="p">)</span>
                 <span class="n">logging</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
                 <span class="n">new_row</span> <span class="o">=</span> <span class="n">smartsheet</span><span class="o">.</span><span class="n">models</span><span class="o">.</span><span class="n">Row</span><span class="p">()</span>
                 <span class="n">new_row</span><span class="o">.</span><span class="n">id</span> <span class="o">=</span> <span class="n">row</span><span class="o">.</span><span class="n">id</span>
@@ -643,9 +643,9 @@
                 <span class="p">})</span>
                 <span class="n">rows_to_write</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">new_row</span><span class="p">)</span>
     <span class="k">if</span> <span class="n">rows_to_write</span><span class="p">:</span>
-        <span class="n">smartsheet_api</span><span class="o">.</span><span class="n">write_rows_to_sheet</span><span class="p">(</span><span class="n">rows_to_write</span><span class="p">,</span> <span class="n">index_sheet</span><span class="p">,</span>
-                                           <span class="n">write_method</span><span class="o">=</span><span class="s2">&quot;update&quot;</span><span class="p">)</span>
-        <span class="k">return</span> <span class="kc">True</span>
+        <span class="n">result</span> <span class="o">=</span> <span class="n">smartsheet_api</span><span class="o">.</span><span class="n">write_rows_to_sheet</span><span class="p">(</span><span class="n">rows_to_write</span><span class="p">,</span> <span class="n">index_sheet</span><span class="p">,</span>
+                                                    <span class="n">write_method</span><span class="o">=</span><span class="s2">&quot;update&quot;</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">result</span>
     <span class="k">else</span><span class="p">:</span>
         <span class="n">msg</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="s2">&quot;No UUIDs copied to Sheet ID: </span><span class="si">{}</span><span class="s2">, Sheet Name: </span><span class="si">{}</span><span class="s2">&quot;</span>
                   <span class="s2">&quot;&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">index_sheet</span><span class="o">.</span><span class="n">id</span><span class="p">,</span> <span class="n">index_sheet</span><span class="o">.</span><span class="n">name</span><span class="p">)</span>
@@ -721,7 +721,7 @@
 <span class="sd">              Program Plans</span>
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">source_sheets</span><span class="p">,</span> <span class="nb">list</span><span class="p">):</span>
-        <span class="n">msg</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="s2">&quot;Sheet should be dict or smartsheet.Sheet, not </span><span class="si">{}</span><span class="s2">&quot;</span>
+        <span class="n">msg</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="s2">&quot;Source Sheets should be a list, not </span><span class="si">{}</span><span class="s2">&quot;</span>
                   <span class="s2">&quot;&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="nb">type</span><span class="p">(</span><span class="n">source_sheets</span><span class="p">))</span>
         <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
     <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">index_sheet</span><span class="p">,</span> <span class="p">(</span><span class="nb">dict</span><span class="p">,</span> <span class="n">smartsheet</span><span class="o">.</span><span class="n">models</span><span class="o">.</span><span class="n">Sheet</span><span class="p">)):</span>
@@ -758,10 +758,18 @@
             <span class="n">logging</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">&quot;New Row&quot;</span><span class="p">)</span>
             <span class="n">logging</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">&quot;------------------------&quot;</span><span class="p">)</span>
             <span class="n">row_data</span> <span class="o">=</span> <span class="n">build_row_data</span><span class="p">(</span><span class="n">row</span><span class="p">,</span> <span class="n">col_map</span><span class="p">)</span>
-            <span class="k">if</span> <span class="ow">not</span> <span class="n">row_data</span><span class="p">[</span><span class="n">app_vars</span><span class="o">.</span><span class="n">jira_col</span><span class="p">]:</span>
+            <span class="k">if</span> <span class="n">row_data</span><span class="p">[</span><span class="n">app_vars</span><span class="o">.</span><span class="n">jira_col</span><span class="p">]</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
                 <span class="c1"># Skip rows with no data in the Jira column</span>
                 <span class="n">msg</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="s2">&quot;Row </span><span class="si">{}</span><span class="s2"> skipped because Jira column was empty.&quot;</span>
                           <span class="s2">&quot;&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">row_data</span><span class="p">[</span><span class="s2">&quot;row_num&quot;</span><span class="p">])</span>
+                <span class="n">logging</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
+                <span class="k">continue</span>
+            <span class="k">if</span> <span class="nb">bool</span><span class="p">(</span><span class="n">re</span><span class="o">.</span><span class="n">match</span><span class="p">(</span><span class="sa">r</span><span class="s2">&quot;[a-zA-Z]+-\d+&quot;</span><span class="p">,</span>
+                             <span class="nb">str</span><span class="p">(</span><span class="n">row_data</span><span class="p">[</span><span class="n">app_vars</span><span class="o">.</span><span class="n">jira_col</span><span class="p">]))):</span>
+                <span class="c1"># Skip tickets that match the Jira Ticket pattern</span>
+                <span class="n">msg</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="s2">&quot;Jira Ticket </span><span class="si">{}</span><span class="s2"> on row </span><span class="si">{}</span><span class="s2"> matches the Jira Ticket&quot;</span>
+                          <span class="s2">&quot;pattern&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">row_data</span><span class="p">[</span><span class="n">app_vars</span><span class="o">.</span><span class="n">jira_col</span><span class="p">],</span>
+                                            <span class="n">row_data</span><span class="p">[</span><span class="s2">&quot;row_num&quot;</span><span class="p">])</span>
                 <span class="n">logging</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
                 <span class="k">continue</span>
             <span class="k">if</span> <span class="n">row_data</span><span class="p">[</span><span class="n">app_vars</span><span class="o">.</span><span class="n">summary_col</span><span class="p">]</span> <span class="o">==</span> <span class="s2">&quot;True&quot;</span><span class="p">:</span>
@@ -795,14 +803,6 @@
                 <span class="n">msg</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="s2">&quot;Row </span><span class="si">{}</span><span class="s2"> skipped because Parent Issue Type is </span><span class="si">{}</span><span class="s2">.&quot;</span>
                           <span class="s2">&quot;&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">row_data</span><span class="p">[</span><span class="s2">&quot;row_num&quot;</span><span class="p">],</span>
                                      <span class="n">row_data</span><span class="p">[</span><span class="s2">&quot;Parent Issue Type&quot;</span><span class="p">])</span>
-                <span class="n">logging</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
-                <span class="k">continue</span>
-            <span class="k">if</span> <span class="nb">bool</span><span class="p">(</span><span class="n">re</span><span class="o">.</span><span class="n">match</span><span class="p">(</span><span class="sa">r</span><span class="s2">&quot;[a-zA-Z]+-\d+&quot;</span><span class="p">,</span>
-                             <span class="nb">str</span><span class="p">(</span><span class="n">row_data</span><span class="p">[</span><span class="n">app_vars</span><span class="o">.</span><span class="n">jira_col</span><span class="p">]))):</span>
-                <span class="c1"># Skip tickets that match the Jira Ticket pattern</span>
-                <span class="n">msg</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="s2">&quot;Jira Ticket </span><span class="si">{}</span><span class="s2"> on row </span><span class="si">{}</span><span class="s2"> matches the Jira Ticket&quot;</span>
-                          <span class="s2">&quot;pattern&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">row_data</span><span class="p">[</span><span class="n">app_vars</span><span class="o">.</span><span class="n">jira_col</span><span class="p">],</span>
-                                            <span class="n">row_data</span><span class="p">[</span><span class="s2">&quot;row_num&quot;</span><span class="p">])</span>
                 <span class="n">logging</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
                 <span class="k">continue</span>
             <span class="k">if</span> <span class="s2">&quot;reasonPhrase&quot;</span> <span class="ow">in</span> <span class="n">row_data</span><span class="p">[</span><span class="s2">&quot;Parent Ticket&quot;</span><span class="p">]:</span>
@@ -964,9 +964,9 @@
             <span class="n">msg</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="s2">&quot;Job interval is </span><span class="si">{}</span><span class="s2"> minute(s) longer than the job &quot;</span>
                       <span class="s2">&quot;runtime. Reduced interval to </span><span class="si">{}</span><span class="s2"> minutes&quot;</span>
                       <span class="s2">&quot;&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="nb">int</span><span class="p">(</span><span class="n">delta</span><span class="p">),</span> <span class="n">new_interval</span><span class="p">)</span>
-        <span class="k">else</span><span class="p">:</span>
-            <span class="n">msg</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="s2">&quot;SUCCESS: Job interval </span><span class="si">{}</span><span class="s2">, elapsed time </span><span class="si">{}</span><span class="s2">, delta </span><span class="si">{}</span><span class="s2">&quot;</span>
-                      <span class="s2">&quot;&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">interval</span><span class="p">,</span> <span class="n">time</span><span class="p">,</span> <span class="n">delta</span><span class="p">)</span>
+        <span class="c1"># else:</span>
+        <span class="c1">#     msg = str(&quot;SUCCESS: Job interval {}, elapsed time {}, delta {}&quot;</span>
+        <span class="c1">#               &quot;&quot;).format(interval, time, delta)</span>
 
     <span class="k">elif</span> <span class="n">interval</span> <span class="o">&lt;</span> <span class="n">time</span><span class="p">:</span>
         <span class="c1"># If the interval is less than the time it took to run the process,</span>
@@ -1105,16 +1105,16 @@
         <span class="n">interval_msg</span> <span class="o">=</span> <span class="n">modify_scheduler</span><span class="p">(</span><span class="n">elapsed</span><span class="p">)</span>
         <span class="n">logging</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="n">interval_msg</span><span class="p">)</span>
         <span class="k">return</span> <span class="kc">False</span>
-    <span class="k">else</span><span class="p">:</span>
-        <span class="n">end</span> <span class="o">=</span> <span class="n">time</span><span class="o">.</span><span class="n">time</span><span class="p">()</span>
-        <span class="n">elapsed</span> <span class="o">=</span> <span class="n">end</span> <span class="o">-</span> <span class="n">start</span>
-        <span class="n">elapsed</span> <span class="o">=</span> <span class="n">helper</span><span class="o">.</span><span class="n">truncate</span><span class="p">(</span><span class="n">elapsed</span><span class="p">,</span> <span class="mi">2</span><span class="p">)</span>
-        <span class="n">interval_msg</span> <span class="o">=</span> <span class="n">modify_scheduler</span><span class="p">(</span><span class="n">elapsed</span><span class="p">)</span>
-        <span class="n">logging</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="n">interval_msg</span><span class="p">)</span>
-        <span class="n">msg</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="s2">&quot;Looping through rows rows to create Jira Tickts &quot;</span>
-                  <span class="s2">&quot;failed with an unknown error.&quot;</span><span class="p">)</span>
-        <span class="n">logging</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
-        <span class="k">return</span> <span class="kc">None</span>
+    <span class="c1"># else:</span>
+    <span class="c1">#     end = time.time()</span>
+    <span class="c1">#     elapsed = end - start</span>
+    <span class="c1">#     elapsed = helper.truncate(elapsed, 2)</span>
+    <span class="c1">#     interval_msg = modify_scheduler(elapsed)</span>
+    <span class="c1">#     logging.info(interval_msg)</span>
+    <span class="c1">#     msg = str(&quot;Looping through rows rows to create Jira Tickts &quot;</span>
+    <span class="c1">#               &quot;failed with an unknown error.&quot;)</span>
+    <span class="c1">#     logging.warning(msg)</span>
+    <span class="c1">#     return None</span>
 </pre></div>
 
         </details>
@@ -1806,7 +1806,7 @@ knows if/when/why a ticket creation failed.</p>
             <span class="k">if</span> <span class="n">sub_ticket</span> <span class="o">==</span> <span class="n">jira_ticket</span><span class="o">.</span><span class="n">value</span><span class="p">:</span>
                 <span class="n">msg</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="s2">&quot;Push ticket </span><span class="si">{}</span><span class="s2"> matches Index ticket </span><span class="si">{}</span><span class="s2">, writing &quot;</span>
                           <span class="s2">&quot;UUID: </span><span class="si">{}</span><span class="s2">&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">sub_ticket</span><span class="p">,</span> <span class="n">jira_ticket</span><span class="o">.</span><span class="n">value</span><span class="p">,</span>
-                                             <span class="n">uuid</span><span class="o">.</span><span class="n">value</span><span class="p">)</span>
+                                             <span class="n">uuid</span><span class="p">)</span>
                 <span class="n">logging</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
                 <span class="n">new_row</span> <span class="o">=</span> <span class="n">smartsheet</span><span class="o">.</span><span class="n">models</span><span class="o">.</span><span class="n">Row</span><span class="p">()</span>
                 <span class="n">new_row</span><span class="o">.</span><span class="n">id</span> <span class="o">=</span> <span class="n">row</span><span class="o">.</span><span class="n">id</span>
@@ -1816,9 +1816,9 @@ knows if/when/why a ticket creation failed.</p>
                 <span class="p">})</span>
                 <span class="n">rows_to_write</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">new_row</span><span class="p">)</span>
     <span class="k">if</span> <span class="n">rows_to_write</span><span class="p">:</span>
-        <span class="n">smartsheet_api</span><span class="o">.</span><span class="n">write_rows_to_sheet</span><span class="p">(</span><span class="n">rows_to_write</span><span class="p">,</span> <span class="n">index_sheet</span><span class="p">,</span>
-                                           <span class="n">write_method</span><span class="o">=</span><span class="s2">&quot;update&quot;</span><span class="p">)</span>
-        <span class="k">return</span> <span class="kc">True</span>
+        <span class="n">result</span> <span class="o">=</span> <span class="n">smartsheet_api</span><span class="o">.</span><span class="n">write_rows_to_sheet</span><span class="p">(</span><span class="n">rows_to_write</span><span class="p">,</span> <span class="n">index_sheet</span><span class="p">,</span>
+                                                    <span class="n">write_method</span><span class="o">=</span><span class="s2">&quot;update&quot;</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">result</span>
     <span class="k">else</span><span class="p">:</span>
         <span class="n">msg</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="s2">&quot;No UUIDs copied to Sheet ID: </span><span class="si">{}</span><span class="s2">, Sheet Name: </span><span class="si">{}</span><span class="s2">&quot;</span>
                   <span class="s2">&quot;&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">index_sheet</span><span class="o">.</span><span class="n">id</span><span class="p">,</span> <span class="n">index_sheet</span><span class="o">.</span><span class="n">name</span><span class="p">)</span>
@@ -1968,7 +1968,7 @@ knows if/when/why a ticket creation failed.</p>
 <span class="sd">              Program Plans</span>
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">source_sheets</span><span class="p">,</span> <span class="nb">list</span><span class="p">):</span>
-        <span class="n">msg</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="s2">&quot;Sheet should be dict or smartsheet.Sheet, not </span><span class="si">{}</span><span class="s2">&quot;</span>
+        <span class="n">msg</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="s2">&quot;Source Sheets should be a list, not </span><span class="si">{}</span><span class="s2">&quot;</span>
                   <span class="s2">&quot;&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="nb">type</span><span class="p">(</span><span class="n">source_sheets</span><span class="p">))</span>
         <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
     <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">index_sheet</span><span class="p">,</span> <span class="p">(</span><span class="nb">dict</span><span class="p">,</span> <span class="n">smartsheet</span><span class="o">.</span><span class="n">models</span><span class="o">.</span><span class="n">Sheet</span><span class="p">)):</span>
@@ -2005,10 +2005,18 @@ knows if/when/why a ticket creation failed.</p>
             <span class="n">logging</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">&quot;New Row&quot;</span><span class="p">)</span>
             <span class="n">logging</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">&quot;------------------------&quot;</span><span class="p">)</span>
             <span class="n">row_data</span> <span class="o">=</span> <span class="n">build_row_data</span><span class="p">(</span><span class="n">row</span><span class="p">,</span> <span class="n">col_map</span><span class="p">)</span>
-            <span class="k">if</span> <span class="ow">not</span> <span class="n">row_data</span><span class="p">[</span><span class="n">app_vars</span><span class="o">.</span><span class="n">jira_col</span><span class="p">]:</span>
+            <span class="k">if</span> <span class="n">row_data</span><span class="p">[</span><span class="n">app_vars</span><span class="o">.</span><span class="n">jira_col</span><span class="p">]</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
                 <span class="c1"># Skip rows with no data in the Jira column</span>
                 <span class="n">msg</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="s2">&quot;Row </span><span class="si">{}</span><span class="s2"> skipped because Jira column was empty.&quot;</span>
                           <span class="s2">&quot;&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">row_data</span><span class="p">[</span><span class="s2">&quot;row_num&quot;</span><span class="p">])</span>
+                <span class="n">logging</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
+                <span class="k">continue</span>
+            <span class="k">if</span> <span class="nb">bool</span><span class="p">(</span><span class="n">re</span><span class="o">.</span><span class="n">match</span><span class="p">(</span><span class="sa">r</span><span class="s2">&quot;[a-zA-Z]+-\d+&quot;</span><span class="p">,</span>
+                             <span class="nb">str</span><span class="p">(</span><span class="n">row_data</span><span class="p">[</span><span class="n">app_vars</span><span class="o">.</span><span class="n">jira_col</span><span class="p">]))):</span>
+                <span class="c1"># Skip tickets that match the Jira Ticket pattern</span>
+                <span class="n">msg</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="s2">&quot;Jira Ticket </span><span class="si">{}</span><span class="s2"> on row </span><span class="si">{}</span><span class="s2"> matches the Jira Ticket&quot;</span>
+                          <span class="s2">&quot;pattern&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">row_data</span><span class="p">[</span><span class="n">app_vars</span><span class="o">.</span><span class="n">jira_col</span><span class="p">],</span>
+                                            <span class="n">row_data</span><span class="p">[</span><span class="s2">&quot;row_num&quot;</span><span class="p">])</span>
                 <span class="n">logging</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
                 <span class="k">continue</span>
             <span class="k">if</span> <span class="n">row_data</span><span class="p">[</span><span class="n">app_vars</span><span class="o">.</span><span class="n">summary_col</span><span class="p">]</span> <span class="o">==</span> <span class="s2">&quot;True&quot;</span><span class="p">:</span>
@@ -2042,14 +2050,6 @@ knows if/when/why a ticket creation failed.</p>
                 <span class="n">msg</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="s2">&quot;Row </span><span class="si">{}</span><span class="s2"> skipped because Parent Issue Type is </span><span class="si">{}</span><span class="s2">.&quot;</span>
                           <span class="s2">&quot;&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">row_data</span><span class="p">[</span><span class="s2">&quot;row_num&quot;</span><span class="p">],</span>
                                      <span class="n">row_data</span><span class="p">[</span><span class="s2">&quot;Parent Issue Type&quot;</span><span class="p">])</span>
-                <span class="n">logging</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
-                <span class="k">continue</span>
-            <span class="k">if</span> <span class="nb">bool</span><span class="p">(</span><span class="n">re</span><span class="o">.</span><span class="n">match</span><span class="p">(</span><span class="sa">r</span><span class="s2">&quot;[a-zA-Z]+-\d+&quot;</span><span class="p">,</span>
-                             <span class="nb">str</span><span class="p">(</span><span class="n">row_data</span><span class="p">[</span><span class="n">app_vars</span><span class="o">.</span><span class="n">jira_col</span><span class="p">]))):</span>
-                <span class="c1"># Skip tickets that match the Jira Ticket pattern</span>
-                <span class="n">msg</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="s2">&quot;Jira Ticket </span><span class="si">{}</span><span class="s2"> on row </span><span class="si">{}</span><span class="s2"> matches the Jira Ticket&quot;</span>
-                          <span class="s2">&quot;pattern&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">row_data</span><span class="p">[</span><span class="n">app_vars</span><span class="o">.</span><span class="n">jira_col</span><span class="p">],</span>
-                                            <span class="n">row_data</span><span class="p">[</span><span class="s2">&quot;row_num&quot;</span><span class="p">])</span>
                 <span class="n">logging</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
                 <span class="k">continue</span>
             <span class="k">if</span> <span class="s2">&quot;reasonPhrase&quot;</span> <span class="ow">in</span> <span class="n">row_data</span><span class="p">[</span><span class="s2">&quot;Parent Ticket&quot;</span><span class="p">]:</span>
@@ -2255,9 +2255,9 @@ Column Name: Column ID</li>
             <span class="n">msg</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="s2">&quot;Job interval is </span><span class="si">{}</span><span class="s2"> minute(s) longer than the job &quot;</span>
                       <span class="s2">&quot;runtime. Reduced interval to </span><span class="si">{}</span><span class="s2"> minutes&quot;</span>
                       <span class="s2">&quot;&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="nb">int</span><span class="p">(</span><span class="n">delta</span><span class="p">),</span> <span class="n">new_interval</span><span class="p">)</span>
-        <span class="k">else</span><span class="p">:</span>
-            <span class="n">msg</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="s2">&quot;SUCCESS: Job interval </span><span class="si">{}</span><span class="s2">, elapsed time </span><span class="si">{}</span><span class="s2">, delta </span><span class="si">{}</span><span class="s2">&quot;</span>
-                      <span class="s2">&quot;&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">interval</span><span class="p">,</span> <span class="n">time</span><span class="p">,</span> <span class="n">delta</span><span class="p">)</span>
+        <span class="c1"># else:</span>
+        <span class="c1">#     msg = str(&quot;SUCCESS: Job interval {}, elapsed time {}, delta {}&quot;</span>
+        <span class="c1">#               &quot;&quot;).format(interval, time, delta)</span>
 
     <span class="k">elif</span> <span class="n">interval</span> <span class="o">&lt;</span> <span class="n">time</span><span class="p">:</span>
         <span class="c1"># If the interval is less than the time it took to run the process,</span>
@@ -2432,16 +2432,6 @@ to the end of the job (in seconds)</li>
         <span class="n">interval_msg</span> <span class="o">=</span> <span class="n">modify_scheduler</span><span class="p">(</span><span class="n">elapsed</span><span class="p">)</span>
         <span class="n">logging</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="n">interval_msg</span><span class="p">)</span>
         <span class="k">return</span> <span class="kc">False</span>
-    <span class="k">else</span><span class="p">:</span>
-        <span class="n">end</span> <span class="o">=</span> <span class="n">time</span><span class="o">.</span><span class="n">time</span><span class="p">()</span>
-        <span class="n">elapsed</span> <span class="o">=</span> <span class="n">end</span> <span class="o">-</span> <span class="n">start</span>
-        <span class="n">elapsed</span> <span class="o">=</span> <span class="n">helper</span><span class="o">.</span><span class="n">truncate</span><span class="p">(</span><span class="n">elapsed</span><span class="p">,</span> <span class="mi">2</span><span class="p">)</span>
-        <span class="n">interval_msg</span> <span class="o">=</span> <span class="n">modify_scheduler</span><span class="p">(</span><span class="n">elapsed</span><span class="p">)</span>
-        <span class="n">logging</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="n">interval_msg</span><span class="p">)</span>
-        <span class="n">msg</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="s2">&quot;Looping through rows rows to create Jira Tickts &quot;</span>
-                  <span class="s2">&quot;failed with an unknown error.&quot;</span><span class="p">)</span>
-        <span class="n">logging</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
-        <span class="k">return</span> <span class="kc">None</span>
 </pre></div>
 
         </details>
