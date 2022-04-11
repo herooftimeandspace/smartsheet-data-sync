@@ -724,7 +724,8 @@ def create_ticket_index(source_sheets, index_sheet, index_col_map):
                                      row_data["Parent Issue Type"])
                 logging.debug(msg)
                 continue
-            if "reasonPhrase" in row_data["Parent Ticket"]:
+            if row_data["Parent Ticket"] and \
+                    "reasonPhrase" in row_data["Parent Ticket"]:
                 # Skip rows where the parent ticket has a sync error
                 msg = str("Parent ticket for row {} has a Jira Sync error: "
                           "{}. Skipping.").format(row_data["row_num"],
