@@ -139,7 +139,7 @@ def set_env_vars(env):
     """
     if not isinstance(env, str):
         msg = str("Env should be a string, not {}.").format(env)
-        raise TypeError(str)
+        raise TypeError(msg)
 
     global workspace_id
     global index_sheet
@@ -147,7 +147,7 @@ def set_env_vars(env):
     global env_msg
     global push_tickets_sheet
 
-    if env in ("-d", "--debug", "-debug", "--dev", "-dev"):
+    if env in ("--debug", "-debug", "--dev", "-dev"):
         workspace_id = app_vars.dev_workspace_id
         index_sheet = app_vars.dev_jira_idx_sheet
         minutes = app_vars.dev_minutes
@@ -243,7 +243,7 @@ def set_logging_config(env):
             'disable_existing_loggers': False
         },
     )
-    if env in ("-d", "--debug", "-debug", "--dev", "-dev"):
+    if env in ("-d", "--debug", "-debug"):
         logging_config = dict(
             version=1,
             formatters={
@@ -266,6 +266,33 @@ def set_logging_config(env):
             },
             root={
                 'handlers': ['docker', 'file'],  # 'console', 'file'
+                'level': logging.DEBUG,
+                'disable_existing_loggers': False
+            },
+        )
+    elif env in ("--dev", "-dev"):
+        logging_config = dict(
+            version=1,
+            formatters={
+                'f': {'format':
+                      "%(asctime)s - %(levelname)s - %(message)s"}
+            },
+            handlers={
+                'file': {
+                    'class': 'logging.FileHandler',
+                    'formatter': 'f',
+                    'level': logging.DEBUG,
+                    'filename': log_location + app_vars.module_log_name
+                },
+                'docker': {
+                    'class': 'logging.StreamHandler',
+                    'formatter': 'f',
+                    'level': logging.DEBUG,
+                    'stream': 'ext://sys.stdout'
+                }
+            },
+            root={
+                'handlers': ['docker'],  # 'console', 'file'
                 'level': logging.DEBUG,
                 'disable_existing_loggers': False
             },
