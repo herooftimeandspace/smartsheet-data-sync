@@ -805,7 +805,8 @@
                                      <span class="n">row_data</span><span class="p">[</span><span class="s2">&quot;Parent Issue Type&quot;</span><span class="p">])</span>
                 <span class="n">logging</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
                 <span class="k">continue</span>
-            <span class="k">if</span> <span class="s2">&quot;reasonPhrase&quot;</span> <span class="ow">in</span> <span class="n">row_data</span><span class="p">[</span><span class="s2">&quot;Parent Ticket&quot;</span><span class="p">]:</span>
+            <span class="k">if</span> <span class="n">row_data</span><span class="p">[</span><span class="s2">&quot;Parent Ticket&quot;</span><span class="p">]</span> <span class="ow">and</span> \
+                    <span class="s2">&quot;reasonPhrase&quot;</span> <span class="ow">in</span> <span class="n">row_data</span><span class="p">[</span><span class="s2">&quot;Parent Ticket&quot;</span><span class="p">]:</span>
                 <span class="c1"># Skip rows where the parent ticket has a sync error</span>
                 <span class="n">msg</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="s2">&quot;Parent ticket for row </span><span class="si">{}</span><span class="s2"> has a Jira Sync error: &quot;</span>
                           <span class="s2">&quot;</span><span class="si">{}</span><span class="s2">. Skipping.&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">row_data</span><span class="p">[</span><span class="s2">&quot;row_num&quot;</span><span class="p">],</span>
@@ -2052,7 +2053,8 @@ knows if/when/why a ticket creation failed.</p>
                                      <span class="n">row_data</span><span class="p">[</span><span class="s2">&quot;Parent Issue Type&quot;</span><span class="p">])</span>
                 <span class="n">logging</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
                 <span class="k">continue</span>
-            <span class="k">if</span> <span class="s2">&quot;reasonPhrase&quot;</span> <span class="ow">in</span> <span class="n">row_data</span><span class="p">[</span><span class="s2">&quot;Parent Ticket&quot;</span><span class="p">]:</span>
+            <span class="k">if</span> <span class="n">row_data</span><span class="p">[</span><span class="s2">&quot;Parent Ticket&quot;</span><span class="p">]</span> <span class="ow">and</span> \
+                    <span class="s2">&quot;reasonPhrase&quot;</span> <span class="ow">in</span> <span class="n">row_data</span><span class="p">[</span><span class="s2">&quot;Parent Ticket&quot;</span><span class="p">]:</span>
                 <span class="c1"># Skip rows where the parent ticket has a sync error</span>
                 <span class="n">msg</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="s2">&quot;Parent ticket for row </span><span class="si">{}</span><span class="s2"> has a Jira Sync error: &quot;</span>
                           <span class="s2">&quot;</span><span class="si">{}</span><span class="s2">. Skipping.&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">row_data</span><span class="p">[</span><span class="s2">&quot;row_num&quot;</span><span class="p">],</span>
