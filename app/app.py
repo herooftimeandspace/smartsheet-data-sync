@@ -147,7 +147,7 @@ def full_smartsheet_sync(minutes):
     """Sync Smartsheet data between rows using UUID
     """
     import uuid_module.get_data as get_data
-    import uuid_module.write_data as write_data
+    # import uuid_module.write_data as write_data
     if not isinstance(minutes, int):
         msg = str("Minutes should be type: int, not {}").format(type(minutes))
         raise TypeError(msg)
@@ -184,9 +184,9 @@ def full_smartsheet_sync(minutes):
         logging.info(msg)
         return msg
 
-    with project_index_lock:
-        project_uuid_index = get_data.get_all_row_data(
-            source_sheets, app_vars.sheet_columns, config.minutes)
+    # with project_index_lock:
+    #     project_uuid_index = get_data.get_all_row_data(
+    #         source_sheets, app_vars.sheet_columns, config.minutes)
 
     # write_uuid_cell_links(project_uuid_index, source_sheets)
 
