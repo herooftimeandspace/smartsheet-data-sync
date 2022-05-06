@@ -242,7 +242,7 @@ def test_set_logging_config_1():
         }
     }
     assert result_0["root"] == {
-        'handlers': ['docker', 'file'],  # 'console', 'file'
+        'handlers': ['docker'],  # 'console', 'file'
         'level': logging.DEBUG,
         'disable_existing_loggers': False
     }
