@@ -30,12 +30,12 @@ exec: true     # Enable running commands in your container.
 environments:
   dev:
     count: 0               # Number of tasks to run for the "test" environment
-      variables:
-        COPILOT_ENV: dev
-      image:
-        build:
-          args:
-            COPILOT_ENV: dev
+    variables:
+      COPILOT_ENV: dev
+    image:
+      build:
+        args:
+          COPILOT_ENV: dev
   staging:
   #  count: 2               # Number of tasks to run for the "test" environment.
     variables:
