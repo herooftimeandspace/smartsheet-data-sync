@@ -211,7 +211,7 @@ def build_row(row, columns_to_link, dest_col_map, jira_index_sheet,
 
         if cell_check in ("Broken", "BROKEN"):
             unlink_cell = smartsheet.models.Cell()
-            unlink_cell.id = int(dest_col_map[col])
+            unlink_cell.column_id = int(dest_col_map[col])
             unlink_cell.value = old_cell.value
             new_row.cells.append(unlink_cell)
             msg = str("Unlinking Broken Cell Link: Row ID {} | "
