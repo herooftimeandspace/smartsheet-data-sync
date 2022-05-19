@@ -289,3 +289,12 @@ def get_row(sheet_id, row_id):
     row = smartsheet_client.Sheets.get_row(sheet_id, row_id,
                                            include='objectValue')
     return row
+
+
+def get_cell_history(sheet_id, row_id, column_name, column_map,
+                     page_size=1, page=1):
+    cell_history = smartsheet_client.Cells.get_cell_history(
+        sheet_id, row_id, column_map[column_name], page_size, page
+    )
+    history = cell_history.data
+    return history
