@@ -291,10 +291,15 @@ def get_row(sheet_id, row_id):
     return row
 
 
-def get_cell_history(sheet_id, row_id, column_name, column_map,
+def get_cell_history(sheet_id, row_id, column_id,
                      page_size=1, page=1):
-    cell_history = smartsheet_client.Cells.get_cell_history(
-        sheet_id, row_id, column_map[column_name], page_size, page
-    )
+    try:
+        cell_history = smartsheet_client.Cells.get_cell_history(
+            sheet_id, row_id, column_id, page_size, page
+        )
+    except KeyError:
+        msg = str("Sheet ID: {}, Row ID: {}, Column ID: {}."
+                  "").format(sheet_id, row_id, column_id)
+        logging.debug(msg)
     history = cell_history.data
     return history
