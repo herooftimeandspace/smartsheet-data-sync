@@ -1,5 +1,5 @@
 import logging
-
+import json
 import app.config as config
 import smartsheet
 
@@ -29,40 +29,143 @@ logger = logging.getLogger(__name__)
 # up with constantly flipping values when we compare times.
 
 
-def compare_dates(index_cell, index_cell_history,
-                  plan_cell, plan_cell_history):
-    ''' Compare the modified date of the row and cell v. the modified date
-    in the Jira Index SHeet
-    If Index > Sheet: Copy Index Cell -> Sheet Cell
-    If Index < Sheet: Copy Sheet Cell -> Index Cell
-    If Index == Sheet (+/- 1 minute): Do nothing
-    If Index Value == Cell Value: Do nothing
-    Data we need from Index: UUID, Modified Date/Time, row_id, column_id,
-    cell_value
-    '''
-    # Smartsheet Date Format: 2022-05-08T19:00:22Z
-    # Might need to convert to datetime object
-    if index_cell_history.modified_at > plan_cell_history.modified_at:
-        delta = index_cell_history.modified_at - plan_cell_history.modified_at
-        if delta.seconds <= 30:
-            return None
-        else:
-            return index_cell
-    elif index_cell_history.modified_at < plan_cell_history.modified_at:
-        delta = plan_cell_history.modified_at - index_cell_history.modified_at
-        if delta.seconds <= 30:
-            return None
-        else:
-            return plan_cell
-    elif index_cell_history.modified_at == plan_cell_history.modified_at:
+def compare_dates(index_cell_history, plan_cell_history):
+    """Compare the modified date of the index cell v. the modified date
+    in the program plan.
+    If Index > Sheet: Copy Index Cell -> Plan is more recent
+    If Index < Sheet: Copy Sheet Cell -> Index is more recent
+    If Index == Sheet (+/- 1 second): Do nothing
+
+    Returns:
+        str: None, Index, or Plan depending on which cell has the most
+        recent modified_at date
+    """
+    if not index_cell_history:
+        index_modified_at = None
+        msg = str("Used Index Cell ModAt: {}").format(
+            index_modified_at)
+        logging.debug(msg)
+    else:
+        index_modified_at = index_cell_history[0]
+        index_modified_at = index_modified_at.modified_at
+        msg = str("Used Index Cell History ModAt: {}").format(
+            index_modified_at)
+        logging.debug(msg)
+
+    if not plan_cell_history:
+        plan_modified_at = None
+        msg = str("Used Plan Cell ModAt: {}").format(
+            plan_modified_at)
+        logging.debug(msg)
+    else:
+        plan_modified_at = plan_cell_history[0]
+        plan_modified_at = plan_modified_at.modified_at
+        msg = str("Used Plan Cell History ModAt: {}").format(
+            plan_modified_at)
+        logging.debug(msg)
+
+    if index_modified_at is None and plan_modified_at is not None:
+        msg = str("Returning Plan")
+        logging.debug(msg)
+        return "Plan"
+    elif index_modified_at is not None and plan_modified_at is None:
+        msg = str("Returning Index")
+        logging.debug(msg)
+        return "Index"
+    elif index_modified_at is None and plan_modified_at is None:
+        msg = str("Returning None")
+        logging.debug(msg)
         return None
     else:
-        return None
+        # Smartsheet Date Format: 2022-05-08T19:00:22Z
+        if index_modified_at > plan_modified_at:
+            delta = index_modified_at - plan_modified_at
+            if delta.seconds <= 1:
+                msg = str("Returning None")
+                logging.debug(msg)
+                return None
+            else:
+                msg = str("Returning Index")
+                logging.debug(msg)
+                return "Index"
+        elif index_modified_at < plan_modified_at:
+            delta = plan_modified_at - index_modified_at
+            if delta.seconds <= 1:
+                return None
+            else:
+                msg = str("Returning Plan")
+                logging.debug(msg)
+                return "Plan"
+        elif index_modified_at == plan_modified_at:
+            msg = str("Returning None")
+            logging.debug(msg)
+            return None
+        else:
+            msg = str("Returning None")
+            logging.debug(msg)
+            return None
 
 
-# REWRITE EVERYTING BELOW THIS LINE.
+def rebuild_cell(cell, column_id):
+    """Takes the most recent cell data and builds a new cell that the API will
+    accept. Drops either the object_value or value parameter. Prefers
+    object_value if present.
+
+    Args:
+        cell (smartsheet.Cell): The cell with the source data
+        column_id (int): The ID of the column for the new cell
+
+    Returns:
+        smartsheet.Cell: The new Smartsheet cell.
+    """
+    newer_cell = smartsheet.models.Cell()
+    newer_cell.column_id = int(column_id)
+    # Use object_value first for more complex cells like picklists, URLS, etc
+    if cell.object_value:
+        newer_cell.object_value = cell.object_value
+        # If object_value is still None after copying it from the source,
+        # set basic value instead.
+        if not newer_cell.object_value:
+            newer_cell.value = cell.value
+    else:
+        # Default to setting basic cell value
+        newer_cell.value = cell.value
+    # Set the hyperlink if there is one.
+    if cell.hyperlink:
+        link = str({}).format(cell.hyperlink)
+        link = json.loads(link)
+        newer_cell.hyperlink = link
+
+    logging.debug("Newer Cell v: {} | ov: {} | hl: {}"
+                  "". format(newer_cell.value, newer_cell.object_value,
+                             newer_cell.hyperlink))
+
+    return newer_cell
+
+
 def build_row(jira_index_sheet, jira_index_col_map, index_row, plan_sheet,
               plan_row, plan_col_map, columns_to_compare):
+    """Builds the row data necessary to update both the Index Sheet and the
+    Program Plan sheet(s). Parses through the cell history of each row and
+    determines which cell is the most recent, then creates new rows with the
+    updated data and adds it to the list
+
+    Args:
+        jira_index_sheet (smartsheet.Sheet): The Jira Index Sheet
+        jira_index_col_map (dict): The Jira Index Sheet column map in the form
+                                   of Column Name: Column ID
+        index_row (smartsheet.Row): The Index row to evaluate
+        plan_sheet (smartsheet.sheet): The Program Plan sheet
+        plan_row (smartsheet.row): The Program Plan row to evaluate
+        plan_col_map (dict): The Program Plan column nap in the form of
+                             Column Name: Column ID
+        columns_to_compare (list): A list of columns to compare between the 
+                                   two rows
+
+    Returns:
+        list, list: A Smartsheet Row to update the Index Sheet, and a
+                    Smartsheet Row to update the Program Plan sheet
+    """
 
     # Create new row for the Index Sheet and copy the row's ID
     updated_index_row = smartsheet.models.Row()
@@ -71,17 +174,26 @@ def build_row(jira_index_sheet, jira_index_col_map, index_row, plan_sheet,
     # Create a new row object for the plan sheet and copy the plan_row ID
     updated_plan_row = smartsheet.models.Row()
     updated_plan_row.id = plan_row.id
-    # Interate through each column that we want to sync data
 
+    # Interate through each column that we want to sync data
     for col in columns_to_compare:
         # Get the cell data for matching columns between the two rows
         index_cell = helper.get_cell_data(index_row, col, jira_index_col_map)
         plan_cell = helper.get_cell_data(plan_row, col, plan_col_map)
+        logging.debug("Index v: {}, ov: {}, hl: {}".format(
+            index_cell.value, index_cell.object_value,
+            index_cell.hyperlink))
+        logging.debug("Plan v: {}, ov: {}, hl: {}".format(
+            plan_cell.value, plan_cell.object_value,
+            plan_cell.hyperlink))
 
         # If the index cell and plan cell values match, continue to the
         # next column.
-        if index_cell.value == plan_cell.value:
-            continue
+        if index_cell.value == plan_cell.value or\
+                index_cell.object_value == plan_cell.value:
+            if index_cell.hyperlink == plan_cell.hyperlink:
+                logging.debug("Values Match, skipping {}".format(col))
+                continue
 
         # Query the cell history for both cells from the API.
         # Defaults to only pulling the most recent history object.
@@ -92,65 +204,142 @@ def build_row(jira_index_sheet, jira_index_col_map, index_row, plan_sheet,
             plan_sheet.id, plan_row.id, plan_col_map[col]
         )
 
-        # Get the newer of the two cells
-        newer_cell = compare_dates(
-            index_cell, index_cell_history, plan_cell, plan_cell_history)
+        # Always write the Jira Col on the plan sheet if not hyperlinked
+        if col == app_vars.jira_col:
+            logging.debug("Jira Col found, returning Index")
+            newer = "Index"
+            plan_link = str({}).format(plan_cell.hyperlink)
+            index_link = str({}).format(index_cell.hyperlink)
+            if plan_link == index_link:
+                logging.debug("URL links match, skipping.")
+                continue
+        else:
+            # Get the newer of the two cells
+            newer = compare_dates(index_cell_history, plan_cell_history)
 
-        if newer_cell is None:
+        if not newer:
             # Newer Cell was modified within the last 30 seconds, skip
+            msg = str("Newer cell is None, skipping.")
+            logging.debug(msg)
             continue
-        elif newer_cell == index_cell:
+        if newer == "Index":
             # Index Cell was the newer cell. Copy the Plan Cell column
             # ID to the newer cell object, and append it to the new plan
             # row object.
-            newer_cell.column_id = plan_col_map[col]
-            updated_plan_row.cells.append(newer_cell)
-        elif newer_cell == plan_cell:
+            msg = str("Newer {} cell is the Index Cell: {}, type {}"
+                      "").format(col, index_cell, type(index_cell))
+            logging.debug(msg)
+            newer_cell = rebuild_cell(index_cell, plan_col_map[col])
+            if newer_cell.object_value or newer_cell.value:
+                updated_plan_row.cells.append(newer_cell)
+            else:
+                logging.debug("Skipped {} because value: {} | object_value: {}"
+                              "".format(col, newer_cell.value,
+                                        newer_cell.object_value))
+        if newer == "Plan":
             # Plan Cell was the newer cell. Copy the Index Cell column
             # ID to the newer cell object, and append it to the new index
             # row object.
-            newer_cell.column_id = jira_index_col_map[col]
-            updated_index_row.cells.append(newer_cell)
+            msg = str("Newer {} cell is the Plan Cell: {}, type {}"
+                      "").format(col, plan_cell, type(plan_cell))
+            logging.debug(msg)
+            newer_cell = rebuild_cell(plan_cell, jira_index_col_map[col])
+            if newer_cell.object_value or newer_cell.value:
+                updated_index_row.cells.append(newer_cell)
+            else:
+                logging.debug("Skipped {} because value: {} | object_value: {}"
+                              "".format(col, newer_cell.value,
+                                        newer_cell.object_value))
+
+    return updated_index_row, updated_plan_row
+
+
+def drop_dupes(row_list):
+    """Drops duplicate row IDs from the list of rows to update
+
+    Args:
+        row_list (list): List of Smartsheet Row objects to parse
+
+    Raises:
+        TypeError: Row List must be a list
+        ValueError: Row List must not be empty
+
+    Returns:
+        list: A new list with only unique Row IDs
+    """
+    if not isinstance(row_list, list):
+        msg = str("Project data must be type: list, not"
+                  " {}").format(type(row_list))
+        raise TypeError(msg)
+    if not row_list:
+        msg = str("List of Row objects must not be empty."
+                  "").format()
+        raise ValueError(msg)
+
+    row_ids = []
+    for row in row_list:
+        if row.id in row_ids:
+            index = row_list.index(row)
+            del row_list[index]
         else:
-            # Catch if the cell returned doesn't meet those criteria
-            continue
-
-    return updated_index_row, updated_index_row
+            row_ids.append(row.id)
+    return row_list
 
 
-def bidirectional_sync():
+def bidirectional_sync(minutes):
+    """Main execution for syncing bidirectionally between Program Plan sheets
+    and the Jira Index Sheet, and by extension, Jira.
+
+    Args:
+        minutes (int): Number of minutes in the past used to filter sheets and
+        sheet data. Defaults to dev_minutes
+
+    Raises:
+        TypeError: Minutes must be an int
+        ValueError: Minutes must be a positive integer or 0
+    """
+    if not isinstance(minutes, int):
+        msg = str("Minutes should be type: int, not {}").format(type(minutes))
+        raise TypeError(msg)
+    if minutes < 0:
+        msg = str("Minutes should be >= 0, not {}").format(minutes)
+        raise ValueError(msg)
     # Define the list of columns where we want to copy data
     # TODO: Add predecessor and create Jira links (blocked/is blocked by)
     # Will need to check the Index Sheet Linked Issues column and handle
     # single list v CSV, parse each index for strings and
     # ticket IDs, match to Row IDs (might need to re-pull the predecessor
     # row by row number?)
-    columns_to_compare = [app_vars.jira_col, app_vars.status_col,
+    columns_to_compare = [app_vars.jira_col, app_vars.jira_status_col,
                           app_vars.task_col, app_vars.assignee_col]
 
-    # Get all sheet IDs modified within the last config.minutes
-    sheet_ids = get_data.get_all_sheet_ids(config.minutes, config.workspace_id,
+    # Get all sheet IDs modified within the last N minutes
+    sheet_ids = get_data.get_all_sheet_ids(minutes, config.workspace_id,
                                            config.index_sheet)
     # Pull the sheets from the API and add them to a list.
-    source_sheets = get_data.refresh_source_sheets(sheet_ids, config.minutes)
+    source_sheets = get_data.refresh_source_sheets(sheet_ids, minutes)
     # Pull the Jira Index Sheet and get the sheet data and columns
     jira_index_sheet, jira_index_col_map, jira_index_rows =\
         get_data.load_jira_index(config.index_sheet)
 
-    # Loop through the list of sheets modified in the last config.minutes
+    # Loop through the list of sheets modified in the last N minutes
     for plan_sheet in source_sheets:
         # Loop through each row. Look for a Jira Ticket value. Look up that
         # value against all the tickets in the Index Sheet.
         plan_rows_to_update = []
         index_rows_to_update = []
         plan_col_map = helper.get_column_map(plan_sheet)
-        for plan_row in plan_sheet.rows():
+        # Skip the sheet if it doesn't have a Jira column
+        if app_vars.jira_col not in plan_col_map.keys():
+            continue
+
+        for plan_row in plan_sheet.rows:
             plan_jira_cell = helper.get_cell_data(
                 plan_row, app_vars.jira_col, plan_col_map)
-            if plan_jira_cell is None:
+            if not plan_jira_cell:
                 # Plan Jira cell never had a value
                 continue
-            if plan_jira_cell.value is None:
+            if not plan_jira_cell.value:
                 # Plan Jira cell value is blank
                 continue
             if plan_jira_cell.value not in jira_index_rows.keys():
@@ -167,11 +356,21 @@ def bidirectional_sync():
                 plan_row, plan_col_map, columns_to_compare)
             if updated_index_row.cells:
                 index_rows_to_update.append(updated_index_row)
+            else:
+                logging.debug("No Index Rows to Update")
             if updated_plan_row.cells:
                 plan_rows_to_update.append(updated_plan_row)
+            else:
+                logging.debug("No Plan Rows to Update")
         if index_rows_to_update:
+            # Drop multiple references to the same row
+            index_rows_to_update = drop_dupes(index_rows_to_update)
             smartsheet_api.write_rows_to_sheet(
                 index_rows_to_update, jira_index_sheet, "update")
         if plan_rows_to_update:
+            # Drop multiple references to the same row. This should never
+            # happen since the Jira Index Sheet can't contain more than
+            # 1 reference to a Jira Key, but adding it to be safe.
+            plan_rows_to_update = drop_dupes(plan_rows_to_update)
             smartsheet_api.write_rows_to_sheet(
                 plan_rows_to_update, plan_sheet, "update")
