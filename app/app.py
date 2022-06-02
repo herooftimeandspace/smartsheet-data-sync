@@ -6,6 +6,7 @@ import time
 import uuid_module.create_jira_tickets as create_jira_tickets
 import uuid_module.helper as helper
 import uuid_module.variables as app_vars
+import uuid_module.bidirectional_sync as sync
 
 import app.config as config
 
@@ -220,26 +221,26 @@ def main():
         bool: Returns True if main successfully initialized and scheduled jobs,
               False if not.
     """
-    logging.debug("------------------------")
-    logging.debug("Adding job to refresh Jira tickets in real time. "
-                  "Interval = every 30 seconds.")
-    logging.debug("------------------------")
-    config.scheduler.add_job(full_jira_sync,
-                             'interval',
-                             args=[config.minutes],
-                             seconds=30,
-                             id="sync_jira_interval")
+    # logging.debug("------------------------")
+    # logging.debug("Adding job to refresh Jira tickets in real time. "
+    #               "Interval = every 30 seconds.")
+    # logging.debug("------------------------")
+    # config.scheduler.add_job(full_jira_sync,
+    #                          'interval',
+    #                          args=[config.minutes],
+    #                          seconds=30,
+    #                          id="sync_jira_interval")
 
-    logging.debug("------------------------")
-    logging.debug("Adding job to get all data in the past week. "
-                  "Cron = every day at 1:00am UTC.")
-    logging.debug("------------------------")
-    config.scheduler.add_job(full_jira_sync,
-                             'cron',
-                             args=[10080],
-                             day='*/1',
-                             hour='1',
-                             id="sync_jira_cron")
+    # logging.debug("------------------------")
+    # logging.debug("Adding job to get all data in the past week. "
+    #               "Cron = every day at 1:00am UTC.")
+    # logging.debug("------------------------")
+    # config.scheduler.add_job(full_jira_sync,
+    #                          'cron',
+    #                          args=[10080],
+    #                          day='*/1',
+    #                          hour='1',
+    #                          id="sync_jira_cron")
 
     logging.debug("------------------------")
     logging.debug("Adding job to write new Jira tickets in real time. "
@@ -261,4 +262,27 @@ def main():
                              day='*/1',
                              hour='1',
                              id="create_jira_cron")
+
+    logging.debug("------------------------")
+    logging.debug("Adding job to bidirectionally sync Jira to Smartsheet. "
+                  "in real time. "
+                  "Interval = every 2 minutes.")
+    logging.debug("------------------------")
+    config.scheduler.add_job(sync.bidirectional_sync,
+                             'interval',
+                             args=[config.minutes],
+                             minutes=1,
+                             id="sync_jira_interval")
+
+    logging.debug("------------------------")
+    logging.debug("Adding job to sync any tickets missed in the past week. "
+                  "Cron = every day at 1:00am UTC.")
+    logging.debug("------------------------")
+    config.scheduler.add_job(sync.bidirectional_sync,
+                             'cron',
+                             args=[10080],
+                             day='*/1',
+                             hour='1',
+                             id="sync_jira_cron")
+
     return True
