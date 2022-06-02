@@ -89,6 +89,10 @@ predecessor_col = "Predecessors"
 """Predecessors column name. Type: str
     """
 
+jira_status_col = "Jira Status"
+"""Jira Status column name, Type: str
+    """
+
 index_columns = [task_col, description_col,
                  status_col, assignee_col, jira_col,
                  duration_col, start_col, finish_col, predecessor_col]
