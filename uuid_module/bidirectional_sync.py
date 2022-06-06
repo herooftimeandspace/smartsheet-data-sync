@@ -29,7 +29,7 @@ logger = logging.getLogger(__name__)
 # up with constantly flipping values when we compare times.
 
 
-def compare_dates(index_cell_history, plan_cell_history):
+def compare_dates(index_history, plan_history, context="Cell"):
     """Compare the modified date of the index cell v. the modified date
     in the program plan.
     If Index > Sheet: Copy Index Cell -> Plan is more recent
@@ -40,29 +40,78 @@ def compare_dates(index_cell_history, plan_cell_history):
         str: None, Index, or Plan depending on which cell has the most
         recent modified_at date
     """
-    if not index_cell_history:
-        index_modified_at = None
-        msg = str("Used Index Cell ModAt: {}").format(
-            index_modified_at)
-        logging.debug(msg)
-    else:
-        index_modified_at = index_cell_history[0]
-        index_modified_at = index_modified_at.modified_at
-        msg = str("Used Index Cell History ModAt: {}").format(
-            index_modified_at)
-        logging.debug(msg)
+    if not isinstance(index_history, (smartsheet.models.row.Row,
+                                      smartsheet.models.cell.Cell,
+                                      list)):
+        msg = str("Index History should be smartsheet.models.Row or "
+                  "smartsheet.models.Cell, not {}"
+                  "").format(type(index_history))
+        raise TypeError(msg)
+    if not isinstance(plan_history, (smartsheet.models.row.Row,
+                                     smartsheet.models.cell.Cell,
+                                     list)):
+        msg = str("Index History should be smartsheet.models.Row or "
+                  "smartsheet.models.Cell, not {}"
+                  "").format(type(index_history))
+        raise TypeError(msg)
+    if not isinstance(context, str):
+        msg = str("Context should be a string, not {}"
+                  "").format(type(index_history))
+        raise TypeError(msg)
+    if context not in ("Row", "Cell"):
+        msg = str("Type should be either 'Row' or 'Cell', not {}"
+                  "").format(type(context))
+        raise ValueError(msg)
+    if context == "Cell":
+        if not index_history:
+            index_modified_at = None
+            msg = str("Used Index Cell ModAt: {}").format(
+                index_modified_at)
+            logging.debug(msg)
+        else:
+            index_modified_at = index_history[0]
+            index_modified_at = index_modified_at.modified_at
+            msg = str("Used Index Cell History ModAt: {}").format(
+                index_modified_at)
+            logging.debug(msg)
 
-    if not plan_cell_history:
-        plan_modified_at = None
-        msg = str("Used Plan Cell ModAt: {}").format(
-            plan_modified_at)
-        logging.debug(msg)
-    else:
-        plan_modified_at = plan_cell_history[0]
-        plan_modified_at = plan_modified_at.modified_at
-        msg = str("Used Plan Cell History ModAt: {}").format(
-            plan_modified_at)
-        logging.debug(msg)
+        if not plan_history:
+            plan_modified_at = None
+            msg = str("Used Plan Cell ModAt: {}").format(
+                plan_modified_at)
+            logging.debug(msg)
+        else:
+            plan_modified_at = plan_history[0]
+            plan_modified_at = plan_modified_at.modified_at
+            msg = str("Used Plan Cell History ModAt: {}").format(
+                plan_modified_at)
+            logging.debug(msg)
+        # Set threshold for cell detection to 1 seconds
+        threshold = 1
+    if context == "Row":
+        if not index_history:
+            index_modified_at = None
+            msg = str("Used Index Row ModAt: {}").format(
+                index_modified_at)
+            logging.debug(msg)
+        else:
+            index_modified_at = index_history.modified_at
+            msg = str("Used Index Row History ModAt: {}").format(
+                index_modified_at)
+            logging.debug(msg)
+
+        if not plan_history:
+            plan_modified_at = None
+            msg = str("Used Plan Row ModAt: {}").format(
+                plan_modified_at)
+            logging.debug(msg)
+        else:
+            plan_modified_at = plan_history.modified_at
+            msg = str("Used Plan Row History ModAt: {}").format(
+                plan_modified_at)
+            logging.debug(msg)
+        # Set threshold for row detection to 15 seconds
+        threshold = 15
 
     if index_modified_at is None and plan_modified_at is not None:
         msg = str("Returning Plan")
@@ -80,7 +129,7 @@ def compare_dates(index_cell_history, plan_cell_history):
         # Smartsheet Date Format: 2022-05-08T19:00:22Z
         if index_modified_at > plan_modified_at:
             delta = index_modified_at - plan_modified_at
-            if delta.seconds <= 1:
+            if delta.seconds <= threshold:
                 msg = str("Returning None")
                 logging.debug(msg)
                 return None
@@ -90,7 +139,7 @@ def compare_dates(index_cell_history, plan_cell_history):
                 return "Index"
         elif index_modified_at < plan_modified_at:
             delta = plan_modified_at - index_modified_at
-            if delta.seconds <= 1:
+            if delta.seconds <= threshold:
                 return None
             else:
                 msg = str("Returning Plan")
@@ -104,6 +153,13 @@ def compare_dates(index_cell_history, plan_cell_history):
             msg = str("Returning None")
             logging.debug(msg)
             return None
+
+
+def get_index_row(index_sheet, row_id):
+    for row in index_sheet.rows:
+        if row.id == row_id:
+            return row
+    return None
 
 
 def rebuild_cell(cell, column_id):
@@ -159,7 +215,7 @@ def build_row(jira_index_sheet, jira_index_col_map, index_row, plan_sheet,
         plan_row (smartsheet.row): The Program Plan row to evaluate
         plan_col_map (dict): The Program Plan column nap in the form of
                              Column Name: Column ID
-        columns_to_compare (list): A list of columns to compare between the 
+        columns_to_compare (list): A list of columns to compare between the
                                    two rows
 
     Returns:
@@ -191,18 +247,11 @@ def build_row(jira_index_sheet, jira_index_col_map, index_row, plan_sheet,
         # next column.
         if index_cell.value == plan_cell.value or\
                 index_cell.object_value == plan_cell.value:
+            # Check the hyperlink property to ensure we arent missing a URL
+            # between the two. Mostly for links to Jira tickets.
             if index_cell.hyperlink == plan_cell.hyperlink:
                 logging.debug("Values Match, skipping {}".format(col))
                 continue
-
-        # Query the cell history for both cells from the API.
-        # Defaults to only pulling the most recent history object.
-        index_cell_history = smartsheet_api.get_cell_history(
-            jira_index_sheet.id, index_row.id, jira_index_col_map[col]
-        )
-        plan_cell_history = smartsheet_api.get_cell_history(
-            plan_sheet.id, plan_row.id, plan_col_map[col]
-        )
 
         # Always write the Jira Col on the plan sheet if not hyperlinked
         if col == app_vars.jira_col:
@@ -214,6 +263,14 @@ def build_row(jira_index_sheet, jira_index_col_map, index_row, plan_sheet,
                 logging.debug("URL links match, skipping.")
                 continue
         else:
+            # Query the cell history for both cells from the API.
+            # Defaults to only pulling the most recent history object.
+            index_cell_history = smartsheet_api.get_cell_history(
+                jira_index_sheet.id, index_row.id, jira_index_col_map[col]
+            )
+            plan_cell_history = smartsheet_api.get_cell_history(
+                plan_sheet.id, plan_row.id, plan_col_map[col]
+            )
             # Get the newer of the two cells
             newer = compare_dates(index_cell_history, plan_cell_history)
 
@@ -348,12 +405,26 @@ def bidirectional_sync(minutes):
                 # "Jira Key" not found in the index sheet. Check that
                 # The ticket was created or modified within the last 3 months.
                 continue
-
-            index_row = smartsheet_api.get_row(
-                jira_index_sheet.id, jira_index_rows[plan_jira_cell.value])
-            updated_index_row, updated_plan_row = build_row(
-                jira_index_sheet, jira_index_col_map, index_row, plan_sheet,
-                plan_row, plan_col_map, columns_to_compare)
+            else:
+                index_row = get_index_row(
+                    jira_index_sheet, jira_index_rows[plan_jira_cell.value])
+            # index_row = smartsheet_api.get_row(
+            #     jira_index_sheet.id, jira_index_rows[plan_jira_cell.value])
+            msg = str("Index Row type: {}, Data: {}"
+                      "").format(type(index_row), index_row)
+            logging.debug(msg)
+            msg = str("Plan Row type: {}, Data: {}"
+                      "").format(type(plan_row), plan_row)
+            logging.debug(msg)
+            newer = compare_dates(index_row, plan_row, "Row")
+            if not newer:
+                # Skip to next row if rows were updated within 30 seconds of
+                # each other.
+                continue
+            else:
+                updated_index_row, updated_plan_row = build_row(
+                    jira_index_sheet, jira_index_col_map, index_row,
+                    plan_sheet, plan_row, plan_col_map, columns_to_compare)
             if updated_index_row.cells:
                 index_rows_to_update.append(updated_index_row)
             else:
