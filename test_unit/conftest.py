@@ -119,6 +119,14 @@ def cell_fixture():
 
 
 @pytest.fixture(scope="module")
+def cell_history_fixture():
+    with open(cwd + '/dev_cell_history.json') as f:
+        basic_json = json.load(f)
+    basic_cell = smartsheet.models.cell_history(basic_json)
+    return basic_cell
+
+
+@pytest.fixture(scope="module")
 def env_fixture():
     return "--dev"
 
