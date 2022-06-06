@@ -266,12 +266,12 @@ def main():
     logging.debug("------------------------")
     logging.debug("Adding job to bidirectionally sync Jira to Smartsheet. "
                   "in real time. "
-                  "Interval = every 2 minutes.")
+                  "Interval = every 15 seconds.")
     logging.debug("------------------------")
     config.scheduler.add_job(sync.bidirectional_sync,
                              'interval',
                              args=[config.minutes],
-                             minutes=1,
+                             seconds=15,
                              id="sync_jira_interval")
 
     logging.debug("------------------------")
