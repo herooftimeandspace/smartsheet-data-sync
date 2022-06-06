@@ -156,6 +156,18 @@ def compare_dates(index_history, plan_history, context="Cell"):
 
 
 def get_index_row(index_sheet, row_id):
+    if not isinstance(index_sheet, (dict, smartsheet.models.Sheet)):
+        msg = str("Index Sheet should be dict or smartsheet.Sheet, not {}"
+                  "").format(type(index_sheet))
+        raise TypeError(msg)
+    if not isinstance(row_id, int):
+        msg = str("Row ID should be an int, not {}"
+                  "").format(type(row_id))
+        raise TypeError(msg)
+    if row_id <= 0:
+        msg = str("Row ID should be a positive int, not {}"
+                  "").format(row_id)
+        raise ValueError(msg)
     for row in index_sheet.rows:
         if row.id == row_id:
             return row
@@ -174,6 +186,18 @@ def rebuild_cell(cell, column_id):
     Returns:
         smartsheet.Cell: The new Smartsheet cell.
     """
+    if not isinstance(cell, smartsheet.models.Cell):
+        msg = str("Cell should be smartsheet.models.Cell, not {}"
+                  "").format(type(cell))
+        raise TypeError(msg)
+    if not isinstance(column_id, int):
+        msg = str("Column ID should be an int, not {}"
+                  "").format(type(column_id))
+        raise TypeError(msg)
+    if column_id <= 0:
+        msg = str("Column ID should be a positive int, not {}"
+                  "").format(column_id)
+        raise ValueError(msg)
     newer_cell = smartsheet.models.Cell()
     newer_cell.column_id = int(column_id)
     # Use object_value first for more complex cells like picklists, URLS, etc
@@ -200,7 +224,7 @@ def rebuild_cell(cell, column_id):
 
 
 def build_row(jira_index_sheet, jira_index_col_map, index_row, plan_sheet,
-              plan_row, plan_col_map, columns_to_compare):
+              plan_col_map, plan_row, columns_to_compare):
     """Builds the row data necessary to update both the Index Sheet and the
     Program Plan sheet(s). Parses through the cell history of each row and
     determines which cell is the most recent, then creates new rows with the
@@ -222,7 +246,37 @@ def build_row(jira_index_sheet, jira_index_col_map, index_row, plan_sheet,
         list, list: A Smartsheet Row to update the Index Sheet, and a
                     Smartsheet Row to update the Program Plan sheet
     """
-
+    if not isinstance(jira_index_sheet, smartsheet.models.Sheet):
+        msg = str("Jira Index Sheet should be smartsheet.models.Sheet, not {}"
+                  "").format(type(jira_index_sheet))
+        raise TypeError(msg)
+    if not isinstance(jira_index_col_map, dict):
+        msg = str("Index Column Map should be a dict, not {}"
+                  "").format(type(jira_index_col_map))
+        raise TypeError(msg)
+    if not isinstance(index_row, smartsheet.models.Row):
+        msg = str("Index Row should be smartsheet.models.Row, not {}"
+                  "").format(type(index_row))
+        raise TypeError(msg)
+    if not isinstance(plan_sheet, smartsheet.models.Sheet):
+        msg = str("Plan Sheet should be smartsheet.models.Sheet, not {}"
+                  "").format(type(plan_sheet))
+        raise TypeError(msg)
+    if not isinstance(plan_col_map, dict):
+        msg = str("Plan Column Map should be a dict, not {}"
+                  "").format(type(plan_col_map))
+        raise TypeError(msg)
+    if not isinstance(plan_row, smartsheet.models.Row):
+        msg = str("Plan Row should be smartsheet.models.Row, not {}"
+                  "").format(type(plan_row))
+        raise TypeError(msg)
+    if not isinstance(columns_to_compare, list):
+        msg = str("Columns to compare should be a list, not {}"
+                  "").format(type(columns_to_compare))
+        raise TypeError(msg)
+    if not columns_to_compare:
+        msg = str("Columns to compare cannot be an enpty list.")
+        raise ValueError(msg)
     # Create new row for the Index Sheet and copy the row's ID
     updated_index_row = smartsheet.models.Row()
     updated_index_row.id = index_row.id
@@ -334,13 +388,14 @@ def drop_dupes(row_list):
         raise ValueError(msg)
 
     row_ids = []
-    for row in row_list:
+    list_copy = row_list
+    for row in list_copy:
         if row.id in row_ids:
-            index = row_list.index(row)
-            del row_list[index]
+            index = list_copy.index(row)
+            del list_copy[index]
         else:
             row_ids.append(row.id)
-    return row_list
+    return list_copy
 
 
 def bidirectional_sync(minutes):
@@ -424,7 +479,7 @@ def bidirectional_sync(minutes):
             else:
                 updated_index_row, updated_plan_row = build_row(
                     jira_index_sheet, jira_index_col_map, index_row,
-                    plan_sheet, plan_row, plan_col_map, columns_to_compare)
+                    plan_sheet, plan_col_map, plan_row, columns_to_compare)
             if updated_index_row.cells:
                 index_rows_to_update.append(updated_index_row)
             else:
