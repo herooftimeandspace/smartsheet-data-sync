@@ -1,7 +1,7 @@
 import app.app as app
 import app.config as config
 import logging
-import uuid_module.bidirectional_sync as sync
+import sync_module.bidirectional_sync as sync
 
 if __name__ == '__main__':
     """Runs main(). If main returns True, starts the scheduler. If main
