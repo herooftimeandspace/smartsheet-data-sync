@@ -4,10 +4,10 @@ import re
 
 import smartsheet
 
-import uuid_module.helper as helper
-import uuid_module.smartsheet_api as smartsheet_api
-import uuid_module.variables as app_vars
-import uuid_module.write_data as write_data
+import data_module.helper as helper
+import data_module.smartsheet_api as smartsheet_api
+import app.variables as app_vars
+import data_module.write_data as write_data
 
 
 def write_uuid_cell_links(project_data_index, source_sheets):

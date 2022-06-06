@@ -4,10 +4,10 @@ from unittest.mock import patch
 
 import pytest
 import smartsheet
-import uuid_module.helper as helper
-import uuid_module.variables as app_vars
-import uuid_module.write_data as write_data
-import uuid_module.get_data as get_data
+import data_module.helper as helper
+import app.variables as app_vars
+import data_module.write_data as write_data
+import data_module.get_data as get_data
 from freezegun import freeze_time
 
 _, cwd = helper.get_local_paths()
@@ -16,7 +16,7 @@ logger = logging.getLogger(__name__)
 
 # @pytest.fixture(scope="module")
 # def sheet_fixture():
-#     import uuid_module.helper as helper
+#     import data_module.helper as helper
 #     with open(cwd + '/dev_program_plan.json') as f:
 #         sheet_json = json.load(f)
 
@@ -52,12 +52,12 @@ logger = logging.getLogger(__name__)
 
 # @pytest.fixture(scope="module")
 # def index_fixture():
-#     import uuid_module.get_data as get_data
+#     import data_module.get_data as get_data
 #     with open(cwd + '/dev_jira_index_sheet.json') as f:
 #         sheet_json = json.load(f)
 #     index_sheet = smartsheet.models.Sheet(sheet_json)
 
-#     @patch("uuid_module.smartsheet_api.get_sheet", return_value=index_sheet)
+#     @patch("data_module.smartsheet_api.get_sheet", return_value=index_sheet)
 #     def load_jira_index_fixture(mock_0):
 #         jira_index_sheet, jira_index_col_map, jira_index_rows \
 #             = get_data.load_jira_index(index_sheet.id)
@@ -108,7 +108,7 @@ def src_data():
 # TODO: Static return and check for actual values
 def project_indexes(sheet_fixture):
     import app.config as config
-    import uuid_module.get_data as get_data
+    import data_module.get_data as get_data
     sheet, _, _, _ = sheet_fixture
     project_uuid_index = get_data.get_all_row_data([sheet],
                                                    app_vars.sheet_columns,
@@ -132,7 +132,7 @@ def test_write_uuids_1(sheet_fixture):
     result.message = "SUCCESS"
     result.result_code = 0
 
-    @patch("uuid_module.smartsheet_api.write_rows_to_sheet",
+    @patch("data_module.smartsheet_api.write_rows_to_sheet",
            return_value=result)
     def test_0(mock_0):
         sheets_updated = write_data.write_uuids(sheets_to_update)
@@ -161,7 +161,7 @@ def test_write_uuids_2(sheet_fixture):
     result.message = "SUCCESS"
     result.result_code = 0
 
-    @patch("uuid_module.smartsheet_api.write_rows_to_sheet",
+    @patch("data_module.smartsheet_api.write_rows_to_sheet",
            return_value=result)
     def test_0(mock_0):
         sheets_updated = write_data.write_uuids(sheets_to_update)
@@ -189,12 +189,12 @@ def test_write_jira_index_cell_links_1(index_sheet_fixture,
     result.message = "SUCCESS"
     result.result_code = 0
 
-    @patch("uuid_module.smartsheet_api.write_rows_to_sheet",
+    @patch("data_module.smartsheet_api.write_rows_to_sheet",
            return_value=result)
-    @patch("uuid_module.get_data.load_jira_index",
+    @patch("data_module.get_data.load_jira_index",
            return_value=(index_sheet, index_col_map,
                          index_rows))
-    @patch("uuid_module.smartsheet_api.get_sheet", return_value=sheet)
+    @patch("data_module.smartsheet_api.get_sheet", return_value=sheet)
     def test_0(mock_0, mock_1, mock_2):
         project_sub_index = {}
         project_sub_index[31337] = "1337"
@@ -202,12 +202,12 @@ def test_write_jira_index_cell_links_1(index_sheet_fixture,
             write_data.write_jira_index_cell_links(project_sub_index)
         return True
 
-    @patch("uuid_module.smartsheet_api.write_rows_to_sheet",
+    @patch("data_module.smartsheet_api.write_rows_to_sheet",
            return_value=result)
-    @patch("uuid_module.get_data.load_jira_index",
+    @patch("data_module.get_data.load_jira_index",
            return_value=(index_sheet, index_col_map,
                          index_rows))
-    @patch("uuid_module.smartsheet_api.get_sheet", return_value=sheet)
+    @patch("data_module.smartsheet_api.get_sheet", return_value=sheet)
     def test_1(mock_0, mock_1, mock_2):
         project_sub_index = {}
         project_sub_index["31337"] = 1337
@@ -231,12 +231,12 @@ def test_write_jira_index_cell_links_2(project_indexes, index_sheet_fixture,
     result.message = "SUCCESS"
     result.result_code = 0
 
-    @patch("uuid_module.smartsheet_api.write_rows_to_sheet",
+    @patch("data_module.smartsheet_api.write_rows_to_sheet",
            return_value=result)
-    @patch("uuid_module.get_data.load_jira_index",
+    @patch("data_module.get_data.load_jira_index",
            return_value=(index_sheet, index_col_map,
                          index_rows))
-    @patch("uuid_module.smartsheet_api.get_sheet", return_value=sheet)
+    @patch("data_module.smartsheet_api.get_sheet", return_value=sheet)
     def test_0(mock_0, mock_1, mock_2):
         var_0 = write_data.write_jira_index_cell_links(project_sub_index)
         return var_0
@@ -260,13 +260,13 @@ def test_write_jira_index_cell_links_2(project_indexes, index_sheet_fixture,
     # result.message = "SUCCESS"
     # result.result_code = 0
 
-    # @patch("uuid_module.smartsheet_api.write_rows_to_sheet",
+    # @patch("data_module.smartsheet_api.write_rows_to_sheet",
     #        return_value=result)
-#     @patch("uuid_module.build_data.build_row", return_value=row)
-#     @patch("uuid_module.get_data.load_jira_index",
+#     @patch("data_module.build_data.build_row", return_value=row)
+#     @patch("data_module.get_data.load_jira_index",
 #            return_value=(jira_index_sheet, jira_index_col_map,
 #                          jira_index_rows))
-#     @patch("uuid_module.smartsheet_api.get_sheet", return_value=sheet)
+#     @patch("data_module.smartsheet_api.get_sheet", return_value=sheet)
 #     def test_0(mock_0, mock_1, mock_2, mock_3):
 #         var_0 = write_data.write_jira_index_cell_links(project_sub_index)
 #         return var_0
@@ -335,12 +335,12 @@ def test_write_jira_index_cell_links_2(project_indexes, index_sheet_fixture,
 #     result.message = "SUCCESS"
 #     result.result_code = 0
 
-#     @patch("uuid_module.smartsheet_api.get_sheet", return_value=sheet)
-#     @patch("uuid_module.helper.get_column_map", return_value=col_map)
-#     @patch("uuid_module.smartsheet_api.get_row", return_value=unlinked_row)
-#     @patch("uuid_module.helper.get_cell_data",
+#     @patch("data_module.smartsheet_api.get_sheet", return_value=sheet)
+#     @patch("data_module.helper.get_column_map", return_value=col_map)
+#     @patch("data_module.smartsheet_api.get_row", return_value=unlinked_row)
+#     @patch("data_module.helper.get_cell_data",
 #            return_value=pred_cell)
-#     @patch("uuid_module.smartsheet_api.write_rows_to_sheet",
+#     @patch("data_module.smartsheet_api.write_rows_to_sheet",
 #            return_value=result)
 #     def test_0(mock_0, mock_1, mock_2, mock_3, mock_4):
 #         result_0 = write_data.write_predecessor_dates(src_data,

@@ -3,9 +3,9 @@ import logging
 
 import pytest
 import smartsheet
-import uuid_module.bidirectional_sync as sync
-import uuid_module.helper as helper
-import uuid_module.variables as app_vars
+import sync_module.bidirectional_sync as sync
+import data_module.helper as helper
+import app.variables as app_vars
 
 # from unittest.mock import patch
 

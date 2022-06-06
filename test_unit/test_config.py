@@ -4,7 +4,7 @@ import pytest
 
 @pytest.fixture
 def env_dict():
-    import uuid_module.variables as app_vars
+    import app.variables as app_vars
     dev = {'env': '--dev', 'env_msg': "Using Dev variables for "
            "workspace_id and Jira index sheet. Set workspace_id to: "
            "[7802463043512196], index_sheet to: 5786250381682564, and "
@@ -217,7 +217,7 @@ def test_set_logging_config_0():
 
 def test_set_logging_config_1():
     import app.config as config
-    import uuid_module.variables as app_vars
+    import app.variables as app_vars
     import logging
     result_0 = config.set_logging_config("--dev")
     cwd = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))

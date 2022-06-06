@@ -2,7 +2,7 @@ from unittest.mock import patch
 
 import pytest
 import smartsheet
-import uuid_module.helper as helper
+import data_module.helper as helper
 
 _, cwd = helper.get_local_paths()
 
@@ -97,9 +97,9 @@ def test_full_jira_sync_1(env_dict):
     result.message = "SUCCESS"
     result.result_code = 0
 
-    @patch("uuid_module.smartsheet_api.write_rows_to_sheet",
+    @patch("data_module.smartsheet_api.write_rows_to_sheet",
            return_value=result)
-    @patch("uuid_module.get_data.get_all_sheet_ids", return_value=[])
+    @patch("data_module.get_data.get_all_sheet_ids", return_value=[])
     def test_0(mock_0, mock_1):
         var_0 = app.full_jira_sync(minutes)
         return var_0
@@ -115,11 +115,11 @@ def test_full_jira_sync_2(env_dict, sheet_fixture):
     sheet, _, _, _ = sheet_fixture
     minutes = env_dict['minutes']
 
-    @patch("uuid_module.get_data.refresh_source_sheets", return_value=[sheet])
-    @patch("uuid_module.get_data.get_all_sheet_ids",
+    @patch("data_module.get_data.refresh_source_sheets", return_value=[sheet])
+    @patch("data_module.get_data.get_all_sheet_ids",
            return_value=[sheet.id])
-    @patch("uuid_module.write_data.write_uuids", return_value=1)
-    @patch("uuid_module.get_data.get_all_row_data",
+    @patch("data_module.write_data.write_uuids", return_value=1)
+    @patch("data_module.get_data.get_all_row_data",
            return_value={})
     def test_0(mock_0, mock_1, mock_2, mock_3):
         var_0 = app.full_jira_sync(minutes)
@@ -136,11 +136,11 @@ def test_full_jira_sync_3(env_dict, sheet_fixture):
     sheet, _, _, _ = sheet_fixture
     minutes = env_dict['minutes']
 
-    @patch("uuid_module.get_data.refresh_source_sheets", return_value=[sheet])
-    @patch("uuid_module.get_data.get_all_sheet_ids",
+    @patch("data_module.get_data.refresh_source_sheets", return_value=[sheet])
+    @patch("data_module.get_data.get_all_sheet_ids",
            return_value=[sheet.id])
-    @patch("uuid_module.write_data.write_uuids", return_value=1)
-    @patch("uuid_module.get_data.get_sub_indexes",
+    @patch("data_module.write_data.write_uuids", return_value=1)
+    @patch("data_module.get_data.get_sub_indexes",
            return_value=({"UUID": "Value"}, {}))
     def test_0(mock_0, mock_1, mock_2, mock_3):
         var_0 = app.full_jira_sync(minutes)
@@ -157,11 +157,11 @@ def test_full_jira_sync_4(env_dict, sheet_fixture):
     sheet, _, _, _ = sheet_fixture
     minutes = env_dict['minutes']
 
-    @patch("uuid_module.get_data.refresh_source_sheets", return_value=[sheet])
-    @patch("uuid_module.get_data.get_all_sheet_ids",
+    @patch("data_module.get_data.refresh_source_sheets", return_value=[sheet])
+    @patch("data_module.get_data.get_all_sheet_ids",
            return_value=[sheet.id])
-    @patch("uuid_module.write_data.write_uuids", return_value=1)
-    @patch("uuid_module.get_data.get_sub_indexes",
+    @patch("data_module.write_data.write_uuids", return_value=1)
+    @patch("data_module.get_data.get_sub_indexes",
            return_value=({}, {"UUID": "Value"}))
     def test_0(mock_0, mock_1, mock_2, mock_3):
         var_0 = app.full_jira_sync(minutes)
@@ -185,29 +185,29 @@ def test_full_jira_sync_5(env_dict, sheet_fixture, index_sheet_fixture,
     result.message = "SUCCESS"
     result.result_code = 0
 
-    @patch("uuid_module.get_data.load_jira_index",
+    @patch("data_module.get_data.load_jira_index",
            return_value=(index_sheet, index_col_map, index_rows))
-    @patch("uuid_module.helper.truncate", return_value=10)
-    @patch("uuid_module.get_data.get_all_row_data",
+    @patch("data_module.helper.truncate", return_value=10)
+    @patch("data_module.get_data.get_all_row_data",
            return_value=project_uuid_index)
-    @patch("uuid_module.smartsheet_api.write_rows_to_sheet",
+    @patch("data_module.smartsheet_api.write_rows_to_sheet",
            return_value=result)
-    @patch("uuid_module.get_data.refresh_source_sheets", return_value=[sheet])
-    @patch("uuid_module.get_data.get_all_sheet_ids",
+    @patch("data_module.get_data.refresh_source_sheets", return_value=[sheet])
+    @patch("data_module.get_data.get_all_sheet_ids",
            return_value=[sheet.id])
     def test_0(mock_0, mock_1, mock_2, mock_3, mock_4, mock_5):
         var_0 = app.full_jira_sync(minutes)
         return var_0
 
-    @patch("uuid_module.get_data.load_jira_index",
+    @patch("data_module.get_data.load_jira_index",
            return_value=(index_sheet, index_col_map, index_rows))
-    @patch("uuid_module.helper.truncate", return_value=45)
-    @patch("uuid_module.get_data.get_all_row_data",
+    @patch("data_module.helper.truncate", return_value=45)
+    @patch("data_module.get_data.get_all_row_data",
            return_value=project_uuid_index)
-    @patch("uuid_module.smartsheet_api.write_rows_to_sheet",
+    @patch("data_module.smartsheet_api.write_rows_to_sheet",
            return_value=result)
-    @patch("uuid_module.get_data.refresh_source_sheets", return_value=[sheet])
-    @patch("uuid_module.get_data.get_all_sheet_ids",
+    @patch("data_module.get_data.refresh_source_sheets", return_value=[sheet])
+    @patch("data_module.get_data.get_all_sheet_ids",
            return_value=[sheet.id])
     def test_1(mock_0, mock_1, mock_2, mock_3, mock_4, mock_5):
         var_0, var_1 = app.full_jira_sync(minutes)
@@ -246,9 +246,9 @@ def test_full_smartsheet_sync_1(env_dict):
     result.message = "SUCCESS"
     result.result_code = 0
 
-    @ patch("uuid_module.smartsheet_api.write_rows_to_sheet",
-            return_value=result)
-    @ patch("uuid_module.get_data.get_all_sheet_ids", return_value=[])
+    @patch("data_module.smartsheet_api.write_rows_to_sheet",
+           return_value=result)
+    @patch("data_module.get_data.get_all_sheet_ids", return_value=[])
     def test_0(mock_0, mock_1):
         var_0 = app.full_smartsheet_sync(minutes)
         return var_0
@@ -269,14 +269,14 @@ def test_full_smartsheet_sync_2(env_dict, sheet_fixture, workspace_fixture):
     result.message = "SUCCESS"
     result.result_code = 0
 
-    @patch("uuid_module.get_data.refresh_source_sheets", return_value=[sheet])
-    @patch("uuid_module.get_data.get_all_sheet_ids",
+    @patch("data_module.get_data.refresh_source_sheets", return_value=[sheet])
+    @patch("data_module.get_data.get_all_sheet_ids",
            return_value=[sheet.id])
-    @patch("uuid_module.smartsheet_api.get_workspace",
+    @patch("data_module.smartsheet_api.get_workspace",
            return_value=workspace)
-    @patch("uuid_module.smartsheet_api.write_rows_to_sheet",
+    @patch("data_module.smartsheet_api.write_rows_to_sheet",
            return_value=result)
-    @patch("uuid_module.helper.truncate", return_value=10)
+    @patch("data_module.helper.truncate", return_value=10)
     def test_0(mock_0, mock_1, mock_2, mock_3, mock_4):
         var_0 = app.full_smartsheet_sync(minutes)
         return var_0
@@ -297,14 +297,14 @@ def test_full_smartsheet_sync_3(env_dict, sheet_fixture, workspace_fixture):
     result.message = "SUCCESS"
     result.result_code = 0
 
-    @patch("uuid_module.get_data.refresh_source_sheets", return_value=[sheet])
-    @patch("uuid_module.get_data.get_all_sheet_ids",
+    @patch("data_module.get_data.refresh_source_sheets", return_value=[sheet])
+    @patch("data_module.get_data.get_all_sheet_ids",
            return_value=[sheet.id])
-    @patch("uuid_module.smartsheet_api.get_workspace",
+    @patch("data_module.smartsheet_api.get_workspace",
            return_value=workspace)
-    @patch("uuid_module.smartsheet_api.write_rows_to_sheet",
+    @patch("data_module.smartsheet_api.write_rows_to_sheet",
            return_value=result)
-    @patch("uuid_module.helper.truncate", return_value=180)
+    @patch("data_module.helper.truncate", return_value=180)
     def test_0(mock_0, mock_1, mock_2, mock_3, mock_4):
         var_0 = app.full_smartsheet_sync(minutes)
         return var_0
@@ -325,11 +325,11 @@ def test_full_smartsheet_sync_3(env_dict, sheet_fixture, workspace_fixture):
     # result.message = "SUCCESS"
     # result.result_code = 0
 
-#     @patch("uuid_module.get_data.refresh_source_sheets",
+#     @patch("data_module.get_data.refresh_source_sheets",
 #            return_value=[sheet])
-#     @patch("uuid_module.smartsheet_api.write_rows_to_sheet",
+#     @patch("data_module.smartsheet_api.write_rows_to_sheet",
 #            return_value=result)
-#     @patch("uuid_module.helper.truncate", return_value=180)
+#     @patch("data_module.helper.truncate", return_value=180)
 #     def test_0(mock_0, mock_1, mock_2):
 #         var_0, var_1 = app.full_smartsheet_sync(minutes)
 #         return var_0, var_1

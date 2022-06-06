@@ -10,8 +10,8 @@ import smartsheet
 from apscheduler.executors.pool import ProcessPoolExecutor, ThreadPoolExecutor
 from apscheduler.schedulers.background import BlockingScheduler
 from botocore.exceptions import ClientError
-import uuid_module.helper as helper
-import uuid_module.variables as app_vars
+import data_module.helper as helper
+import app.variables as app_vars
 
 cwd = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 log_location = os.path.join(cwd, app_vars.log_location)
@@ -405,7 +405,7 @@ def init(args):
     smartsheet_client.errors_as_exceptions(True)
 
     # Defer setting the token until all modules are loaded
-    import uuid_module.smartsheet_api as ss
+    import data_module.smartsheet_api as ss
     ss.set_smartsheet_client()
 
     config['scheduler'] = scheduler

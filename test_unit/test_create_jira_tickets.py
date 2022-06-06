@@ -3,9 +3,9 @@ from unittest.mock import patch
 
 import pytest
 import smartsheet
-import uuid_module.helper as helper
-import uuid_module.create_jira_tickets as jira
-import uuid_module.variables as app_vars
+import data_module.helper as helper
+import data_module.create_jira_tickets as jira
+import app.variables as app_vars
 
 
 logger = logging.getLogger(__name__)
@@ -62,7 +62,7 @@ def test_build_sub_indexes_1(index_sheet_fixture):
 def test_build_sub_indexes_2(index_sheet_fixture):
     index_sheet, index_col_map, _, _ = index_sheet_fixture
 
-    @patch("uuid_module.helper.get_cell_data", return_value=None)
+    @patch("data_module.helper.get_cell_data", return_value=None)
     def test_0(mock_0):
         sub_index_dict, sub_index_list = \
             jira.build_sub_indexes(index_sheet, index_col_map)
@@ -78,7 +78,7 @@ def test_build_sub_indexes_3(index_sheet_fixture, cell_fixture):
     basic_cell, _, _, _, _, _ = cell_fixture
     basic_cell.value = "None"
 
-    @patch("uuid_module.helper.get_cell_data", return_value=basic_cell)
+    @patch("data_module.helper.get_cell_data", return_value=basic_cell)
     def test_0(mock_0):
         sub_index_dict, sub_index_list = \
             jira.build_sub_indexes(index_sheet, index_col_map)
@@ -96,8 +96,8 @@ def test_build_sub_indexes_4(index_sheet_fixture, cell_fixture):
     jira_cell = uuid_cell
     jira_cell.value = None
 
-    @patch("uuid_module.helper.get_cell_data", return_value=jira_cell)
-    @patch("uuid_module.helper.get_cell_data", return_value=uuid_cell)
+    @patch("data_module.helper.get_cell_data", return_value=jira_cell)
+    @patch("data_module.helper.get_cell_data", return_value=uuid_cell)
     def test_0(mock_0, mock_1):
         sub_index_dict, sub_index_list = \
             jira.build_sub_indexes(index_sheet, index_col_map)
@@ -115,8 +115,8 @@ def test_build_sub_indexes_5(index_sheet_fixture, cell_fixture):
     jira_cell = uuid_cell
     jira_cell.value = None
 
-    @patch("uuid_module.helper.get_cell_data", return_value=jira_cell)
-    @patch("uuid_module.helper.get_cell_data", return_value=uuid_cell)
+    @patch("data_module.helper.get_cell_data", return_value=jira_cell)
+    @patch("data_module.helper.get_cell_data", return_value=uuid_cell)
     def test_0(mock_0, mock_1):
         sub_index_dict, sub_index_list = \
             jira.build_sub_indexes(index_sheet, index_col_map)
@@ -265,7 +265,7 @@ def test_form_rows_4(row_fixture, index_sheet_fixture, sheet_fixture):
 def test_get_push_tickets_sheet_0(push_tickets_sheet_fixture):
     push_tickets_sheet, push_col_map, _, _, _ = push_tickets_sheet_fixture
 
-    @patch("uuid_module.smartsheet_api.get_sheet",
+    @patch("data_module.smartsheet_api.get_sheet",
            return_value=push_tickets_sheet)
     def test_0(mock_0):
         sheet, col_map = jira.get_push_tickets_sheet()
@@ -305,7 +305,7 @@ def test_copy_jira_tickets_to_sheet_1(sheet_fixture, index_sheet_fixture,
     result.message = "SUCCESS"
     result.result_code = 0
 
-    @patch("uuid_module.smartsheet_api.write_rows_to_sheet",
+    @patch("data_module.smartsheet_api.write_rows_to_sheet",
            return_value=result)
     def test_0(mock_0):
         sheets_updated = jira.copy_jira_tickets_to_sheets([sheet],
@@ -317,9 +317,9 @@ def test_copy_jira_tickets_to_sheet_1(sheet_fixture, index_sheet_fixture,
     assert isinstance(result_0, int)
     assert result_0 == 0
 
-    @patch("uuid_module.smartsheet_api.write_rows_to_sheet",
+    @patch("data_module.smartsheet_api.write_rows_to_sheet",
            return_value=result)
-    @patch("uuid_module.create_jira_tickets.build_sub_indexes",
+    @patch("data_module.create_jira_tickets.build_sub_indexes",
            return_value=[{"3027747506284420-2568506862659460-3-4": "JAR-1234"},
                          ["JAR-1234"]])
     @patch.dict(sheet_col_map, {"Tasks": 12345678900})
@@ -333,9 +333,9 @@ def test_copy_jira_tickets_to_sheet_1(sheet_fixture, index_sheet_fixture,
     assert isinstance(result_1, int)
     assert result_1 == 0
 
-    @patch("uuid_module.smartsheet_api.write_rows_to_sheet",
+    @patch("data_module.smartsheet_api.write_rows_to_sheet",
            return_value=result)
-    @patch("uuid_module.create_jira_tickets.build_sub_indexes",
+    @patch("data_module.create_jira_tickets.build_sub_indexes",
            return_value=[{"3027747506284420-2568506862659460-3-4": "JAR-1234"},
                          ["JAR-1234"]])
     @patch.dict(sheet_col_map, {"UUID": 12344568999, "Tasks": 12345678900})
@@ -360,9 +360,9 @@ def test_copy_jira_tickets_to_sheet_2(sheet_fixture, index_sheet_fixture,
     result.message = "SUCCESS"
     result.result_code = 0
 
-    @patch("uuid_module.smartsheet_api.write_rows_to_sheet",
+    @patch("data_module.smartsheet_api.write_rows_to_sheet",
            return_value=result)
-    @patch("uuid_module.create_jira_tickets.build_sub_indexes",
+    @patch("data_module.create_jira_tickets.build_sub_indexes",
            return_value=[{"3027747506284420-2568506862659460-3-4": "JAR-1234"},
                          ["JAR-1234"]])
     def test_3(mock_0, mock_1):
@@ -386,12 +386,12 @@ def test_copy_errors_to_sheet_0(sheet_fixture, push_tickets_sheet_fixture,
     result.message = "SUCCESS"
     result.result_code = 0
 
-    @patch("uuid_module.smartsheet_api.write_rows_to_sheet",
+    @patch("data_module.smartsheet_api.write_rows_to_sheet",
            return_value=result)
-    @patch("uuid_module.smartsheet_api.get_row", return_value=row)
-    @patch("uuid_module.helper.get_column_map", return_value=col_map)
-    @patch("uuid_module.smartsheet_api.get_sheet", return_value=sheet)
-    @patch("uuid_module.create_jira_tickets.get_push_tickets_sheet",
+    @patch("data_module.smartsheet_api.get_row", return_value=row)
+    @patch("data_module.helper.get_column_map", return_value=col_map)
+    @patch("data_module.smartsheet_api.get_sheet", return_value=sheet)
+    @patch("data_module.create_jira_tickets.get_push_tickets_sheet",
            return_value=[push_tickets_sheet, push_col_map])
     def test_0(mock_0, mock_1, mock_2, mock_3, mock_4):
         success_count, failure_count, skip_count = jira.copy_errors_to_sheet()
@@ -426,12 +426,12 @@ def test_copy_errors_to_sheet_2(sheet_fixture, push_tickets_sheet_fixture,
             if cell.column_id == col_map[app_vars.jira_col]:
                 cell.value = "JAR-1234"
 
-    @patch("uuid_module.smartsheet_api.write_rows_to_sheet",
+    @patch("data_module.smartsheet_api.write_rows_to_sheet",
            return_value=result)
-    @patch("uuid_module.smartsheet_api.get_row", return_value=row)
-    @patch("uuid_module.helper.get_column_map", return_value=col_map)
-    @patch("uuid_module.smartsheet_api.get_sheet", return_value=sheet)
-    @patch("uuid_module.create_jira_tickets.get_push_tickets_sheet",
+    @patch("data_module.smartsheet_api.get_row", return_value=row)
+    @patch("data_module.helper.get_column_map", return_value=col_map)
+    @patch("data_module.smartsheet_api.get_sheet", return_value=sheet)
+    @patch("data_module.create_jira_tickets.get_push_tickets_sheet",
            return_value=[push_tickets_sheet, push_col_map])
     def test_0(mock_0, mock_1, mock_2, mock_3, mock_4):
         success_count, failure_count, skip_count = jira.copy_errors_to_sheet()
@@ -473,12 +473,12 @@ def test_copy_errors_to_sheet_3(sheet_fixture, push_tickets_sheet_fixture,
             cell.object_value = "JAR-1234"
             cell.display_value = "JAR-1234"
 
-    @patch("uuid_module.smartsheet_api.write_rows_to_sheet",
+    @patch("data_module.smartsheet_api.write_rows_to_sheet",
            return_value=result)
-    @patch("uuid_module.smartsheet_api.get_row", return_value=row)
-    @patch("uuid_module.helper.get_column_map", return_value=col_map)
-    @patch("uuid_module.smartsheet_api.get_sheet", return_value=sheet)
-    @patch("uuid_module.create_jira_tickets.get_push_tickets_sheet",
+    @patch("data_module.smartsheet_api.get_row", return_value=row)
+    @patch("data_module.helper.get_column_map", return_value=col_map)
+    @patch("data_module.smartsheet_api.get_sheet", return_value=sheet)
+    @patch("data_module.create_jira_tickets.get_push_tickets_sheet",
            return_value=[push_tickets_sheet, push_col_map])
     def test_0(mock_0, mock_1, mock_2, mock_3, mock_4):
         success_count, failure_count, skip_count = jira.copy_errors_to_sheet()
@@ -507,9 +507,9 @@ def test_copy_uuid_to_index_sheet_1(index_sheet_fixture):
     result.message = "SUCCESS"
     result.result_code = 0
 
-    @patch("uuid_module.create_jira_tickets.build_sub_indexes",
+    @patch("data_module.create_jira_tickets.build_sub_indexes",
            return_value=[{}, None])
-    @patch("uuid_module.smartsheet_api.write_rows_to_sheet",
+    @patch("data_module.smartsheet_api.write_rows_to_sheet",
            return_value=result)
     def test_0(mock_0, mock_1):
         result = jira.copy_uuid_to_index_sheet(index_sheet, index_col_map)
@@ -533,9 +533,9 @@ def test_copy_uuid_to_index_sheet_2(index_sheet_fixture, cell_fixture):
             elif cell.column_id == index_col_map[app_vars.jira_col]:
                 cell.value = "JAR-1234"
 
-    @patch("uuid_module.smartsheet_api.write_rows_to_sheet",
+    @patch("data_module.smartsheet_api.write_rows_to_sheet",
            return_value=result)
-    @patch("uuid_module.create_jira_tickets.build_sub_indexes",
+    @patch("data_module.create_jira_tickets.build_sub_indexes",
            return_value=[{basic_cell.value: "JAR-1234"}, None])
     def test_0(mock_0, mock_1):
         result = jira.copy_uuid_to_index_sheet(index_sheet, index_col_map)
@@ -559,9 +559,9 @@ def test_copy_uuid_to_index_sheet_3(index_sheet_fixture, cell_fixture):
             elif cell.column_id == index_col_map[app_vars.jira_col]:
                 cell.value = "JAR-1234"
 
-    @patch("uuid_module.smartsheet_api.write_rows_to_sheet",
+    @patch("data_module.smartsheet_api.write_rows_to_sheet",
            return_value=result)
-    @patch("uuid_module.create_jira_tickets.build_sub_indexes",
+    @patch("data_module.create_jira_tickets.build_sub_indexes",
            return_value=[{basic_cell.value: "JAR-1234"}, None])
     def test_0(mock_0, mock_1):
         result = jira.copy_uuid_to_index_sheet(index_sheet, index_col_map)
@@ -593,7 +593,7 @@ def test_link_jira_index_to_sheet_1(index_sheet_fixture,
     sheet, _, _, _, = sheet_fixture
     source_sheets = [sheet]
 
-    @patch("uuid_module.create_jira_tickets.build_sub_indexes",
+    @patch("data_module.create_jira_tickets.build_sub_indexes",
            return_value=({}, []))
     def test(mock_0):
         sheets_updated = jira.copy_jira_tickets_to_sheets(
@@ -630,7 +630,7 @@ def test_build_row_data_2(row_fixture, sheet_fixture, cell_fixture):
     row, _ = row_fixture
     _, col_map, _, _ = sheet_fixture
 
-    @patch("uuid_module.helper.get_cell_data", return_value=basic_cell,
+    @patch("data_module.helper.get_cell_data", return_value=basic_cell,
            side_effect=KeyError)
     def test_0(mock_0):
         row_data = jira.build_row_data(row, col_map)
@@ -667,7 +667,7 @@ def test_create_ticket_index_1(sheet_fixture, index_sheet_fixture):
     result.message = "SUCCESS"
     result.result_code = 0
 
-    @patch("uuid_module.smartsheet_api.write_rows_to_sheet",
+    @patch("data_module.smartsheet_api.write_rows_to_sheet",
            return_value=result)
     def test(mock_0):
         ticket_index = jira.create_ticket_index(
@@ -689,9 +689,9 @@ def test_create_ticket_index_2(sheet_fixture, index_sheet_fixture):
 
     col_map.pop(app_vars.uuid_col)
 
-    @patch("uuid_module.smartsheet_api.write_rows_to_sheet",
+    @patch("data_module.smartsheet_api.write_rows_to_sheet",
            return_value=result)
-    @patch("uuid_module.helper.get_column_map", return_value=col_map)
+    @patch("data_module.helper.get_column_map", return_value=col_map)
     def test(mock_0, mock_1):
         ticket_index = jira.create_ticket_index(
             source_sheets, index_sheet, index_col_map)
@@ -712,11 +712,11 @@ def test_create_ticket_index_3(sheet_fixture, index_sheet_fixture,
     result.message = "SUCCESS"
     result.result_code = 0
 
-    @patch("uuid_module.smartsheet_api.write_rows_to_sheet",
+    @patch("data_module.smartsheet_api.write_rows_to_sheet",
            return_value=result)
-    @patch("uuid_module.create_jira_tickets.build_row_data",
+    @patch("data_module.create_jira_tickets.build_row_data",
            return_value=mock_row_data)
-    @patch("uuid_module.helper.get_column_map", return_value=col_map)
+    @patch("data_module.helper.get_column_map", return_value=col_map)
     def test(mock_0, mock_1, mock_2):
         ticket_index = jira.create_ticket_index(
             source_sheets, index_sheet, index_col_map)
@@ -738,10 +738,10 @@ def test_create_ticket_index_4(sheet_fixture, index_sheet_fixture,
     mock_row_data = row_data_fixture
     mock_row_data[app_vars.jira_col] = None
 
-    @patch("uuid_module.smartsheet_api.write_rows_to_sheet",
+    @patch("data_module.smartsheet_api.write_rows_to_sheet",
            return_value=result)
-    @patch("uuid_module.helper.get_column_map", return_value=col_map)
-    @patch("uuid_module.create_jira_tickets.build_row_data",
+    @patch("data_module.helper.get_column_map", return_value=col_map)
+    @patch("data_module.create_jira_tickets.build_row_data",
            return_value=mock_row_data, side_effect=mock_row_data)
     def test(mock_0, mock_1, mock_2):
         ticket_index = jira.create_ticket_index(
@@ -765,11 +765,11 @@ def test_create_ticket_index_5(sheet_fixture, index_sheet_fixture,
     mock_row_data = row_data_fixture
     mock_row_data[app_vars.summary_col] = "False"
 
-    @patch("uuid_module.smartsheet_api.write_rows_to_sheet",
+    @patch("data_module.smartsheet_api.write_rows_to_sheet",
            return_value=result)
-    @patch("uuid_module.create_jira_tickets.build_row_data",
+    @patch("data_module.create_jira_tickets.build_row_data",
            return_value=mock_row_data)
-    @patch("uuid_module.helper.get_column_map", return_value=col_map)
+    @patch("data_module.helper.get_column_map", return_value=col_map)
     def test(mock_0, mock_1, mock_2):
         ticket_index = jira.create_ticket_index(
             source_sheets, index_sheet, index_col_map)
@@ -793,11 +793,11 @@ def test_create_ticket_index_6(sheet_fixture, index_sheet_fixture,
     mock_row_data[app_vars.summary_col] = "False"
     mock_row_data["Team"] = None
 
-    @patch("uuid_module.smartsheet_api.write_rows_to_sheet",
+    @patch("data_module.smartsheet_api.write_rows_to_sheet",
            return_value=result)
-    @patch("uuid_module.create_jira_tickets.build_row_data",
+    @patch("data_module.create_jira_tickets.build_row_data",
            return_value=mock_row_data)
-    @patch("uuid_module.helper.get_column_map", return_value=col_map)
+    @patch("data_module.helper.get_column_map", return_value=col_map)
     def test(mock_0, mock_1, mock_2):
         ticket_index = jira.create_ticket_index(
             source_sheets, index_sheet, index_col_map)
@@ -821,11 +821,11 @@ def test_create_ticket_index_7(sheet_fixture, index_sheet_fixture,
     mock_row_data[app_vars.summary_col] = "False"
     mock_row_data[app_vars.uuid_col] = None
 
-    @patch("uuid_module.smartsheet_api.write_rows_to_sheet",
+    @patch("data_module.smartsheet_api.write_rows_to_sheet",
            return_value=result)
-    @patch("uuid_module.create_jira_tickets.build_row_data",
+    @patch("data_module.create_jira_tickets.build_row_data",
            return_value=mock_row_data)
-    @patch("uuid_module.helper.get_column_map", return_value=col_map)
+    @patch("data_module.helper.get_column_map", return_value=col_map)
     def test(mock_0, mock_1, mock_2):
         ticket_index = jira.create_ticket_index(
             source_sheets, index_sheet, index_col_map)
@@ -948,19 +948,19 @@ def test_create_tickets_1(workspace_fixture, sheet_fixture,
     result.message = "SUCCESS"
     result.result_code = 0
 
-    @patch("uuid_module.create_jira_tickets.modify_scheduler",
+    @patch("data_module.create_jira_tickets.modify_scheduler",
            return_value="message")
-    @patch("uuid_module.create_jira_tickets.create_ticket_index",
+    @patch("data_module.create_jira_tickets.create_ticket_index",
            return_value={"Row": "Data"})
-    @patch("uuid_module.smartsheet_api.write_rows_to_sheet",
+    @patch("data_module.smartsheet_api.write_rows_to_sheet",
            return_value=result)
-    @patch("uuid_module.create_jira_tickets.form_rows",
+    @patch("data_module.create_jira_tickets.form_rows",
            return_value=['row 1', 'row 2'])
-    @patch("uuid_module.smartsheet_api.get_sheet",
+    @patch("data_module.smartsheet_api.get_sheet",
            return_value=index_sheet)
-    @patch("uuid_module.get_data.refresh_source_sheets",
+    @patch("data_module.get_data.refresh_source_sheets",
            return_value=[sheet])
-    @patch("uuid_module.smartsheet_api.get_workspace",
+    @patch("data_module.smartsheet_api.get_workspace",
            return_value=workspace)
     def test_0(mock_0, mock_1, mock_2, mock_3, mock_4, mock_5, mock_6):
         result = jira.create_tickets(config.minutes)
@@ -979,19 +979,19 @@ def test_create_tickets_2(workspace_fixture, sheet_fixture,
     result.message = "SUCCESS"
     result.result_code = 0
 
-    @patch("uuid_module.create_jira_tickets.modify_scheduler",
+    @patch("data_module.create_jira_tickets.modify_scheduler",
            return_value="message")
-    @patch("uuid_module.create_jira_tickets.create_ticket_index",
+    @patch("data_module.create_jira_tickets.create_ticket_index",
            return_value={})
-    @patch("uuid_module.smartsheet_api.write_rows_to_sheet",
+    @patch("data_module.smartsheet_api.write_rows_to_sheet",
            return_value=result)
-    @patch("uuid_module.create_jira_tickets.form_rows",
+    @patch("data_module.create_jira_tickets.form_rows",
            return_value=['row 1', 'row 2'])
-    @patch("uuid_module.smartsheet_api.get_sheet",
+    @patch("data_module.smartsheet_api.get_sheet",
            return_value=index_sheet)
-    @patch("uuid_module.get_data.refresh_source_sheets",
+    @patch("data_module.get_data.refresh_source_sheets",
            return_value=[sheet])
-    @patch("uuid_module.smartsheet_api.get_workspace",
+    @patch("data_module.smartsheet_api.get_workspace",
            return_value=workspace)
     def test_0(mock_0, mock_1, mock_2, mock_3, mock_4, mock_5, mock_6):
         result = jira.create_tickets(config.minutes)
@@ -1010,21 +1010,21 @@ def test_create_tickets_3(workspace_fixture, sheet_fixture,
     result.message = "SUCCESS"
     result.result_code = 0
 
-    @patch("uuid_module.create_jira_tickets.copy_errors_to_sheet",
+    @patch("data_module.create_jira_tickets.copy_errors_to_sheet",
            return_value=[1, 1, 1])
-    @patch("uuid_module.create_jira_tickets.modify_scheduler",
+    @patch("data_module.create_jira_tickets.modify_scheduler",
            return_value="message")
-    @patch("uuid_module.create_jira_tickets.create_ticket_index",
+    @patch("data_module.create_jira_tickets.create_ticket_index",
            return_value={"Row": "Data"})
-    @patch("uuid_module.smartsheet_api.write_rows_to_sheet",
+    @patch("data_module.smartsheet_api.write_rows_to_sheet",
            return_value=result)
-    @patch("uuid_module.create_jira_tickets.form_rows",
+    @patch("data_module.create_jira_tickets.form_rows",
            return_value=['row 1', 'row 2'])
-    @patch("uuid_module.smartsheet_api.get_sheet",
+    @patch("data_module.smartsheet_api.get_sheet",
            return_value=index_sheet)
-    @patch("uuid_module.get_data.refresh_source_sheets",
+    @patch("data_module.get_data.refresh_source_sheets",
            return_value=[sheet])
-    @patch("uuid_module.smartsheet_api.get_workspace",
+    @patch("data_module.smartsheet_api.get_workspace",
            return_value=workspace)
     def test_0(mock_0, mock_1, mock_2, mock_3,
                mock_4, mock_5, mock_6, mock_7):

@@ -2,12 +2,12 @@ import logging
 
 import app.config as config
 import pytest
-import uuid_module.cell_link_sheet_data as cell_links
-import uuid_module.get_data as get_data
-import uuid_module.helper as helper
-import uuid_module.variables as app_vars
+import data_module.cell_link_sheet_data as cell_links
+import data_module.get_data as get_data
+import data_module.helper as helper
+import app.variables as app_vars
 
-# import uuid_module.write_data as write_data
+# import data_module.write_data as write_data
 
 _, cwd = helper.get_local_paths()
 logger = logging.getLogger(__name__)

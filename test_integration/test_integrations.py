@@ -2,9 +2,9 @@ import json
 
 import pytest
 import smartsheet
-import uuid_module.helper as helper
-import uuid_module.smartsheet_api as smartsheet_api
-import uuid_module.variables as app_vars
+import data_module.helper as helper
+import data_module.smartsheet_api as smartsheet_api
+import app.variables as app_vars
 
 _, cwd = helper.get_local_paths()
 

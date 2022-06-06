@@ -7,9 +7,9 @@ import app.config as config
 import pytz
 import smartsheet
 
-import uuid_module.helper as helper
-import uuid_module.smartsheet_api as smartsheet_api
-import uuid_module.variables as app_vars
+import data_module.helper as helper
+import data_module.smartsheet_api as smartsheet_api
+import app.variables as app_vars
 
 logger = logging.getLogger(__name__)
 

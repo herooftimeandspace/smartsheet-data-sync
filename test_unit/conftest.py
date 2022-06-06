@@ -4,8 +4,8 @@ import logging
 from freezegun import freeze_time
 import pytest
 import smartsheet
-import uuid_module.variables as app_vars
-import uuid_module.helper as helper
+import app.variables as app_vars
+import data_module.helper as helper
 from unittest.mock import patch
 
 logger = logging.getLogger(__name__)
@@ -48,12 +48,12 @@ def sheet_fixture():
 
 @pytest.fixture(scope="module")
 def index_sheet_fixture():
-    import uuid_module.get_data as get_data
+    import data_module.get_data as get_data
     with open(cwd + '/dev_jira_index_sheet.json') as f:
         index_sheet = json.load(f)
         index_sheet = smartsheet.models.Sheet(index_sheet)
 
-    @patch("uuid_module.smartsheet_api.get_sheet",
+    @patch("data_module.smartsheet_api.get_sheet",
            return_value=index_sheet)
     def load_jira_index_fixture(mock_0):
         jira_index_sheet, jira_index_col_map, jira_index_rows \
@@ -136,7 +136,7 @@ def env_fixture():
 # TODO: Static return and check for actual values
 def project_indexes(sheet_fixture):
     import app.config as config
-    import uuid_module.get_data as get_data
+    import data_module.get_data as get_data
     sheet, _, _, _ = sheet_fixture
     project_uuid_index = get_data.get_all_row_data([sheet],
                                                    app_vars.sheet_columns,

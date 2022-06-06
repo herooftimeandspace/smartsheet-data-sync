@@ -2,8 +2,8 @@ import logging
 
 import smartsheet
 
-import uuid_module.helper as helper
-import uuid_module.variables as app_vars
+import data_module.helper as helper
+import app.variables as app_vars
 
 
 def set_smartsheet_client():

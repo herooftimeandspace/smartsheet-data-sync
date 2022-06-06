@@ -3,14 +3,14 @@ import logging
 import threading
 import time
 
-import uuid_module.create_jira_tickets as create_jira_tickets
-import uuid_module.helper as helper
-import uuid_module.variables as app_vars
-import uuid_module.bidirectional_sync as sync
+import data_module.create_jira_tickets as create_jira_tickets
+import data_module.helper as helper
+import app.variables as app_vars
+import sync_module.bidirectional_sync as sync
 
 import app.config as config
 
-# import uuid_module.cell_link_sheet_data as uuid_links
+# import data_module.cell_link_sheet_data as uuid_links
 
 
 sheet_id_lock = threading.Lock()
@@ -28,8 +28,8 @@ def full_jira_sync(minutes):
         TypeError: Minutes should be an INT
         ValueError: Minutes should be a positive number, or zero
     """
-    import uuid_module.get_data as get_data
-    import uuid_module.write_data as write_data
+    import data_module.get_data as get_data
+    import data_module.write_data as write_data
     if not isinstance(minutes, int):
         msg = str("Minutes should be type: int, not {}").format(type(minutes))
         raise TypeError(msg)
@@ -147,8 +147,8 @@ def full_jira_sync(minutes):
 def full_smartsheet_sync(minutes):
     """Sync Smartsheet data between rows using UUID
     """
-    import uuid_module.get_data as get_data
-    # import uuid_module.write_data as write_data
+    import data_module.get_data as get_data
+    # import data_module.write_data as write_data
     if not isinstance(minutes, int):
         msg = str("Minutes should be type: int, not {}").format(type(minutes))
         raise TypeError(msg)
