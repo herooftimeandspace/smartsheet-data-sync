@@ -1,13 +1,17 @@
-import data_module.get_data as get_data
-import data_module.write_data as write_data
-import data_module.helper as helper
-import time
-import app.config as config
 import logging
+import time
+
+import app.config as config
+import data_module.get_data as get_data
+import data_module.helper as helper
+import data_module.write_data as write_data
+
+logger = logging.getLogger(__name__)
 
 
 def write_uuids_to_sheets(minutes):
-    """Executes a full Jira sync across all sheets in the workspace.
+    """Writes UUIDs to each blank cell in the UUID column across every sheet
+        in the workspace, excluding the Index Sheet.
 
     Args:
         minutes (int): Number of minutes into the past to check for changes
@@ -30,18 +34,14 @@ def write_uuids_to_sheets(minutes):
                          time.strftime('%Y-%m-%d %H:%M:%S',
                                        time.localtime(start)))
     logging.debug(msg)
-    global sheet_id_lock
 
-    with sheet_id_lock:
-        sheet_ids = get_data.get_all_sheet_ids(
-            minutes, config.workspace_id, config.index_sheet)
-        sheet_ids = list(set(sheet_ids))
+    sheet_ids = get_data.get_all_sheet_ids(
+        minutes, config.workspace_id, config.index_sheet)
+    sheet_ids = list(set(sheet_ids))
 
     # Calculate a number minutes ago to get only the rows that were modified
     # since the last run.
-    global sheet_index_lock
-    with sheet_index_lock:
-        source_sheets = get_data.refresh_source_sheets(sheet_ids, minutes)
+    source_sheets = get_data.refresh_source_sheets(sheet_ids, minutes)
 
     if not source_sheets:
         end = time.time()
