@@ -227,7 +227,6 @@ def write_uuid_cell_links(project_data_index, source_sheets):
             else:
                 logging.debug(dest_row)
                 if dest_row is not None:
-                    # TODO: Replace with get_cell_data
                     desc_cell = helper.get_cell_data(
                         dest_row, app_vars.description_col, dest_col_map)
                     logging.debug(desc_cell.value)
