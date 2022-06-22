@@ -84,6 +84,8 @@ def modify_scheduler(time, job_name, time_type="seconds", margin=0):
         interval_minute = int(interval_time[1])
         interval_second = int(interval_time[2])
 
+    # Create a new job dictionary and map the job ID, for use later to
+    # reschedule the job.
     job_dict = {"job_id": job.id}
 
     # Convert everything to seconds so that we're dealing with a single type
@@ -96,6 +98,10 @@ def modify_scheduler(time, job_name, time_type="seconds", margin=0):
         # in seconds. Multiply margin by 60 to get margin in seconds
         interval = interval_minute * 60
         margin = margin * 60
+    else:
+        # Default to seconds and modify the job accordingly
+        interval = interval_second
+        time_type = "seconds"
 
     if time >= interval - margin and time <= interval + margin:
         # Ex: Interval 15, margin 5, time 17
@@ -107,7 +113,7 @@ def modify_scheduler(time, job_name, time_type="seconds", margin=0):
                   "").format(margin, time_type)
         return msg
 
-    new_interval = interval
+    # new_interval = interval
     if interval + margin > time:
         # If the interval is greater than the time it took to run the process,
         # check to see how much more. Subtract the delta from the interval, but
@@ -115,6 +121,8 @@ def modify_scheduler(time, job_name, time_type="seconds", margin=0):
         delta = interval - time
         if delta >= margin:
             new_interval = interval - delta + margin
+        else:
+            new_interval = delta + margin
         msg = str("Job {} interval is {} {} longer than the job "
                   "runtime. Reduced interval to {} {}."
                   "").format(job_name, int(delta), time_type,
@@ -130,6 +138,8 @@ def modify_scheduler(time, job_name, time_type="seconds", margin=0):
             # interval to 1.
             if new_interval < 1:
                 new_interval = 1
+        else:
+            new_interval = delta - margin
         msg = str("Job {} interval is {} {} shorter than the job "
                   "runtime. Increased interval to {} {}."
                   "").format(job_name, int(delta), time_type,
@@ -138,11 +148,20 @@ def modify_scheduler(time, job_name, time_type="seconds", margin=0):
         msg = str("ERROR: Job interval {}, elapsed time {}"
                   "").format(interval, time)
 
+    # Convert seconds back into minutes and always round up to the nearest
+    # whole minute.
     if time_type == 'minutes':
         new_interval = math.ceil(new_interval / 60)
-    # job_dict[time_type] = new_interval
+
+    # Create a new dict that maps the time type to the new interval value
+    # e.g. {seconds: 15}
     trigger_dict = {time_type: new_interval}
+    # Create a new APScheduler Interval Trigger object using the trigger_dict
+    # as kwargs.
     new_trigger = IntervalTrigger(**trigger_dict)
+    # Map the 'trigger' key to the new IntervalTrigger
+    # object in the job dict, e.g.{job_id: 1234, trigger: {seconds: 15}}
     job_dict['trigger'] = new_trigger
+    # Reschedule the job using the job_dict as kwargs
     config.scheduler.reschedule_job(**job_dict)
     return msg
