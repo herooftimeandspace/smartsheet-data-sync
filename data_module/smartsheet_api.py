@@ -1,9 +1,11 @@
 import logging
+import backoff
 
 import smartsheet
 
 import data_module.helper as helper
 import app.variables as app_vars
+import app.config as config
 
 
 def set_smartsheet_client():
@@ -16,6 +18,8 @@ def set_smartsheet_client():
     smartsheet_client = config.smartsheet_client
 
 
+@backoff.on_exception(backoff.expo,
+                      smartsheet.exceptions.SmartsheetException)
 def write_rows_to_sheet(rows_to_write, sheet, write_method="add"):
     """
     Args:
@@ -83,21 +87,21 @@ def write_rows_to_sheet(rows_to_write, sheet, write_method="add"):
                 chunked_cells = helper.chunks(rows_to_write, 125)
                 for i in chunked_cells:
                     try:
-                        result = smartsheet_client.Sheets.add_rows(sheet_id,
-                                                                   i)
+                        result = config.smartsheet_client.Sheets.add_rows(
+                            sheet_id, i)
                         msg = str("Smartsheet API responded with the "
                                   "following message: {} | Result Code: {}."
                                   "").format(result.message,
                                              result.result_code)
                         logging.info(msg)
-                    except Exception as result:
+                    except smartsheet.exceptions.SmartsheetException as result:
                         logging.warning(result.message)
                         return result
                 return result
             else:
                 try:
-                    result = smartsheet_client.Sheets.add_rows(sheet_id,
-                                                               rows_to_write)
+                    result = config.smartsheet_client.Sheets.add_rows(
+                        sheet_id, rows_to_write)
                     msg = str("Smartsheet API responded with the "
                               "following message: {} | Result Code: {}."
                               "").format(result.message,
@@ -116,21 +120,21 @@ def write_rows_to_sheet(rows_to_write, sheet, write_method="add"):
                 chunked_cells = helper.chunks(rows_to_write, 125)
                 for i in chunked_cells:
                     try:
-                        result = smartsheet_client.Sheets.\
-                            update_rows(sheet_id, i)
+                        result = config.smartsheet_client.Sheets.update_rows(
+                            sheet_id, i)
                         msg = str("Smartsheet API responded with the "
                                   "following message: {} | Result Code: {}."
                                   "").format(result.message,
                                              result.result_code)
                         logging.info(msg)
-                    except Exception as result:
+                    except smartsheet.exceptions.SmartsheetException as result:
                         logging.warning(result.message)
                         return result
                 return result
             else:
                 try:
-                    result = smartsheet_client.Sheets.\
-                        update_rows(sheet_id, rows_to_write)
+                    result = config.smartsheet_client.Sheets.update_rows(
+                        sheet_id, rows_to_write)
                     msg = str("Smartsheet API responded with the "
                               "following message: {} | Result Code: {}."
                               "").format(result.message, result.result_code)
@@ -147,6 +151,8 @@ def write_rows_to_sheet(rows_to_write, sheet, write_method="add"):
         return None
 
 
+@backoff.on_exception(backoff.expo,
+                      smartsheet.exceptions.SmartsheetException)
 def get_workspace(workspace_id=app_vars.dev_workspace_id):
     """Gets all reports, sheets, and dashboards from a given Workspace ID.
     LoadAll = True to get objects from all nested folders in the Workspace.
@@ -186,18 +192,20 @@ def get_workspace(workspace_id=app_vars.dev_workspace_id):
                 raise ValueError(msg)
 
     if isinstance(workspace_id, int):
-        workspace = smartsheet_client.Workspaces.get_workspace(
+        workspace = config.smartsheet_client.Workspaces.get_workspace(
             workspace_id, load_all=True)
         return workspace
     elif isinstance(workspace_id, list):
         workspaces = []
         for ws_id in workspace_id:
-            workspace = smartsheet_client.Workspaces.get_workspace(
+            workspace = config.smartsheet_client.Workspaces.get_workspace(
                 ws_id, load_all=True)
             workspaces.append(workspace)
         return workspaces
 
 
+@backoff.on_exception(backoff.expo,
+                      smartsheet.exceptions.SmartsheetException)
 def get_sheet(sheet_id, minutes=app_vars.dev_minutes):
     """Gets a sheet from the Smartsheet API via Sheet ID.
 
@@ -235,23 +243,25 @@ def get_sheet(sheet_id, minutes=app_vars.dev_minutes):
     if minutes > 0:
         _, modified_since = helper.get_timestamp(minutes)
 
-        sheet = smartsheet_client.Sheets.get_sheet(
+        sheet = config.smartsheet_client.Sheets.get_sheet(
             sheet_id, include='object_value', level=2,
             rows_modified_since=modified_since)
     # If minutes is zero, get all rows regardless of modified date
     elif minutes == 0:
-        sheet = smartsheet_client.Sheets.get_sheet(
+        sheet = config.smartsheet_client.Sheets.get_sheet(
             sheet_id, include='object_value', level=2)
     # If somehow minutes is less than zero but doesn't raise a ValueError,
     # default to dev_minutes and return the sheet.
     else:
         modified_since, _ = helper.get_timestamp(app_vars.dev_minutes)
-        sheet = smartsheet_client.Sheets.get_sheet(
+        sheet = config.smartsheet_client.Sheets.get_sheet(
             sheet_id, include='object_value', level=2,
             rows_modified_since=modified_since)
     return sheet
 
 
+@backoff.on_exception(backoff.expo,
+                      smartsheet.exceptions.SmartsheetException)
 def get_row(sheet_id, row_id):
     """Gets row data from a given sheet ID and row ID from the Smartsheet API
 
@@ -286,20 +296,23 @@ def get_row(sheet_id, row_id):
                   "").format()
         raise ValueError(msg)
 
-    row = smartsheet_client.Sheets.get_row(sheet_id, row_id,
-                                           include='objectValue')
+    row = config.smartsheet_client.Sheets.get_row(sheet_id, row_id,
+                                                  include='objectValue')
     return row
 
 
+@backoff.on_exception(backoff.expo,
+                      smartsheet.exceptions.SmartsheetException)
 def get_cell_history(sheet_id, row_id, column_id,
                      page_size=1, page=1):
     try:
-        cell_history = smartsheet_client.Cells.get_cell_history(
-            sheet_id, row_id, column_id, page_size, page
-        )
+        response = config.smartsheet_client.Cells.get_cell_history(
+            sheet_id, row_id, column_id, page_size, page)
+        logging.info("{}, type: {}".format(response, type(response)))
     except KeyError:
         msg = str("Sheet ID: {}, Row ID: {}, Column ID: {}."
                   "").format(sheet_id, row_id, column_id)
         logging.debug(msg)
-    history = cell_history.data
+
+    history = response.data
     return history
