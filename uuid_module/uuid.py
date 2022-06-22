@@ -1,5 +1,6 @@
 import logging
 import time
+import gc
 
 import app.config as config
 import data_module.get_data as get_data
@@ -60,3 +61,18 @@ def write_uuids_to_sheets(minutes):
         if sheets_updated:
             logging.info("{} project sheet(s) updated with UUIDs"
                          "".format(sheets_updated))
+
+    end = time.time()
+    elapsed = end - start
+    elapsed = helper.truncate(elapsed, 3)
+    msg = str("Writing UUIDs took: {} seconds.").format(elapsed)
+    logging.info(msg)
+    gc.collect()
+    if elapsed > 30:
+        delta = elapsed - 30
+        warn_msg = str("Writing UUIDs took {} seconds longer than "
+                       "the interval.").format(delta)
+        logging.warning(warn_msg)
+        return msg, warn_msg
+    else:
+        return msg
