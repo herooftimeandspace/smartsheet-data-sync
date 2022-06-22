@@ -48,7 +48,6 @@ def build_linked_cell(jira_index_sheet, jira_index_col_map, dest_col_map,
         msg = str("Destination column map must be type: dict, not"
                   " {}").format(type(jira_index_sheet))
         raise TypeError(msg)
-    # TODO: Fix to int instead of str, or both
     if not isinstance(idx_row_id, int):
         msg = str("Jira Index Row ID must be type: int, not"
                   " {}").format(type(idx_row_id))
