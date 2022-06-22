@@ -3,12 +3,12 @@ import re
 import time
 
 import app.config as config
+import app.variables as app_vars
 import smartsheet
 
+import data_module.get_data as get_data
 import data_module.helper as helper
 import data_module.smartsheet_api as smartsheet_api
-import app.variables as app_vars
-import data_module.get_data as get_data
 
 project_columns = [app_vars.summary_col, app_vars.task_col, "Issue Type",
                    app_vars.jira_col,
@@ -686,7 +686,7 @@ def create_ticket_index(source_sheets, index_sheet, index_col_map):
             if bool(re.match(r"[a-zA-Z]+-\d+",
                              str(row_data[app_vars.jira_col]))):
                 # Skip tickets that match the Jira Ticket pattern
-                msg = str("Jira Ticket {} on row {} matches the Jira Ticket"
+                msg = str("Jira Ticket {} on row {} matches the Jira Ticket "
                           "pattern").format(row_data[app_vars.jira_col],
                                             row_data["row_num"])
                 logging.debug(msg)
