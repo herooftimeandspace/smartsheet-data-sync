@@ -6,6 +6,7 @@ import smartsheet
 import sync_module.bidirectional_sync as sync
 import data_module.helper as helper
 import app.variables as app_vars
+from datetime import datetime
 
 # from unittest.mock import patch
 
@@ -35,13 +36,13 @@ def test_compare_dates_0(cell_history_fixture):
 
 
 # def test_compare_dates_1(cell_history_fixture):
-#     index_history = cell_history_fixture
-#     plan_history = cell_history_fixture
-#     print(index_history, plan_history)
+#     index_history = [cell_history_fixture]
+#     plan_history = [cell_history_fixture]
 
 #     def test_0():
-#         index_history.modified_at = index_history.modified_at.time_delta(
-#             seconds=30)
+#         index_history[0].modified_at = datetime.now()
+#         plan_history[0].modified_at = index_history[0].modified_at.replace(
+#             hour=1)
 #         result = sync.compare_dates(index_history, plan_history, "Cell")
 #         return result
 #     result_0 = test_0()

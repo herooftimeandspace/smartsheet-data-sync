@@ -56,12 +56,14 @@ def write_uuids_to_sheets(minutes):
 
     blank_uuid_index = get_data.get_blank_uuids(source_sheets)
     if blank_uuid_index:
-        logging.info("There are {} project sheets to be updated "
-                     "with UUIDs".format(len(blank_uuid_index)))
+        msg = str("There are {} project sheets to be updated "
+                  "with UUIDs").format(len(blank_uuid_index))
+        logging.info(msg)
         sheets_updated = write_data.write_uuids(blank_uuid_index)
         if sheets_updated:
-            logging.info("{} project sheet(s) updated with UUIDs"
-                         "".format(sheets_updated))
+            msg = str("{} project sheet(s) updated with UUIDs"
+                      "").format(sheets_updated)
+            logging.info(msg)
 
     end = time.time()
     elapsed = end - start

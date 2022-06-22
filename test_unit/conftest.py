@@ -122,7 +122,7 @@ def cell_fixture():
 def cell_history_fixture():
     with open(cwd + '/dev_cell_history.json') as f:
         cell_history = json.load(f)
-    cell_history = smartsheet.models.CellHistory(cell_history)
+    cell_history = smartsheet.models.CellHistory(cell_history["data"])
     return cell_history
 
 

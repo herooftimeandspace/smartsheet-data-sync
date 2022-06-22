@@ -61,6 +61,17 @@ def test_uuid_2(env_dict, sheet_fixture, index_sheet_fixture,
     index_sheet, index_col_map, index_rows, _ = index_sheet_fixture
     project_uuid_index, _ = project_indexes
     minutes = env_dict['minutes']
+    sheets_to_update = {
+        sheet.id: {
+            "sheet_name": sheet.name,
+            "row_data": {
+                12345678: {
+                    "column_id": 123456789,
+                    "uuid": 123-456-789-101112
+                }
+            }
+        }
+    }
 
     result = smartsheet.models.Result()
     result.message = "SUCCESS"
@@ -80,6 +91,8 @@ def test_uuid_2(env_dict, sheet_fixture, index_sheet_fixture,
         var_0 = uuid.write_uuids_to_sheets(minutes)
         return var_0
 
+    @patch("data_module.get_data.get_blank_uuids",
+           return_value=sheets_to_update)
     @patch("data_module.get_data.load_jira_index",
            return_value=(index_sheet, index_col_map, index_rows))
     @patch("data_module.helper.truncate", return_value=45)
@@ -90,17 +103,14 @@ def test_uuid_2(env_dict, sheet_fixture, index_sheet_fixture,
     @patch("data_module.get_data.refresh_source_sheets", return_value=[sheet])
     @patch("data_module.get_data.get_all_sheet_ids",
            return_value=[sheet.id])
-    def test_1(mock_0, mock_1, mock_2, mock_3, mock_4, mock_5):
-        var_0, var_1 = uuid.write_uuids_to_sheets(minutes)
-        return var_0, var_1
+    def test_1(mock_0, mock_1, mock_2, mock_3, mock_4, mock_5, mock_6):
+        var_0 = uuid.write_uuids_to_sheets(minutes)
+        return var_0
 
     result_0 = test_0()
-    assert isinstance(result_0, str)
-    assert result_0 == "Writing UUIDs took: 10 seconds."
+    assert isinstance(result_0, bool)
+    assert result_0
 
-    result_1, result_2 = test_1()
-    assert isinstance(result_1, str)
-    assert isinstance(result_2, str)
-    assert result_1 == "Writing UUIDs took: 45 seconds."
-    assert result_2 == str("Writing UUIDs took 15 seconds longer than the "
-                           "interval.")
+    result_1 = test_1()
+    assert isinstance(result_1, bool)
+    assert result_1
