@@ -92,7 +92,7 @@ def compare_dates(index_history, plan_history, context="Cell"):
             logging.debug(msg)
         # Set threshold for cell detection to 1 seconds
         threshold = 1
-    if context == "Row":
+    elif context == "Row":
         if not index_history:
             index_modified_at = None
             msg = str("Used Index Row ModAt: {}").format(
@@ -116,6 +116,8 @@ def compare_dates(index_history, plan_history, context="Cell"):
             logging.debug(msg)
         # Set threshold for row detection to 15 seconds
         threshold = 15
+    else:
+        return None
 
     if index_modified_at is None and plan_modified_at is not None:
         return "Plan"
@@ -483,15 +485,15 @@ def bidirectional_sync(minutes):
             msg = str("Plan Row type: {}, Data: {}"
                       "").format(type(plan_row), plan_row)
             logging.debug(msg)
-            newer = compare_dates(index_row, plan_row, "Row")
-            if not newer:
-                # Skip to next row if rows were updated within 30 seconds of
-                # each other.
-                continue
-            else:
-                updated_index_row, updated_plan_row = build_row(
-                    jira_index_sheet, jira_index_col_map, index_row,
-                    plan_sheet, plan_col_map, plan_row, columns_to_compare)
+            # newer = compare_dates(index_row, plan_row, "Row")
+            # if not newer:
+            #     # Skip to next row if rows were updated within 30 seconds of
+            #     # each other.
+            #     continue
+            # else:
+            updated_index_row, updated_plan_row = build_row(
+                jira_index_sheet, jira_index_col_map, index_row,
+                plan_sheet, plan_col_map, plan_row, columns_to_compare)
             if updated_index_row.cells:
                 index_rows_to_update.append(updated_index_row)
             else:
