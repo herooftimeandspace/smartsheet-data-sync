@@ -1,12 +1,15 @@
-import logging
+import gc
 import json
-import app.config as config
-import smartsheet
+import logging
+import time
 
-import data_module.helper as helper
-import data_module.smartsheet_api as smartsheet_api
+import app.config as config
 import app.variables as app_vars
 import data_module.get_data as get_data
+import data_module.helper as helper
+import data_module.jobs as jobs
+import data_module.smartsheet_api as smartsheet_api
+import smartsheet
 
 logger = logging.getLogger(__name__)
 
@@ -62,6 +65,7 @@ def compare_dates(index_history, plan_history, context="Cell"):
         msg = str("Type should be either 'Row' or 'Cell', not {}"
                   "").format(type(context))
         raise ValueError(msg)
+
     if context == "Cell":
         if not index_history:
             index_modified_at = None
@@ -114,44 +118,28 @@ def compare_dates(index_history, plan_history, context="Cell"):
         threshold = 15
 
     if index_modified_at is None and plan_modified_at is not None:
-        msg = str("Returning Plan")
-        logging.debug(msg)
         return "Plan"
     elif index_modified_at is not None and plan_modified_at is None:
-        msg = str("Returning Index")
-        logging.debug(msg)
         return "Index"
     elif index_modified_at is None and plan_modified_at is None:
-        msg = str("Returning None")
-        logging.debug(msg)
         return None
     else:
         # Smartsheet Date Format: 2022-05-08T19:00:22Z
         if index_modified_at > plan_modified_at:
             delta = index_modified_at - plan_modified_at
             if delta.seconds <= threshold:
-                msg = str("Returning None")
-                logging.debug(msg)
                 return None
             else:
-                msg = str("Returning Index")
-                logging.debug(msg)
                 return "Index"
         elif index_modified_at < plan_modified_at:
             delta = plan_modified_at - index_modified_at
             if delta.seconds <= threshold:
                 return None
             else:
-                msg = str("Returning Plan")
-                logging.debug(msg)
                 return "Plan"
         elif index_modified_at == plan_modified_at:
-            msg = str("Returning None")
-            logging.debug(msg)
             return None
         else:
-            msg = str("Returning None")
-            logging.debug(msg)
             return None
 
 
@@ -216,9 +204,14 @@ def rebuild_cell(cell, column_id):
         link = json.loads(link)
         newer_cell.hyperlink = link
 
-    logging.debug("Newer Cell v: {} | ov: {} | hl: {}"
-                  "". format(newer_cell.value, newer_cell.object_value,
-                             newer_cell.hyperlink))
+    if not newer_cell.value:
+        newer_cell.value = smartsheet.models.ExplicitNull()
+    elif not newer_cell.object_value:
+        newer_cell.object_value = smartsheet.models.ExplicitNull()
+
+    # logging.debug("Newer Cell v: {} | ov: {} | hl: {}"
+    #               "". format(newer_cell.value, newer_cell.object_value,
+    #                          newer_cell.hyperlink))
 
     return newer_cell
 
@@ -290,12 +283,12 @@ def build_row(jira_index_sheet, jira_index_col_map, index_row, plan_sheet,
         # Get the cell data for matching columns between the two rows
         index_cell = helper.get_cell_data(index_row, col, jira_index_col_map)
         plan_cell = helper.get_cell_data(plan_row, col, plan_col_map)
-        logging.debug("Index v: {}, ov: {}, hl: {}".format(
-            index_cell.value, index_cell.object_value,
-            index_cell.hyperlink))
-        logging.debug("Plan v: {}, ov: {}, hl: {}".format(
-            plan_cell.value, plan_cell.object_value,
-            plan_cell.hyperlink))
+        # logging.debug("Index v: {}, ov: {}, hl: {}".format(
+        #     index_cell.value, index_cell.object_value,
+        #     index_cell.hyperlink))
+        # logging.debug("Plan v: {}, ov: {}, hl: {}".format(
+        #     plan_cell.value, plan_cell.object_value,
+        #     plan_cell.hyperlink))
 
         # If the index cell and plan cell values match, continue to the
         # next column.
@@ -309,12 +302,12 @@ def build_row(jira_index_sheet, jira_index_col_map, index_row, plan_sheet,
 
         # Always write the Jira Col on the plan sheet if not hyperlinked
         if col == app_vars.jira_col:
-            logging.debug("Jira Col found, returning Index")
+            # logging.debug("Jira Col found, returning Index")
             newer = "Index"
             plan_link = str({}).format(plan_cell.hyperlink)
             index_link = str({}).format(index_cell.hyperlink)
             if plan_link == index_link:
-                logging.debug("URL links match, skipping.")
+                logging.debug("URL links match, skipping {}.".format(col))
                 continue
         else:
             # Query the cell history for both cells from the API.
@@ -330,37 +323,38 @@ def build_row(jira_index_sheet, jira_index_col_map, index_row, plan_sheet,
 
         if not newer:
             # Newer Cell was modified within the last 30 seconds, skip
-            msg = str("Newer cell is None, skipping.")
+            msg = str("Newer {} cell is None, skipping.").format(col)
             logging.debug(msg)
             continue
         if newer == "Index":
             # Index Cell was the newer cell. Copy the Plan Cell column
             # ID to the newer cell object, and append it to the new plan
             # row object.
-            msg = str("Newer {} cell is the Index Cell: {}, type {}"
-                      "").format(col, index_cell, type(index_cell))
+            msg = str("Newer {} cell is the {} cell.").format(col, newer)
             logging.debug(msg)
             newer_cell = rebuild_cell(index_cell, plan_col_map[col])
-            if newer_cell.object_value or newer_cell.value:
-                updated_plan_row.cells.append(newer_cell)
-            else:
-                logging.debug("Skipped {} because value: {} | object_value: {}"
-                              "".format(col, newer_cell.value,
-                                        newer_cell.object_value))
+            # Update the cell even if it's None
+            updated_plan_row.cells.append(newer_cell)
+            # if newer_cell.object_value or newer_cell.value:
+            #     updated_plan_row.cells.append(newer_cell)
+            # else:
+            #     logging.debug("Skipped {} because value: {} | object_value: {}"
+            #                   "".format(col, newer_cell.value,
+            #                             newer_cell.object_value))
         if newer == "Plan":
             # Plan Cell was the newer cell. Copy the Index Cell column
             # ID to the newer cell object, and append it to the new index
             # row object.
-            msg = str("Newer {} cell is the Plan Cell: {}, type {}"
-                      "").format(col, plan_cell, type(plan_cell))
+            msg = str("Newer {} cell is the {} cell.").format(col, newer)
             logging.debug(msg)
             newer_cell = rebuild_cell(plan_cell, jira_index_col_map[col])
-            if newer_cell.object_value or newer_cell.value:
-                updated_index_row.cells.append(newer_cell)
-            else:
-                logging.debug("Skipped {} because value: {} | object_value: {}"
-                              "".format(col, newer_cell.value,
-                                        newer_cell.object_value))
+            updated_plan_row.cells.append(newer_cell)
+            # if newer_cell.object_value or newer_cell.value:
+            #     updated_plan_row.cells.append(newer_cell)
+            # else:
+            #     logging.debug("Skipped {} because value: {} | object_value: {}"
+            #                   "".format(col, newer_cell.value,
+            #                             newer_cell.object_value))
 
     return updated_index_row, updated_plan_row
 
@@ -416,6 +410,15 @@ def bidirectional_sync(minutes):
     if minutes < 0:
         msg = str("Minutes should be >= 0, not {}").format(minutes)
         raise ValueError(msg)
+
+    start = time.time()
+    msg = str("Starting bidirectinal sync between the Jira Index Sheet "
+              "and all available Program Plans. "
+              "Looking back {} minutes from {}"
+              "").format(minutes,
+                         time.strftime('%Y-%m-%d %H:%M:%S',
+                                       time.localtime(start)))
+    logging.debug(msg)
     # Define the list of columns where we want to copy data
     # TODO: Add predecessor and create Jira links (blocked/is blocked by)
     # Will need to check the Index Sheet Linked Issues column and handle
@@ -455,10 +458,17 @@ def bidirectional_sync(minutes):
                 # Plan Jira cell value is blank
                 continue
             if plan_jira_cell.value not in jira_index_rows.keys():
-                # Plan Jira cell value isn't in the Jira Index Sheet
-                # TODO: Update the plan row with an error message, a la:
-                # "Jira Key" not found in the index sheet. Check that
-                # The ticket was created or modified within the last 3 months.
+                # Plan Jira cell value isn't in the Jira Index Sheet.
+                # Raise error by setting plan jira cell value
+                msg = str("[WARNING]; {} not found in the index sheet. Check "
+                          "that the ticket was created or modified within the "
+                          "last 3 months and try again."
+                          "").format(plan_jira_cell.value)
+                plan_jira_cell.value = msg
+                new_row = smartsheet.models.Row()
+                new_row.id = plan_row.id
+                new_row.append(plan_jira_cell)
+                plan_rows_to_update.append(new_row)
                 continue
             else:
                 index_row = get_index_row(
@@ -500,3 +510,14 @@ def bidirectional_sync(minutes):
             plan_rows_to_update = drop_dupes(plan_rows_to_update)
             smartsheet_api.write_rows_to_sheet(
                 plan_rows_to_update, plan_sheet, "update")
+
+    end = time.time()
+    elapsed = end - start
+    elapsed = helper.truncate(elapsed, 3)
+    msg = str("Bidirectional sync took: {} seconds.").format(elapsed)
+    logging.info(msg)
+    interval_msg = jobs.modify_scheduler(
+        elapsed, 'sync_jira_interval', 'seconds', 1)
+    logging.info(interval_msg)
+    gc.collect()
+    return True
