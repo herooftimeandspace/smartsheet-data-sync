@@ -186,34 +186,34 @@ def rebuild_cell(cell, column_id):
         msg = str("Column ID should be a positive int, not {}"
                   "").format(column_id)
         raise ValueError(msg)
-    newer_cell = smartsheet.models.Cell()
-    newer_cell.column_id = int(column_id)
+    rebuilt_cell = smartsheet.models.Cell()
+    rebuilt_cell.column_id = column_id
     # Use object_value first for more complex cells like picklists, URLS, etc
     if cell.object_value:
-        newer_cell.object_value = cell.object_value
+        rebuilt_cell.object_value = cell.object_value
         # If object_value is still None after copying it from the source,
         # set basic value instead.
-        if not newer_cell.object_value:
-            newer_cell.value = cell.value
+        if not rebuilt_cell.object_value:
+            rebuilt_cell.value = cell.value
     else:
         # Default to setting basic cell value
-        newer_cell.value = cell.value
+        rebuilt_cell.value = cell.value
     # Set the hyperlink if there is one.
     if cell.hyperlink:
         link = str({}).format(cell.hyperlink)
         link = json.loads(link)
-        newer_cell.hyperlink = link
+        rebuilt_cell.hyperlink = link
 
-    if not newer_cell.value:
-        newer_cell.value = smartsheet.models.ExplicitNull()
-    elif not newer_cell.object_value:
-        newer_cell.object_value = smartsheet.models.ExplicitNull()
+    if not rebuilt_cell.value:
+        rebuilt_cell.value = smartsheet.models.ExplicitNull()
+    elif not rebuilt_cell.object_value:
+        rebuilt_cell.object_value = smartsheet.models.ExplicitNull()
 
     # logging.debug("Newer Cell v: {} | ov: {} | hl: {}"
     #               "". format(newer_cell.value, newer_cell.object_value,
     #                          newer_cell.hyperlink))
 
-    return newer_cell
+    return rebuilt_cell
 
 
 def build_row(jira_index_sheet, jira_index_col_map, index_row, plan_sheet,
@@ -338,8 +338,9 @@ def build_row(jira_index_sheet, jira_index_col_map, index_row, plan_sheet,
             # if newer_cell.object_value or newer_cell.value:
             #     updated_plan_row.cells.append(newer_cell)
             # else:
-            #     logging.debug("Skipped {} because value: {} | object_value: {}"
-            #                   "".format(col, newer_cell.value,
+            #     logging.debug("Skipped {} because value: {} | "
+            #                   "object_value: {}".format(col,
+            #                             newer_cell.value,
             #                             newer_cell.object_value))
         if newer == "Plan":
             # Plan Cell was the newer cell. Copy the Index Cell column
@@ -348,12 +349,13 @@ def build_row(jira_index_sheet, jira_index_col_map, index_row, plan_sheet,
             msg = str("Newer {} cell is the {} cell.").format(col, newer)
             logging.debug(msg)
             newer_cell = rebuild_cell(plan_cell, jira_index_col_map[col])
-            updated_plan_row.cells.append(newer_cell)
+            updated_index_row.cells.append(newer_cell)
             # if newer_cell.object_value or newer_cell.value:
             #     updated_plan_row.cells.append(newer_cell)
             # else:
-            #     logging.debug("Skipped {} because value: {} | object_value: {}"
-            #                   "".format(col, newer_cell.value,
+            #     logging.debug("Skipped {} because value: {} | "
+            #                   "object_value: {}".format(col,
+            #                             newer_cell.value,
             #                             newer_cell.object_value))
 
     return updated_index_row, updated_plan_row
