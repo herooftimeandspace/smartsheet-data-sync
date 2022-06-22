@@ -5,6 +5,7 @@ import gc
 import app.config as config
 import data_module.get_data as get_data
 import data_module.helper as helper
+import data_module.jobs as jobs
 import data_module.write_data as write_data
 
 logger = logging.getLogger(__name__)
@@ -67,12 +68,8 @@ def write_uuids_to_sheets(minutes):
     elapsed = helper.truncate(elapsed, 3)
     msg = str("Writing UUIDs took: {} seconds.").format(elapsed)
     logging.info(msg)
+    interval_msg = jobs.modify_scheduler(
+        elapsed, 'write_uuids_interval', 'seconds', 1)
+    logging.info(interval_msg)
     gc.collect()
-    if elapsed > 30:
-        delta = elapsed - 30
-        warn_msg = str("Writing UUIDs took {} seconds longer than "
-                       "the interval.").format(delta)
-        logging.warning(warn_msg)
-        return msg, warn_msg
-    else:
-        return msg
+    return True
