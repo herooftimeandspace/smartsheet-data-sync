@@ -1008,8 +1008,7 @@ def create_tickets(minutes=app_vars.dev_minutes):
         end = time.time()
         elapsed = end - start
         elapsed = helper.truncate(elapsed, 2)
-        logging.info("Create new tickets from Program Plan line items "
-                     "took: {} seconds.".format(elapsed))
+        logging.info("[JOB][CREATE TICKETS] took {} seconds.".format(elapsed))
         interval_msg = modify_scheduler(elapsed)
         logging.info(interval_msg)
         return True
@@ -1020,8 +1019,7 @@ def create_tickets(minutes=app_vars.dev_minutes):
         end = time.time()
         elapsed = end - start
         elapsed = helper.truncate(elapsed, 2)
-        logging.info("Create new tickets from Program Plan line items "
-                     "took: {} seconds.".format(elapsed))
+        logging.info("[JOB][CREATE TICKETS] took {} seconds.".format(elapsed))
         interval_msg = modify_scheduler(elapsed)
         logging.info(interval_msg)
         return False

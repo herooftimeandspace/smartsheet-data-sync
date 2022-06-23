@@ -518,7 +518,7 @@ def bidirectional_sync(minutes):
     end = time.time()
     elapsed = end - start
     elapsed = helper.truncate(elapsed, 3)
-    msg = str("Bidirectional sync took: {} seconds.").format(elapsed)
+    msg = str("[JOB][JIRA SYNC] took {} seconds.").format(elapsed)
     logging.info(msg)
     interval_msg = jobs.modify_scheduler(
         elapsed, 'sync_jira_interval', 'seconds', 1)

@@ -4,6 +4,7 @@ import time
 
 import app.config as config
 import data_module.helper as helper
+import data_module.jobs as jobs
 
 
 def full_smartsheet_sync(minutes):
@@ -53,15 +54,11 @@ def full_smartsheet_sync(minutes):
     end = time.time()
     elapsed = end - start
     elapsed = helper.truncate(elapsed, 3)
-    msg = str("Full Smartsheet cross-sheet sync took: {} seconds."
+    msg = str("[JOB][INTERSHEET SYNC] took {} seconds."
               "").format(elapsed)
     logging.info(msg)
+    interval_msg = jobs.modify_scheduler(
+        elapsed, 'sync_intersheet_interval', 'seconds', 1)
+    logging.info(interval_msg)
     gc.collect()
-    if elapsed > 120:
-        delta = elapsed - 120
-        warn_msg = str("Full Smartsheet cross-sheet sync took {} seconds "
-                       "longer than the interval.").format(delta)
-        logging.warning(warn_msg)
-        return msg, warn_msg
-    else:
-        return msg
+    return True

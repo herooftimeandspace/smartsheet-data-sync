@@ -415,6 +415,6 @@ def init(args):
     end = time.time()
     elapsed = end - start
     elapsed = helper.truncate(elapsed, 2)
-    logging.debug("Initialization took: {}".format(elapsed))
+    logging.debug("[Initialization] took {} seconds".format(elapsed))
 
     return config

@@ -78,7 +78,7 @@ def test_full_smartsheet_sync_2(env_dict, sheet_fixture, workspace_fixture):
 
     result_0 = test_0()
     assert isinstance(result_0, str)
-    result_1 = "Full Smartsheet cross-sheet sync took: 10 seconds." in result_0
+    result_1 = "[JOB][INTERSHEET SYNC] took 10 seconds." in result_0
     assert result_1 is True
 
 
@@ -103,12 +103,13 @@ def test_full_smartsheet_sync_3(env_dict, sheet_fixture, workspace_fixture):
         var_0 = sync.full_smartsheet_sync(minutes)
         return var_0
 
-    result_0, result_1 = test_0()
-    assert isinstance(result_0, str)
-    assert isinstance(result_1, str)
-    assert result_0 == "Full Smartsheet cross-sheet sync took: 180 seconds."
-    assert result_1 == str("Full Smartsheet cross-sheet sync took 60 seconds "
-                           "longer than the interval.")
+    result_0 = test_0()
+    assert isinstance(result_0, bool)
+    assert result_0
+    # assert isinstance(result_1, str)
+    # assert result_0 == "[JOB][INTERSHEET SYNC] took 180 seconds."
+    # assert result_1 == str("[JOB][INTERSHEET SYNC] took 60 seconds "
+    #                        "longer than the interval.")
 
 
 # def test_full_smartsheet_sync_3(env_dict, sheet_fixture):
