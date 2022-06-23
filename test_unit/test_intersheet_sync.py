@@ -77,9 +77,9 @@ def test_full_smartsheet_sync_2(env_dict, sheet_fixture, workspace_fixture):
         return var_0
 
     result_0 = test_0()
-    assert isinstance(result_0, str)
-    result_1 = "[JOB][INTERSHEET SYNC] took 10 seconds." in result_0
-    assert result_1 is True
+    assert isinstance(result_0, bool)
+    # result_1 = "[JOB][INTERSHEET SYNC] took 10 seconds." in result_0
+    assert result_0
 
 
 def test_full_smartsheet_sync_3(env_dict, sheet_fixture, workspace_fixture):
