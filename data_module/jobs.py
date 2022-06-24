@@ -1,6 +1,7 @@
 import math
 from apscheduler.triggers.interval import IntervalTrigger
 import app.config as config
+import logging
 
 
 def modify_scheduler(time, job_name, time_type="seconds", margin=0):
@@ -108,9 +109,9 @@ def modify_scheduler(time, job_name, time_type="seconds", margin=0):
         # If 17 <= 20: True
         # If 17 >= 10: True
         # Time is within the margins and no changes need to be made.
-        msg = str("Job interval and job runtime are within {} {} of "
+        msg = str("[JOB][{}] interval and job runtime are within {} {} of "
                   "each other. No changes to interval."
-                  "").format(margin, time_type)
+                  "").format(job_name, margin, time_type)
         return msg
 
     # new_interval = interval
@@ -123,7 +124,7 @@ def modify_scheduler(time, job_name, time_type="seconds", margin=0):
             new_interval = interval - delta + margin
         else:
             new_interval = delta + margin
-        msg = str("Job {} interval is {} {} longer than the job "
+        msg = str("[JOB][{}] interval is {} {} longer than the job "
                   "runtime. Reduced interval to {} {}."
                   "").format(job_name, int(delta), time_type,
                              new_interval, time_type)
@@ -140,13 +141,15 @@ def modify_scheduler(time, job_name, time_type="seconds", margin=0):
                 new_interval = 1
         else:
             new_interval = delta - margin
-        msg = str("Job {} interval is {} {} shorter than the job "
+        msg = str("[JOB][{}] interval is {} {} shorter than the job "
                   "runtime. Increased interval to {} {}."
                   "").format(job_name, int(delta), time_type,
                              new_interval, time_type)
     else:
-        msg = str("ERROR: Job interval {}, elapsed time {}"
-                  "").format(interval, time)
+        msg = str("[JOB][{}] interval {}, elapsed time {}"
+                  "").format(job_name, interval, time)
+        logging.error(msg)
+        msg = str("[JOB][{}] returned an error").format(job_name)
 
     # Convert seconds back into minutes and always round up to the nearest
     # whole minute.
