@@ -68,7 +68,7 @@ def write_uuids_to_sheets(minutes):
     end = time.time()
     elapsed = end - start
     elapsed = helper.truncate(elapsed, 3)
-    msg = str("Writing UUIDs took: {} seconds.").format(elapsed)
+    msg = str("[JOB][WRITE UUIDS] took {} seconds.").format(elapsed)
     logging.info(msg)
     interval_msg = jobs.modify_scheduler(
         elapsed, 'write_uuids_interval', 'seconds', 1)
