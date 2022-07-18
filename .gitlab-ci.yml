@@ -105,6 +105,7 @@ deploy_dev:
   tags:
   - copilot
   script:
+  - echo $USER
   - copilot svc deploy --name smartsheet-data-sync-backend --env dev
   - docker rm -v $(docker ps -a -q -f status=exited) || true
   - docker rmi $(docker images -f "dangling=true" -q) || true
