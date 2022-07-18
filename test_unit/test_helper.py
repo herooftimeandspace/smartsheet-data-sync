@@ -323,8 +323,8 @@ def test_chunks(simple_list):
 
 
 def test_get_local_paths():
-    root = "/smartsheet-data-sync-gitlab"
-    fixtures = "/smartsheet-data-sync-gitlab/test_fixtures"
+    root = "/smartsheet-data-sync"
+    fixtures = "/smartsheet-data-sync/test_fixtures"
 
     result_0, result_1 = helper.get_local_paths()
     assert root in result_0
