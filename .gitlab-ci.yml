@@ -103,7 +103,7 @@ deploy_dev:
   stage: deploy
   image: ubuntu:latest
   tags:
-  - copilot
+  - aws-gitlab-copilot
   script:
   - copilot svc deploy --name smartsheet-data-sync-backend --env dev
   - docker rm -v $(docker ps -a -q -f status=exited) || true
