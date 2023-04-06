@@ -1,18 +1,8 @@
-""" The UUID module interacts with the Smartsheet API and the Jira Index
-       Sheet. It is broken down into submodules for getting data from the
-       Smartsheet API, building new data structures such as cells and rows,
-       and writing data back to Smartsheets.
-
-       The Helper and Variables submodules contain smaller functions to
-       smooth the data transformation process between functions, and load
-       constant variables to ensure consistency across the application.
+""" The UUID module searches across all sheets in a workspace and looks for
+        any sheet with a UUID column. It then populates any blank cells in
+        that column with a unique identifier that includes the sheet ID,
+        row ID, column ID and timestamp of when the row was created. This
+        UUID is used in other modules for looking up and writing data
+        back to the row, as it guarantees that no UUID will ever match another
+        across every sheet in Smartsheet.
 """
-
-from .cell_link_sheet_data import write_uuid_cell_links
-from .get_data import (get_all_row_data, get_all_sheet_ids, get_blank_uuids,
-                       get_secret, get_secret_name, get_sub_indexs,
-                       load_jira_index)
-from .helper import (chunks, get_cell_data, get_cell_value, get_column_map,
-                     get_timestamp, has_cell_link, json_extract, truncate)
-from .write_data import (check_uuid, write_jira_index_cell_links,
-                         write_predecessor_dates, write_uuids)

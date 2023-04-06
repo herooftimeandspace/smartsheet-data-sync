@@ -1,7 +1,5 @@
 smartsheet-python-sdk
 apscheduler
-pytest
 boto3
-pytest-cov
-pytest-xdist
 pdoc
+backoff

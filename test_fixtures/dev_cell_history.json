@@ -1,0 +1,21 @@
+{
+    "pageNumber": 1,
+    "pageSize": 1,
+    "totalPages": 1,
+    "totalCount": 1,
+    "data": [
+        {
+            "columnId": 6026995401287556,
+            "value": "VP-13529",
+            "displayValue": "VP-13529",
+            "hyperlink": {
+                "url": "https://jdev.xarth.tv/browse/VP-13529"
+            },
+            "modifiedAt": "2022-05-23T03:00:29Z",
+            "modifiedBy": {
+                "name": "Smartsheet Service Account",
+                "email": "srvc-smartsheet-jira@twitch.tv"
+            }
+        }
+    ]
+}

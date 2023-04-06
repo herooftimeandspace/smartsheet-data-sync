@@ -4,110 +4,142 @@
 # Dependency Scanning customization: https://docs.gitlab.com/ee/user/application_security/dependency_scanning/#customizing-the-dependency-scanning-settings
 # Note that environment variables can be set in several places
 # See https://docs.gitlab.com/ee/ci/variables/#cicd-variable-precedence
-image: python:3.7
+image: python:3.8
 variables:
   PIP_CACHE_DIR: "$CI_PROJECT_DIR/.cache/pip"
 cache:
   paths:
   - ".cache/pip"
   - venv/
+  - "~/.local/bin"
+
+before_script:
+  - python3 -V  # Print out python version for debugging
+  - python3 -m pip install virtualenv
+  - virtualenv venv
+  - source venv/bin/activate
+  - python3 -m pip install -r requirements.txt
+
 
 stages:
-- prep
-- lint
+- coverage
+- pages
 - test
 - deploy
-- pages
 
-prep:
-  stage: prep
-  script:
-    - python -V  # Print out python version for debugging
-    - pip install virtualenv
-    - virtualenv venv
-    - source venv/bin/activate
-    - pip install -r requirements.txt
 
-linting:
-  stage: lint
-  needs: []
+flake8:
+  stage: coverage
   script:
-    - pip install flake8
-    - flake8 --max-line-length=80 --per-file-ignores="__init__.py:F401" ./*.py
-    - flake8 --max-line-length=80 --per-file-ignores="__init__.py:F401" ./uuid_module/*.py
+  - export PATH=$PATH:~/.local/bin
+  - python3 -m pip install -r test_requirements.txt
+  - flake8 --max-line-length=80 --per-file-ignores="__init__.py:F401" ./*.py
+  - flake8 --max-line-length=80 --per-file-ignores="__init__.py:F401" ./uuid_module/*.py
 
-coverage:
-  stage: lint
-  needs: []
+pytest_lite:
+  stage: coverage
+  tags:
+  - copilot
   script:
-    - pip install -r requirements.txt
-    - pytest --cov-config=.coveragerc --cov=./
-    - coverage xml --include="./**" -o reports/coverage.xml
+  - export PATH=$PATH:~/.local/bin
+  - python3 -m pip install -r test_requirements.txt
+  - pytest test_unit/ -x -W ignore::DeprecationWarning --cov-config=.coveragerc --cov=./ -vvv
+  - coverage xml --include="./**" -o coverage.xml
   artifacts:
     paths:
-      - reports/coverage.xml
+    - coverage.xml
     reports:
-      cobertura:
-        - reports/coverage.xml
-  coverage: /TOTAL.*\s+(\d+%)$/
+      junit:
+      - coverage.xml
+  coverage: '/^TOTAL.+?(\d+\%)$/'
+  except:
+  - main
+  - staging
+  - debug
+
+pytest_full:
+  stage: coverage
+  tags:
+  - copilot
+  script:
+  - export PATH=$PATH:~/.local/bin
+  - python3 -m pip install -r test_requirements.txt
+  - pytest test_unit/ test_integration/ -x -W ignore::DeprecationWarning --cov-config=.coveragerc --cov=./ -vvv
+  - coverage xml --include="./**" -o coverage.xml
+  artifacts:
+    paths:
+    - coverage.xml
+    reports:
+      junit:
+      - coverage.xml
+  coverage: '/^TOTAL.+?(\d+\%)$/'
+  only:
+  - main
+  - staging
+  - debug
 
 sast:
   stage: test
-  needs: []
+  before_script:
+  - ''
 include:
   - template: Security/SAST.gitlab-ci.yml
 
-pages:
-  stage: pages
-  needs: ["coverage"]
+# pages:
+#   stage: pages
+#   needs: ["coverage"]
+#   script:
+#   - pip install pdoc
+#   - pdoc -o docs/ -d google uuid_module
+#   - mkdir ./public
+#   - mv ./docs/* ./public/
+#   artifacts:
+#     paths:
+#     - public
+  # rules:
+  # - if: "$CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH"
+
+deploy_dev:
+  stage: deploy
+  image: ubuntu:latest
+  tags:
+  - aws-gitlab-copilot
   script:
-  - pip install pdoc
-  - pdoc -o docs/ -d google uuid_module
-  - mkdir ./public
-  - mv ./docs/* ./public/
-  artifacts:
-    paths:
-    - public
-  rules:
-  - if: "$CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH"
+  - copilot svc deploy --name smartsheet-data-sync-backend --env dev
+  - docker rm -v $(docker ps -a -q -f status=exited) || true
+  - docker rmi $(docker images -f "dangling=true" -q) || true
+  - docker image prune -a --force --filter "until=730h" || true
+  environment:
+    name: Dev
+  only:
+  - debug
 
 deploy_staging:
   stage: deploy
   image: ubuntu:latest
-  needs: ["linting", "coverage"]
   tags:
-    - copilot
+  - copilot
   script:
-    - export AWS_REGION=$AWS_REGION
-    - export AWS_ACCESS_KEY_ID=$ACCESS_KEY
-    - export AWS_SECRET_ACCESS_KEY=$SECRET_KEY
-    - copilot svc deploy --name smartsheet-data-sync-backend --env staging
-    - docker rm -v $(docker ps -a -q -f status=exited) 2> /dev/null
-    - docker rmi $(docker images -f "dangling=true" -q) 2> /dev/null
+  - copilot svc deploy --name smartsheet-data-sync-backend --env staging
+  - docker rm -v $(docker ps -a -q -f status=exited) || true
+  - docker rmi $(docker images -f "dangling=true" -q) || true
+  - docker image prune -a --force --filter "until=730h" || true
   environment:
     name: Staging
-  except:
-    - main
+  only:
+  - staging
 
 deploy_prod:
   stage: deploy
   image: ubuntu:latest
-  needs: ["linting", "coverage"]
   tags:
-    - copilot
+  - copilot
   script:
-    - export AWS_REGION=$AWS_REGION
-    - export AWS_ACCESS_KEY_ID=$ACCESS_KEY
-    - export AWS_SECRET_ACCESS_KEY=$SECRET_KEY
-    - copilot svc deploy --name smartsheet-data-sync-backend --env prod
-    - docker rm -v $(docker ps -a -q -f status=exited) 2> /dev/null
-    - docker rmi $(docker images -f "dangling=true" -q) 2> /dev/null
+  - copilot svc deploy --name smartsheet-data-sync-backend --env prod
+  - docker rm -v $(docker ps -a -q -f status=exited) || true
+  - docker rmi $(docker images -f "dangling=true" -q) || true
+  - docker image prune -a --force --filter "until=730h" || true
   environment:
     name: Production
   only:
-    - main
-
-# # after_script:
-# #   - docker build -t registry.gitlab-dev.video.xarth.tv/cmpbad/smartsheet-data-sync-gitlab .
-# #   - docker push registry.gitlab-dev.video.xarth.tv/cmpbad/smartsheet-data-sync-gitlab
-# #   - main
+  - main
