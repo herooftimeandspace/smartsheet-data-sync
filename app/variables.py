@@ -6,14 +6,14 @@ module_log_name = "main.log"
     """
 
 # INTEGRATION TESTS / DEV ENV
-dev_workspace_id = [7802463043512196]
+dev_workspace_id = [1234567891011120] # Generic INT
 """Single Workspace ID for Integration Testing, so that tests can run without
    affecting active Prod data. Workspace Type: list, Workspace IDs Type: int
    """
-dev_jira_idx_sheet = 5786250381682564
+dev_jira_idx_sheet = 1234567891011120 # Generic INT
 """Jira Index Sheet in Dev. Type: int
    """
-dev_push_jira_tickets_sheet = 3312520078354308
+dev_push_jira_tickets_sheet = 1234567891011120 # Generic INT
 """Sheet used to push rows into Jira to create new tickets. Separate from the
    index sheet to prevent accidental data corruption.
    """
@@ -23,7 +23,7 @@ dev_minutes = 525600
 
 
 # STAGING
-stg_workspace_id = [2618107878500228]
+stg_workspace_id = [1234567891011120] # Generic INT
 """Single Workspace ID for Integration Testing, so that tests can run without
    affecting active Prod data. Workspace Type: list, Workspace IDs Type: int
    """
@@ -40,10 +40,11 @@ stg_minutes = 130
     """
 
 # PROD
-prod_workspace_id = [8158274374657924, 1479840747546500, 6569226535233412]
+# Generic INT
+prod_workspace_id = [1234567891011120, 1234567891011120, 1234567891011120]
 """List of workspace IDs. Workspace IDs are Type: int.
     """
-prod_jira_idx_sheet = 5366809688860548
+prod_jira_idx_sheet = 1234567891011120  # Generic INT
 """Jira Index Sheet ID. Type: int
     """
 prod_push_jira_tickets_sheet = None
