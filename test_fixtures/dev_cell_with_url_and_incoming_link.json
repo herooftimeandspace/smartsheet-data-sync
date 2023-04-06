@@ -1,0 +1,16 @@
+{
+    "columnId": 4152410033678212,
+    "value": "VP-13059",
+    "objectValue": "VP-13059",
+    "displayValue": "VP-13059",
+    "hyperlink": {
+        "url": "https://jdev.xarth.tv/browse/VP-13059"
+    },
+    "linkInFromCell": {
+        "status": "OK",
+        "sheetId": 5786250381682564,
+        "rowId": 8062427097655172,
+        "columnId": 6026995401287556,
+        "sheetName": "Jira Dev Index Sheet"
+    }
+}

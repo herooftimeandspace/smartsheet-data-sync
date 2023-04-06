@@ -1,0 +1,18 @@
+{
+    "columnId": 6026995401287556,
+    "value": "VP-13059",
+    "objectValue": "VP-13059",
+    "displayValue": "VP-13059",
+    "hyperlink": {
+        "url": "https://jdev.xarth.tv/browse/VP-13059"
+    },
+    "linksOutToCells": [
+        {
+            "status": "OK",
+            "sheetId": 5447415714080644,
+            "rowId": 1237356817606532,
+            "columnId": 4152410033678212,
+            "sheetName": "Data Sync Program Plan - Dev"
+        }
+    ]
+}

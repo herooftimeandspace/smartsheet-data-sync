@@ -1,0 +1,139 @@
+{
+    "id": 602945077831556,
+    "sheetId": 5786250381682564,
+    "rowNumber": 165,
+    "parentId": 6640860098127748,
+    "siblingId": 1307027656599428,
+    "version": 1934,
+    "expanded": true,
+    "accessLevel": "OWNER",
+    "createdAt": "2022-03-04T11:06:17Z",
+    "modifiedAt": "2022-03-18T20:19:21Z",
+    "cells": [
+        {
+            "columnId": 2164383706048388,
+            "value": false,
+            "objectValue": false
+        },
+        {
+            "columnId": 6667983333418884
+        },
+        {
+            "columnId": 1523395773917060
+        },
+        {
+            "columnId": 6026995401287556,
+            "value": "VTCD-1184",
+            "objectValue": "VTCD-1184",
+            "displayValue": "VTCD-1184",
+            "hyperlink": {
+                "url": "https://jdev.xarth.tv/browse/VTCD-1184"
+            }
+        },
+        {
+            "columnId": 3775195587602308,
+            "value": "rbickhar@twitch.tv",
+            "objectValue": {
+                "objectType": "CONTACT",
+                "email": "rbickhar@twitch.tv",
+                "name": "rbickhar@twitch.tv"
+            },
+            "displayValue": "rbickhar@twitch.tv"
+        },
+        {
+            "columnId": 8278795214972804,
+            "value": "Complete",
+            "objectValue": "Complete",
+            "displayValue": "Complete",
+            "formula": "=VLOOKUP([Jira Status]@row, {Data Maps: Jira Status}, 2, false)"
+        },
+        {
+            "columnId": 960445820495748
+        },
+        {
+            "columnId": 5464045447866244
+        },
+        {
+            "columnId": 3212245634180996
+        },
+        {
+            "columnId": 7715845261551492,
+            "value": "Make SpadeMetrics UT deterministic",
+            "objectValue": "Make SpadeMetrics UT deterministic",
+            "displayValue": "Make SpadeMetrics UT deterministic"
+        },
+        {
+            "columnId": 2086345727338372,
+            "value": "VTCD",
+            "objectValue": "VTCD",
+            "displayValue": "VTCD"
+        },
+        {
+            "columnId": 6589945354708868
+        },
+        {
+            "columnId": 2719670900942724
+        },
+        {
+            "columnId": 466685676283780
+        },
+        {
+            "columnId": 414411629324164,
+            "value": "VTCD-1220",
+            "objectValue": "VTCD-1220",
+            "displayValue": "VTCD-1220"
+        },
+        {
+            "columnId": 8184810626672516
+        },
+        {
+            "columnId": 4338145541023620,
+            "value": "Done",
+            "objectValue": "Done",
+            "displayValue": "Done"
+        },
+        {
+            "columnId": 8841745168394116
+        },
+        {
+            "columnId": 256758378719108,
+            "value": "2022-03-10T08:51:20Z",
+            "objectValue": {
+                "objectType": "DATETIME",
+                "value": "2022-03-10T08:51:20Z"
+            }
+        },
+        {
+            "columnId": 4760358006089604,
+            "value": "Task",
+            "objectValue": "Task",
+            "displayValue": "Task"
+        },
+        {
+            "columnId": 2508558192404356,
+            "value": 1.0,
+            "objectValue": 1.0,
+            "displayValue": "1",
+            "formula": "=COUNT(ANCESTORS([Jira Ticket]@row))"
+        },
+        {
+            "columnId": 7012157819774852,
+            "value": "Filtered out by Connector - not synced",
+            "objectValue": "Filtered out by Connector - not synced",
+            "displayValue": "Filtered out by Connector - not synced",
+            "formula": "=PARENT([Jira Ticket]@row)"
+        },
+        {
+            "columnId": 3290283612891012,
+            "value": false,
+            "objectValue": false,
+            "formula": "=IF(OR(CONTAINS(\"KTLO\", Components@row), CONTAINS(\"KTLO\", Labels@row)), 1, 0)"
+        },
+        {
+            "columnId": 7793883240261508,
+            "value": false,
+            "objectValue": false,
+            "formula": "=IF(OR(CONTAINS(\"Inject\", Components@row), CONTAINS(\"Inject\", Labels@row)), 1, 0)"
+        }
+    ]
+}
